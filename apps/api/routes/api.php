@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\InvitationClaimController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecipesController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UtilitiesController;
 use App\Http\Controllers\Api\VehiclesController;
@@ -189,6 +190,25 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.update');
             Route::delete('/budgets/{budget}', [FinanceController::class, 'deleteBudget'])
                 ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.destroy');
+        });
+
+        Route::prefix('recipes')->name('recipes.')->group(function (): void {
+            Route::get('/', [RecipesController::class, 'index'])
+                ->middleware('module.access:recipes,view')->name('index');
+            Route::post('/', [RecipesController::class, 'store'])
+                ->middleware('module.enabled:recipes')->name('store');
+            Route::get('/{recipe}', [RecipesController::class, 'show'])
+                ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('show');
+            Route::patch('/{recipe}', [RecipesController::class, 'update'])
+                ->middleware('module.enabled:recipes')->whereNumber('recipe')->name('update');
+            Route::delete('/{recipe}', [RecipesController::class, 'destroy'])
+                ->middleware('module.enabled:recipes')->whereNumber('recipe')->name('destroy');
+            Route::put('/{recipe}/favorite', [RecipesController::class, 'favorite'])
+                ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('favorite');
+            Route::delete('/{recipe}/favorite', [RecipesController::class, 'unfavorite'])
+                ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('unfavorite');
+            Route::get('/{recipe}/photo', [RecipesController::class, 'photo'])
+                ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('photo');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
