@@ -1,6 +1,6 @@
 # Metricove architecture — proposed
 
-> The architecture below is **planned**, not yet implemented. See GitHub Issues and PRs for verified state.
+> The API and web application scaffolds are implemented. The domain services, Docker Compose runtime, and module behavior below are being delivered incrementally; see GitHub Issues and PRs for current status.
 
 ## Deployment and tenancy
 A self-hosted installation represents **exactly one household**, with one independent PostgreSQL database and persistent file store. Multiple installations are supported but there is no multi-household tenancy in one deployment. The first sign-up is a one-time, atomic setup and creates an active administrator. Public registration stops after setup.
