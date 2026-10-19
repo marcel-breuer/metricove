@@ -1,0 +1,87 @@
+# Adapted from WebGuard; Metricove checks for routine updates once a week.
+# Application manifests will be added in upcoming implementation PRs.
+version: 2
+
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Berlin
+    assignees:
+      - marcel-breuer
+
+updates:
+  - package-ecosystem: "composer"
+    directory: "/apps/api"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
+    assignees:
+      - marcel-breuer
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "bun"
+    directory: "/apps/web"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
+    assignees:
+      - marcel-breuer
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
+    assignees:
+      - marcel-breuer
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/apps/api"
+      - "/apps/web"
+      - "/docker/gateway"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
+    assignees:
+      - marcel-breuer
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
+    assignees:
+      - marcel-breuer
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
