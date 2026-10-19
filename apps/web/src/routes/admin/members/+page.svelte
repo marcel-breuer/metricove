@@ -18,7 +18,12 @@
 		actor_user_id: number | null;
 		subject_user_id: number;
 		action: string;
-		details: { before?: AccessState; after?: AccessState; source?: string } | null;
+		details: {
+			before?: AccessState | Record<string, boolean>;
+			after?: AccessState | Record<string, boolean>;
+		source?: string;
+		module_key?: string;
+		} | null;
 		created_at: string;
 	};
 
@@ -157,6 +162,7 @@
 			'member.activated': 'Member reactivated',
 			'member.suspended': 'Member suspended',
 			'member.access_changed': 'Member access changed',
+			'member.module_permissions_changed': 'Module permissions changed',
 			'member.removed': 'Member removed',
 			'admin.recovered': 'Administrator access recovered'
 		};
@@ -166,6 +172,9 @@
 	function eventSummary(event: AuditEvent): string {
 		if (event.action === 'member.removed') return `Member #${event.subject_user_id}`;
 		if (event.action === 'admin.recovered') return `Member #${event.subject_user_id} was restored as an active administrator.`;
+		if (event.action === 'member.module_permissions_changed') {
+			return `Member #${event.subject_user_id} · ${event.details?.module_key ?? 'Module'} capabilities updated`;
+		}
 
 		const before = event.details?.before;
 		const after = event.details?.after;
@@ -236,6 +245,7 @@
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-2 lg:justify-end">
+								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-cyan-300/30 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Module rights</a>
 								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{member.is_admin ? 'Demote' : 'Promote'}</button>
 								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50">{member.is_active ? 'Suspend' : 'Reactivate'}</button>
 								<button type="button" disabled={busy} onclick={() => void removeMember(member)} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">Remove</button>
