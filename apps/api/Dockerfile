@@ -25,6 +25,7 @@ COPY --chown=www-data:www-data apps/api/bootstrap ./bootstrap
 COPY --chown=www-data:www-data apps/api/config ./config
 COPY --chown=www-data:www-data apps/api/database ./database
 COPY --chown=www-data:www-data apps/api/public ./public
+COPY --chown=www-data:www-data apps/api/resources ./resources
 COPY --chown=www-data:www-data apps/api/routes ./routes
 COPY --chown=www-data:www-data apps/api/storage ./storage
 COPY --chown=www-data:www-data apps/api/artisan ./artisan

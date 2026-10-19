@@ -101,6 +101,10 @@ return [
         ],
     ],
 
+    'invitations' => [
+        'expire' => (int) env('AUTH_INVITATION_EXPIRE', 10080),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Password Confirmation Timeout

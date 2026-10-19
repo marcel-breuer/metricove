@@ -43,6 +43,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by('password-reset-submit:'.$request->ip());
         });
 
+        RateLimiter::for('invitation-send', function (Request $request): array {
+            $userId = $request->user('web')?->id ?? 'guest';
+
+            return [
+                Limit::perMinute(5)->by('invitation-send-user:'.$userId),
+                Limit::perMinute(10)->by('invitation-send-ip:'.$request->ip()),
+            ];
+        });
+
+        RateLimiter::for('invitation-claim', function (Request $request): Limit {
+            return Limit::perMinute(10)->by('invitation-claim:'.$request->ip());
+        });
+
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
             return route('password.reset').'#token='.urlencode($token);
         });
