@@ -1,23 +1,75 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { csrfToken, type AuthUser, type ApiResponse } from '#lib/auth';
+
+	let currentUser: AuthUser | null = null;
+	let sessionChecked = false;
+	let signOutError = '';
 
 	onMount(() => {
 		let cancelled = false;
 
-		void fetch('/api/setup/status', { headers: { Accept: 'application/json' } })
-			.then((response) => (response.ok ? response.json() : null))
-			.then((status: { setup_required?: boolean } | null) => {
-				if (!cancelled && status?.setup_required) {
+		async function loadSession(): Promise<void> {
+			try {
+				const setupResponse = await fetch('/api/setup/status', {
+					headers: { Accept: 'application/json' }
+				});
+				const setup = setupResponse.ok
+					? ((await setupResponse.json()) as { setup_required?: boolean })
+					: null;
+
+				if (!cancelled && setup?.setup_required) {
 					void goto('/setup');
+					return;
 				}
-			})
-			.catch(() => {});
+
+				const sessionResponse = await fetch('/api/auth/session', {
+					headers: { Accept: 'application/json' }
+				});
+				const session = sessionResponse.ok ? ((await sessionResponse.json()) as ApiResponse) : null;
+
+				if (!cancelled) currentUser = session?.user ?? null;
+			} catch {
+				currentUser = null;
+			} finally {
+				if (!cancelled) sessionChecked = true;
+			}
+		}
+
+		void loadSession();
 
 		return () => {
 			cancelled = true;
 		};
 	});
+
+	async function signOut(): Promise<void> {
+		signOutError = '';
+		const token = csrfToken();
+		if (!token) {
+			signOutError = 'Reload this page and try again.';
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/auth/logout', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }
+			});
+
+			if (!response.ok) {
+				signOutError = 'Sign-out is unavailable. Try again.';
+				return;
+			}
+
+			currentUser = null;
+			await goto('/login');
+		} catch {
+			signOutError = 'Sign-out is unavailable. Check your connection and try again.';
+		}
+	}
 </script>
 
 <svelte:head>
@@ -52,12 +104,33 @@
 			>
 				Check service health
 			</a>
-			<a
-				href="/setup"
-				class="ml-3 mt-10 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
-			>
-				Set up this household
-			</a>
+			{#if sessionChecked}
+				{#if currentUser}
+					<a
+						href="/profile"
+						class="ml-3 mt-10 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+					>
+						Your profile
+					</a>
+					<button
+						type="button"
+						onclick={signOut}
+						class="ml-3 mt-10 inline-flex items-center rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+					>
+						Sign out
+					</button>
+				{:else}
+					<a
+						href="/login"
+						class="ml-3 mt-10 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+					>
+						Sign in
+					</a>
+				{/if}
+			{/if}
+			{#if signOutError}
+				<p class="mt-4 text-sm text-rose-200" role="alert">{signOutError}</p>
+			{/if}
 		</section>
 
 		<footer class="border-t border-slate-800 pt-5 text-sm text-slate-500">

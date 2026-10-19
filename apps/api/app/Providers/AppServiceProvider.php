@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +25,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('login', function (Request $request): array {
+            $email = $request->input('email');
+            $emailKey = is_string($email) ? Str::lower(trim($email)) : '';
+
+            return [
+                Limit::perMinute(5)->by('login-ip:'.$request->ip()),
+                Limit::perMinute(5)->by('login-email:'.hash('sha256', $emailKey)),
+            ];
+        });
+
+        RateLimiter::for('password-reset-request', function (Request $request): Limit {
+            return Limit::perMinute(3)->by('password-reset-request:'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-submit', function (Request $request): Limit {
+            return Limit::perMinute(10)->by('password-reset-submit:'.$request->ip());
+        });
+
+        ResetPassword::createUrlUsing(function (User $user, string $token): string {
+            return route('password.reset').'#token='.urlencode($token);
+        });
     }
 }

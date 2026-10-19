@@ -1,6 +1,6 @@
 # Metricove architecture — proposed
 
-> The API, web application scaffolds, Docker Compose runtime and one-time household setup are implemented. Authentication management and domain modules are being delivered incrementally; see GitHub Issues and PRs for current status.
+> The API, web application, Docker Compose runtime, one-time household setup, session authentication, member profiles and password recovery are implemented. Invitations and domain modules are being delivered incrementally; see GitHub Issues and PRs for current status.
 
 ## Deployment and tenancy
 A self-hosted installation represents **exactly one household**, with one independent PostgreSQL database and persistent file store. Multiple installations are supported but there is no multi-household tenancy in one deployment. The first sign-up is a one-time, atomic setup and creates an active administrator. Public registration stops after setup.

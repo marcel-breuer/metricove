@@ -1,6 +1,10 @@
 {
 	"extends": "$app/tsconfig",
 	"compilerOptions": {
+		"paths": {
+			"#lib": ["./src/lib/index.ts"],
+			"#lib/*": ["./src/lib/*"]
+		},
 		"strict": true
 	},
 	"include": ["src", "vite.config.ts"]
