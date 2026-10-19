@@ -18,7 +18,7 @@ return [
         ],
         'utilities' => [
             'label' => 'Utilities',
-            'description' => 'Energy, water and other household meter readings.',
+            'description' => 'Private and household electricity, gas and water meters with reading history.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,

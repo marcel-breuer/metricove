@@ -55,7 +55,8 @@
 		if (path === '/modules/tracking') return 'Tracking';
 		if (path.startsWith('/modules/tracking/')) return 'Tracker history';
 		if (path.startsWith('/modules/')) {
-			return modules.find((module) => path === `/modules/${module.key}`)?.label ?? 'Module';
+			const moduleKey = path.split('/')[2];
+			return modules.find((module) => module.key === moduleKey)?.label ?? 'Module';
 		}
 		return 'Metricove';
 	}
