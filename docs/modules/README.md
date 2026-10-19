@@ -56,7 +56,7 @@ Any module model used in an authorization decision must implement `App\Contracts
 
 The UI presents capability checkboxes per member and module. The authenticated app shell uses `available_modules` for responsive navigation and uses the same API state for module links; hidden navigation does not authorize operations. REST, jobs and AI/MCP must call `ModuleAccessService` at the operation boundary. A resource that does not declare its ownership policy fails closed when passed to that service.
 
-The current SvelteKit shell provides the responsive household dashboard, member and module administration navigation, account links, a keyboard-accessible mobile drawer and Quick Add empty state. Module landing screens are navigation placeholders until their domain issues add records and entry forms; Quick Add does not create or imply saved data on its own.
+The current SvelteKit shell provides the responsive household dashboard, member and module administration navigation, account links, a keyboard-accessible mobile drawer and Quick Add empty state. Tracking has its own schema builder, quick-entry form and private measurement history. Other module landing screens remain placeholders until their domain issues add records and entry forms; Quick Add does not create or imply saved data on its own.
 
 ## Registry and permissions
 Every module defines:
@@ -81,6 +81,18 @@ A request is allowed only if module enabled **and** user has permission **and** 
 - `shopping`: lists and independently manageable items.
 - `analytics`, `import`, `ai`: cross-cutting tools, gated by source-module permissions.
 - `health` (future): private and separately consented data.
+
+## Tracking module contract
+
+Tracking supports private trackers owned by one member and household templates managed by an active administrator. A household template exposes its schema to members with Tracking `view` access; every measurement still belongs to its author and stays private unless the owner grants record-level access. Administrator status alone does not reveal private tracker definitions or measurements.
+
+- `GET /api/tracking/trackers` lists definitions visible to the member and requires `view`.
+- `POST /api/tracking/trackers` creates a private tracker with `create`, or a household template with active-admin status and exact `manage` access. A schema has 1–50 fields of type `number`, `text`, `date` or `boolean`.
+- `GET /api/tracking/trackers/{tracker}` returns its schema and up to 20 immutable schema revisions; `PUT` updates the schema with exact `manage` access.
+- `GET /api/tracking/trackers/{tracker}/entries` returns the latest 100 visible entries and requires `view`.
+- `POST /api/tracking/trackers/{tracker}/entries` records an entry with exact `create` access. `PATCH /api/tracking/entries/{entry}` edits an accessible entry with exact `edit` access and ownership or an explicit record grant.
+
+Numeric values are accepted as decimal strings, limited to 14 whole and 6 fractional digits, and persisted as `DECIMAL(20,6)`. Every numeric field requires an explicit unit. Values include label, type and unit snapshots so historical display survives field retirement. Once a field has values, its type and unit cannot change; replace it with a new field. Schema changes increment the version and append an immutable snapshot. Entry writes carrying a stale schema version return `409 Conflict` and require a reload.
 
 ## Cross-module rule
 A shared integration must not make an optional module mandatory. Shopping works when Recipes, Pantry and MealPlanning are disabled. MealPlanning supports free-text dishes. Disablement removes access to integrations without deleting data, and re-enabling restores authorized use.

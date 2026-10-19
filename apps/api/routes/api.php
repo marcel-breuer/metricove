@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\InvitationClaimController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\TrackingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health');
@@ -41,6 +42,35 @@ Route::middleware('web')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::get('/modules', ModuleDiscoveryController::class)->name('modules.enabled');
+
+        Route::prefix('tracking')->name('tracking.')->group(function (): void {
+            Route::get('/trackers', [TrackingController::class, 'index'])
+                ->middleware('module.access:tracking,view')
+                ->name('trackers.index');
+            Route::post('/trackers', [TrackingController::class, 'store'])
+                ->middleware('module.enabled:tracking')
+                ->name('trackers.store');
+            Route::get('/trackers/{tracker}', [TrackingController::class, 'show'])
+                ->middleware('module.access:tracking,view')
+                ->whereNumber('tracker')
+                ->name('trackers.show');
+            Route::put('/trackers/{tracker}', [TrackingController::class, 'update'])
+                ->middleware('module.access:tracking,manage')
+                ->whereNumber('tracker')
+                ->name('trackers.update');
+            Route::get('/trackers/{tracker}/entries', [TrackingController::class, 'entries'])
+                ->middleware('module.access:tracking,view')
+                ->whereNumber('tracker')
+                ->name('entries.index');
+            Route::post('/trackers/{tracker}/entries', [TrackingController::class, 'storeEntry'])
+                ->middleware('module.access:tracking,create')
+                ->whereNumber('tracker')
+                ->name('entries.store');
+            Route::patch('/entries/{entry}', [TrackingController::class, 'updateEntry'])
+                ->middleware('module.access:tracking,edit')
+                ->whereNumber('entry')
+                ->name('entries.update');
+        });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
             Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');

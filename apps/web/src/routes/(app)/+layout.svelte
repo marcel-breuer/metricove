@@ -52,6 +52,8 @@
 		if (path.startsWith('/admin/members/')) return 'Module rights';
 		if (path === '/admin/modules') return 'Modules';
 		if (path === '/admin/invitations') return 'Invitations';
+		if (path === '/modules/tracking') return 'Tracking';
+		if (path.startsWith('/modules/tracking/')) return 'Tracker history';
 		if (path.startsWith('/modules/')) {
 			return modules.find((module) => path === `/modules/${module.key}`)?.label ?? 'Module';
 		}
