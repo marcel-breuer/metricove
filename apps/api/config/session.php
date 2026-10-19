@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Str;
 
+$secureCookie = env('SESSION_SECURE_COOKIE');
+
+if ($secureCookie === null || $secureCookie === '') {
+    $secureCookie = parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_SCHEME) === 'https';
+} else {
+    $secureCookie = filter_var($secureCookie, FILTER_VALIDATE_BOOLEAN);
+}
+
 return [
 
     /*
@@ -169,7 +177,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => $secureCookie,
 
     /*
     |--------------------------------------------------------------------------

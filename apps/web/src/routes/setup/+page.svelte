@@ -199,7 +199,7 @@
 							Your administrator account is active and this browser session is signed in.
 						</p>
 						<a
-							href="/"
+							href="/profile"
 							class="mt-6 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
 						>
 							Continue
