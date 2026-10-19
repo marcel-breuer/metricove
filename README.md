@@ -2,7 +2,7 @@
 
 **An open-source, self-hosted home for household metrics, everyday organization, and AI-assisted insights.**
 
-> **Status:** Planning and repository bootstrap. Metricove is **not yet runnable**; Docker images and installation instructions will arrive with the implementation.
+> **Status:** The Laravel API and SvelteKit web app have a runnable development scaffold. Product features and the integrated container setup are still in progress.
 
 Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, and shopping lists. Household administrators enable modules and manage who may use them.
 
@@ -41,10 +41,32 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Backend:** Laravel / PHP, API-first modular monolith
 - **Frontend:** SvelteKit, TypeScript and Tailwind CSS; accessible, responsive UI
 - **Storage:** PostgreSQL, persistent media files; Redis for queues/cache as needed
-- **Runtime:** Multi-stage Docker builds, Server Side Up PHP, Bun and Nginx gateway.
+- **Runtime:** Docker Compose with API, web, gateway, PostgreSQL and Redis services is being implemented.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
 See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. **No container image is published yet.**
+
+## Development
+
+Run the API and web app independently from their directories. The API needs PHP 8.3+ and Composer; the web app needs Bun 1.4+.
+
+```sh
+cd apps/api
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+In another terminal:
+
+```sh
+cd apps/web
+bun install --frozen-lockfile
+bun run dev --host 0.0.0.0
+```
+
+The API health checks are `/up` and `/api/health`; the web health check is `/health`. Run `composer test` in `apps/api`, then `bun run check` and `bun run --bun build` in `apps/web` to validate the scaffold. Data-backed API features require reachable PostgreSQL and Redis services configured through environment variables.
 
 ## Contributing
 
