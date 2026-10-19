@@ -126,5 +126,13 @@ Recurring entries store a category, amount, currency, cadence (`weekly`, `monthl
 
 The REST surface is `GET/POST /api/finance/categories`, `PATCH/DELETE /api/finance/categories/{category}`, `GET/POST /api/finance/transactions`, `PATCH/DELETE /api/finance/transactions/{transaction}`, `GET/POST /api/finance/recurring`, `PATCH/DELETE /api/finance/recurring/{entry}`, `POST /api/finance/recurring/{entry}/record`, `GET/POST /api/finance/budgets`, `PATCH/DELETE /api/finance/budgets/{budget}`, and `GET /api/finance/overview?month=YYYY-MM`. Transaction lists can filter by month and return at most 200 visible records. Optional Finance routes check module enablement, and typed service operations enforce exact capabilities, ownership and resource visibility.
 
+## Recipes module contract
+
+Recipes is an independently enabled module with no dependency on MealPlanning, Pantry or Shopping. It stores recipes with a title, optional free-text category, servings, optional preparation time, instructions, and an ordered list of ingredients. Ingredient quantities are positive exact decimal strings stored as `DECIMAL(14,4)` with an explicit member-supplied unit and optional note. Units are labels; the module does not silently convert them. Recipe photos are optional, limited to JPEG/PNG/WebP up to 5 MB, stored on the private local disk, and served only through an authenticated, resource-authorized route.
+
+Recipes are private by default. Members with exact Recipes `create` can create private recipes and members with `edit` can change their own or explicitly shared private recipes. Only an active household administrator with `manage` can create or edit household recipes. Admin status alone does not reveal a private recipe. A resource-level permission must match the operation. Favorites are private to the signed-in member and require Recipes `view`; they do not grant access to recipe data.
+
+The REST surface is `GET/POST /api/recipes`, `GET/PATCH/DELETE /api/recipes/{recipe}`, `PUT/DELETE /api/recipes/{recipe}/favorite` and `GET /api/recipes/{recipe}/photo`. Lists return up to 200 visible recipes and include ingredients, visibility, per-member favorite state and whether the current member may edit the recipe. Disabling Recipes blocks all API access while preserving recipes, ingredients, favorites and private photo files for later re-enablement. Recipes does not read or write meal plans, pantry stock or shopping lists.
+
 ## Cross-module rule
 A shared integration must not make an optional module mandatory. Shopping works when Recipes, Pantry and MealPlanning are disabled. MealPlanning supports free-text dishes. Disablement removes access to integrations without deleting data, and re-enabling restores authorized use.
