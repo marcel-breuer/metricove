@@ -2,7 +2,7 @@
 
 **An open-source, self-hosted home for household metrics, everyday organization, and AI-assisted insights.**
 
-> **Status:** The Laravel API and SvelteKit web app have a runnable development scaffold. Product features and the integrated container setup are still in progress.
+> **Status:** Laravel API, SvelteKit web app and the Docker Compose runtime are implemented. First-run household setup and product modules are still in progress.
 
 Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, and shopping lists. Household administrators enable modules and manage who may use them.
 
@@ -41,10 +41,27 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Backend:** Laravel / PHP, API-first modular monolith
 - **Frontend:** SvelteKit, TypeScript and Tailwind CSS; accessible, responsive UI
 - **Storage:** PostgreSQL, persistent media files; Redis for queues/cache as needed
-- **Runtime:** Docker Compose with API, web, gateway, PostgreSQL and Redis services is being implemented.
+- **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, queue worker and scheduler. Only the gateway publishes a host port.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
-See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. **No container image is published yet.**
+See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Container images will be published with GitHub releases.
+
+## Docker Compose
+
+Docker Engine and the Docker Compose plugin are required. Prepare a private `.env` file with fresh application and database secrets, then build and start the stack:
+
+```sh
+./scripts/prepare-compose-env.sh
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+```
+
+The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Open the web app at `http://localhost:8080`; the API health endpoint is `/api/health` and the web health endpoint is `/health`. The first household and administrator setup is delivered in a follow-up issue.
+
+PostgreSQL data, Redis queue data and Laravel application files use named Docker volumes. `docker compose down` preserves them; `docker compose down --volumes` deletes them. Back up the PostgreSQL and application-storage volumes before upgrades or destructive maintenance.
+
+GitHub Actions publishes the API, web and gateway images to GHCR for `linux/amd64` and `linux/arm64` when a GitHub release is published. The image tag is the release version without its leading `v` (for example, `1.2.3`). New GHCR packages default to private; make each package public in its GitHub package settings if installations should pull without registry credentials. For a release deployment, set `APP_IMAGE_TAG` in `.env` to the release version, then run `docker compose pull` and `docker compose up -d`. A local Compose build targets the current host architecture.
 
 ## Development
 

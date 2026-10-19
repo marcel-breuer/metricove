@@ -1,0 +1,48 @@
+FROM serversideup/php:8.4-cli-bookworm AS vendor
+
+WORKDIR /var/www/html
+
+COPY apps/api/composer.json apps/api/composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist
+
+FROM serversideup/php:8.4-fpm-bookworm AS runtime
+
+LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricove"
+
+USER root
+RUN install-php-extensions pdo_pgsql redis
+
+WORKDIR /var/www/html
+
+COPY --chown=www-data:www-data apps/api/app ./app
+COPY --chown=www-data:www-data apps/api/bootstrap ./bootstrap
+COPY --chown=www-data:www-data apps/api/config ./config
+COPY --chown=www-data:www-data apps/api/database ./database
+COPY --chown=www-data:www-data apps/api/public ./public
+COPY --chown=www-data:www-data apps/api/routes ./routes
+COPY --chown=www-data:www-data apps/api/storage ./storage
+COPY --chown=www-data:www-data apps/api/artisan ./artisan
+COPY --chown=www-data:www-data apps/api/composer.json ./composer.json
+COPY --from=vendor --chown=www-data:www-data /var/www/html/vendor ./vendor
+
+RUN mkdir -p \
+        bootstrap/cache \
+        storage/app/private \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+    && chown -R www-data:www-data bootstrap/cache storage \
+    && chmod -R u+rwX,go-rwx bootstrap/cache storage
+
+USER www-data
+RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction --no-scripts \
+    && php artisan package:discover --ansi --no-interaction
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php-fpm-healthcheck"]
