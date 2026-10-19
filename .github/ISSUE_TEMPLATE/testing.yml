@@ -1,0 +1,16 @@
+name: Testing or CI change
+description: Track automated tests, CI quality gates and release verification.
+title: "Test: "
+body:
+  - type: textarea
+    id: requirement
+    attributes:
+      label: Behavior or security invariant to verify
+    validations:
+      required: true
+  - type: textarea
+    id: cases
+    attributes:
+      label: Required test scenarios and expected results
+    validations:
+      required: true

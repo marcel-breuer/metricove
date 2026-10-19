@@ -1,0 +1,20 @@
+name: Feature request
+description: Propose an improvement with acceptance criteria.
+title: "Feature: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem and proposed outcome
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Related modules, permissions and risks

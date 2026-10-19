@@ -54,6 +54,6 @@ We welcome bug reports, feature proposals, documentation, tests and code contrib
 
 ## Project status and licensing
 
-The repository is public and intended to be licensed under an OSI-approved open-source license. **The exact license must be selected and the full `LICENSE` file committed before accepting code contributions or releasing software.** Public visibility alone does not grant an open-source license.
+Metricove is published under the [MIT License](LICENSE). Community contributions are welcome under the policies in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Release conventions will use SemVer, changelogs, CI checks and reproducible multi-architecture images. Track decisions and work in GitHub Issues.
