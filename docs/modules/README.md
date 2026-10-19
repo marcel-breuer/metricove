@@ -32,6 +32,20 @@ Every access change and removal is recorded in `household_audit_events` in the s
 
 If an operator must recover an existing account after out-of-band damage, run `php artisan metricove:recover-admin <user-id>` in the API container. This command can reactivate and promote only an existing member and records the recovery in the same audit table. It does not create accounts or expose an HTTP recovery endpoint.
 
+## Core module registry and activation
+
+The versioned registry in `apps/api/config/modules.php` defines stable keys, labels, descriptions, versions, required module keys and whether a module is always enabled. `core` is always available and is not stored as an optional state. Optional modules default to disabled until an administrator enables them. The registry rejects missing dependencies, self-dependencies and dependency cycles during application boot. Current optional modules require only Core; optional integrations remain independent, including Recipes, MealPlanning, Pantry and Shopping.
+
+The Core module settings API is:
+
+- `GET /api/admin/modules` returns the registered catalog, enabled state, unmet requirements and enabled dependents to active administrators.
+- `PATCH /api/admin/modules/{key}` accepts only `enabled: boolean`. Enabling with an unmet requirement returns `422` and its module keys. Disabling a required module while a dependent is enabled returns `409` and the dependent keys. Disabling Core returns `409`.
+- `GET /api/modules` returns the enabled module keys to an active household member so the UI can build its navigation from household state.
+
+Changes lock the singleton `household_settings` row, recheck the administrator from the database and write only the requested `module_states` row in the same transaction. Disable and re-enable do not delete or migrate module-owned records. An absent state row means disabled; Core is always returned as enabled.
+
+Every optional API route must use `module.enabled:{key}`. Queue jobs must include `App\Jobs\Middleware\EnsureModuleEnabled` in their middleware so the state is checked when the job runs, not only when it is queued. Typed AI/MCP tools must call `ModuleStateService::assertEnabled($key)` before reading or writing module data. SvelteKit module navigation must be derived from `GET /api/modules`; the server-side route, job and tool guards remain authoritative. No optional module routes, jobs or AI/MCP tools are registered yet; those feature issues must apply these gates when adding them.
+
 ## Registry and permissions
 Every module defines:
 - Stable `module_key`, label and version.

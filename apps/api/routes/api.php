@@ -3,10 +3,12 @@
 use App\Http\Controllers\Api\AdminInvitationController;
 use App\Http\Controllers\Api\AdminMemberAuditController;
 use App\Http\Controllers\Api\AdminMemberController;
+use App\Http\Controllers\Api\AdminModuleController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
+use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -37,8 +39,14 @@ Route::middleware('web')->group(function (): void {
         Route::post('/auth/logout', [AuthenticationController::class, 'logout'])->name('auth.logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/modules', ModuleDiscoveryController::class)->name('modules.enabled');
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
+            Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
+            Route::patch('/modules/{moduleKey}', [AdminModuleController::class, 'update'])
+                ->middleware('throttle:module-manage')
+                ->where('moduleKey', '[a-z][a-z0-9_]{0,63}')
+                ->name('modules.update');
             Route::get('/members', [AdminMemberController::class, 'index'])->name('members.index');
             Route::patch('/members/{member}', [AdminMemberController::class, 'update'])
                 ->middleware('throttle:member-manage')

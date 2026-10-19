@@ -128,6 +128,9 @@
 				<a href="/admin/invitations" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
 					Manage invitations
 				</a>
+				<a href="/admin/modules" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
+					Manage modules
+				</a>
 			{/if}
 		</header>
 
