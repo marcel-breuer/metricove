@@ -1,4 +1,4 @@
-# Adapted from WebGuard; Metricove checks for routine updates once a week.
+# Weekly dependency checks for Metricove.
 # Application manifests will be added in upcoming implementation PRs.
 version: 2
 
