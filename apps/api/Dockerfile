@@ -46,3 +46,20 @@ RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction --
     && php artisan package:discover --ansi --no-interaction
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php-fpm-healthcheck"]
+
+FROM serversideup/php:8.4-cli-bookworm AS test
+
+WORKDIR /var/www/html
+
+COPY --chown=www-data:www-data apps/api/ ./
+
+USER www-data
+RUN touch .env \
+    && composer install \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --no-scripts \
+    && composer dump-autoload --no-interaction --no-scripts \
+    && php artisan package:discover --ansi --no-interaction \
+    && composer test
