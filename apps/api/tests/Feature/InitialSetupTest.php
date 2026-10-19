@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\HouseholdSettings;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -20,6 +22,17 @@ class InitialSetupTest extends TestCase
 
         $this->assertDatabaseCount('household_settings', 1);
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_database_rejects_a_second_household_settings_row(): void
+    {
+        $this->expectException(QueryException::class);
+
+        DB::table('household_settings')->insert([
+            'id' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     public function test_first_registration_creates_the_active_admin_and_initializes_a_session(): void
