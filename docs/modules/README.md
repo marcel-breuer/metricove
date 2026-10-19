@@ -40,7 +40,7 @@ The Core module settings API is:
 
 - `GET /api/admin/modules` returns the registered catalog, enabled state, unmet requirements and enabled dependents to active administrators.
 - `PATCH /api/admin/modules/{key}` accepts only `enabled: boolean`. Enabling with an unmet requirement returns `422` and its module keys. Disabling a required module while a dependent is enabled returns `409` and the dependent keys. Disabling Core returns `409`.
-- `GET /api/modules` returns the enabled module keys to an active household member so the UI can build its navigation from household state.
+- `GET /api/modules` returns household `enabled_modules` and an `available_modules` navigation catalog for the signed-in member. The latter contains only enabled optional modules with at least one exact `view`, `create`, `edit` or `manage` grant, and includes that member's capability flags. Core administration stays separate from optional modules.
 
 Changes lock the singleton `household_settings` row, recheck the administrator from the database and write only the requested `module_states` row in the same transaction. Disable and re-enable do not delete or migrate module-owned records. An absent state row means disabled; Core is always returned as enabled.
 
@@ -54,7 +54,9 @@ Administrator status grants access to member and module administration only. It 
 
 Any module model used in an authorization decision must implement `App\Contracts\ModuleResource` and declare its module key, nullable owner user ID and private/shared state. A private record must have an owner. The owner must still hold the required module capability. Another member, including an administrator, must hold both that module capability and an explicit `resource_user_permissions` grant for the exact record and operation. Only the active record owner with module-level `manage` permission may issue or revoke those grants. Models with persisted resource grants must use `App\Models\Concerns\HasResourcePermissions` so deleting a record removes its grants. Shared records still require the member's exact module capability.
 
-The UI presents capability checkboxes per member and module. These controls do not authorize access themselves; REST, jobs and AI/MCP must call `ModuleAccessService` at the operation boundary. A resource that does not declare its ownership policy fails closed when passed to that service.
+The UI presents capability checkboxes per member and module. The authenticated app shell uses `available_modules` for responsive navigation and uses the same API state for module links; hidden navigation does not authorize operations. REST, jobs and AI/MCP must call `ModuleAccessService` at the operation boundary. A resource that does not declare its ownership policy fails closed when passed to that service.
+
+The current SvelteKit shell provides the responsive household dashboard, member and module administration navigation, account links, a keyboard-accessible mobile drawer and Quick Add empty state. Module landing screens are navigation placeholders until their domain issues add records and entry forms; Quick Add does not create or imply saved data on its own.
 
 ## Registry and permissions
 Every module defines:

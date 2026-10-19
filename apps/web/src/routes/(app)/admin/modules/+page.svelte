@@ -2,6 +2,10 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+	import { getContext } from 'svelte';
+	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+
+	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 
 	type ModuleEntry = {
 		key: string;
@@ -28,6 +32,12 @@
 	let busyKey = '';
 	let message = '';
 	let error = '';
+
+	function requiredModuleLabels(module: ModuleEntry): string[] {
+		return module.dependencies
+			.filter((key) => !modules.find((entry) => entry.key === key)?.always_enabled)
+			.map((key) => modules.find((entry) => entry.key === key)?.label ?? key);
+	}
 
 	onMount(() => {
 		void loadModules();
@@ -88,6 +98,7 @@
 
 			message = result.message ?? 'Module settings updated.';
 			await loadModules();
+			await shell.refresh();
 		} catch {
 			error = 'Module state could not be changed. Check your connection and try again.';
 		} finally {
@@ -101,24 +112,12 @@
 	<meta name="description" content="Enable optional Metricove modules for this household." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-5 py-8 text-slate-100 sm:px-10 sm:py-12">
+<section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<header class="flex flex-wrap items-center justify-between gap-4">
-			<a href="/profile" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
-			</a>
-			<nav aria-label="Account administration" class="flex flex-wrap gap-2">
-				<a href="/admin/members" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Members</a>
-				<a href="/admin/invitations" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Invitations</a>
-				<a href="/profile" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Your profile</a>
-			</nav>
-		</header>
-
-		<section class="mt-12 max-w-2xl">
-			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household settings</p>
-			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Choose your modules.</h1>
-			<p class="mt-5 text-base leading-7 text-slate-300">Optional modules are enabled for the whole household. You can turn them off later without deleting their saved data.</p>
+		<section class="max-w-3xl">
+			<p class="text-sm font-medium tracking-wide text-cyan-200">Household settings</p>
+			<h1 class="mt-2 text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">Manage modules.</h1>
+			<p class="mt-3 text-base leading-7 text-slate-300">Enable modules for the whole household. Member capabilities are granted separately, and disabling a module preserves its data.</p>
 		</section>
 
 		{#if message}
@@ -142,39 +141,40 @@
 			{:else if modules.length === 0}
 				<p class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">No modules are registered.</p>
 			{:else}
-				<ul class="mt-5 grid gap-4 md:grid-cols-2">
+					<ul class="mt-5 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/30 px-4 sm:px-6">
 					{#each modules as module (module.key)}
-						<li class="flex min-h-52 flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl shadow-black/10 sm:p-6">
-							<div>
-							<div class="flex flex-wrap items-center justify-between gap-3">
-								<h3 class="text-lg font-semibold">{module.label}</h3>
-								<span class="rounded-full border px-2.5 py-1 text-xs font-medium {module.enabled ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-slate-700 bg-slate-950/60 text-slate-300'}">{module.always_enabled ? 'Always on' : module.enabled ? 'Enabled' : 'Disabled'}</span>
-							</div>
-							<p class="mt-3 text-sm leading-6 text-slate-300">{module.description}</p>
-							{#if module.dependencies.length > 0}
-								<p class="mt-3 text-xs text-slate-500">Requires: {module.dependencies.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
+							<li class="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-8">
+								<div class="min-w-0">
+									<div class="flex flex-wrap items-center gap-3">
+										<h3 class="text-base font-semibold text-slate-100">{module.label}</h3>
+									</div>
+									<p class="mt-1.5 text-sm leading-6 text-slate-400">{module.description}</p>
+								{#if requiredModuleLabels(module).length > 0}
+									<p class="mt-2 text-xs text-slate-500">Requires: {requiredModuleLabels(module).join(', ')}</p>
 							{/if}
 							{#if module.missing_dependencies.length > 0}
-								<p class="mt-3 text-xs text-amber-200">Enable first: {module.missing_dependencies.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
+									<p class="mt-2 text-xs text-amber-200">Enable first: {module.missing_dependencies.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
 							{/if}
 							{#if module.active_dependents.length > 0}
-								<p class="mt-3 text-xs text-amber-200">Used by enabled modules: {module.active_dependents.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
+									<p class="mt-2 text-xs text-amber-200">Used by enabled modules: {module.active_dependents.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
 							{/if}
-							</div>
+								</div>
 
-							<div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-800 pt-4">
-								<p class="text-xs text-slate-500">Version {module.version}</p>
+								<div class="flex items-center justify-between gap-3 sm:justify-end">
 								{#if module.always_enabled}
-									<button type="button" disabled aria-label="Core is always enabled" class="cursor-not-allowed rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-500">Always on</button>
+										<span class="text-sm font-medium text-cyan-200">Always on</span>
 								{:else}
 									<button
 										type="button"
+											role="switch"
+											aria-checked={module.enabled}
+											aria-label={`${module.label} module`}
 										disabled={busyKey !== '' || (module.enabled ? !module.can_disable : !module.can_enable)}
-										aria-label={`${module.enabled ? 'Disable' : 'Enable'} ${module.label}`}
 										onclick={() => void setEnabled(module)}
-										class="rounded-lg px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 {module.enabled ? 'border border-amber-300/30 text-amber-200 hover:border-amber-200' : 'bg-cyan-300 text-slate-950 hover:bg-cyan-200'}"
+											class="group inline-flex min-h-11 items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium text-slate-300 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
 									>
-										{busyKey === module.key ? 'Saving…' : module.enabled ? 'Disable' : 'Enable'}
+											<span class="relative inline-flex h-7 w-12 items-center rounded-full border border-slate-700 bg-slate-800 transition {module.enabled ? 'border-cyan-200 bg-cyan-400' : ''}" aria-hidden="true"><span class="ml-1 size-5 rounded-full bg-slate-300 shadow-sm transition {module.enabled ? 'translate-x-5 bg-slate-950' : ''}"></span></span>
+											<span class="min-w-16 text-left">{busyKey === module.key ? 'Saving…' : module.enabled ? 'On' : 'Off'}</span>
 									</button>
 								{/if}
 							</div>
@@ -184,6 +184,5 @@
 			{/if}
 		</section>
 
-		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/profile" class="hover:text-slate-300">Return to your profile</a></footer>
 	</div>
-</main>
+</section>

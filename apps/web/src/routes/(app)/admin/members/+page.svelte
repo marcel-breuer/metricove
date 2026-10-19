@@ -192,20 +192,8 @@
 	<meta name="description" content="Manage member access for your Metricove household." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-5 py-8 text-slate-100 sm:px-10 sm:py-12">
+<section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<header class="flex flex-wrap items-center justify-between gap-4">
-			<a href="/profile" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
-			</a>
-			<nav aria-label="Account administration" class="flex flex-wrap gap-2">
-				<a href="/admin/invitations" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Invitations</a>
-				<a href="/admin/modules" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Modules</a>
-				<a href="/profile" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Your profile</a>
-			</nav>
-		</header>
-
 		<section class="mt-12 max-w-2xl">
 			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household access</p>
 			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Manage members.</h1>
@@ -282,4 +270,4 @@
 
 		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/profile" class="hover:text-slate-300">Return to your profile</a></footer>
 	</div>
-</main>
+</section>

@@ -3,6 +3,10 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+	import { getContext } from 'svelte';
+	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+
+	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 
 	type Capability = 'view' | 'create' | 'edit' | 'manage';
 	type MemberModule = {
@@ -95,6 +99,7 @@
 
 			modules = modules.map((entry) => entry.key === module.key ? result.module! : entry);
 			message = result.message ?? 'Module rights updated.';
+			await shell.refresh();
 		} catch {
 			input.checked = module.capabilities[capability];
 			error = 'Module rights could not be updated. Check your connection and try again.';
@@ -109,20 +114,8 @@
 	<meta name="description" content="Manage module capabilities for a household member." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-5 py-8 text-slate-100 sm:px-10 sm:py-12">
+<section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<header class="flex flex-wrap items-center justify-between gap-4">
-			<a href="/profile" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
-			</a>
-			<nav aria-label="Account administration" class="flex flex-wrap gap-2">
-				<a href="/admin/members" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Members</a>
-				<a href="/admin/modules" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Modules</a>
-				<a href="/profile" class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Your profile</a>
-			</nav>
-		</header>
-
 		<section class="mt-12 max-w-2xl">
 			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Member access</p>
 			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Module rights.</h1>
@@ -190,4 +183,4 @@
 
 		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/admin/members" class="hover:text-slate-300">Return to household members</a></footer>
 	</div>
-</main>
+</section>

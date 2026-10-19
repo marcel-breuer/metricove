@@ -6,6 +6,7 @@ use App\Exceptions\ModuleDisabled;
 use App\Http\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForRequest;
 use App\Jobs\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForJob;
 use App\Models\HouseholdSettings;
+use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\ModuleManagementService;
 use App\Services\Modules\ModuleStateService;
@@ -83,6 +84,57 @@ class ModuleActivationTest extends TestCase
         $this->actingAs($member, 'web')->getJson('/api/admin/modules')->assertForbidden();
         $this->patchJson('/api/admin/modules/tracking', ['enabled' => true])->assertForbidden();
         $this->assertDatabaseCount('module_states', 0);
+    }
+
+    public function test_module_navigation_discovery_only_returns_enabled_modules_with_member_capabilities(): void
+    {
+        $admin = $this->admin();
+        $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $states = app(ModuleManagementService::class);
+        $states->setEnabled($admin, 'tracking', true);
+        $states->setEnabled($admin, 'utilities', true);
+
+        ModuleUserPermission::query()->create([
+            'user_id' => $member->id,
+            'module_key' => 'tracking',
+            'can_view' => false,
+            'can_create' => true,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+        ModuleUserPermission::query()->create([
+            'user_id' => $member->id,
+            'module_key' => 'utilities',
+            'can_view' => true,
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+        ModuleUserPermission::query()->create([
+            'user_id' => $member->id,
+            'module_key' => 'finance',
+            'can_view' => true,
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+
+        $this->actingAs($member, 'web')
+            ->getJson('/api/modules')
+            ->assertOk()
+            ->assertJsonPath('enabled_modules', ['core', 'tracking', 'utilities'])
+            ->assertJsonPath('available_modules.0.key', 'tracking')
+            ->assertJsonPath('available_modules.0.capabilities.create', true)
+            ->assertJsonPath('available_modules.1.key', 'utilities')
+            ->assertJsonMissingPath('available_modules.2');
+
+        $states->setEnabled($admin, 'utilities', false);
+
+        $this->getJson('/api/modules')
+            ->assertOk()
+            ->assertJsonPath('enabled_modules', ['core', 'tracking'])
+            ->assertJsonPath('available_modules.0.key', 'tracking')
+            ->assertJsonMissingPath('available_modules.1');
     }
 
     public function test_dependency_manifest_blocks_enable_and_dependency_disable_with_explanation(): void

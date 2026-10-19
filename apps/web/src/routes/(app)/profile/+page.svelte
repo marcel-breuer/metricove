@@ -84,26 +84,6 @@
 		}
 	}
 
-	async function signOut(): Promise<void> {
-		error = '';
-		const token = csrfToken();
-		if (!token) {
-			error = 'Reload this page and try again.';
-			return;
-		}
-
-		try {
-			const response = await fetch('/api/auth/logout', {
-				method: 'POST',
-				credentials: 'same-origin',
-				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }
-			});
-			if (!response.ok) throw new Error('Sign-out failed.');
-			await goto('/login');
-		} catch {
-			error = 'Sign-out is unavailable. Check your connection and try again.';
-		}
-	}
 </script>
 
 <svelte:head>
@@ -111,29 +91,8 @@
 	<meta name="description" content="Update your Metricove household profile." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 sm:px-10 sm:py-16">
+<section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col">
-		<header class="flex flex-wrap items-center justify-between gap-4">
-			<a href="/" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
-			</a>
-			<button type="button" onclick={signOut} class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-				Sign out
-			</button>
-			{#if user?.is_admin}
-				<a href="/admin/members" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-					Manage members
-				</a>
-				<a href="/admin/invitations" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-					Manage invitations
-				</a>
-				<a href="/admin/modules" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-					Manage modules
-				</a>
-			{/if}
-		</header>
-
 		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
 			<div class="max-w-xl">
 				<p class="mb-5 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Account settings</p>
@@ -179,4 +138,4 @@
 			<a href="/" class="hover:text-slate-300">Return home</a>
 		</footer>
 	</div>
-</main>
+</section>
