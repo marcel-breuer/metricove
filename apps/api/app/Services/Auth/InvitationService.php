@@ -7,6 +7,7 @@ use App\Mail\InvitationMail;
 use App\Models\HouseholdSettings;
 use App\Models\Invitation;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -25,18 +26,26 @@ class InvitationService
     }
 
     /** @return Collection<int, Invitation> */
-    public function pending(): Collection
+    public function pending(User $viewer): Collection
     {
-        return Invitation::query()
-            ->whereNull('accepted_at')
-            ->whereNull('revoked_at')
-            ->orderByDesc('updated_at')
-            ->get();
+        return DB::transaction(function () use ($viewer): Collection {
+            HouseholdSettings::query()->whereKey(1)->lockForUpdate()->firstOrFail();
+            $this->ensureActiveAdministrator($viewer->id);
+
+            return Invitation::query()
+                ->whereNull('accepted_at')
+                ->whereNull('revoked_at')
+                ->orderByDesc('updated_at')
+                ->get();
+        }, 5);
     }
 
-    public function revoke(int $invitationId): bool
+    public function revoke(int $invitationId, User $revoker): bool
     {
-        return DB::transaction(function () use ($invitationId): bool {
+        return DB::transaction(function () use ($invitationId, $revoker): bool {
+            HouseholdSettings::query()->whereKey(1)->lockForUpdate()->firstOrFail();
+            $this->ensureActiveAdministrator($revoker->id);
+
             $invitation = Invitation::query()
                 ->whereKey($invitationId)
                 ->whereNull('accepted_at')
@@ -98,6 +107,7 @@ class InvitationService
         [$invitation, $token] = DB::transaction(function () use ($email, $inviter, $invitationId): array {
             // All account creation paths and invitation issuance share this lock.
             HouseholdSettings::query()->whereKey(1)->lockForUpdate()->firstOrFail();
+            $this->ensureActiveAdministrator($inviter->id);
 
             if ($invitationId !== null) {
                 $invitation = Invitation::query()
@@ -147,5 +157,14 @@ class InvitationService
         ));
 
         return $invitation->refresh();
+    }
+
+    private function ensureActiveAdministrator(int $userId): void
+    {
+        $administrator = User::query()->whereKey($userId)->lockForUpdate()->first();
+
+        if (! $administrator instanceof User || ! $administrator->is_active || ! $administrator->is_admin) {
+            throw new AuthorizationException('Only an active household administrator can manage invitations.');
+        }
     }
 }

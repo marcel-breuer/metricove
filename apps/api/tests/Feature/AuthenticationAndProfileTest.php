@@ -190,12 +190,14 @@ class AuthenticationAndProfileTest extends TestCase
         $current = User::factory()->create(['email' => 'current@example.test']);
         User::factory()->create(['email' => 'taken@example.test']);
 
-        $this->actingAs($current, 'web')
+        $this->assertTrue($current->fresh()->is_active);
+
+        $response = $this->actingAs($current, 'web')
             ->patchJson('/api/profile', [
                 'name' => $current->name,
                 'email' => '  TAKEN@Example.Test ',
-            ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['email']);
+            ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['email']);
     }
 }

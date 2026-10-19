@@ -23,6 +23,15 @@ Only an active household administrator can manage invitations. `POST /api/admin/
 
 Invitation tokens are random and stored as SHA-256 digests. They expire after seven days by default (`AUTH_INVITATION_EXPIRE` can override the lifetime in minutes) and are delivered through the installation's configured SMTP mailer. The link carries the token in a URL fragment; the web page removes it from the address bar before posting it to `POST /api/invitations/claim`. Claiming creates an active non-admin account whose normalized email comes only from the invitation record, marks that address verified, accepts the invitation atomically, regenerates the session and signs in the recipient. Invalid, expired, revoked, replayed and already-registered claims receive the same generic response. Delivery failures do not log recipient addresses or tokens; the pending invitation remains available for resend.
 
+## Core member administration
+`GET /api/admin/members` lists active and suspended members for active administrators. `PATCH /api/admin/members/{id}` accepts only `is_admin` and/or `is_active`; `DELETE /api/admin/members/{id}` removes an account. An administrator may promote, demote, activate, suspend or remove any member, including themselves when another active administrator remains. The API rejects changes that would demote, suspend or remove the final active administrator with `409 Conflict`.
+
+All authenticated API routes require an active member. Suspending an account also invalidates its web session on the next request; it cannot keep using profile or future protected endpoints with an existing cookie.
+
+Every access change and removal is recorded in `household_audit_events` in the same transaction as the member change; no API endpoint edits or deletes audit events. `GET /api/admin/member-audit` returns the latest 100 events. Audit details contain only role/status flags and numeric member IDs, never email addresses, passwords or other profile fields. Member mutations acquire the singleton `household_settings` row lock and recount active administrators inside that transaction; every role/status/removal path must use this service so competing requests cannot remove the final admin.
+
+If an operator must recover an existing account after out-of-band damage, run `php artisan metricove:recover-admin <user-id>` in the API container. This command can reactivate and promote only an existing member and records the recovery in the same audit table. It does not create accounts or expose an HTTP recovery endpoint.
+
 ## Registry and permissions
 Every module defines:
 - Stable `module_key`, label and version.

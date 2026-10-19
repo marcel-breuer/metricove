@@ -79,7 +79,7 @@ class InvitationTest extends TestCase
 
         $this->actingAs($inactiveAdmin, 'web')
             ->getJson('/api/admin/invitations')
-            ->assertForbidden();
+            ->assertUnauthorized();
 
         $this->assertDatabaseCount('invitations', 0);
     }
