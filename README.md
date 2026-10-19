@@ -2,7 +2,7 @@
 
 **An open-source, self-hosted home for household metrics, everyday organization, and AI-assisted insights.**
 
-> **Status:** Planning and repository bootstrap. Metricove is **not yet runnable**; Docker images and installation instructions will arrive with the implementation. Do not treat the deployment domain as an active release.
+> **Status:** Planning and repository bootstrap. Metricove is **not yet runnable**; Docker images and installation instructions will arrive with the implementation.
 
 Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, and shopping lists. Household administrators enable modules and manage who may use them.
 
@@ -41,8 +41,8 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Backend:** Laravel / PHP, API-first modular monolith
 - **Frontend:** SvelteKit, TypeScript and Tailwind CSS; accessible, responsive UI
 - **Storage:** PostgreSQL, persistent media files; Redis for queues/cache as needed
-- **Runtime:** Multi-stage Docker builds, Server Side Up PHP, Bun and Nginx gateway, following relevant patterns from [WebGuard](https://github.com/marcel-breuer/webguard)
-- **Deployment:** Docker Compose and Coolify. Maintainer's planned address: `https://home.marcel-breuer.dev`
+- **Runtime:** Multi-stage Docker builds, Server Side Up PHP, Bun and Nginx gateway.
+- **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
 See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. **No container image is published yet.**
 
