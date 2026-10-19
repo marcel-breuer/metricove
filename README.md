@@ -2,7 +2,7 @@
 
 **An open-source, self-hosted home for household metrics, everyday organization, and AI-assisted insights.**
 
-> **Status:** Laravel API, SvelteKit web app and the Docker Compose runtime are implemented. First-run household setup and product modules are still in progress.
+> **Status:** Laravel API, SvelteKit web app, Docker Compose runtime and first-run household setup are implemented. Sign-in, invitations and product modules are still in progress.
 
 Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, and shopping lists. Household administrators enable modules and manage who may use them.
 
@@ -57,7 +57,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Open the web app at `http://localhost:8080`; the API health endpoint is `/api/health` and the web health endpoint is `/health`. The first household and administrator setup is delivered in a follow-up issue.
+The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Open the web app at `http://localhost:8080`; the first-run administrator form is available at `/setup`. The API health endpoint is `/api/health` and the web health endpoint is `/health`.
 
 PostgreSQL data, Redis queue data and Laravel application files use named Docker volumes. `docker compose down` preserves them; `docker compose down --volumes` deletes them. Back up the PostgreSQL and application-storage volumes before upgrades or destructive maintenance.
 

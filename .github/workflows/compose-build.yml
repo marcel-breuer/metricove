@@ -27,3 +27,6 @@ jobs:
 
       - name: Build application images
         run: docker compose --env-file .env.example build --parallel
+
+      - name: Build API regression-test target
+        run: docker buildx build --platform linux/amd64 --target test --file apps/api/Dockerfile --load --tag metricove/api:test .

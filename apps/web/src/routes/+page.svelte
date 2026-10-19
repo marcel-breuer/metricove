@@ -1,3 +1,25 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		let cancelled = false;
+
+		void fetch('/api/setup/status', { headers: { Accept: 'application/json' } })
+			.then((response) => (response.ok ? response.json() : null))
+			.then((status: { setup_required?: boolean } | null) => {
+				if (!cancelled && status?.setup_required) {
+					void goto('/setup');
+				}
+			})
+			.catch(() => {});
+
+		return () => {
+			cancelled = true;
+		};
+	});
+</script>
+
 <svelte:head>
 	<title>Metricove</title>
 	<meta
@@ -29,6 +51,12 @@
 				class="mt-10 inline-flex items-center rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 hover:text-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
 			>
 				Check service health
+			</a>
+			<a
+				href="/setup"
+				class="ml-3 mt-10 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+			>
+				Set up this household
 			</a>
 		</section>
 
