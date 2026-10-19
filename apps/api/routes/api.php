@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminInvitationController;
 use App\Http\Controllers\Api\AdminMemberAuditController;
 use App\Http\Controllers\Api\AdminMemberController;
+use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\HealthController;
@@ -48,6 +49,14 @@ Route::middleware('web')->group(function (): void {
                 ->where('moduleKey', '[a-z][a-z0-9_]{0,63}')
                 ->name('modules.update');
             Route::get('/members', [AdminMemberController::class, 'index'])->name('members.index');
+            Route::get('/members/{member}/module-permissions', [AdminMemberModulePermissionController::class, 'index'])
+                ->whereNumber('member')
+                ->name('members.module-permissions.index');
+            Route::put('/members/{member}/module-permissions/{moduleKey}', [AdminMemberModulePermissionController::class, 'update'])
+                ->middleware('throttle:member-manage')
+                ->whereNumber('member')
+                ->where('moduleKey', '[a-z][a-z0-9_]{0,63}')
+                ->name('members.module-permissions.update');
             Route::patch('/members/{member}', [AdminMemberController::class, 'update'])
                 ->middleware('throttle:member-manage')
                 ->whereNumber('member')
