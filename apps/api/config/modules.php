@@ -32,7 +32,7 @@ return [
         ],
         'finance' => [
             'label' => 'Finance',
-            'description' => 'Household income, expenses, budgets and recurring costs.',
+            'description' => 'Private and household transactions, categories, budgets and recurring entries.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,
