@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UtilitiesController;
+use App\Http\Controllers\Api\VehiclesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health');
@@ -104,6 +105,47 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:utilities,view')
                 ->whereNumber('reading')
                 ->name('readings.photo');
+        });
+
+        Route::prefix('vehicles')->name('vehicles.')->group(function (): void {
+            Route::get('/', [VehiclesController::class, 'index'])
+                ->middleware('module.access:vehicles,view')
+                ->name('index');
+            Route::post('/', [VehiclesController::class, 'store'])
+                ->middleware('module.enabled:vehicles')
+                ->name('store');
+            Route::get('/{vehicle}', [VehiclesController::class, 'show'])
+                ->middleware('module.access:vehicles,view')
+                ->whereNumber('vehicle')
+                ->name('show');
+            Route::patch('/{vehicle}', [VehiclesController::class, 'update'])
+                ->middleware('module.access:vehicles,manage')
+                ->whereNumber('vehicle')
+                ->name('update');
+            Route::post('/{vehicle}/odometer-readings', [VehiclesController::class, 'storeOdometerReading'])
+                ->middleware('module.access:vehicles,create')
+                ->whereNumber('vehicle')
+                ->name('odometer.store');
+            Route::post('/{vehicle}/maintenance', [VehiclesController::class, 'storeMaintenance'])
+                ->middleware('module.access:vehicles,create')
+                ->whereNumber('vehicle')
+                ->name('maintenance.store');
+            Route::post('/{vehicle}/insurance', [VehiclesController::class, 'storeInsurance'])
+                ->middleware('module.access:vehicles,create')
+                ->whereNumber('vehicle')
+                ->name('insurance.store');
+            Route::post('/{vehicle}/costs', [VehiclesController::class, 'storeCost'])
+                ->middleware('module.access:vehicles,create')
+                ->whereNumber('vehicle')
+                ->name('costs.store');
+            Route::patch('/odometer-readings/{reading}', [VehiclesController::class, 'correctOdometerReading'])
+                ->middleware('module.access:vehicles,edit')
+                ->whereNumber('reading')
+                ->name('odometer.update');
+            Route::get('/odometer-readings/{reading}/revisions', [VehiclesController::class, 'odometerRevisions'])
+                ->middleware('module.access:vehicles,view')
+                ->whereNumber('reading')
+                ->name('odometer.revisions');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {

@@ -25,7 +25,7 @@ return [
         ],
         'vehicles' => [
             'label' => 'Vehicles',
-            'description' => 'Vehicles, mileage, maintenance and running costs.',
+            'description' => 'Private and household vehicles, odometer history, insurance and costs.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,
