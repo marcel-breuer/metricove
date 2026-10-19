@@ -65,6 +65,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('module-manage', function (Request $request): array {
+            $userId = $request->user('web')?->id ?? 'guest';
+
+            return [
+                Limit::perMinute(30)->by('module-manage-user:'.$userId),
+                Limit::perMinute(60)->by('module-manage-ip:'.$request->ip()),
+            ];
+        });
+
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
             return route('password.reset').'#token='.urlencode($token);
         });

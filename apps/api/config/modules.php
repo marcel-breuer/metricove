@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'catalog' => [
+        'core' => [
+            'label' => 'Core',
+            'description' => 'Household setup, authentication, members, settings and module access.',
+            'version' => '1.0.0',
+            'dependencies' => [],
+            'always_enabled' => true,
+        ],
+        'tracking' => [
+            'label' => 'Tracking',
+            'description' => 'Flexible trackers, typed values, units and history.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'utilities' => [
+            'label' => 'Utilities',
+            'description' => 'Energy, water and other household meter readings.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'vehicles' => [
+            'label' => 'Vehicles',
+            'description' => 'Vehicles, mileage, maintenance and running costs.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'finance' => [
+            'label' => 'Finance',
+            'description' => 'Household income, expenses, budgets and recurring costs.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'recipes' => [
+            'label' => 'Recipes',
+            'description' => 'Recipes, ingredients, servings and preparation steps.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'meal_planning' => [
+            'label' => 'MealPlanning',
+            'description' => 'Weekly meals using recipes or free-text dishes.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'pantry' => [
+            'label' => 'Pantry',
+            'description' => 'Household stock, quantities, storage and expiry dates.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'shopping' => [
+            'label' => 'Shopping',
+            'description' => 'Shared shopping lists and item check-off.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'analytics' => [
+            'label' => 'Analytics',
+            'description' => 'Cross-module charts and household summaries.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'import' => [
+            'label' => 'Import',
+            'description' => 'File import, export and data extraction workflows.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+        'ai' => [
+            'label' => 'AI',
+            'description' => 'Permission-bound AI actions and integrations.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
+    ],
+];
