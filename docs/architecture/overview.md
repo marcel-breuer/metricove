@@ -5,7 +5,7 @@
 ## Deployment and tenancy
 A self-hosted installation represents **exactly one household**, with one independent PostgreSQL database and persistent file store. Multiple installations are supported but there is no multi-household tenancy in one deployment. The first sign-up is a one-time, atomic setup and creates an active administrator. Public registration stops after setup.
 
-The backend is a Laravel modular monolith; the frontend is SvelteKit with Tailwind CSS. Docker Compose will run a gateway, API, web, queue worker, scheduler, PostgreSQL and Redis. Only a reverse-proxy gateway should have a public listener. Operators choose domains and credentials in private configuration.
+The backend is a Laravel modular monolith; the frontend is SvelteKit with Tailwind CSS. Docker Compose runs a gateway, API, web, queue worker, scheduler, PostgreSQL and Redis. Only the Nginx gateway publishes a host port; database, Redis, PHP-FPM and Bun stay on private Compose networks. Operators choose domains and credentials in private configuration.
 
 ## Administration and invitations
 The household may have multiple active admins but **never fewer than one**. All role changes and user deactivations/removals must share a database transaction/lock so simultaneous requests cannot remove the last admin. Admin invitations require **only the email address**, normalized and unique, with a single-use expiring token bound to a verified recipient email. SMTP settings are per installation. The invited user selects their password and display name.

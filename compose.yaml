@@ -1,0 +1,258 @@
+name: metricove
+
+x-laravel-environment: &laravel-environment
+  APP_NAME: Metricove
+  APP_ENV: ${APP_ENV:-production}
+  APP_DEBUG: ${APP_DEBUG:-false}
+  APP_KEY: ${APP_KEY:?Run scripts/prepare-compose-env.sh before starting Metricove}
+  APP_URL: ${APP_URL:-http://localhost:8080}
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: pgsql
+  DB_HOST: database
+  DB_PORT: "5432"
+  DB_DATABASE: ${DB_DATABASE:-metricove}
+  DB_USERNAME: ${DB_USERNAME:-metricove}
+  DB_PASSWORD: ${DB_PASSWORD:?Run scripts/prepare-compose-env.sh before starting Metricove}
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: redis
+  SESSION_DRIVER: file
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+  FILESYSTEM_DISK: local
+  MAIL_MAILER: log
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_CACHE_DB: "1"
+  AUTORUN_ENABLED: "false"
+
+services:
+  gateway:
+    image: ghcr.io/marcel-breuer/metricove/gateway:${APP_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+        restart: true
+      web:
+        condition: service_healthy
+        restart: true
+    networks:
+      - ingress
+      - frontend
+      - backend
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -T 2 -O /dev/null http://127.0.0.1:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  api:
+    image: ghcr.io/marcel-breuer/metricove/api:${APP_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    environment: *laravel-environment
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+    networks:
+      - backend
+      - egress
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  migrate:
+    image: ghcr.io/marcel-breuer/metricove/api:${APP_IMAGE_TAG:-local}
+    command: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
+    environment: *laravel-environment
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - backend
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+
+  worker:
+    image: ghcr.io/marcel-breuer/metricove/api:${APP_IMAGE_TAG:-local}
+    command: ["php", "/var/www/html/artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment: *laravel-environment
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+        restart: true
+      database:
+        condition: service_healthy
+        restart: true
+    networks:
+      - backend
+      - egress
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 2m
+    healthcheck:
+      test: ["CMD", "healthcheck-queue"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  scheduler:
+    image: ghcr.io/marcel-breuer/metricove/api:${APP_IMAGE_TAG:-local}
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    environment: *laravel-environment
+    volumes:
+      - app_storage:/var/www/html/storage/app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+    networks:
+      - backend
+      - egress
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    image: ghcr.io/marcel-breuer/metricove/web:${APP_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: runtime
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+      NODE_ENV: production
+    networks:
+      - frontend
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  database:
+    image: postgres:17.11-alpine3.24
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-metricove}
+      POSTGRES_USER: ${DB_USERNAME:-metricove}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run scripts/prepare-compose-env.sh before starting Metricove}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /var/run/postgresql:rw,noexec,nosuid,size=16m
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:8.8.2-alpine3.23
+    user: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  app_storage:
+  postgres_data:
+  redis_data:
+
+networks:
+  ingress:
+  frontend:
+    internal: true
+  backend:
+    internal: true
+  egress:

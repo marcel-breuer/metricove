@@ -1,5 +1,4 @@
-# Weekly dependency checks for Metricove.
-# Application manifests will be added in upcoming implementation PRs.
+# Weekly dependency checks for application, container and workflow manifests.
 version: 2
 
 multi-ecosystem-groups:

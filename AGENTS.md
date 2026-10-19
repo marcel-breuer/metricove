@@ -16,9 +16,9 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 ## Architecture
 - Modular Laravel/PHP backend, REST API, Laravel Policies, PostgreSQL, Redis queues, versioned migrations.
 - SvelteKit + TypeScript + Tailwind responsive web frontend; accessible and mobile-first.
-- Self-hostable with Docker Compose; image topology: Laravel API, Bun web, Nginx gateway, worker/scheduler, PostgreSQL, Redis.
+- Self-hostable with Docker Compose; current topology: Laravel API, Bun web, Nginx gateway, worker/scheduler, PostgreSQL, Redis. Only the gateway publishes a host port.
 - Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Recipes, MealPlanning, Pantry, Shopping, Analytics, Import, AI; Health considered later.
-- See [architecture](docs/architecture/overview.md) and [module contracts](docs/modules/README.md). The current repository is at documentation/bootstrap stage: **do not claim runtime services or tests exist yet**.
+- See [architecture](docs/architecture/overview.md) and [module contracts](docs/modules/README.md). The API, web scaffold and Compose runtime are implemented; household setup and product modules are still being delivered incrementally. Do not claim unimplemented product behavior exists.
 
 ## Contribution workflow
 1. Read the assigned GitHub Issue, acceptance criteria, current repository layout, applicable agent rules and 1–2 relevant skills.
