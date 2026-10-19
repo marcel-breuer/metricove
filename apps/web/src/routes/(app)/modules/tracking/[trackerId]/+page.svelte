@@ -143,7 +143,7 @@
 					headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
 					body: JSON.stringify({
 						schema_version: tracker.schema_version,
-						recorded_at: recordedAt,
+						recorded_at: new Date(recordedAt).toISOString(),
 						note,
 						values
 					})
