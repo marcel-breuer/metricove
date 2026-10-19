@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TrackingController;
+use App\Http\Controllers\Api\UtilitiesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health');
@@ -70,6 +71,39 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:tracking,edit')
                 ->whereNumber('entry')
                 ->name('entries.update');
+        });
+
+        Route::prefix('utilities')->name('utilities.')->group(function (): void {
+            Route::get('/meters', [UtilitiesController::class, 'index'])
+                ->middleware('module.access:utilities,view')
+                ->name('meters.index');
+            Route::post('/meters', [UtilitiesController::class, 'store'])
+                ->middleware('module.enabled:utilities')
+                ->name('meters.store');
+            Route::get('/meters/{meter}', [UtilitiesController::class, 'show'])
+                ->middleware('module.access:utilities,view')
+                ->whereNumber('meter')
+                ->name('meters.show');
+            Route::patch('/meters/{meter}', [UtilitiesController::class, 'update'])
+                ->middleware('module.access:utilities,manage')
+                ->whereNumber('meter')
+                ->name('meters.update');
+            Route::post('/meters/{meter}/readings', [UtilitiesController::class, 'storeReading'])
+                ->middleware('module.access:utilities,create')
+                ->whereNumber('meter')
+                ->name('readings.store');
+            Route::patch('/readings/{reading}', [UtilitiesController::class, 'correctReading'])
+                ->middleware('module.access:utilities,edit')
+                ->whereNumber('reading')
+                ->name('readings.update');
+            Route::get('/readings/{reading}/revisions', [UtilitiesController::class, 'revisions'])
+                ->middleware('module.access:utilities,view')
+                ->whereNumber('reading')
+                ->name('readings.revisions');
+            Route::get('/readings/{reading}/photo', [UtilitiesController::class, 'photo'])
+                ->middleware('module.access:utilities,view')
+                ->whereNumber('reading')
+                ->name('readings.photo');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
