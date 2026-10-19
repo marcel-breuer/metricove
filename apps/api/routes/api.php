@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AdminMemberController;
 use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
 use App\Http\Controllers\Api\AuthenticationController;
+use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
@@ -146,6 +147,48 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,view')
                 ->whereNumber('reading')
                 ->name('odometer.revisions');
+        });
+
+        Route::prefix('finance')->name('finance.')->group(function (): void {
+            Route::get('/overview', [FinanceController::class, 'overview'])
+                ->middleware('module.access:finance,view')->name('overview');
+            Route::get('/categories', [FinanceController::class, 'categories'])
+                ->middleware('module.access:finance,view')->name('categories.index');
+            Route::post('/categories', [FinanceController::class, 'storeCategory'])
+                ->middleware('module.enabled:finance')->name('categories.store');
+            Route::patch('/categories/{category}', [FinanceController::class, 'updateCategory'])
+                ->middleware('module.enabled:finance')->whereNumber('category')->name('categories.update');
+            Route::delete('/categories/{category}', [FinanceController::class, 'deleteCategory'])
+                ->middleware('module.enabled:finance')->whereNumber('category')->name('categories.destroy');
+
+            Route::get('/transactions', [FinanceController::class, 'transactions'])
+                ->middleware('module.access:finance,view')->name('transactions.index');
+            Route::post('/transactions', [FinanceController::class, 'storeTransaction'])
+                ->middleware('module.enabled:finance')->name('transactions.store');
+            Route::patch('/transactions/{transaction}', [FinanceController::class, 'updateTransaction'])
+                ->middleware('module.enabled:finance')->whereNumber('transaction')->name('transactions.update');
+            Route::delete('/transactions/{transaction}', [FinanceController::class, 'deleteTransaction'])
+                ->middleware('module.enabled:finance')->whereNumber('transaction')->name('transactions.destroy');
+
+            Route::get('/recurring', [FinanceController::class, 'recurringEntries'])
+                ->middleware('module.access:finance,view')->name('recurring.index');
+            Route::post('/recurring', [FinanceController::class, 'storeRecurringEntry'])
+                ->middleware('module.enabled:finance')->name('recurring.store');
+            Route::patch('/recurring/{entry}', [FinanceController::class, 'updateRecurringEntry'])
+                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.update');
+            Route::delete('/recurring/{entry}', [FinanceController::class, 'deleteRecurringEntry'])
+                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.destroy');
+            Route::post('/recurring/{entry}/record', [FinanceController::class, 'recordRecurringOccurrence'])
+                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.record');
+
+            Route::get('/budgets', [FinanceController::class, 'budgets'])
+                ->middleware('module.access:finance,view')->name('budgets.index');
+            Route::post('/budgets', [FinanceController::class, 'storeBudget'])
+                ->middleware('module.enabled:finance')->name('budgets.store');
+            Route::patch('/budgets/{budget}', [FinanceController::class, 'updateBudget'])
+                ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.update');
+            Route::delete('/budgets/{budget}', [FinanceController::class, 'deleteBudget'])
+                ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.destroy');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
