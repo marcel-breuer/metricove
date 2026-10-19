@@ -18,6 +18,11 @@ The current Core authentication surface is same-origin and session-based:
 
 Session cookies are encrypted, `HttpOnly`, `SameSite=Lax`, and `Secure` when `APP_URL` uses HTTPS unless explicitly overridden. Per-installation SMTP settings deliver reset messages; the default mailer is SMTP, not a log transport, so reset links are not written to application logs. Public registration remains closed after initial setup.
 
+## Core invitations
+Only an active household administrator can manage invitations. `POST /api/admin/invitations` accepts a normalized email address only; `GET /api/admin/invitations` lists unclaimed invitations, including expired ones so they can be resent. `POST /api/admin/invitations/{id}/resend` rotates the token and expiry, invalidating any earlier link, and `DELETE /api/admin/invitations/{id}` revokes the invitation.
+
+Invitation tokens are random and stored as SHA-256 digests. They expire after seven days by default (`AUTH_INVITATION_EXPIRE` can override the lifetime in minutes) and are delivered through the installation's configured SMTP mailer. The link carries the token in a URL fragment; the web page removes it from the address bar before posting it to `POST /api/invitations/claim`. Claiming creates an active non-admin account whose normalized email comes only from the invitation record, marks that address verified, accepts the invitation atomically, regenerates the session and signs in the recipient. Invalid, expired, revoked, replayed and already-registered claims receive the same generic response. Delivery failures do not log recipient addresses or tokens; the pending invitation remains available for resend.
+
 ## Registry and permissions
 Every module defines:
 - Stable `module_key`, label and version.

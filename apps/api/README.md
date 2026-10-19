@@ -13,4 +13,6 @@ The framework health check is available at `/up`, and the JSON API health check 
 
 On a fresh installation, `GET /api/setup/status` reports whether the one-time setup is available. The web app uses this to show the setup form. `POST /api/setup` accepts a display name, normalized email, password and confirmation; it creates the household's first active administrator once, starts a web session, and then returns `409 Conflict` for later attempts. The setup routes use Laravel's web session and CSRF middleware.
 
+After setup, active administrators can manage email-only invitations at `/admin/invitations`. Invitation emails use the configured installation SMTP settings. Links expire after seven days by default; `AUTH_INVITATION_EXPIRE` may override the lifetime in minutes.
+
 Run the API regression tests with `composer test` when PHP has SQLite support. The Docker test target installs the development dependencies and runs the same suite during its build without requiring host PHP extensions.
