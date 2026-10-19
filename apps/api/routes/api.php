@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AdminInvitationController;
+use App\Http\Controllers\Api\AdminMemberAuditController;
+use App\Http\Controllers\Api\AdminMemberController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\InitialSetupController;
@@ -31,12 +33,23 @@ Route::middleware('web')->group(function (): void {
         ->middleware('throttle:invitation-claim')
         ->name('invitations.claim');
 
-    Route::middleware('auth:web')->group(function (): void {
+    Route::middleware(['auth:web', 'active-member'])->group(function (): void {
         Route::post('/auth/logout', [AuthenticationController::class, 'logout'])->name('auth.logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
+            Route::get('/members', [AdminMemberController::class, 'index'])->name('members.index');
+            Route::patch('/members/{member}', [AdminMemberController::class, 'update'])
+                ->middleware('throttle:member-manage')
+                ->whereNumber('member')
+                ->name('members.update');
+            Route::delete('/members/{member}', [AdminMemberController::class, 'destroy'])
+                ->middleware('throttle:member-manage')
+                ->whereNumber('member')
+                ->name('members.destroy');
+            Route::get('/member-audit', AdminMemberAuditController::class)->name('members.audit');
+
             Route::get('/invitations', [AdminInvitationController::class, 'index'])->name('invitations.index');
             Route::post('/invitations', [AdminInvitationController::class, 'store'])
                 ->middleware('throttle:invitation-send')

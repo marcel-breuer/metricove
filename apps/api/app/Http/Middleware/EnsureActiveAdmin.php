@@ -13,7 +13,14 @@ class EnsureActiveAdmin
     {
         $user = $request->user('web');
 
-        if (! $user instanceof User || ! $user->is_active || ! $user->is_admin) {
+        $isActiveAdministrator = $user instanceof User
+            && User::query()
+                ->whereKey($user->id)
+                ->where('is_active', true)
+                ->where('is_admin', true)
+                ->exists();
+
+        if (! $isActiveAdministrator) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 

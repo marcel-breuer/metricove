@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -11,7 +12,8 @@ class CreateInvitationRequest extends FormRequest
     {
         $user = $this->user('web');
 
-        return $user !== null && $user->is_active && $user->is_admin;
+        return $user instanceof User
+            && User::query()->whereKey($user->id)->where('is_active', true)->where('is_admin', true)->exists();
     }
 
     protected function prepareForValidation(): void

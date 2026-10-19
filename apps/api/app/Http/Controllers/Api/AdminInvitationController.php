@@ -10,15 +10,16 @@ use App\Http\Requests\RevokeInvitationRequest;
 use App\Models\Invitation;
 use App\Services\Auth\InvitationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class AdminInvitationController extends Controller
 {
-    public function index(InvitationService $invitations): JsonResponse
+    public function index(Request $request, InvitationService $invitations): JsonResponse
     {
         return response()->json([
-            'invitations' => $invitations->pending()->map(fn (Invitation $invitation): array => $this->resource($invitation)),
+            'invitations' => $invitations->pending($request->user('web'))->map(fn (Invitation $invitation): array => $this->resource($invitation)),
         ]);
     }
 
@@ -70,7 +71,7 @@ class AdminInvitationController extends Controller
         int $invitation,
         InvitationService $invitations,
     ): JsonResponse {
-        if (! $invitations->revoke($invitation)) {
+        if (! $invitations->revoke($invitation, $request->user('web'))) {
             return response()->json(['message' => 'This invitation is no longer available.'], 404);
         }
 
