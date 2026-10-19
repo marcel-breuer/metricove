@@ -25,7 +25,6 @@
 	let error = '';
 
 	onMount(() => {
-		void fetch('/api/auth/session', { headers: { Accept: 'application/json' } }).catch(() => {});
 		void loadInvitations();
 	});
 
@@ -148,18 +147,8 @@
 	<meta name="description" content="Invite members to your Metricove household." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 sm:px-10 sm:py-16">
+<section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col">
-		<header class="flex flex-wrap items-center justify-between gap-4">
-			<a href="/profile" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
-			</a>
-			<a href="/profile" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-				Your profile
-			</a>
-		</header>
-
 		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
 			<div class="max-w-xl">
 				<p class="mb-5 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household access</p>
@@ -219,4 +208,4 @@
 
 		<footer class="border-t border-slate-800 pt-5 text-sm text-slate-500">Each invitation shows its expiry date and works once.</footer>
 	</div>
-</main>
+</section>
