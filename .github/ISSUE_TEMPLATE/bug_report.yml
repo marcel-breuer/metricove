@@ -1,0 +1,23 @@
+name: Bug report
+description: Report a reproducible defect. Use private channels for vulnerabilities.
+title: "Bug: "
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: Do not include passwords or private instance details.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps and affected version
+    validations:
+      required: true
