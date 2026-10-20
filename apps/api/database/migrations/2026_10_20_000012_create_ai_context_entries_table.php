@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('source', 120)->nullable();
             $table->boolean('enabled')->default(true);
             $table->timestampTz('expires_at')->nullable();
+            $table->unsignedInteger('version')->default(1);
             $table->timestampsTz();
             $table->index(['owner_user_id', 'scope', 'project_key', 'enabled'], 'ai_context_lookup_idx');
         });

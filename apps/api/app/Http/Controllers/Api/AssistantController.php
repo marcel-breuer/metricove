@@ -25,6 +25,7 @@ class AssistantController extends Controller
                 $this->actor($request),
                 trim($request->validated('message')),
                 (bool) $request->validated('allow_external_data_sharing', false),
+                $request->validated('project_key'),
             ));
         } catch (AssistantUnavailable) {
             return response()->json(['message' => 'The assistant is not configured for this installation.'], 503);

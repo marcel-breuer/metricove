@@ -9,12 +9,12 @@ class AiContextEntry extends Model
 {
     protected $fillable = [
         'owner_user_id', 'scope', 'project_key', 'kind',
-        'content', 'source', 'enabled', 'expires_at',
+        'content', 'source', 'enabled', 'expires_at', 'version',
     ];
 
     protected function casts(): array
     {
-        return ['enabled' => 'boolean', 'expires_at' => 'datetime'];
+        return ['enabled' => 'boolean', 'expires_at' => 'datetime', 'version' => 'integer'];
     }
 
     public function scopeAvailableTo(Builder $query, int $userId, ?string $projectKey = null): Builder
