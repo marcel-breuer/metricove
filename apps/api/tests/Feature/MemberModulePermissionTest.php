@@ -92,8 +92,8 @@ class MemberModulePermissionTest extends TestCase
 
         $this->actingAs($member, 'web')->getJson('/test/modules/tracking/view')->assertNotFound();
 
-        $this->grant($admin, $member, 'tracking', ['view' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+        $this->grant($admin, $member, 'tracking', ['view' => true]);
 
         $this->getJson('/test/modules/tracking/view')->assertOk()->assertJsonPath('value', 'safe test value');
         $this->postJson('/test/modules/tracking/create')->assertForbidden();
@@ -128,10 +128,10 @@ class MemberModulePermissionTest extends TestCase
         $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $recipient = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $record = $this->record(owner: $owner->id, isPrivate: true);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
         $this->grant($admin, $admin, 'tracking', ['view' => true]);
         $this->grant($admin, $owner, 'tracking', ['manage' => true]);
         $this->grant($admin, $recipient, 'tracking', ['view' => true]);
-        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
 
         $access = app(ModuleAccessService::class);
         Route::get('/test/private/tracking-record', function (Request $request) use ($record) {
@@ -227,9 +227,9 @@ class MemberModulePermissionTest extends TestCase
         $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $recipient = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $record = $this->record(owner: $owner->id, isPrivate: true);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
         $this->grant($admin, $owner, 'tracking', ['manage' => true, 'view' => true]);
         $this->grant($admin, $recipient, 'tracking', []);
-        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
 
         $access = app(ModuleAccessService::class);
         $access->grantPrivateResourceAccess($owner, $record, $recipient, ModuleCapability::View);
@@ -255,8 +255,8 @@ class MemberModulePermissionTest extends TestCase
         $admin = $this->admin();
         $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $record = $this->record(owner: null, isPrivate: true);
-        $this->grant($admin, $member, 'tracking', ['view' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+        $this->grant($admin, $member, 'tracking', ['view' => true]);
 
         $this->expectException(AuthorizationException::class);
         app(ModuleAccessService::class)->authorize($member, 'tracking', ModuleCapability::View, $record);
@@ -266,8 +266,8 @@ class MemberModulePermissionTest extends TestCase
     {
         $admin = $this->admin();
         $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $this->grant($admin, $member, 'ai', ['manage' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
+        $this->grant($admin, $member, 'ai', ['manage' => true]);
         $access = app(ModuleAccessService::class);
 
         try {

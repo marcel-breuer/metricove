@@ -2,6 +2,11 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+	import Button from '#lib/ui/Button.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import Panel from '#lib/ui/Panel.svelte';
+	import Switch from '#lib/ui/Switch.svelte';
 	import { getContext } from 'svelte';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 
@@ -67,7 +72,7 @@
 
 	async function setEnabled(module: ModuleEntry): Promise<void> {
 		const enabled = !module.enabled;
-		if (!enabled && !window.confirm(`Disable ${module.label}? Existing module data will be kept.`)) return;
+		if (!enabled && !window.confirm(`Disable ${module.label}? Existing data and member rights will be kept. If enabled again, every active member will receive all module rights.`)) return;
 
 		message = '';
 		error = '';
@@ -114,17 +119,13 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<section class="max-w-3xl">
-			<p class="text-sm font-medium tracking-wide text-cyan-200">Household settings</p>
-			<h1 class="mt-2 text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">Manage modules.</h1>
-			<p class="mt-3 text-base leading-7 text-slate-300">Enable modules for the whole household. Member capabilities are granted separately, and disabling a module preserves its data.</p>
-		</section>
+		<PageHeading class="max-w-3xl" eyebrow="Household settings" title="Manage modules." description="Optional modules start disabled. Enabling one gives every active member all four module capabilities; you can narrow access per member afterward. Disabling a module preserves its data." />
 
 		{#if message}
-			<p role="status" class="mt-8 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{message}</p>
+			<Notice class="mt-8" tone="success" message={message} />
 		{/if}
 		{#if error}
-			<p role="alert" class="mt-8 rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{error}</p>
+			<Notice class="mt-8" tone="error" message={error} />
 		{/if}
 
 		<section class="mt-10" aria-labelledby="module-list-heading">
@@ -133,7 +134,7 @@
 					<h2 id="module-list-heading" class="text-xl font-semibold">Available modules</h2>
 					<p class="mt-1 text-sm text-slate-400">{modules.filter((module) => module.enabled && !module.always_enabled).length} optional module(s) enabled</p>
 				</div>
-				<button type="button" disabled={busyKey !== ''} onclick={() => void loadModules()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button>
+				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadModules()}>Refresh</Button>
 			</div>
 
 			{#if loading}
@@ -141,7 +142,8 @@
 			{:else if modules.length === 0}
 				<p class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">No modules are registered.</p>
 			{:else}
-					<ul class="mt-5 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/30 px-4 sm:px-6">
+					<Panel padding="none" class="mt-5 overflow-hidden">
+					<ul class="divide-y divide-slate-800 px-4 sm:px-6">
 					{#each modules as module (module.key)}
 							<li class="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-8">
 								<div class="min-w-0">
@@ -164,23 +166,19 @@
 								{#if module.always_enabled}
 										<span class="text-sm font-medium text-cyan-200">Always on</span>
 								{:else}
-									<button
-										type="button"
-											role="switch"
-											aria-checked={module.enabled}
-											aria-label={`${module.label} module`}
+									<Switch
+										checked={module.enabled}
+										label={`${module.label} module`}
 										disabled={busyKey !== '' || (module.enabled ? !module.can_disable : !module.can_enable)}
-										onclick={() => void setEnabled(module)}
-											class="group inline-flex min-h-11 items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium text-slate-300 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-									>
-											<span class="relative inline-flex h-7 w-12 items-center rounded-full border border-slate-700 bg-slate-800 transition {module.enabled ? 'border-cyan-200 bg-cyan-400' : ''}" aria-hidden="true"><span class="ml-1 size-5 rounded-full bg-slate-300 shadow-sm transition {module.enabled ? 'translate-x-5 bg-slate-950' : ''}"></span></span>
-											<span class="min-w-16 text-left">{busyKey === module.key ? 'Saving…' : module.enabled ? 'On' : 'Off'}</span>
-									</button>
+										pending={busyKey === module.key}
+										onchange={() => void setEnabled(module)}
+									/>
 								{/if}
 							</div>
 						</li>
 					{/each}
 				</ul>
+					</Panel>
 			{/if}
 		</section>
 

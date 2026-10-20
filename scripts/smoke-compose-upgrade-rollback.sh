@@ -46,6 +46,8 @@ assert_setup_status() {
 }
 
 compose "$BASE_IMAGE_TAG" down --timeout 15 --volumes --remove-orphans
+echo "Initializing the fresh app_storage volume through the API before starting peer services."
+compose "$BASE_IMAGE_TAG" up --detach --wait --wait-timeout 180 api
 echo "Starting base images and waiting for healthy services."
 compose "$BASE_IMAGE_TAG" up --detach --wait --wait-timeout 180
 request_health "/health"

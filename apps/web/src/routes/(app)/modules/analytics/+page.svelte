@@ -3,7 +3,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { formatNumber } from '#lib/number-format';
+	import { formatMeasurement, formatNumber } from '#lib/number-format';
 	import {
 		analyticsRanges,
 		type AnalyticsChartType,
@@ -153,7 +153,9 @@
 	}
 
 	function displayedValue(value: string, currency: boolean): string {
-		return formatNumber(value, currency ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : {});
+		return currency
+			? formatNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+			: formatMeasurement(value);
 	}
 </script>
 

@@ -23,8 +23,8 @@ class UtilitiesModuleTest extends TestCase
     public function test_meter_units_chronological_usage_and_alerts_use_exact_decimals(): void
     {
         $admin = $this->admin();
-        $this->grant($admin, ['view' => true, 'create' => false, 'edit' => true, 'manage' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'utilities', true);
+        $this->grant($admin, ['view' => true, 'create' => false, 'edit' => true, 'manage' => true]);
 
         $created = $this->actingAs($admin, 'web')->postJson('/api/utilities/meters', [
             'name' => 'Main electricity',

@@ -4,9 +4,13 @@ namespace App\Services\Auth;
 
 use App\Exceptions\InvitationUnavailable;
 use App\Mail\InvitationMail;
+use App\Models\HouseholdAuditEvent;
 use App\Models\HouseholdSettings;
 use App\Models\Invitation;
+use App\Models\ModuleUserPermission;
 use App\Models\User;
+use App\Services\Modules\ModuleRegistry;
+use App\Services\Modules\ModuleStateService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +19,11 @@ use Illuminate\Support\Str;
 
 class InvitationService
 {
+    public function __construct(
+        private readonly ModuleRegistry $modules,
+        private readonly ModuleStateService $moduleStates,
+    ) {}
+
     public function invite(string $email, User $inviter): Invitation
     {
         return $this->issue($email, $inviter);
@@ -95,6 +104,34 @@ class InvitationService
                 'is_admin' => false,
                 'is_active' => true,
             ])->save();
+
+            $enabledKeys = $this->moduleStates->enabledKeys();
+            foreach ($this->modules->all() as $module) {
+                if ($module->alwaysEnabled || ! in_array($module->key, $enabledKeys, true)) {
+                    continue;
+                }
+
+                $capabilities = ['view' => true, 'create' => true, 'edit' => true, 'manage' => true];
+                ModuleUserPermission::query()->create([
+                    'user_id' => $user->id,
+                    'module_key' => $module->key,
+                    'can_view' => true,
+                    'can_create' => true,
+                    'can_edit' => true,
+                    'can_manage' => true,
+                ]);
+                HouseholdAuditEvent::query()->create([
+                    'actor_user_id' => null,
+                    'subject_user_id' => $user->id,
+                    'action' => 'member.module_permissions_initialized',
+                    'details' => [
+                        'module_key' => $module->key,
+                        'before' => ['view' => false, 'create' => false, 'edit' => false, 'manage' => false],
+                        'after' => $capabilities,
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
 
             $invitation->forceFill(['accepted_at' => now()])->save();
 

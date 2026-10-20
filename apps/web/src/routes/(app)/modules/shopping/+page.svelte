@@ -3,7 +3,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { formatNumber } from '#lib/number-format';
+	import { formatMeasurement } from '#lib/number-format';
 	import type {
 		MealSuggestionPreview,
 		MealSuggestionsResponse,
@@ -547,11 +547,11 @@
 														<span class="min-w-0 flex-1">
 															<span class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
 																<span class="break-words text-sm font-medium text-white">{suggestion.name}</span>
-																<span class="text-sm tabular-nums text-violet-100">{formatNumber(suggestion.quantity)} {suggestion.unit}</span>
+																<span class="text-sm tabular-nums text-violet-100">{formatMeasurement(suggestion.quantity, suggestion.unit)} {suggestion.unit}</span>
 															</span>
 															{#if suggestion.pantry_status === 'unit_mismatch'}<span class="mt-1 block text-xs text-amber-200">Visible Pantry stock uses a different unit; nothing was subtracted.</span>{/if}
 														{#if suggestion.pantry_status === 'unavailable'}<span class="mt-1 block text-xs text-amber-200">Pantry was unavailable; the full amount is shown.</span>{/if}
-														{#if formatNumber(suggestion.pantry_quantity_used) !== '0'}<span class="mt-1 block text-xs text-emerald-200">After previewing {formatNumber(suggestion.pantry_quantity_used)} {suggestion.unit} of visible stock.</span>{/if}
+														{#if formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit) !== '0'}<span class="mt-1 block text-xs text-emerald-200">After previewing {formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit)} {suggestion.unit} of visible stock.</span>{/if}
 														</span>
 													</label>
 												{/each}
@@ -609,7 +609,7 @@
 										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-950 text-cyan-300 focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-50 sm:mt-0" />
 										<div class="min-w-0 flex-1">
 											<p class="break-words text-sm font-medium {item.is_checked ? 'text-slate-500 line-through' : 'text-white'}">{item.name}</p>
-											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{formatNumber(item.quantity)} {item.unit}{:else}Quantity not set{/if}{#if item.is_checked && item.checked_at}<span> · Checked {formatDate(item.checked_at)}</span>{/if}</p>
+											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}Quantity not set{/if}{#if item.is_checked && item.checked_at}<span> · Checked {formatDate(item.checked_at)}</span>{/if}</p>
 										</div>
 										{#if item.can_edit}
 											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">

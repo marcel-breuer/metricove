@@ -68,6 +68,73 @@ class ModuleActivationTest extends TestCase
         $this->assertDatabaseHas('tracking_records', ['id' => 1, 'value' => 'preserved']);
     }
 
+    public function test_enabling_grants_every_capability_to_active_members_and_reenabling_restores_them(): void
+    {
+        $admin = $this->admin();
+        $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $suspendedMember = User::factory()->create(['is_admin' => false, 'is_active' => false]);
+
+        $this->assertDatabaseMissing('module_user_permissions', ['module_key' => 'tracking']);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $this->assertDatabaseHas('module_user_permissions', [
+            'user_id' => $admin->id,
+            'module_key' => 'tracking',
+            'can_view' => true,
+            'can_create' => true,
+            'can_edit' => true,
+            'can_manage' => true,
+        ]);
+        $this->assertDatabaseHas('module_user_permissions', [
+            'user_id' => $member->id,
+            'module_key' => 'tracking',
+            'can_view' => true,
+            'can_create' => true,
+            'can_edit' => true,
+            'can_manage' => true,
+        ]);
+        $this->assertDatabaseMissing('module_user_permissions', [
+            'user_id' => $suspendedMember->id,
+            'module_key' => 'tracking',
+        ]);
+        $this->assertDatabaseCount('household_audit_events', 2);
+
+        ModuleUserPermission::query()->where('user_id', $member->id)->where('module_key', 'tracking')->update([
+            'can_view' => true,
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+        $this->assertDatabaseHas('module_user_permissions', [
+            'user_id' => $member->id,
+            'module_key' => 'tracking',
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', false);
+        $this->assertDatabaseHas('module_user_permissions', [
+            'user_id' => $member->id,
+            'module_key' => 'tracking',
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $this->assertDatabaseHas('module_user_permissions', [
+            'user_id' => $member->id,
+            'module_key' => 'tracking',
+            'can_view' => true,
+            'can_create' => true,
+            'can_edit' => true,
+            'can_manage' => true,
+        ]);
+        $this->assertDatabaseCount('household_audit_events', 3);
+    }
+
     public function test_core_cannot_be_disabled_and_members_cannot_manage_modules(): void
     {
         $admin = $this->admin();
@@ -94,30 +161,18 @@ class ModuleActivationTest extends TestCase
         $states->setEnabled($admin, 'tracking', true);
         $states->setEnabled($admin, 'utilities', true);
 
-        ModuleUserPermission::query()->create([
-            'user_id' => $member->id,
-            'module_key' => 'tracking',
-            'can_view' => false,
-            'can_create' => true,
-            'can_edit' => false,
-            'can_manage' => false,
-        ]);
-        ModuleUserPermission::query()->create([
-            'user_id' => $member->id,
-            'module_key' => 'utilities',
-            'can_view' => true,
-            'can_create' => false,
-            'can_edit' => false,
-            'can_manage' => false,
-        ]);
-        ModuleUserPermission::query()->create([
-            'user_id' => $member->id,
-            'module_key' => 'finance',
-            'can_view' => true,
-            'can_create' => false,
-            'can_edit' => false,
-            'can_manage' => false,
-        ]);
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $member->id, 'module_key' => 'tracking'],
+            ['can_view' => false, 'can_create' => true, 'can_edit' => false, 'can_manage' => false],
+        );
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $member->id, 'module_key' => 'utilities'],
+            ['can_view' => true, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
+        );
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $member->id, 'module_key' => 'finance'],
+            ['can_view' => true, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
+        );
 
         $this->actingAs($member, 'web')
             ->getJson('/api/modules')

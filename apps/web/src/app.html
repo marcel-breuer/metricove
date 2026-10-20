@@ -4,6 +4,21 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<script>
+			(() => {
+				const root = document.documentElement;
+				let preference = 'system';
+				try {
+					const stored = window.localStorage.getItem('metricove-theme');
+					if (stored === 'light' || stored === 'dark') preference = stored;
+				} catch {}
+				const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+				const theme = preference === 'system' ? (prefersDark ? 'dark' : 'light') : preference;
+				root.dataset.theme = theme;
+				root.dataset.themePreference = preference;
+				root.style.colorScheme = theme;
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

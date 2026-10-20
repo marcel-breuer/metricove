@@ -4,7 +4,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { formatNumber } from '#lib/number-format';
+	import { formatMeasurement } from '#lib/number-format';
 	import type { UtilityMeter, UtilityReading, UtilityReadingRevision, UtilitiesResponse } from '#lib/utilities';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -125,7 +125,7 @@
 			if (!response.ok) throw new Error(result.message || 'A local reading suggestion is unavailable.');
 			if (result.value) {
 				readingValue = result.value;
-				ocrMessage = `Suggested ${formatNumber(result.value)} ${meter.unit}. Check the meter photo and save the reading yourself.`;
+				ocrMessage = `Suggested ${formatMeasurement(result.value, meter.unit)} ${meter.unit}. Check the meter photo and save the reading yourself.`;
 			} else {
 				ocrMessage = 'No single reading could be recognized. Enter the value from the photo manually.';
 			}
@@ -219,7 +219,7 @@
 		<a href="/modules/utilities" class="inline-flex items-center gap-2 text-sm font-medium text-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"><span aria-hidden="true">←</span> All meters</a>
 		<div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
 			<div><p class="text-sm font-medium tracking-wide text-cyan-200">{meter.meter_label} meter · {meter.visibility}</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{meter.name}</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{meter.description ?? 'Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.'}</p></div>
-			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><span class="block text-xs uppercase tracking-wide text-slate-500">Latest interval</span><span class="mt-1 block text-lg font-semibold text-white">{formatNumber(latestUsage?.consumption_since_previous)} <span class="text-sm font-medium text-slate-400">{meter.unit}</span></span></div><div class="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><span class="block text-xs uppercase tracking-wide text-slate-500">Alerts</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-amber-200' : 'text-white'}">{alertCount}</span></div></div>
+			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><span class="block text-xs uppercase tracking-wide text-slate-500">Latest interval</span><span class="mt-1 block text-lg font-semibold text-white">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-slate-400">{meter.unit}</span></span></div><div class="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"><span class="block text-xs uppercase tracking-wide text-slate-500">Alerts</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-amber-200' : 'text-white'}">{alertCount}</span></div></div>
 		</div>
 		{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{message}</p>{/if}
 		{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{error}</p>{/if}
@@ -243,7 +243,7 @@
 						{@const barWidth = Math.min(36, 560 / chartData.length)}
 						{@const x = 48 + index * (620 / chartData.length)}
 						{@const height = Math.max(3, Number(reading.consumption_since_previous ?? 0) / chartMaximum * 118)}
-						<rect x={x} y={155 - height} width={barWidth} height={height} rx="5" fill={reading.alert ? '#fbbf24' : '#67e8f9'} opacity="0.9"><title>{reading.reading_date}: {formatNumber(reading.consumption_since_previous)} {meter.unit}{reading.alert ? ' — alert' : ''}</title></rect>
+						<rect x={x} y={155 - height} width={barWidth} height={height} rx="5" fill={reading.alert ? '#fbbf24' : '#67e8f9'} opacity="0.9"><title>{reading.reading_date}: {formatMeasurement(reading.consumption_since_previous, meter.unit)} {meter.unit}{reading.alert ? ' — alert' : ''}</title></rect>
 						<text x={x + barWidth / 2} y="174" text-anchor="middle" fill="#94a3b8" font-size="10">{reading.reading_date.slice(5)}</text>
 					{/each}
 				</svg></div>
@@ -276,8 +276,8 @@
 					{#each [...readings].reverse() as reading (reading.id)}
 						<li class="rounded-2xl border {reading.alert ? 'border-amber-300/30 bg-amber-300/[0.06]' : 'border-slate-800 bg-slate-900/50'} p-4 sm:p-5">
 							<div class="flex flex-wrap items-start justify-between gap-4">
-								<div><div class="flex flex-wrap items-center gap-2"><time datetime={reading.reading_date} class="font-semibold text-slate-100">{reading.reading_date}</time>{#if reading.alert}<span class="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs font-semibold text-amber-100">Usage alert</span>{/if}{#if reading.revision_count > 0}<span class="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">{reading.revision_count} correction{reading.revision_count === 1 ? '' : 's'}</span>{/if}</div><p class="mt-2 text-2xl font-semibold tracking-tight text-white">{formatNumber(reading.value)} <span class="text-sm font-medium text-slate-400">{reading.unit}</span></p></div>
-								<div class="min-w-36 text-left sm:text-right"><span class="block text-xs uppercase tracking-wide text-slate-500">Since previous</span><span class="mt-1 block text-base font-semibold {reading.alert ? 'text-amber-100' : 'text-cyan-100'}">{formatNumber(reading.consumption_since_previous)} {reading.consumption_since_previous === null ? '' : reading.unit}</span>{#if reading.days_since_previous !== null}<span class="mt-1 block text-xs text-slate-500">over {reading.days_since_previous} day{reading.days_since_previous === 1 ? '' : 's'}</span>{/if}</div>
+								<div><div class="flex flex-wrap items-center gap-2"><time datetime={reading.reading_date} class="font-semibold text-slate-100">{reading.reading_date}</time>{#if reading.alert}<span class="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs font-semibold text-amber-100">Usage alert</span>{/if}{#if reading.revision_count > 0}<span class="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">{reading.revision_count} correction{reading.revision_count === 1 ? '' : 's'}</span>{/if}</div><p class="mt-2 text-2xl font-semibold tracking-tight text-white">{formatMeasurement(reading.value, reading.unit)} <span class="text-sm font-medium text-slate-400">{reading.unit}</span></p></div>
+								<div class="min-w-36 text-left sm:text-right"><span class="block text-xs uppercase tracking-wide text-slate-500">Since previous</span><span class="mt-1 block text-base font-semibold {reading.alert ? 'text-amber-100' : 'text-cyan-100'}">{formatMeasurement(reading.consumption_since_previous, meter.unit)} {reading.consumption_since_previous === null ? '' : reading.unit}</span>{#if reading.days_since_previous !== null}<span class="mt-1 block text-xs text-slate-500">over {reading.days_since_previous} day{reading.days_since_previous === 1 ? '' : 's'}</span>{/if}</div>
 							</div>
 							{#if reading.note}<p class="mt-3 text-sm leading-6 text-slate-300">{reading.note}</p>{/if}
 							{#if reading.photo_url}<a href={reading.photo_url} target="_blank" rel="noreferrer" class="mt-3 inline-flex rounded-lg border border-slate-700 p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"><img src={reading.photo_url} alt={`Meter photo for ${reading.reading_date}`} loading="lazy" class="max-h-36 max-w-48 rounded-md object-cover" /></a>{/if}
@@ -295,7 +295,7 @@
 								</form>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
-								<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label="Correction history">{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatNumber(revision.old_value)} → {revision.new_reading_date}: {formatNumber(revision.new_value)} {reading.unit}</p><p class="mt-1 text-slate-400">{revision.reason}</p><time class="mt-1 block text-xs text-slate-500">{new Date(revision.changed_at).toLocaleString()}</time></li>{/each}</ol>
+								<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label="Correction history">{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p><p class="mt-1 text-slate-400">{revision.reason}</p><time class="mt-1 block text-xs text-slate-500">{new Date(revision.changed_at).toLocaleString()}</time></li>{/each}</ol>
 							{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-slate-500">Loading correction history…</p>{/if}
 						</li>
 					{/each}

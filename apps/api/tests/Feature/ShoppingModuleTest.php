@@ -120,10 +120,10 @@ class ShoppingModuleTest extends TestCase
         $admin = $this->member(true);
         $editor = $this->member();
         $reader = $this->member();
+        $this->enable($admin, true);
         $this->grant($admin, ['view' => true, 'manage' => true]);
         $this->grant($editor, ['view' => true, 'create' => true, 'edit' => true]);
         $this->grant($reader, ['view' => true]);
-        $this->enable($admin, true);
 
         $this->actingAs($editor, 'web')->postJson('/api/shopping/lists', [
             'name' => 'Unauthorized shared list', 'visibility' => 'household',
