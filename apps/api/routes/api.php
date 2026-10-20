@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AdminMemberController;
 use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
 use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
@@ -223,6 +224,13 @@ Route::middleware('web')->group(function (): void {
             Route::post('/utilities/meters/{meter}/reading-suggestions', [ImportController::class, 'suggest'])
                 ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
                 ->whereNumber('meter')->name('utilities.readings.suggest');
+        });
+
+        Route::prefix('ai')->name('ai.')->middleware('module.access:ai,view')->group(function (): void {
+            Route::get('/assistant', [AssistantController::class, 'status'])->name('assistant.status');
+            Route::post('/assistant', [AssistantController::class, 'ask'])
+                ->middleware('throttle:assistant')
+                ->name('assistant.ask');
         });
 
         Route::prefix('recipes')->name('recipes.')->group(function (): void {
