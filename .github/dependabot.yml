@@ -6,6 +6,7 @@ multi-ecosystem-groups:
     schedule:
       interval: weekly
       day: monday
+      time: "08:00"
       timezone: Europe/Berlin
     assignees:
       - marcel-breuer
@@ -55,7 +56,6 @@ updates:
 
   - package-ecosystem: "docker"
     directories:
-      - "/"
       - "/apps/api"
       - "/apps/web"
       - "/docker/gateway"
