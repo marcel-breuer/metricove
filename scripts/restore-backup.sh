@@ -29,6 +29,7 @@ restore_suffix="$(date -u +%Y%m%d%H%M%S)_$BASHPID"
 restart_targets=()
 writers_stopped=0
 safe_to_restart=1
+gateway_was_running=0
 
 compose() {
     docker compose \
@@ -38,15 +39,37 @@ compose() {
         "$@"
 }
 
+run_storage_helper() {
+    local api_container api_image
+    api_container="$(compose ps --all --quiet api)"
+
+    if [[ -z "$api_container" || "$api_container" == *$'\n'* ]]; then
+        printf '%s\n' "Expected exactly one Compose API container for app_storage access." >&2
+        return 1
+    fi
+
+    api_image="$(docker inspect --format '{{.Config.Image}}' "$api_container")"
+    docker run --interactive --rm --network none --volumes-from "$api_container" \
+        --user www-data --entrypoint "$1" "$api_image" "${@:2}"
+}
+
 finish() {
     local exit_status=$?
     trap - EXIT
 
     if (( writers_stopped )); then
         if (( safe_to_restart )) && (("${#restart_targets[@]}" > 0)); then
-            if ! compose start "${restart_targets[@]}" >/dev/null; then
-                printf '%s\n' "Could not restart all services that were running before the restore." >&2
+            if ! compose up --detach --wait --wait-timeout 180 "${restart_targets[@]}" >/dev/null; then
+                printf '%s\n' "Could not restart and verify all services that were running before the restore." >&2
                 exit_status=1
+            fi
+
+            if (( gateway_was_running )); then
+                if ! compose restart --timeout 30 gateway >/dev/null \
+                    || ! compose up --detach --wait --wait-timeout 180 gateway >/dev/null; then
+                    printf '%s\n' "Could not refresh and verify the gateway after restarting the API." >&2
+                    exit_status=1
+                fi
             fi
         elif ((! safe_to_restart)); then
             printf '%s\n' "Restore stopped before database and file recovery both completed; API, worker, and scheduler remain stopped." >&2
@@ -111,6 +134,9 @@ fi
 
 compose config --quiet
 running_services="$(compose ps --services --filter status=running)"
+if grep -Fxq -- gateway <<<"$running_services"; then
+    gateway_was_running=1
+fi
 if ! grep -Fxq -- database <<<"$running_services" || ! grep -Fxq -- api <<<"$running_services"; then
     printf '%s\n' "The Compose database and API services must be running before a restore." >&2
     exit 1
@@ -185,9 +211,10 @@ compose exec -T -e RESTORE_SUFFIX="$restore_suffix" database sh -ec '
     fi
 '
 
-compose run --rm --no-deps -T --entrypoint /bin/sh --user www-data api -ec \
+# These helpers only replace the named volume; do not let one claim the stopped API's IP.
+run_storage_helper /bin/sh -ec \
     'find /var/www/html/storage/app -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +'
-compose run --rm --no-deps -T --entrypoint tar --user www-data api \
+run_storage_helper tar \
     --no-same-owner --no-same-permissions -xzf - -C /var/www/html/storage/app \
     < "$backup_path/app-storage.tar.gz"
 

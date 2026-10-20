@@ -16,6 +16,7 @@ final_dir="$backup_root/$backup_name"
 temporary_dir=""
 restart_targets=()
 writers_stopped=0
+gateway_was_running=0
 
 compose() {
     docker compose \
@@ -25,14 +26,36 @@ compose() {
         "$@"
 }
 
+run_storage_helper() {
+    local api_container api_image
+    api_container="$(compose ps --all --quiet api)"
+
+    if [[ -z "$api_container" || "$api_container" == *$'\n'* ]]; then
+        printf '%s\n' "Expected exactly one Compose API container for app_storage access." >&2
+        return 1
+    fi
+
+    api_image="$(docker inspect --format '{{.Config.Image}}' "$api_container")"
+    docker run --rm --network none --volumes-from "$api_container" \
+        --user www-data --entrypoint "$1" "$api_image" "${@:2}"
+}
+
 finish() {
     local exit_status=$?
     trap - EXIT
 
     if (( writers_stopped )) && (("${#restart_targets[@]}" > 0)); then
-        if ! compose start "${restart_targets[@]}" >/dev/null; then
-            printf '%s\n' "Could not restart all services that were running before the backup." >&2
+        if ! compose up --detach --wait --wait-timeout 180 "${restart_targets[@]}" >/dev/null; then
+            printf '%s\n' "Could not restart and verify all services that were running before the backup." >&2
             exit_status=1
+        fi
+
+        if (( gateway_was_running )); then
+            if ! compose restart --timeout 30 gateway >/dev/null \
+                || ! compose up --detach --wait --wait-timeout 180 gateway >/dev/null; then
+                printf '%s\n' "Could not refresh and verify the gateway after restarting the API." >&2
+                exit_status=1
+            fi
         fi
     fi
 
@@ -59,6 +82,9 @@ if [[ -e "$final_dir" ]]; then
 fi
 
 running_services="$(compose ps --services --filter status=running)"
+if grep -Fxq -- gateway <<<"$running_services"; then
+    gateway_was_running=1
+fi
 if ! grep -Fxq -- database <<<"$running_services"; then
     printf '%s\n' "The Compose database service must be running before a backup." >&2
     exit 1
@@ -93,7 +119,7 @@ compose exec -T database sh -ec \
     'pg_dump --format=custom --no-acl --username="$POSTGRES_USER" --dbname="$POSTGRES_DB"' \
     > "$temporary_dir/database.dump"
 
-compose run --rm --no-deps -T --entrypoint tar --user www-data api \
+run_storage_helper tar \
     -C /var/www/html/storage/app -czf - . \
     > "$temporary_dir/app-storage.tar.gz"
 
