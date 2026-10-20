@@ -3,7 +3,14 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import type { ShoppingActivity, ShoppingItem, ShoppingList, ShoppingListsResponse } from '#lib/shopping';
+	import type {
+		MealSuggestionPreview,
+		MealSuggestionsResponse,
+		ShoppingActivity,
+		ShoppingItem,
+		ShoppingList,
+		ShoppingListsResponse
+	} from '#lib/shopping';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'shopping'));
@@ -35,6 +42,12 @@
 	let editName = $state('');
 	let editQuantity = $state('');
 	let editUnit = $state('');
+	let suggestionWeekStart = $state(mondayDate());
+	let subtractPantry = $state(false);
+	let suggestionPreview = $state<MealSuggestionPreview | null>(null);
+	let selectedSuggestionIds = $state<string[]>([]);
+	let suggestionLoading = $state(false);
+	let suggestionImporting = $state(false);
 
 	const openItems = $derived(items.filter((item) => !item.is_checked));
 	const checkedItems = $derived(items.filter((item) => item.is_checked));
@@ -84,6 +97,8 @@
 			if (next?.id !== previousId) {
 				historyOpen = false;
 				activity = [];
+				suggestionPreview = null;
+				selectedSuggestionIds = [];
 			}
 			if (next) await loadList(next.id);
 			else {
@@ -163,6 +178,64 @@
 			error = cause instanceof Error ? cause.message : 'The item could not be added.';
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function previewMealSuggestions(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		if (!activeListId) return;
+		error = '';
+		message = '';
+		suggestionLoading = true;
+		suggestionPreview = null;
+		selectedSuggestionIds = [];
+		try {
+			const result = await api<MealSuggestionsResponse>(
+				'/api/shopping/lists/' + activeListId + '/meal-suggestions',
+				'POST',
+				{ week_start: suggestionWeekStart, subtract_pantry: subtractPantry }
+			);
+			suggestionPreview = result.preview ?? null;
+			selectedSuggestionIds = suggestionPreview?.suggestions.map((suggestion) => suggestion.id) ?? [];
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Meal suggestions could not be prepared.';
+		} finally {
+			suggestionLoading = false;
+		}
+	}
+
+	async function importMealSuggestions(): Promise<void> {
+		if (!activeListId || !suggestionPreview || selectedSuggestionIds.length === 0) return;
+		error = '';
+		message = '';
+		suggestionImporting = true;
+		try {
+			const result = await api<MealSuggestionsResponse>(
+				'/api/shopping/lists/' + activeListId + '/meal-suggestions/import',
+				'POST',
+				{
+					week_start: suggestionPreview.week_start,
+					subtract_pantry: suggestionPreview.subtract_pantry,
+					expected_list_version: suggestionPreview.list_version,
+					preview_expires_at: suggestionPreview.preview_expires_at,
+					preview_token: suggestionPreview.preview_token,
+					confirmed: true,
+					suggestion_ids: selectedSuggestionIds
+				}
+			);
+			const added = result.items?.length ?? 0;
+			suggestionPreview = null;
+			selectedSuggestionIds = [];
+			message = `${added} meal suggestion${added === 1 ? '' : 's'} added to the list. Pantry stock was not changed.`;
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Meal suggestions could not be added.';
+			if (error.toLowerCase().includes('changed') || error.toLowerCase().includes('expired')) {
+				suggestionPreview = null;
+				selectedSuggestionIds = [];
+			}
+		} finally {
+			suggestionImporting = false;
 		}
 	}
 
@@ -312,6 +385,18 @@
 		if (!value) return 'Just now';
 		return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 	}
+
+	function mondayDate(): string {
+		const date = new Date();
+		const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+		monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+		return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+	}
+
+	function invalidateMealPreview(): void {
+		suggestionPreview = null;
+		selectedSuggestionIds = [];
+	}
 </script>
 
 <svelte:head>
@@ -420,6 +505,67 @@
 							</div>
 							<p class="mt-2 text-xs text-slate-500">Add both quantity and unit, or leave both blank. No unit conversions are applied.</p>
 						</form>
+					{/if}
+
+					{#if activeList.can_add_items}
+						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Optional connection</p>
+								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">Suggestions from meal plans</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-400">Review recipe ingredients before adding them. Free-text meals stay untouched, pantry stock is read-only, and units are never converted.</p>
+							</div>
+							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+								<label class="block text-xs font-medium text-slate-400">Week starting Monday
+									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
+								</label>
+								<label class="flex min-h-11 items-center gap-2 rounded-xl border border-slate-800 px-3 py-2 text-xs leading-5 text-slate-300">
+									<input bind:checked={subtractPantry} onchange={invalidateMealPreview} type="checkbox" class="size-4 shrink-0 accent-violet-300" />
+									<span>Subtract visible Pantry stock in the preview</span>
+								</label>
+								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-violet-300/40 px-4 text-sm font-semibold text-violet-100 hover:bg-violet-300/10 disabled:opacity-60">{suggestionLoading ? 'Preparing…' : 'Review suggestions'}</button>
+							</form>
+
+							{#if suggestionPreview}
+								<div class="mt-4 space-y-3 border-t border-slate-800 pt-4" aria-live="polite">
+									{#if !suggestionPreview.availability.meal_planning}
+										<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">Meal Planning is disabled or unavailable to your account. No plan data was loaded.</p>
+									{:else}
+										{#if subtractPantry && !suggestionPreview.availability.pantry}
+											<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">Pantry is disabled or unavailable to your account. Suggestions show the full recipe quantities.</p>
+										{:else if suggestionPreview.availability.pantry && !subtractPantry}
+											<p class="text-xs text-slate-500">Pantry was not read. Select the option above and review again to account for stock you can view.</p>
+										{/if}
+										{#if suggestionPreview.suggestions.length === 0}
+											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">No importable recipe ingredients were found for this week.</p>
+										{:else}
+											<p class="text-xs text-slate-400">All suggestions are selected. Review the quantities and uncheck anything you do not want to add.</p>
+											<div class="max-h-80 space-y-2 overflow-y-auto">
+												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
+													<label class="flex min-h-12 items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-3">
+														<input bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} class="mt-0.5 size-4 shrink-0 accent-violet-300" />
+														<span class="min-w-0 flex-1">
+															<span class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+																<span class="break-words text-sm font-medium text-white">{suggestion.name}</span>
+																<span class="text-sm tabular-nums text-violet-100">{suggestion.quantity} {suggestion.unit}</span>
+															</span>
+															{#if suggestion.pantry_status === 'unit_mismatch'}<span class="mt-1 block text-xs text-amber-200">Visible Pantry stock uses a different unit; nothing was subtracted.</span>{/if}
+														{#if suggestion.pantry_status === 'unavailable'}<span class="mt-1 block text-xs text-amber-200">Pantry was unavailable; the full amount is shown.</span>{/if}
+														{#if suggestion.pantry_quantity_used !== '0.000'}<span class="mt-1 block text-xs text-emerald-200">After previewing {suggestion.pantry_quantity_used} {suggestion.unit} of visible stock.</span>{/if}
+														</span>
+													</label>
+												{/each}
+											</div>
+											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} free-text meal(s) have no recipe ingredients to suggest.</p>{/if}
+											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-slate-500">Some linked recipes are unavailable to your account and were skipped.</p>{/if}
+											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-amber-200">Some quantities cannot be represented exactly in Shopping and were skipped.</p>{/if}
+											{#if suggestionPreview.skipped.covered_by_pantry > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.covered_by_pantry} ingredient group(s) are covered by visible Pantry stock. Stock remains unchanged.</p>{/if}
+											<p class="text-xs leading-5 text-slate-500">Adding suggestions copies items into this list only. Confirming will not change meal plans, recipes or Pantry stock.</p>
+											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-violet-300 px-4 text-sm font-semibold text-slate-950 hover:bg-violet-200 disabled:opacity-50">{suggestionImporting ? 'Adding…' : `Add ${selectedSuggestionIds.length} selected item${selectedSuggestionIds.length === 1 ? '' : 's'} to this list`}</button>
+										{/if}
+									{/if}
+								</div>
+							{/if}
+						</section>
 					{/if}
 
 					<div class="rounded-2xl border border-slate-800 bg-slate-900/55">

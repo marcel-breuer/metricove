@@ -239,6 +239,10 @@ Route::middleware('web')->group(function (): void {
         });
 
         Route::prefix('shopping')->name('shopping.')->group(function (): void {
+            Route::post('/lists/{list}/meal-suggestions', [ShoppingController::class, 'mealSuggestions'])
+                ->middleware('module.enabled:shopping')->whereNumber('list')->name('lists.meal-suggestions.preview');
+            Route::post('/lists/{list}/meal-suggestions/import', [ShoppingController::class, 'importMealSuggestions'])
+                ->middleware('module.enabled:shopping')->whereNumber('list')->name('lists.meal-suggestions.import');
             Route::get('/lists', [ShoppingController::class, 'index'])
                 ->middleware('module.access:shopping,view')->name('lists.index');
             Route::post('/lists', [ShoppingController::class, 'storeList'])

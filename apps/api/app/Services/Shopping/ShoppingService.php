@@ -15,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class ShoppingService
@@ -47,6 +48,65 @@ class ShoppingService
             'list' => $this->presentList($actor, $list, $canEdit),
             'items' => $items->map(fn (ShoppingItem $item): array => $this->presentItem($item, $canEdit))->all(),
         ];
+    }
+
+    public function mealSuggestionListVersion(User $actor, int $listId): int
+    {
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
+        $list = $this->visibleLists($actor, [ModuleCapability::View], ShoppingList::query())
+            ->whereKey($listId)->firstOrFail();
+        $this->authorizeListCapability($actor, $list, ModuleCapability::View);
+        $this->authorizeListCapability($actor, $list, ModuleCapability::Create);
+
+        return (int) $list->version;
+    }
+
+    /** @param list<array{name: string, quantity: string, unit: string}> $suggestions
+     * @return list<array<string, mixed>>
+     */
+    public function addSuggestedItems(User $actor, int $listId, int $expectedVersion, array $suggestions): array
+    {
+        $normalized = [];
+
+        foreach ($suggestions as $index => $suggestion) {
+            $name = is_string($suggestion['name'] ?? null) ? trim($suggestion['name']) : '';
+            if ($name === '' || mb_strlen($name) > 180) {
+                throw ValidationException::withMessages(["suggestion_ids.{$index}" => 'A suggested item name is not valid.']);
+            }
+
+            $quantity = ShoppingQuantity::normalize($suggestion['quantity'] ?? null, $suggestion['unit'] ?? null);
+            $normalized[] = ['name' => $name, ...$quantity];
+        }
+
+        [$items, $canEdit] = DB::transaction(function () use ($actor, $listId, $expectedVersion, $normalized): array {
+            $list = $this->findListForMutation($actor, $listId, [ModuleCapability::Create, ModuleCapability::Manage]);
+            $this->authorizeListCapability($actor, $list, ModuleCapability::View);
+            $this->authorizeListCapability($actor, $list, ModuleCapability::Create);
+            $this->assertVersion($list->version, $expectedVersion, 'The shopping list changed. Review the meal suggestions again.');
+
+            $sortOrder = ((int) $list->items()->max('sort_order')) + 100;
+            $created = [];
+            foreach ($normalized as $suggestion) {
+                $item = $list->items()->create([
+                    'created_by_user_id' => $actor->id,
+                    'name' => $suggestion['name'],
+                    'quantity' => $suggestion['quantity'],
+                    'unit' => $suggestion['unit'],
+                    'sort_order' => $sortOrder,
+                    'is_checked' => false,
+                    'version' => 1,
+                ]);
+                $sortOrder += 100;
+                $created[] = $item;
+                $this->recordEvent($list, $item, $actor, 'item_added', null, $this->itemSnapshot($item));
+            }
+
+            $this->bumpList($list);
+
+            return [$created, $this->canUse($actor, $list, ModuleCapability::Edit)];
+        }, 3);
+
+        return array_map(fn (ShoppingItem $item): array => $this->presentItem($item, $canEdit), $items);
     }
 
     /** @param array<string, mixed> $data

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ImportMealSuggestionsRequest;
 use App\Http\Requests\MoveShoppingItemRequest;
+use App\Http\Requests\PreviewMealSuggestionsRequest;
 use App\Http\Requests\SetShoppingItemCheckedRequest;
 use App\Http\Requests\StoreShoppingItemRequest;
 use App\Http\Requests\StoreShoppingListRequest;
 use App\Http\Requests\UpdateShoppingItemRequest;
 use App\Http\Requests\UpdateShoppingListRequest;
 use App\Models\User;
+use App\Services\Shopping\MealShoppingSuggestionService;
 use App\Services\Shopping\ShoppingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,6 +48,27 @@ class ShoppingController extends Controller
     public function history(Request $request, int $list, ShoppingService $shopping): JsonResponse
     {
         return response()->json(['events' => $shopping->history($this->actor($request), $list)]);
+    }
+
+    public function mealSuggestions(
+        PreviewMealSuggestionsRequest $request,
+        int $list,
+        MealShoppingSuggestionService $suggestions,
+    ): JsonResponse {
+        return response()->json([
+            'preview' => $suggestions->preview($this->actor($request), $list, $request->validated()),
+        ]);
+    }
+
+    public function importMealSuggestions(
+        ImportMealSuggestionsRequest $request,
+        int $list,
+        MealShoppingSuggestionService $suggestions,
+    ): JsonResponse {
+        return response()->json([
+            'message' => 'Selected meal suggestions were added to the shopping list.',
+            'items' => $suggestions->import($this->actor($request), $list, $request->validated()),
+        ]);
     }
 
     public function storeItem(StoreShoppingItemRequest $request, int $list, ShoppingService $shopping): JsonResponse
