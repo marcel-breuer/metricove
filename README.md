@@ -44,7 +44,7 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, queue worker and scheduler. Only the gateway publishes a host port.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
-See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Container images will be published with GitHub releases.
+See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Release versions and image operations are documented in [the release guide](docs/releases.md).
 
 ## Docker Compose
 
@@ -61,7 +61,7 @@ The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and s
 
 PostgreSQL data, Redis queue data and Laravel application files use named Docker volumes. `docker compose down` preserves them; `docker compose down --volumes` deletes them. Back up the PostgreSQL and application-storage volumes before upgrades or destructive maintenance.
 
-GitHub Actions publishes the API, web and gateway images to GHCR for `linux/amd64` and `linux/arm64` when a GitHub release is published. The image tag is the release version without its leading `v` (for example, `1.2.3`). New GHCR packages default to private; make each package public in its GitHub package settings if installations should pull without registry credentials. For a release deployment, set `APP_IMAGE_TAG` in `.env` to the release version, then run `docker compose pull` and `docker compose up -d`. A local Compose build targets the current host architecture.
+GitHub Actions publishes the API, web and gateway images to GHCR for `linux/amd64` and `linux/arm64` after the release commit's main-branch quality and Compose workflows pass. Tags omit the leading `v` (for example, `0.1.0`); version tags are published once, and each release records its immutable image digests. New GHCR packages default to private; make each package public in its GitHub package settings if installations should pull without registry credentials. Set `APP_IMAGE_TAG` in `.env` to the release version, then run `docker compose pull` and `docker compose up -d --wait`. Back up persistent data before upgrades and follow the [upgrade and rollback steps](docs/releases.md#upgrade-and-rollback). A local Compose build targets the current host architecture.
 
 ## Development
 
@@ -95,4 +95,4 @@ We welcome bug reports, feature proposals, documentation, tests and code contrib
 
 Metricove is published under the [MIT License](LICENSE). Community contributions are welcome under the policies in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Release conventions will use SemVer, changelogs, CI checks and reproducible multi-architecture images. Track decisions and work in GitHub Issues.
+Release conventions use pre-1.0 SemVer, a maintained changelog, successful CI and reproducible multi-architecture images. Track release work in GitHub Issues.
