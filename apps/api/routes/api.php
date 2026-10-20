@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
+use App\Http\Controllers\Api\MealPlanningController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
@@ -209,6 +210,17 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('unfavorite');
             Route::get('/{recipe}/photo', [RecipesController::class, 'photo'])
                 ->middleware('module.access:recipes,view')->whereNumber('recipe')->name('photo');
+        });
+
+        Route::prefix('meal-planning')->name('meal-planning.')->group(function (): void {
+            Route::get('/', [MealPlanningController::class, 'week'])
+                ->middleware('module.access:meal_planning,view')->name('week');
+            Route::post('/slots', [MealPlanningController::class, 'store'])
+                ->middleware('module.enabled:meal_planning')->name('slots.store');
+            Route::patch('/slots/{slot}', [MealPlanningController::class, 'update'])
+                ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.update');
+            Route::delete('/slots/{slot}', [MealPlanningController::class, 'destroy'])
+                ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.destroy');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
