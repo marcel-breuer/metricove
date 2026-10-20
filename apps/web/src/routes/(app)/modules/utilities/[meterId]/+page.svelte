@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import type { UtilityMeter, UtilityReading, UtilityReadingRevision, UtilitiesResponse } from '#lib/utilities';
@@ -13,6 +13,8 @@
 	const canCreate = $derived(access?.capabilities.create ?? false);
 	const canEdit = $derived(access?.capabilities.edit ?? false);
 	const canManage = $derived(access?.capabilities.manage ?? false);
+	const importAccess = $derived(shell.modules.find((module) => module.key === 'import'));
+	const canSuggest = $derived(canCreate && importAccess?.capabilities.create === true);
 
 	let meter = $state<UtilityMeter | null>(null);
 	let readings = $state<UtilityReading[]>([]);
@@ -25,6 +27,8 @@
 	let readingValue = $state('');
 	let readingNote = $state('');
 	let readingPhoto = $state<File | null>(null);
+	let ocrWorking = $state(false);
+	let ocrMessage = $state('');
 	let meterName = $state('');
 	let alertThreshold = $state('');
 	let editingReadingId = $state<number | null>(null);
@@ -40,7 +44,7 @@
 	const alertCount = $derived(readings.filter((reading) => reading.alert).length);
 	const latestUsage = $derived([...readings].reverse().find((reading) => reading.consumption_since_previous !== null) ?? null);
 
-	onMount(() => { void loadMeter(); });
+	$effect(() => { if (!shell.loading) void loadMeter(); });
 
 	function localDate(): string {
 		const date = new Date();
@@ -99,6 +103,35 @@
 			error = 'The reading could not be saved. Check your connection and try again.';
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function suggestReadingFromPhoto(): Promise<void> {
+		if (!meter || !readingPhoto || !canSuggest || ocrWorking) return;
+		const token = csrfToken();
+		if (!token) { ocrMessage = 'Reload this page and try again.'; return; }
+		const form = new FormData();
+		form.set('photo', readingPhoto);
+		ocrWorking = true;
+		ocrMessage = '';
+		try {
+			const response = await fetch(`/api/import/utilities/meters/${meter.id}/reading-suggestions`, {
+				method: 'POST', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }, body: form
+			});
+			if (response.status === 401) { await goto('/login'); return; }
+			const result = (await response.json()) as { value?: string | null; message?: string };
+			if (!response.ok) throw new Error(result.message || 'A local reading suggestion is unavailable.');
+			if (result.value) {
+				readingValue = result.value;
+				ocrMessage = `Suggested ${result.value} ${meter.unit}. Check the meter photo and save the reading yourself.`;
+			} else {
+				ocrMessage = 'No single reading could be recognized. Enter the value from the photo manually.';
+			}
+		} catch (cause) {
+			ocrMessage = cause instanceof Error ? cause.message : 'A local reading suggestion is unavailable.';
+		} finally {
+			ocrWorking = false;
 		}
 	}
 
@@ -224,7 +257,10 @@
 						<label class="block text-sm font-medium text-slate-200">Reading date<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						<label class="block text-sm font-medium text-slate-200">Cumulative value <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={readingValue} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="1234.567" /></label>
 						<label class="block text-sm font-medium text-slate-200">Note <span class="font-normal text-slate-500">(optional)</span><textarea bind:value={readingNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Meter display or context"></textarea></label>
-						<label class="block text-sm font-medium text-slate-200">Meter photo <span class="font-normal text-slate-500">(optional, max 5 MB)</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; }} class="mt-2 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
+						<label class="block text-sm font-medium text-slate-200">Meter photo <span class="font-normal text-slate-500">(optional, max 5 MB)</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; ocrMessage = ''; }} class="mt-2 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
+						{#if canSuggest}
+							<div><button type="button" onclick={suggestReadingFromPhoto} disabled={!readingPhoto || ocrWorking || saving} class="min-h-10 rounded-lg border border-cyan-300/30 px-3 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{ocrWorking ? 'Reading photo locally…' : 'Suggest value from photo'}</button><p class="mt-2 text-xs leading-5 text-slate-500">Local OCR only. The suggestion is never saved until you confirm with Save reading.</p>{#if ocrMessage}<p role="status" class="mt-2 text-sm text-cyan-100">{ocrMessage}</p>{/if}</div>
+						{/if}
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : 'Save reading'}</button>
 					</form>
 				</section>

@@ -10,10 +10,12 @@ use App\Services\Modules\ModuleAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\LazyCollection;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -293,6 +295,55 @@ class UtilityService
         return Storage::disk('local')->path($reading->photo_path);
     }
 
+    /**
+     * Return the full visible reading history for an authorized import target.
+     * Imports require both meter-level view and create access so chronology checks
+     * never need to inspect a reading that the member cannot view.
+     *
+     * @return array{meter: UtilityMeter, readings: list<UtilityReading>}
+     */
+    public function importContext(User $actor, int $meterId, bool $lock = false): array
+    {
+        $query = UtilityMeter::query()->whereKey($meterId);
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+        $meter = $query->firstOrFail();
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $meter);
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $meter);
+
+        $allReadingsCount = $meter->readings()->count();
+        $visibleReadings = $this->visibleReadings($actor, $meter)
+            ->orderBy('reading_date')
+            ->orderBy('id');
+        $readings = $visibleReadings->get();
+
+        if ($readings->count() !== $allReadingsCount) {
+            throw new AuthorizationException('All readings on this meter must be visible to import data.');
+        }
+
+        return ['meter' => $meter, 'readings' => $readings->all()];
+    }
+
+    public function authorizeMeterForReading(User $actor, int $meterId): UtilityMeter
+    {
+        $meter = $this->findVisibleMeter($actor, $meterId, ModuleCapability::View);
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $meter);
+
+        return $meter;
+    }
+
+    /** @return LazyCollection<int, UtilityReading> */
+    public function exportableReadings(User $actor, int $meterId): LazyCollection
+    {
+        $meter = $this->findVisibleMeter($actor, $meterId, ModuleCapability::View);
+
+        return $this->visibleReadings($actor, $meter)
+            ->orderBy('reading_date')
+            ->orderBy('id')
+            ->cursor();
+    }
+
     private function visibleMeters(User $actor): Builder
     {
         $morphType = (new UtilityMeter)->getMorphClass();
@@ -351,6 +402,24 @@ class UtilityService
         $this->access->authorize($actor, self::MODULE, $capability, $reading);
 
         return $reading;
+    }
+
+    private function visibleReadings(User $actor, UtilityMeter $meter): HasMany
+    {
+        $morphType = (new UtilityReading)->getMorphClass();
+
+        return $meter->readings()->where(function (Builder $query) use ($actor, $morphType): void {
+            $query->where('is_private', false)
+                ->orWhere('owner_user_id', $actor->id)
+                ->orWhereExists(function (QueryBuilder $permissions) use ($actor, $morphType): void {
+                    $permissions->selectRaw('1')
+                        ->from('resource_user_permissions')
+                        ->whereColumn('resource_user_permissions.resource_id', 'utility_readings.id')
+                        ->where('resource_user_permissions.resource_type', $morphType)
+                        ->where('resource_user_permissions.user_id', $actor->id)
+                        ->where('resource_user_permissions.capability', ModuleCapability::View->value);
+                });
+        });
     }
 
     private function assertChronology(UtilityMeter $meter, string $date, string $value, ?int $exceptReadingId = null): void

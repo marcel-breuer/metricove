@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
 use App\Http\Controllers\Api\MealPlanningController;
@@ -207,6 +208,21 @@ Route::middleware('web')->group(function (): void {
                 ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.update');
             Route::delete('/widgets/{widget}', [AnalyticsController::class, 'destroy'])
                 ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.destroy');
+        });
+
+        Route::prefix('import')->name('import.')->group(function (): void {
+            Route::get('/utilities/meters/{meter}/readings.csv', [ImportController::class, 'export'])
+                ->middleware(['module.access:import,view', 'module.access:utilities,view'])
+                ->whereNumber('meter')->name('utilities.readings.export');
+            Route::post('/utilities/meters/{meter}/readings/preview', [ImportController::class, 'preview'])
+                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
+                ->whereNumber('meter')->name('utilities.readings.preview');
+            Route::post('/utilities/meters/{meter}/readings/confirm', [ImportController::class, 'confirm'])
+                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
+                ->whereNumber('meter')->name('utilities.readings.confirm');
+            Route::post('/utilities/meters/{meter}/reading-suggestions', [ImportController::class, 'suggest'])
+                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
+                ->whereNumber('meter')->name('utilities.readings.suggest');
         });
 
         Route::prefix('recipes')->name('recipes.')->group(function (): void {

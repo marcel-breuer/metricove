@@ -16,7 +16,10 @@ FROM serversideup/php:8.4-fpm-bookworm AS runtime
 LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricove"
 
 USER root
-RUN install-php-extensions pdo_pgsql redis
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/* \
+    && install-php-extensions pdo_pgsql redis
 
 WORKDIR /var/www/html
 
@@ -51,6 +54,11 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php
 FROM serversideup/php:8.4-cli-bookworm AS test
 
 WORKDIR /var/www/html
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=www-data:www-data apps/api/ ./
 
