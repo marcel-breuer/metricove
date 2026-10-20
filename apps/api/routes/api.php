@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminMemberAuditController;
 use App\Http\Controllers\Api\AdminMemberController;
 use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
+use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
@@ -193,6 +194,19 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.update');
             Route::delete('/budgets/{budget}', [FinanceController::class, 'deleteBudget'])
                 ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.destroy');
+        });
+
+        Route::prefix('analytics')->name('analytics.')->group(function (): void {
+            Route::get('/catalog', [AnalyticsController::class, 'catalog'])
+                ->middleware('module.access:analytics,view')->name('catalog');
+            Route::get('/dashboard', [AnalyticsController::class, 'dashboard'])
+                ->middleware('module.access:analytics,view')->name('dashboard');
+            Route::post('/widgets', [AnalyticsController::class, 'store'])
+                ->middleware(['module.access:analytics,create', 'throttle:30,1'])->name('widgets.store');
+            Route::patch('/widgets/{widget}', [AnalyticsController::class, 'update'])
+                ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.update');
+            Route::delete('/widgets/{widget}', [AnalyticsController::class, 'destroy'])
+                ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.destroy');
         });
 
         Route::prefix('recipes')->name('recipes.')->group(function (): void {

@@ -67,7 +67,7 @@ return [
         ],
         'analytics' => [
             'label' => 'Analytics',
-            'description' => 'Cross-module charts and household summaries.',
+            'description' => 'Private cross-module charts for data the member can view.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,
