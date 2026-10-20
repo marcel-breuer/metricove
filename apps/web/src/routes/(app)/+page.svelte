@@ -3,6 +3,7 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
+	const analyticsAvailable = $derived(shell.modules.some((module) => module.key === 'analytics' && module.capabilities.view));
 </script>
 
 <svelte:head>
@@ -38,7 +39,8 @@
 			<div class="flex max-w-xl flex-col items-center text-center">
 				<div class="grid size-16 place-items-center rounded-2xl border border-slate-700 bg-slate-900 text-2xl text-slate-400" aria-hidden="true">▤</div>
 				<h2 class="mt-5 text-2xl font-semibold tracking-tight text-white">Your dashboard is taking shape.</h2>
-				<p class="mt-3 text-sm leading-6 text-slate-400">Your modules are enabled and ready. Their dashboards and data summaries will appear here as those features are delivered.</p>
+				<p class="mt-3 text-sm leading-6 text-slate-400">Your modules are enabled and ready. Open Analytics to configure charts from the data you can access.</p>
+				{#if analyticsAvailable}<a href="/modules/analytics" class="mt-5 inline-flex rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Open Analytics</a>{/if}
 			</div>
 		</div>
 
