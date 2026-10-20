@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PantryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecipesController;
+use App\Http\Controllers\Api\ShoppingController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UtilitiesController;
 use App\Http\Controllers\Api\VehiclesController;
@@ -235,6 +236,29 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:pantry')->whereNumber('item')->name('update');
             Route::post('/{item}/adjustments', [PantryController::class, 'adjust'])
                 ->middleware('module.enabled:pantry')->whereNumber('item')->name('adjustments.store');
+        });
+
+        Route::prefix('shopping')->name('shopping.')->group(function (): void {
+            Route::get('/lists', [ShoppingController::class, 'index'])
+                ->middleware('module.access:shopping,view')->name('lists.index');
+            Route::post('/lists', [ShoppingController::class, 'storeList'])
+                ->middleware('module.enabled:shopping')->name('lists.store');
+            Route::get('/lists/{list}', [ShoppingController::class, 'show'])
+                ->middleware('module.access:shopping,view')->whereNumber('list')->name('lists.show');
+            Route::patch('/lists/{list}', [ShoppingController::class, 'updateList'])
+                ->middleware('module.enabled:shopping')->whereNumber('list')->name('lists.update');
+            Route::get('/lists/{list}/history', [ShoppingController::class, 'history'])
+                ->middleware('module.access:shopping,view')->whereNumber('list')->name('lists.history');
+            Route::post('/lists/{list}/items', [ShoppingController::class, 'storeItem'])
+                ->middleware('module.enabled:shopping')->whereNumber('list')->name('items.store');
+            Route::patch('/items/{item}', [ShoppingController::class, 'updateItem'])
+                ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.update');
+            Route::patch('/items/{item}/checked', [ShoppingController::class, 'setChecked'])
+                ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.checked');
+            Route::post('/items/{item}/move', [ShoppingController::class, 'moveItem'])
+                ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.move');
+            Route::delete('/items/{item}', [ShoppingController::class, 'deleteItem'])
+                ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.destroy');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {

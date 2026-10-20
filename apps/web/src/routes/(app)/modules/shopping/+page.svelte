@@ -1,0 +1,534 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { getContext } from 'svelte';
+	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import type { ShoppingActivity, ShoppingItem, ShoppingList, ShoppingListsResponse } from '#lib/shopping';
+
+	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
+	const access = $derived(shell.modules.find((module) => module.key === 'shopping'));
+	const canView = $derived(access?.capabilities.view ?? false);
+	const canCreate = $derived(access?.capabilities.create ?? false);
+	const canManageShared = $derived(shell.currentUser?.is_admin === true && (access?.capabilities.manage ?? false));
+	const canCreateList = $derived(canCreate || canManageShared);
+
+	let lists = $state<ShoppingList[]>([]);
+	let activeListId = $state<number | null>(null);
+	let activeList = $state<ShoppingList | null>(null);
+	let items = $state<ShoppingItem[]>([]);
+	let activity = $state<ShoppingActivity[]>([]);
+	let loading = $state(true);
+	let listLoading = $state(false);
+	let saving = $state(false);
+	let error = $state('');
+	let message = $state('');
+	let listName = $state('');
+	let visibility = $state<'private' | 'household'>('private');
+	let quickName = $state('');
+	let quickQuantity = $state('');
+	let quickUnit = $state('');
+	let filter = $state<'open' | 'checked' | 'all'>('open');
+	let sortMode = $state<'manual' | 'name'>('manual');
+	let historyOpen = $state(false);
+	let historyLoading = $state(false);
+	let editingItemId = $state<number | null>(null);
+	let editName = $state('');
+	let editQuantity = $state('');
+	let editUnit = $state('');
+
+	const openItems = $derived(items.filter((item) => !item.is_checked));
+	const checkedItems = $derived(items.filter((item) => item.is_checked));
+	const visibleItems = $derived.by(() => {
+		let result = items.filter((item) => filter === 'all' || (filter === 'checked' ? item.is_checked : !item.is_checked));
+		if (sortMode === 'name') result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+		return result;
+	});
+
+	$effect(() => {
+		if (!shell.loading && canView) void loadLists();
+		else if (!shell.loading) loading = false;
+	});
+
+	async function api<T>(path: string, method = 'GET', body?: object): Promise<T> {
+		const headers: Record<string, string> = { Accept: 'application/json' };
+		if (method !== 'GET') {
+			const token = csrfToken();
+			if (!token) throw new Error('Reload this page and try again.');
+			headers['X-XSRF-TOKEN'] = token;
+			headers['Content-Type'] = 'application/json';
+		}
+		const response = await fetch(path, {
+			method,
+			credentials: 'same-origin',
+			headers,
+			...(body ? { body: JSON.stringify(body) } : {})
+		});
+		if (response.status === 401) {
+			await goto('/login');
+			throw new Error('Your session has expired.');
+		}
+		const result = (await response.json()) as T & ApiResponse;
+		if (!response.ok) throw new Error(firstError(result) || result.message || 'Shopping could not complete that request.');
+		return result as T;
+	}
+
+	async function loadLists(preferredId: number | null = activeListId): Promise<void> {
+		loading = true;
+		error = '';
+		try {
+			const result = await api<ShoppingListsResponse>('/api/shopping/lists');
+			lists = result.lists ?? [];
+			const previousId = activeListId;
+			const next = lists.find((list) => list.id === preferredId) ?? lists[0] ?? null;
+			activeListId = next?.id ?? null;
+			if (next?.id !== previousId) {
+				historyOpen = false;
+				activity = [];
+			}
+			if (next) await loadList(next.id);
+			else {
+				activeList = null;
+				items = [];
+				activity = [];
+			}
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Shopping lists could not be loaded.';
+		} finally {
+			loading = false;
+		}
+	}
+
+	async function loadList(id: number): Promise<void> {
+		listLoading = true;
+		error = '';
+		try {
+			const result = await api<ShoppingListsResponse>('/api/shopping/lists/' + id);
+			activeList = result.list ?? null;
+			items = result.items ?? [];
+			activeListId = id;
+			editingItemId = null;
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'This shopping list could not be loaded.';
+		} finally {
+			listLoading = false;
+		}
+	}
+
+	async function refresh(): Promise<void> {
+		const reloadActivity = historyOpen;
+		activity = [];
+		await loadLists(activeListId);
+		if (reloadActivity && activeList) await loadActivity();
+	}
+
+	async function createList(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		error = '';
+		message = '';
+		saving = true;
+		try {
+			const result = await api<ShoppingListsResponse>('/api/shopping/lists', 'POST', {
+				name: listName,
+				visibility: canManageShared ? visibility : 'private'
+			});
+			listName = '';
+			visibility = 'private';
+			message = 'Shopping list created.';
+			await loadLists(result.list?.id ?? null);
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The shopping list could not be created.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function addItem(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		if (!activeListId) return;
+		error = '';
+		message = '';
+		saving = true;
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/lists/' + activeListId + '/items', 'POST', {
+				name: quickName,
+				quantity: quickQuantity.trim() || null,
+				unit: quickUnit.trim() || null
+			});
+			quickName = '';
+			quickQuantity = '';
+			quickUnit = '';
+			message = 'Item added to the list.';
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The item could not be added.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function setChecked(item: ShoppingItem, checked: boolean): Promise<void> {
+		error = '';
+		message = '';
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id + '/checked', 'PATCH', {
+				expected_version: item.version,
+				checked
+			});
+			message = checked ? 'Item checked off.' : 'Item restored to the list.';
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The item status could not be changed.';
+		}
+	}
+
+	function startEdit(item: ShoppingItem): void {
+		editingItemId = item.id;
+		editName = item.name;
+		editQuantity = item.quantity ?? '';
+		editUnit = item.unit ?? '';
+		error = '';
+	}
+
+	async function saveItem(event: SubmitEvent, item: ShoppingItem): Promise<void> {
+		event.preventDefault();
+		error = '';
+		message = '';
+		saving = true;
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id, 'PATCH', {
+				expected_version: item.version,
+				name: editName,
+				quantity: editQuantity.trim() || null,
+				unit: editUnit.trim() || null
+			});
+			editingItemId = null;
+			message = 'Shopping item updated.';
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The item could not be updated.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function moveItem(item: ShoppingItem, direction: 'up' | 'down'): Promise<void> {
+		error = '';
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id + '/move', 'POST', {
+				expected_version: item.version,
+				direction
+			});
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The item order could not be changed.';
+		}
+	}
+
+	async function removeItem(item: ShoppingItem): Promise<void> {
+		error = '';
+		message = '';
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id, 'DELETE');
+			message = 'Item removed. Its activity remains in the list history.';
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The item could not be removed.';
+		}
+	}
+
+	async function renameList(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		if (!activeList) return;
+		error = '';
+		message = '';
+		try {
+			await api<ShoppingListsResponse>('/api/shopping/lists/' + activeList.id, 'PATCH', {
+				expected_version: activeList.version,
+				name: activeList.name
+			});
+			message = 'Shopping list renamed.';
+			await refresh();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The list name could not be changed.';
+		}
+	}
+
+	async function loadActivity(): Promise<void> {
+		if (!activeList) return;
+		historyLoading = true;
+		error = '';
+		try {
+			const result = await api<ShoppingListsResponse>('/api/shopping/lists/' + activeList.id + '/history');
+			activity = result.events ?? [];
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'List history could not be loaded.';
+		} finally {
+			historyLoading = false;
+		}
+	}
+
+	async function toggleHistory(): Promise<void> {
+		historyOpen = !historyOpen;
+		if (!historyOpen || !activeList || activity.length > 0) return;
+		await loadActivity();
+	}
+
+	function chooseList(id: number): void {
+		historyOpen = false;
+		activity = [];
+		message = '';
+		void loadList(id);
+	}
+
+	function isFirstInGroup(item: ShoppingItem): boolean {
+		const group = items.filter((entry) => entry.is_checked === item.is_checked)
+			.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
+		return group[0]?.id === item.id;
+	}
+
+	function isLastInGroup(item: ShoppingItem): boolean {
+		const group = items.filter((entry) => entry.is_checked === item.is_checked)
+			.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
+		return group.at(-1)?.id === item.id;
+	}
+
+	function eventLabel(entry: ShoppingActivity): string {
+		const subject = String(entry.after?.name ?? entry.before?.name ?? 'List');
+		const actor = entry.actor ? entry.actor + ' ' : '';
+		const action: Record<string, string> = {
+			list_created: 'created the list',
+			list_renamed: 'renamed the list',
+			item_added: 'added ' + subject,
+			item_updated: 'updated ' + subject,
+			item_checked: 'checked off ' + subject,
+			item_unchecked: 'restored ' + subject,
+			item_deleted: 'removed ' + subject,
+			item_reordered: 'reordered ' + subject
+		};
+		return actor + (action[entry.type] ?? 'changed the list');
+	}
+
+	function formatDate(value: string | null): string {
+		if (!value) return 'Just now';
+		return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+	}
+</script>
+
+<svelte:head>
+	<title>Shopping · Metricove</title>
+	<meta name="description" content="Keep shared shopping lists organized, current and easy to restore." />
+</svelte:head>
+
+<div class="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
+		<div>
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Food · Shopping</p>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">The list everyone can trust</h1>
+			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.</p>
+		</div>
+		{#if activeList}
+			<div class="flex gap-2 text-xs text-slate-400">
+				<span class="rounded-full border border-slate-700 px-3 py-2">{openItems.length} to buy</span>
+				<span class="rounded-full border border-slate-700 px-3 py-2">{checkedItems.length} checked</span>
+			</div>
+		{/if}
+	</header>
+
+	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{message}</p>{/if}
+	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{error}</p>{/if}
+
+	{#if shell.loading || loading}
+		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">Loading your shopping lists…</div>
+	{:else if !canView}
+		<section class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8">
+			<p class="text-sm font-medium text-amber-200">Shopping View access is required.</p>
+			<h2 class="mt-2 text-xl font-semibold text-white">Your lists stay private to the right members.</h2>
+			<p class="mt-3 text-sm leading-6 text-slate-400">Ask a household administrator to enable Shopping and grant your account View access.</p>
+		</section>
+	{:else}
+		<div class="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
+			<aside class="space-y-4">
+				<section class="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+					<div class="mb-3 flex items-center justify-between gap-3">
+						<h2 class="text-sm font-semibold text-white">Your lists</h2>
+						<span class="text-xs text-slate-500">{lists.length} / 100</span>
+					</div>
+					{#if lists.length}
+						<nav aria-label="Shopping lists" class="space-y-2">
+							{#each lists as list (list.id)}
+								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 {activeListId === list.id ? 'border-cyan-300/50 bg-cyan-300/10' : 'border-slate-800 bg-slate-950/40 hover:border-slate-600'}">
+									<span class="flex items-center justify-between gap-2">
+										<span class="truncate text-sm font-medium text-white">{list.name}</span>
+										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] uppercase tracking-wide text-cyan-300">Shared</span>{/if}
+									</span>
+									<span class="mt-1 block text-xs text-slate-500">{list.open_item_count} open · {list.item_count} total</span>
+								</button>
+							{/each}
+						</nav>
+					{:else}
+						<p class="rounded-xl border border-dashed border-slate-700 px-3 py-4 text-xs leading-5 text-slate-400">No lists yet. Create one to start collecting what you need.</p>
+					{/if}
+				</section>
+
+				{#if canCreateList}
+					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+						<h2 class="text-sm font-semibold text-white">Create a list</h2>
+						<label class="block text-xs font-medium text-slate-400">List name
+							<input bind:value={listName} maxlength="160" required placeholder="Weekly groceries" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+						</label>
+						{#if canManageShared}
+							<label class="block text-xs font-medium text-slate-400">Who can see it?
+								<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+									<option value="private">Only me</option>
+									<option value="household">Household</option>
+								</select>
+							</label>
+						{/if}
+						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{saving ? 'Creating…' : 'Create list'}</button>
+					</form>
+				{/if}
+			</aside>
+
+			{#if !activeList}
+				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
+					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Ready when you are</p>
+					<h2 class="mt-3 text-2xl font-semibold text-white">Start with one thing.</h2>
+					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.'}</p>
+				</section>
+			{:else}
+				<section class="min-w-0 space-y-4">
+					{#if activeList.can_add_items}
+						<form onsubmit={addItem} class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-4 shadow-lg shadow-cyan-950/10 sm:p-5">
+							<div class="mb-3 flex items-center justify-between gap-3">
+								<div>
+									<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Quick add</p>
+									<h2 class="mt-1 text-lg font-semibold text-white">What do you need?</h2>
+								</div>
+								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">Shared list</span>{/if}
+							</div>
+							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]">
+								<label class="text-xs font-medium text-slate-400">Item
+									<input bind:value={quickName} maxlength="180" required placeholder="Apples, olive oil…" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								</label>
+								<label class="text-xs font-medium text-slate-400">Quantity <span class="font-normal text-slate-600">optional</span>
+									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								</label>
+								<label class="text-xs font-medium text-slate-400">Unit <span class="font-normal text-slate-600">optional</span>
+									<input bind:value={quickUnit} maxlength="32" placeholder="kg, cans" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								</label>
+								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{saving ? 'Adding…' : 'Add item'}</button>
+							</div>
+							<p class="mt-2 text-xs text-slate-500">Add both quantity and unit, or leave both blank. No unit conversions are applied.</p>
+						</form>
+					{/if}
+
+					<div class="rounded-2xl border border-slate-800 bg-slate-900/55">
+						<header class="flex flex-col gap-3 border-b border-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+							<div class="min-w-0">
+								<div class="flex flex-wrap items-center gap-2">
+									<h2 class="truncate text-xl font-semibold text-white">{activeList.name}</h2>
+									<span class="rounded-full border border-slate-700 px-2.5 py-1 text-[0.65rem] uppercase tracking-wide {activeList.visibility === 'household' ? 'text-cyan-200' : 'text-slate-400'}">{activeList.visibility}</span>
+								</div>
+								<p class="mt-1 text-xs text-slate-500">{activeList.open_item_count} left to buy · {activeList.item_count} total</p>
+							</div>
+							<div class="flex flex-wrap items-center gap-2">
+								<label class="sr-only" for="shopping-filter">Show items</label>
+								<select id="shopping-filter" bind:value={filter} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
+									<option value="open">To buy</option>
+									<option value="checked">Checked</option>
+									<option value="all">All items</option>
+								</select>
+								<label class="sr-only" for="shopping-sort">Sort items</label>
+								<select id="shopping-sort" bind:value={sortMode} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
+									<option value="manual">List order</option>
+									<option value="name">Name A–Z</option>
+								</select>
+								{#if activeList.can_edit}
+									<form onsubmit={renameList} class="flex gap-2">
+										<label class="sr-only" for="shopping-list-name">Rename list</label>
+										<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="min-h-10 w-32 rounded-lg border border-slate-700 bg-slate-950 px-2.5 text-xs text-slate-200 sm:w-40" />
+										<button type="submit" disabled={saving} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">Rename</button>
+									</form>
+								{/if}
+							</div>
+						</header>
+
+						{#if listLoading}
+							<p class="p-6 text-sm text-slate-400">Loading items…</p>
+						{:else if visibleItems.length}
+							<ul aria-label="Shopping items" class="divide-y divide-slate-800/80">
+								{#each visibleItems as item (item.id)}
+									<li class="flex min-w-0 items-start gap-3 px-4 py-4 sm:items-center sm:px-5">
+										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-950 text-cyan-300 focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-50 sm:mt-0" />
+										<div class="min-w-0 flex-1">
+											<p class="break-words text-sm font-medium {item.is_checked ? 'text-slate-500 line-through' : 'text-white'}">{item.name}</p>
+											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{item.quantity} {item.unit}{:else}Quantity not set{/if}{#if item.is_checked && item.checked_at}<span> · Checked {formatDate(item.checked_at)}</span>{/if}</p>
+										</div>
+										{#if item.can_edit}
+											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+												{#if item.is_checked}
+													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-cyan-300/30 px-2.5 text-xs font-medium text-cyan-200 hover:bg-cyan-300/10">Put back</button>
+												{:else}
+													<button type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={'Move ' + item.name + ' up'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↑</button>
+													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↓</button>
+												{/if}
+												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">Edit</button>
+												<button type="button" onclick={() => void removeItem(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">Remove</button>
+											</div>
+										{/if}
+									</li>
+									{#if editingItemId === item.id}
+										<li class="border-t border-slate-800 bg-slate-950/50 px-4 py-4 sm:px-5">
+											<form onsubmit={(event) => saveItem(event, item)} class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto_auto]">
+												<label class="text-xs font-medium text-slate-400">Item name
+													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												</label>
+												<label class="text-xs font-medium text-slate-400">Quantity
+													<input bind:value={editQuantity} type="text" inputmode="decimal" maxlength="15" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												</label>
+												<label class="text-xs font-medium text-slate-400">Unit
+													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												</label>
+												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-xs font-semibold text-slate-950">Save</button>
+												<button type="button" onclick={() => (editingItemId = null)} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">Cancel</button>
+											</form>
+										</li>
+									{/if}
+								{/each}
+							</ul>
+						{:else}
+							<div class="px-5 py-10 text-center">
+								<p class="text-sm font-medium text-white">{items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.'}</p>
+								<p class="mt-1 text-xs text-slate-500">{filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.'}</p>
+							</div>
+						{/if}
+					</div>
+
+					<section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-slate-200 hover:bg-slate-900 sm:px-5">
+							<span>List activity</span><span class="text-xs text-slate-500">{historyOpen ? 'Hide' : 'Show last 100 events'} <span aria-hidden="true">{historyOpen ? '−' : '+'}</span></span>
+						</button>
+						{#if historyOpen}
+							<div class="border-t border-slate-800 px-4 py-3 sm:px-5">
+								{#if historyLoading}
+									<p class="py-3 text-xs text-slate-500">Loading activity…</p>
+								{:else if activity.length}
+									<ol class="divide-y divide-slate-800/70">
+										{#each activity as entry (entry.id)}
+											<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
+												<span class="break-words text-xs text-slate-300">{eventLabel(entry)}</span>
+												<time class="shrink-0 text-[0.68rem] text-slate-500">{formatDate(entry.created_at)}</time>
+											</li>
+										{/each}
+									</ol>
+								{:else}
+									<p class="py-3 text-xs text-slate-500">No list activity yet.</p>
+								{/if}
+							</div>
+						{/if}
+					</section>
+				</section>
+			{/if}
+		</div>
+	{/if}
+</div>
