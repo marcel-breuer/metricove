@@ -1,0 +1,1063 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property App\\Models\\Invitation\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/AdminInvitationController.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/AdminInvitationController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/AdminInvitationController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/AdminMemberAuditController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\HouseholdAuditEvent\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/AdminMemberAuditController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/ImportController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/McpController.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Services\\AI\\AssistantToolRegistry\:\:definitionsFor\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/McpController.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\Mcp\\McpAccessService\:\:allowedScopes\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/McpController.php
+
+		-
+			message: '#^Cannot call method isFuture\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/McpAccessToken.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int\<0, max\> and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/TrackerEntry.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/AI/Tools/FinanceMonthSummaryTool.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: app/Services/AI/Tools/FinanceMonthSummaryTool.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{''month''\} and array\{''month''\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Services/AI/Tools/FinanceMonthSummaryTool.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Services/AI/Tools/TrackingSnapshotTool.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Services/AI/Tools/UtilitiesSnapshotTool.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{\} and array\{\} will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Services/AI/Tools/VehiclesSnapshotTool.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Analytics/AnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$odometer_unit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Analytics/AnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$period\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Analytics/AnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Analytics/AnalyticsService.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Services/Analytics/AnalyticsService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invitation\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/Auth/InvitationService.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Auth/InvitationService.php
+
+		-
+			message: '#^Cannot call method toDayDateTimeString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Auth/InvitationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$ends_on\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$finance_category_id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$frequency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$is_private\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$next_due_on\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$occurred_on\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$period_start\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$starts_on\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_private\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\FinanceBudget but returns App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\FinanceCategory but returns \(App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\)\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\FinanceRecurringEntry but returns App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\FinancialTransaction but returns App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Call to an undefined method App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:budgets\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Call to an undefined method App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:recurringEntries\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Call to an undefined method App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:transactions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Cannot access property \$day on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 11
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Method App\\Services\\Finance\\FinanceService\:\:findCategoryForUse\(\) should return App\\Models\\FinanceCategory but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$capabilities$#'
+			identifier: parameter.notFound
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\FinanceBudget\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\FinanceCategory\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\FinanceRecurringEntry\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\FinancialTransaction\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\FinancialTransaction\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#1 \$entry of method App\\Services\\Finance\\FinanceService\:\:assertRecurringDates\(\) expects App\\Models\\FinanceRecurringEntry, App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Parameter \#2 \$category of method App\\Services\\Finance\\FinanceService\:\:presentRelatedCategory\(\) expects App\\Models\\FinanceCategory\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Finance/FinanceService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Import/ImportService.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_values contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Import/ImportService.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Import/ImportService.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Import/ImportService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\: int, 1\: int, 2\?\: int\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/Import/UtilityReadingsCsvParser.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: app/Services/Mcp/McpAccessService.php
+
+		-
+			message: '#^Call to function is_array\(\) with string\|null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''meter_id'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''meter_name'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''note'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''reading_date'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 3
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''unit'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Offset ''value'' does not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 3
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of static method Illuminate\\Database\\Connection\:\:transaction\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Services/Mcp/UtilityReadingMcpService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/MealPlanning/MealPlanningService.php
+
+		-
+			message: '#^Method App\\Services\\MealPlanning\\MealPlanningService\:\:findForMutation\(\) should return App\\Models\\MealPlanSlot but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/MealPlanning/MealPlanningService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\MealPlanSlot\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/MealPlanning/MealPlanningService.php
+
+		-
+			message: '#^Offset ''create''\|''edit''\|''manage''\|''view'' on array\{view\: bool, create\: bool, edit\: bool, manage\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Modules/MemberModulePermissionService.php
+
+		-
+			message: '#^Instanceof between App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model and App\\Contracts\\ModuleResource will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Services/Modules/ModuleAccessService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:movements\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Method App\\Services\\Pantry\\PantryService\:\:findForMutation\(\) should return App\\Models\\PantryItem but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Method App\\Services\\Pantry\\PantryService\:\:recordMovement\(\) should return App\\Models\\PantryStockMovement but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\PantryItem\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Property App\\Models\\PantryItem\:\:\$quantity \(float\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/Pantry/PantryService.php
+
+		-
+			message: '#^Method App\\Services\\Recipes\\RecipeService\:\:findForMutation\(\) should return App\\Models\\Recipe but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Recipes/RecipeService.php
+
+		-
+			message: '#^Method App\\Services\\Recipes\\RecipeService\:\:findVisible\(\) should return App\\Models\\Recipe but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Recipes/RecipeService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{name\: string, quantity\: mixed, unit\: string, note\?\: string\|null\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/Recipes/RecipeService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\Recipe\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Recipes/RecipeService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, position\: int\<0, max\>, name\: string, quantity\: numeric\-string&uppercase\-string, unit\: string, note\: string\|null\}, Closure\(App\\Models\\RecipeIngredient\)\: array\{id\: int\<0, max\>, position\: int\<0, max\>, name\: string, quantity\: numeric\-string&uppercase\-string, unit\: string, note\: string\|null\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Recipes/RecipeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Shopping/MealShoppingSuggestionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Shopping/MealShoppingSuggestionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Shopping/MealShoppingSuggestionService.php
+
+		-
+			message: '#^Instanceof between App\\Models\\Recipe and App\\Models\\Recipe will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Services/Shopping/MealShoppingSuggestionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sort_order\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$version\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:events\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:items\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Method App\\Services\\Shopping\\ShoppingService\:\:findListForMutation\(\) should return App\\Models\\ShoppingList but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Method App\\Services\\Shopping\\ShoppingService\:\:lockItemForMutation\(\) should return array\{App\\Models\\ShoppingList, App\\Models\\ShoppingItem\} but returns array\{Illuminate\\Database\\Eloquent\\Model, mixed\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Method App\\Services\\Shopping\\ShoppingService\:\:recordEvent\(\) should return App\\Models\\ShoppingListEvent but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Offset ''name'' on array\{name\: string, quantity\: string, unit\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Offset ''quantity'' on array\{name\: string, quantity\: string, unit\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Offset ''unit'' on array\{name\: string, quantity\: string, unit\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(Illuminate\\Database\\Eloquent\\Model\)\: mixed\)\|null, Closure\(App\\Models\\ShoppingItem\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\ShoppingItem\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$item of method App\\Services\\Shopping\\ShoppingService\:\:itemSnapshot\(\) expects App\\Models\\ShoppingItem, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$item of method App\\Services\\Shopping\\ShoppingService\:\:itemSnapshot\(\) expects App\\Models\\ShoppingItem, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$item of method App\\Services\\Shopping\\ShoppingService\:\:presentItem\(\) expects App\\Models\\ShoppingItem, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:search\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model, Closure\(App\\Models\\ShoppingItem\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#2 \$item of method App\\Services\\Shopping\\ShoppingService\:\:recordEvent\(\) expects App\\Models\\ShoppingItem\|null, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#2 \$item of method App\\Services\\Shopping\\ShoppingService\:\:recordEvent\(\) expects App\\Models\\ShoppingItem\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Parameter \#2 \$list of method App\\Services\\Shopping\\ShoppingService\:\:authorizeListCapability\(\) expects App\\Models\\ShoppingList, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Property App\\Models\\ShoppingItem\:\:\$quantity \(float\|null\) does not accept string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/Shopping/ShoppingService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\TrackerEntryValue\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\TrackerEntry\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''values''\|array\<''values''\|int, array\<int\|string, string\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{values\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Parameter \#2 \$right of static method App\\Services\\Tracking\\DecimalValue\:\:compare\(\) expects string, float given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/Tracking/TrackerEntryService.php
+
+		-
+			message: '#^Method App\\Services\\Tracking\\TrackerSchemaService\:\:findVisible\(\) should return App\\Models\\TrackerDefinition but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Tracking/TrackerSchemaService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\TrackerDefinition\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Tracking/TrackerSchemaService.php
+
+		-
+			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''fields''\|array\<''fields''\|int, array\<int\|string, string\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{fields\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Tracking/TrackerSchemaService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_reading_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_reading_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\UtilityReading but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 7
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Method App\\Services\\Utilities\\UtilityService\:\:exportableReadings\(\) should return Illuminate\\Support\\LazyCollection\<int, App\\Models\\UtilityReading\> but returns Illuminate\\Support\\LazyCollection\<int, Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Method App\\Services\\Utilities\\UtilityService\:\:importContext\(\) should return array\{meter\: App\\Models\\UtilityMeter, readings\: list\<App\\Models\\UtilityReading\>\} but returns array\{meter\: App\\Models\\UtilityMeter, readings\: array\<int, Illuminate\\Database\\Eloquent\\Model\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\UtilityMeter\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Parameter \#1 \$reading of method App\\Services\\Utilities\\UtilityService\:\:presentReading\(\) expects App\\Models\\UtilityReading, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Parameter \#3 \$previous of method App\\Services\\Utilities\\UtilityService\:\:presentReading\(\) expects App\\Models\\UtilityReading\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Property App\\Models\\UtilityMeter\:\:\$alert_threshold \(float\|null\) does not accept string\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/Utilities/UtilityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_reading_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$new_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_reading_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$old_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\VehicleCost but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\VehicleInsurancePolicy but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\VehicleMaintenanceRecord but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Anonymous function should return App\\Models\\VehicleOdometerReading but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 10
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Cannot call method lt\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Method App\\Services\\Vehicles\\VehicleService\:\:findVisibleOdometer\(\) should return App\\Models\\VehicleOdometerReading but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Method App\\Services\\Vehicles\\VehicleService\:\:findVisibleVehicle\(\) should return App\\Models\\Vehicle but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\Vehicle\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\Vehicle\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#1 \$reading of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\VehicleOdometerReading, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#2 \$vehicle of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\Vehicle, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php
+
+		-
+			message: '#^Parameter \#3 \$previous of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\VehicleOdometerReading\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Vehicles/VehicleService.php

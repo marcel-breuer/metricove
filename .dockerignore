@@ -12,6 +12,7 @@
 **/build
 **/.phpunit.result.cache
 **/bootstrap/cache/*.php
+**/storage/framework/testing/**
 **/storage/framework/cache/data/*
 **/storage/framework/sessions/*
 **/storage/framework/views/*
