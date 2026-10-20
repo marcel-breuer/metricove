@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateMcpToken;
 use App\Http\Middleware\EnsureActiveAdmin;
 use App\Http\Middleware\EnsureActiveMember;
 use App\Http\Middleware\EnsureModuleAccess;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active-member' => EnsureActiveMember::class,
             'module.enabled' => EnsureModuleEnabled::class,
             'module.access' => EnsureModuleAccess::class,
+            'mcp.auth' => AuthenticateMcpToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
