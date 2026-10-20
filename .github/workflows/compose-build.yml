@@ -78,4 +78,4 @@ jobs:
 
       - name: Stop Compose stack and remove CI volumes
         if: always()
-        run: APP_IMAGE_TAG=candidate docker compose --timeout 15 --env-file .env.example down --volumes --remove-orphans
+        run: APP_IMAGE_TAG=candidate docker compose --env-file .env.example down --timeout 15 --volumes --remove-orphans
