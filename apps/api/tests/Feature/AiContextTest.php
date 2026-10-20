@@ -83,7 +83,7 @@ class AiContextTest extends TestCase
         ])->assertOk();
 
         $sent = Http::recorded()->map(fn (array $pair): Request => $pair[0])->first()->data();
-        $contextMessage = collect($sent['messages'])->first(fn (array $message): bool => ($message['role'] ?? null) === 'system' && str_contains((string) $message['content'], 'user-authored context'));
+        $contextMessage = collect($sent['messages'])->last(fn (array $message): bool => ($message['role'] ?? null) === 'user' && str_contains((string) $message['content'], 'Saved personal context data'));
         $this->assertNotNull($contextMessage, json_encode($sent, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         $this->assertStringContainsString('I prefer concise writing', $contextMessage['content']);
         $this->assertStringContainsString('recurring costs', $contextMessage['content']);
@@ -104,7 +104,7 @@ class AiContextTest extends TestCase
             ->assertOk()->assertJsonPath('enabled', false);
         $this->postJson('/api/ai/assistant', ['message' => 'How do I prefer my concise answers?'])->assertOk();
         $sent = Http::recorded()->map(fn (array $pair): Request => $pair[0])->first()->data();
-        $this->assertStringNotContainsString('user-authored context', json_encode($sent, JSON_THROW_ON_ERROR));
+        $this->assertStringNotContainsString('Saved personal context data', json_encode($sent, JSON_THROW_ON_ERROR));
 
         $this->patchJson('/api/ai/context/preferences', ['enabled' => true])->assertOk();
         Http::fake(['*' => Http::response($this->assistantAnswer('Hello again.'))]);
