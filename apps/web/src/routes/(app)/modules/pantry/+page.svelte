@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import { formatNumber } from '#lib/number-format';
 	import type { PantryExpiryStatus, PantryItem, PantryMovement, PantryResponse } from '#lib/pantry';
 
 	type ExpiryFilter = 'all' | 'expired' | 'soon' | 'none';
@@ -300,7 +301,7 @@
 							<input bind:value={unit} required maxlength="32" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder="pcs, g, ml" />
 						</label>
 					{:else}
-						<div class="flex items-end pb-3 text-sm text-slate-400">Quantity and unit: <span class="ml-1 text-white">{editingItem.quantity} {editingItem.unit}</span></div>
+						<div class="flex items-end pb-3 text-sm text-slate-400">Quantity and unit: <span class="ml-1 text-white">{formatNumber(editingItem.quantity)} {editingItem.unit}</span></div>
 					{/if}
 					<label class="space-y-2 text-sm text-slate-300">
 						<span>Storage location <span class="text-slate-500">(optional)</span></span>
@@ -359,7 +360,7 @@
 											<h3 class="truncate text-lg font-semibold text-white">{item.name}</h3>
 											<span class="rounded-full border px-2.5 py-1 text-[11px] font-medium {item.visibility === 'household' ? 'border-sky-300/20 bg-sky-300/10 text-sky-100' : 'border-white/10 bg-white/[0.04] text-slate-400'}">{item.visibility === 'household' ? 'Household' : 'Private'}</span>
 										</div>
-										<p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-100">{item.quantity} <span class="text-base font-medium text-emerald-100/70">{item.unit}</span></p>
+										<p class="mt-2 text-2xl font-semibold tracking-tight text-emerald-100">{formatNumber(item.quantity)} <span class="text-base font-medium text-emerald-100/70">{item.unit}</span></p>
 										<div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-400">
 											{#if item.location}<span>Stored in {item.location}</span>{/if}
 											<span class="rounded-full border px-2 py-1 {expiryTone(item.expiry_status)}">{expiryLabel(item.expiry_status, item.best_before_on)}</span>
@@ -391,7 +392,7 @@
 											<ol class="mt-3 space-y-3">
 												{#each history as movement (movement.id)}
 													<li class="flex items-start justify-between gap-4 text-xs">
-														<div><p class="font-medium text-slate-200">{movement.type === 'initial' ? 'Initial stock' : 'Manual adjustment'} · {movement.quantity_delta} {movement.unit}</p>{#if movement.note}<p class="mt-1 text-slate-500">{movement.note}</p>{/if}<p class="mt-1 text-slate-500">{movement.quantity_before} → {movement.quantity_after} {movement.unit}</p></div>
+														<div><p class="font-medium text-slate-200">{movement.type === 'initial' ? 'Initial stock' : 'Manual adjustment'} · {formatNumber(movement.quantity_delta)} {movement.unit}</p>{#if movement.note}<p class="mt-1 text-slate-500">{movement.note}</p>{/if}<p class="mt-1 text-slate-500">{formatNumber(movement.quantity_before)} → {formatNumber(movement.quantity_after)} {movement.unit}</p></div>
 														<time class="shrink-0 text-right text-slate-500">{formatTimestamp(movement.created_at)}</time>
 													</li>
 												{/each}
