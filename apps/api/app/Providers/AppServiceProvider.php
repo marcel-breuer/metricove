@@ -2,9 +2,17 @@
 
 namespace App\Providers;
 
+use App\Contracts\AssistantProvider;
 use App\Contracts\MeterPhotoOcr;
 use App\Models\User;
+use App\Services\AI\AssistantToolRegistry;
+use App\Services\AI\OpenAiCompatibleAssistantProvider;
+use App\Services\AI\Tools\FinanceMonthSummaryTool;
+use App\Services\AI\Tools\TrackingSnapshotTool;
+use App\Services\AI\Tools\UtilitiesSnapshotTool;
+use App\Services\AI\Tools\VehiclesSnapshotTool;
 use App\Services\Import\TesseractMeterPhotoOcr;
+use App\Services\Modules\ModuleAccessService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -20,6 +28,15 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(MeterPhotoOcr::class, TesseractMeterPhotoOcr::class);
+        $this->app->bind(AssistantProvider::class, OpenAiCompatibleAssistantProvider::class);
+        $this->app->singleton(AssistantToolRegistry::class, function ($app): AssistantToolRegistry {
+            return new AssistantToolRegistry($app->make(ModuleAccessService::class), [
+                $app->make(FinanceMonthSummaryTool::class),
+                $app->make(TrackingSnapshotTool::class),
+                $app->make(UtilitiesSnapshotTool::class),
+                $app->make(VehiclesSnapshotTool::class),
+            ]);
+        });
     }
 
     /**
@@ -73,6 +90,15 @@ class AppServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(30)->by('module-manage-user:'.$userId),
                 Limit::perMinute(60)->by('module-manage-ip:'.$request->ip()),
+            ];
+        });
+
+        RateLimiter::for('assistant', function (Request $request): array {
+            $userId = $request->user('web')?->id ?? 'guest';
+
+            return [
+                Limit::perMinute(8)->by('assistant-user:'.$userId),
+                Limit::perMinute(12)->by('assistant-ip:'.$request->ip()),
             ];
         });
 
