@@ -60,7 +60,7 @@ return [
         ],
         'shopping' => [
             'label' => 'Shopping',
-            'description' => 'Shared shopping lists and item check-off.',
+            'description' => 'Private and shared shopping lists, quantities, history and reversible check-off.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,
