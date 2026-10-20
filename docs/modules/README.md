@@ -57,6 +57,8 @@ Any module model used in an authorization decision must implement `App\Contracts
 
 The UI presents capability checkboxes per member and module and uses shared Svelte controls for fields, notices, buttons, panels, switches and page headings. The theme preference can follow the browser or be set to Light or Dark; it is stored in that browser. The authenticated app shell uses `available_modules` for responsive navigation and uses the same API state for module links; hidden navigation does not authorize operations. REST, jobs and AI/MCP must call `ModuleAccessService` at the operation boundary. A resource that does not declare its ownership policy fails closed when passed to that service.
 
+Numeric display formatting is presentation-only. Currency amounts keep two decimal places, vehicle distances in km/mi show at most one, and other measurements show at most three with insignificant trailing zeros removed. A non-zero value smaller than that display precision keeps its significant digits so it cannot appear as zero. The stored and API values retain their original precision.
+
 The current SvelteKit shell provides the responsive household dashboard, member and module administration navigation, account links, a keyboard-accessible mobile drawer and Quick Add empty state. Tracking has its own schema builder, quick-entry form and private measurement history. Other module landing screens remain placeholders until their domain issues add records and entry forms; Quick Add does not create or imply saved data on its own.
 
 ## Registry and permissions

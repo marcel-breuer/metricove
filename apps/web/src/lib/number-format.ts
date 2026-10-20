@@ -6,8 +6,24 @@ export type NumberFormatOptions = {
 	maximumFractionDigits?: number;
 };
 
+const DEFAULT_MEASUREMENT_FRACTION_DIGITS = 3;
+const MEASUREMENT_FRACTION_DIGITS_BY_UNIT = new Map<string, number>([
+	['km', 1],
+	['mi', 1]
+]);
+
 const DECIMAL_PATTERN = /^([+-]?)(\d+)(?:\.(\d+))?$/;
 const EXPONENTIAL_PATTERN = /^([+-]?)(\d+)(?:\.(\d*))?[eE]([+-]?\d+)$/;
+
+function hasNonZeroMagnitude(value: NumberInput): boolean {
+	if (value === null || value === undefined) return false;
+	const source = typeof value === 'number'
+		? (Number.isFinite(value) ? expandExponent(value) : String(value))
+		: value.trim();
+	const match = DECIMAL_PATTERN.exec(source);
+
+	return match !== null && /[1-9]/.test(match[2] + (match[3] ?? ''));
+}
 
 function expandExponent(value: number): string {
 	const source = String(value);
@@ -69,6 +85,24 @@ export function formatNumber(value: NumberInput, options: NumberFormatOptions = 
 	const prefix = isZero ? '' : sign === '-' ? minusSign : sign === '+' ? '+' : '';
 
 	return `${prefix}${groupedWhole}${fraction ? decimalSeparator + fraction : ''}`;
+}
+
+/** Keep measurements readable while retaining useful precision for their unit. */
+export function formatMeasurement(
+	value: NumberInput,
+	unit?: string | null,
+	locale?: string
+): string {
+	const normalizedUnit = unit?.trim().toLocaleLowerCase('en-US') ?? '';
+	const maximumFractionDigits = MEASUREMENT_FRACTION_DIGITS_BY_UNIT.get(normalizedUnit)
+		?? DEFAULT_MEASUREMENT_FRACTION_DIGITS;
+
+	const formatted = formatNumber(value, { locale, maximumFractionDigits });
+	if (formatted === '0' && hasNonZeroMagnitude(value)) {
+		return formatNumber(value, { locale });
+	}
+
+	return formatted;
 }
 
 /** Format stored money amounts to the two decimal places supported by the API. */

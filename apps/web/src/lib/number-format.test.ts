@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { formatCurrency, formatNumber } from './number-format';
+import { formatCurrency, formatMeasurement, formatNumber } from './number-format';
 
 describe('formatNumber', () => {
 	it('groups large integers and removes insignificant fractional zeroes', () => {
@@ -31,5 +31,27 @@ describe('formatNumber', () => {
 		expect(formatCurrency('1234', 'EUR', 'en-US')).toBe('EUR 1,234.00');
 		expect(formatCurrency('1234.235', 'EUR', 'de-DE')).toBe('EUR 1.234,24');
 		expect(formatCurrency('-0.004', 'EUR', 'en-US')).toBe('EUR 0.00');
+	});
+});
+
+describe('formatMeasurement', () => {
+	it('limits odometer values to one decimal place for kilometers and miles', () => {
+		expect(formatMeasurement('123456.789', 'km', 'en-US')).toBe('123,456.8');
+		expect(formatMeasurement('76543.25', 'MI', 'de-DE')).toBe('76.543,3');
+	});
+
+	it('keeps up to three useful decimals for utility and custom units', () => {
+		expect(formatMeasurement('1234.567891', 'kWh', 'en-US')).toBe('1,234.568');
+		expect(formatMeasurement('0.1250', 'cups', 'en-US')).toBe('0.125');
+		expect(formatMeasurement('1200.000', 'm³', 'de-DE')).toBe('1.200');
+	});
+
+	it('does not hide non-zero values that are smaller than the unit precision', () => {
+		expect(formatMeasurement('0.0004', 'kWh', 'en-US')).toBe('0.0004');
+		expect(formatMeasurement('0.04', 'km', 'en-US')).toBe('0.04');
+	});
+
+	it('preserves non-numeric recipe quantities', () => {
+		expect(formatMeasurement('1 1/2', 'cups', 'en-US')).toBe('1 1/2');
 	});
 });

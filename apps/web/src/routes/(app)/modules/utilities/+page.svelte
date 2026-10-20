@@ -3,7 +3,7 @@
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { formatNumber } from '#lib/number-format';
+	import { formatMeasurement } from '#lib/number-format';
 	import { utilityMeterTypes, type UtilityMeter, type UtilitiesResponse, type UtilityVisibility } from '#lib/utilities';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -105,7 +105,7 @@
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
 						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-cyan-300/50 hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-slate-100">{meter.name}</span><span class="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{meter.visibility}</span></span><span class="mt-2 block text-sm text-slate-400">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-slate-500">{meter.description || (meter.alert_threshold ? `Alert above ${formatNumber(meter.alert_threshold)} ${meter.unit} per interval` : 'No interval alert set')}</span></span>
+							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-slate-100">{meter.name}</span><span class="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{meter.visibility}</span></span><span class="mt-2 block text-sm text-slate-400">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-slate-500">{meter.description || (meter.alert_threshold ? `Alert above ${formatMeasurement(meter.alert_threshold, meter.unit)} ${meter.unit} per interval` : 'No interval alert set')}</span></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">Open readings <span aria-hidden="true">→</span></span>
 						</a></li>
 					{/each}

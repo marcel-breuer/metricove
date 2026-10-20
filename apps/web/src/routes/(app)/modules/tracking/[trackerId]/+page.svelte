@@ -4,7 +4,7 @@
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { formatNumber } from '#lib/number-format';
+	import { formatMeasurement } from '#lib/number-format';
 	import {
 		newTrackerField,
 		type Tracker,
@@ -263,7 +263,7 @@
 		const item = entry.values.find((value) => value.key === key);
 		if (!item || item.value === null) return '—';
 		if (typeof item.value === 'boolean') return item.value ? 'Yes' : 'No';
-		const displayedValue = item.type === 'number' ? formatNumber(item.value) : String(item.value);
+		const displayedValue = item.type === 'number' ? formatMeasurement(item.value, item.unit) : String(item.value);
 		return displayedValue + (item.unit ? ' ' + item.unit : '');
 	}
 
@@ -272,7 +272,7 @@
 			const item = entry.values.find((value) => value.key === field.key);
 			if (!item || item.type !== 'number' || typeof item.value !== 'string') return [];
 			const value = Number(item.value);
-			return Number.isFinite(value) ? [{ value, displayedValue: formatNumber(item.value), at: entry.recorded_at }] : [];
+			return Number.isFinite(value) ? [{ value, displayedValue: formatMeasurement(item.value, item.unit), at: entry.recorded_at }] : [];
 		});
 		if (points.length === 0) return [];
 
@@ -384,7 +384,7 @@
 								{:else}
 									<label class="block text-sm font-medium text-slate-200">{field.label}{field.required ? ' · required' : ''}
 										{#if field.type === 'number'}
-										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatNumber(field.minimum)) + ' to ' + (field.maximum === null ? '∞' : formatNumber(field.maximum)) : ''}</span>
+										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' to ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
 											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Enter a decimal value" />
 										{:else if field.type === 'date'}
 											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
