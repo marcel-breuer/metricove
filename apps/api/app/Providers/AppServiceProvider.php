@@ -102,6 +102,10 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('mcp', function (Request $request): Limit {
+            return Limit::perMinute(60)->by('mcp-ip:'.$request->ip());
+        });
+
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
             return route('password.reset').'#token='.urlencode($token);
         });

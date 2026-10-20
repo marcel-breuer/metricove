@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
+use App\Http\Controllers\Api\McpAccessController;
+use App\Http\Controllers\Api\McpController;
 use App\Http\Controllers\Api\MealPlanningController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\PantryController;
@@ -26,6 +28,9 @@ use App\Http\Controllers\Api\VehiclesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health');
+Route::match(['POST', 'OPTIONS'], '/mcp', McpController::class)
+    ->middleware(['mcp.auth', 'throttle:mcp'])
+    ->name('mcp');
 
 Route::middleware('web')->group(function (): void {
     Route::get('/setup/status', [InitialSetupController::class, 'status'])->name('setup.status');
@@ -51,6 +56,11 @@ Route::middleware('web')->group(function (): void {
         Route::post('/auth/logout', [AuthenticationController::class, 'logout'])->name('auth.logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile/mcp', [McpAccessController::class, 'index'])->name('profile.mcp.index');
+        Route::post('/profile/mcp/tokens', [McpAccessController::class, 'store'])->middleware('throttle:member-manage')->name('profile.mcp.tokens.store');
+        Route::delete('/profile/mcp/tokens/{token}', [McpAccessController::class, 'destroy'])->whereNumber('token')->name('profile.mcp.tokens.destroy');
+        Route::post('/profile/mcp/actions/{preview}/approve', [McpAccessController::class, 'approve'])->whereUuid('preview')->name('profile.mcp.actions.approve');
+        Route::post('/profile/mcp/actions/{preview}/reject', [McpAccessController::class, 'reject'])->whereUuid('preview')->name('profile.mcp.actions.reject');
         Route::get('/modules', ModuleDiscoveryController::class)->name('modules.enabled');
 
         Route::prefix('tracking')->name('tracking.')->group(function (): void {
