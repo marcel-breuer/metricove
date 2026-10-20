@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:1.30.4-alpine3.24 AS runtime
+FROM nginxinc/nginx-unprivileged:1.31.6-alpine3.24 AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricove"
 
