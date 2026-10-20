@@ -27,3 +27,5 @@ curl --fail http://localhost:8080/api/health
 To roll back the application, restore the previous release version in `.env`, then run `docker compose pull` and `docker compose up -d --wait`. Check both health endpoints and confirm household data is available. If a migration or application change is not backward-compatible, restore the matching pre-upgrade PostgreSQL and `app_storage` backups before restarting the previous images. Do not run `docker compose down --volumes` during an upgrade or rollback; that deletes persistent data.
 
 The Compose CI workflow exercises an upgrade from the pull request's base commit to its candidate images, creates a first household through the setup API, rolls back to the base images, and confirms the setup record survives both transitions. The test runs in a separate project with disposable volumes and removes them afterward.
+
+See the backup and restore runbook in docs/operations/backup-restore.md for executable backup commands and an isolated recovery drill.
