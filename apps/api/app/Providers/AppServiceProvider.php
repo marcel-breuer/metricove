@@ -11,6 +11,7 @@ use App\Services\AI\Tools\FinanceMonthSummaryTool;
 use App\Services\AI\Tools\TrackingSnapshotTool;
 use App\Services\AI\Tools\UtilitiesSnapshotTool;
 use App\Services\AI\Tools\VehiclesSnapshotTool;
+use App\Services\Auth\ConfiguredFrontendUrl;
 use App\Services\Import\TesseractMeterPhotoOcr;
 use App\Services\Modules\ModuleAccessService;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -107,7 +108,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         ResetPassword::createUrlUsing(function (User $user, string $token): string {
-            return route('password.reset').'#token='.urlencode($token);
+            return app(ConfiguredFrontendUrl::class)->route('password.reset').'#token='.urlencode($token);
         });
     }
 }

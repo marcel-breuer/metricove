@@ -43,9 +43,12 @@ class PasswordResetTest extends TestCase
     public function test_reset_token_is_stored_as_a_hash_and_email_link_uses_frontend_route(): void
     {
         Notification::fake();
+        config(['app.url' => 'https://metricove.example/household/']);
         $user = User::factory()->create(['email' => 'member@example.test']);
 
-        $this->postJson('/api/auth/password/email', ['email' => $user->email])->assertAccepted();
+        $this->withServerVariables(['HTTP_HOST' => 'attacker.example'])
+            ->postJson('/api/auth/password/email', ['email' => $user->email])
+            ->assertAccepted();
 
         $notification = Notification::sent($user, ResetPassword::class)->sole();
         $token = $notification->token;
@@ -54,11 +57,13 @@ class PasswordResetTest extends TestCase
         $actionPath = parse_url($actionUrl, PHP_URL_PATH);
         $actionQuery = parse_url($actionUrl, PHP_URL_QUERY);
         $actionFragment = parse_url($actionUrl, PHP_URL_FRAGMENT);
+        $actionOrigin = parse_url($actionUrl, PHP_URL_SCHEME).'://'.parse_url($actionUrl, PHP_URL_HOST);
 
         $this->assertIsString($storedHash);
         $this->assertNotSame($token, $storedHash);
         $this->assertTrue(Hash::check($token, $storedHash));
-        $this->assertSame('/password/reset', $actionPath);
+        $this->assertSame('https://metricove.example', $actionOrigin);
+        $this->assertSame('/household/password/reset', $actionPath);
         $this->assertNull($actionQuery);
         $this->assertSame('token='.$token, $actionFragment);
     }

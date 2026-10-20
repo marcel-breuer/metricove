@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Services\Auth\ConfiguredFrontendUrl;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -27,7 +28,7 @@ class InvitationMail extends Mailable
         return new Content(
             view: 'emails.invitation',
             with: [
-                'invitationUrl' => route('invitation.accept').'#token='.urlencode($this->token),
+                'invitationUrl' => app(ConfiguredFrontendUrl::class)->route('invitation.accept').'#token='.urlencode($this->token),
                 'expiresAt' => $this->expiresAt,
             ],
         );

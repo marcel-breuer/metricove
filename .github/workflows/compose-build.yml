@@ -76,6 +76,12 @@ jobs:
       - name: Verify upgrade, health, data persistence and rollback
         run: scripts/smoke-compose-upgrade-rollback.sh
 
+      - name: Verify PostgreSQL and app_storage backup and restore
+        env:
+          APP_IMAGE_TAG: candidate
+          BUILD_IMAGES: '0'
+        run: scripts/smoke-compose-backup-restore.sh
+
       - name: Stop Compose stack and remove CI volumes
         if: always()
         run: APP_IMAGE_TAG=candidate docker compose --env-file .env.example down --timeout 15 --volumes --remove-orphans
