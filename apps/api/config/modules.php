@@ -74,7 +74,7 @@ return [
         ],
         'import' => [
             'label' => 'Import',
-            'description' => 'File import, export and data extraction workflows.',
+            'description' => 'Validated utility reading CSV imports, scoped exports and local meter-photo suggestions.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,

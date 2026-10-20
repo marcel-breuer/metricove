@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\MeterPhotoOcr;
 use App\Models\User;
+use App\Services\Import\TesseractMeterPhotoOcr;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -17,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(MeterPhotoOcr::class, TesseractMeterPhotoOcr::class);
     }
 
     /**
