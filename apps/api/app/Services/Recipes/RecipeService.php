@@ -45,6 +45,12 @@ class RecipeService
         return $this->present($actor, $recipe, $recipe->favoritedBy()->whereKey($actor->id)->exists());
     }
 
+    /** Resolve a linked recipe through the same module and resource checks as a recipe detail request. */
+    public function findForMealPlan(User $actor, int $recipeId): Recipe
+    {
+        return $this->findVisible($actor, $recipeId, ModuleCapability::View);
+    }
+
     /** @param array<string, mixed> $data
      * @return array<string, mixed>
      */

@@ -45,7 +45,7 @@ return [
             'always_enabled' => false,
         ],
         'meal_planning' => [
-            'label' => 'MealPlanning',
+            'label' => 'Meal Planning',
             'description' => 'Weekly meals using recipes or free-text dishes.',
             'version' => '0.1.0',
             'dependencies' => ['core'],

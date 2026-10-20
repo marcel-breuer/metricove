@@ -13,7 +13,7 @@ The household may have multiple active admins but **never fewer than one**. All 
 ## Module capability model
 `Core` (auth, members, settings, module permissions, audit) is always available. Each optional module declares a stable key, capabilities, migrations, API routes, frontend navigation and opt-in cross-module contracts. Administrators activate modules household-wide then grant module-level permissions per member. Every operation must validate enabled state + user capability + record visibility at the backend. Disabled modules retain existing data; they cannot be accessed by UI, REST, queues or AI/MCP tools.
 
-Module list: Tracking, Utilities, Vehicles, Finance, Recipes, MealPlanning, Pantry, Shopping, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
+Module list: Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
 
 ## Food modules
 - **Recipes:** ingredient quantities, servings, steps, tags/categories and optional pictures.

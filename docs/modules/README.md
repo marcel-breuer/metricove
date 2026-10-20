@@ -134,5 +134,13 @@ Recipes are private by default. Members with exact Recipes `create` can create p
 
 The REST surface is `GET/POST /api/recipes`, `GET/PATCH/DELETE /api/recipes/{recipe}`, `PUT/DELETE /api/recipes/{recipe}/favorite` and `GET /api/recipes/{recipe}/photo`. Lists return up to 200 visible recipes and include ingredients, visibility, per-member favorite state and whether the current member may edit the recipe. Disabling Recipes blocks all API access while preserving recipes, ingredients, favorites and private photo files for later re-enablement. Recipes does not read or write meal plans, pantry stock or shopping lists.
 
+## Meal Planning module contract
+
+Meal Planning is independently enabled and requires only Core. `GET /api/meal-planning?week_start=YYYY-MM-DD` returns a Monday–Sunday week; the start date must be a Monday. `POST /api/meal-planning/slots`, `PATCH /api/meal-planning/slots/{slot}` and `DELETE /api/meal-planning/slots/{slot}` create, edit and remove one dated breakfast, lunch or dinner slot. Each slot accepts either a free-text dish name or an optional recipe reference, plus servings from 1 to 1,000 and an optional note. A unique household/member scope, date and meal type prevents duplicate slots for the same plan.
+
+Plans are private to their creator by default and require the member's exact Meal Planning `view`, `create` and `edit` capability plus ownership or a matching resource-level grant. Only an active household administrator with exact `manage` can create or edit household-visible plans. Administrator status does not expose another member's private plan. Shared and private plan data remain stored while the module is disabled.
+
+Free-text slots work when Recipes is disabled or unavailable to the member. Creating or changing a recipe reference requires Recipes to be enabled and the member to hold Recipes `view` plus visibility of that exact recipe. A plan response includes the linked title only after that same check; otherwise it returns a generic linked-recipe label without the recipe ID or private title. Deleting a recipe clears the optional reference and leaves the meal slot in place. Meal Planning never reads or changes pantry stock, creates shopping items, or changes saved recipe data. No pantry or shopping dependency is required.
+
 ## Cross-module rule
-A shared integration must not make an optional module mandatory. Shopping works when Recipes, Pantry and MealPlanning are disabled. MealPlanning supports free-text dishes. Disablement removes access to integrations without deleting data, and re-enabling restores authorized use.
+A shared integration must not make an optional module mandatory. Shopping works when Recipes, Pantry and Meal Planning are disabled. Meal Planning supports free-text dishes. Disablement removes access to integrations without deleting data, and re-enabling restores authorized use.
