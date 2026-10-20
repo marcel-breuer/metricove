@@ -25,9 +25,11 @@ class InvitationTest extends TestCase
     public function test_active_admin_can_send_email_only_invitation_and_view_pending_record(): void
     {
         Mail::fake();
+        config(['app.url' => 'https://metricove.example/household/']);
         $admin = $this->admin();
 
-        $this->actingAs($admin, 'web')
+        $this->withServerVariables(['HTTP_HOST' => 'attacker.example'])
+            ->actingAs($admin, 'web')
             ->postJson('/api/admin/invitations', [
                 'email' => '  MEMBER@Example.Test ',
             ])
@@ -50,8 +52,10 @@ class InvitationTest extends TestCase
             preg_match('/href="([^"]+)"/', $mail->render(), $matches);
             $url = html_entity_decode($matches[1] ?? '', ENT_QUOTES | ENT_HTML5);
             $parts = parse_url($url);
+            $origin = ($parts['scheme'] ?? '').'://'.($parts['host'] ?? '');
 
-            $this->assertSame('/invitations/accept', $parts['path'] ?? null);
+            $this->assertSame('https://metricove.example', $origin);
+            $this->assertSame('/household/invitations/accept', $parts['path'] ?? null);
             $this->assertArrayNotHasKey('query', $parts);
             $this->assertSame('token='.$token, $parts['fragment'] ?? null);
             $this->assertStringContainsString($invitation->expires_at->toDayDateTimeString(), $mail->render());
