@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import { formatNumber } from '#lib/number-format';
 	import type { Recipe, RecipeIngredientInput, RecipeResponse, RecipeVisibility } from '#lib/recipes';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -250,7 +251,7 @@
 									<button type="button" aria-label={recipe.is_favorite ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="min-h-11 min-w-11 rounded-xl border border-slate-700 text-xl transition hover:border-amber-200/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 {recipe.is_favorite ? 'text-amber-200' : 'text-slate-500'}">★</button>
 								</div>
 								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400"><span>{recipe.servings} servings</span>{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
-								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ingredients</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2"><span class="shrink-0 text-cyan-300">{ingredient.quantity} {ingredient.unit}</span><span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}</ul></div>
+								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ingredients</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2"><span class="shrink-0 text-cyan-300">{formatNumber(ingredient.quantity)} {ingredient.unit}</span><span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}</ul></div>
 								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Preparation</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions}</p></div>
 								{#if recipe.can_edit}
 									<div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">

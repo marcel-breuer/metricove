@@ -4,6 +4,7 @@
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import { formatNumber } from '#lib/number-format';
 	import {
 		newTrackerField,
 		type Tracker,
@@ -262,15 +263,16 @@
 		const item = entry.values.find((value) => value.key === key);
 		if (!item || item.value === null) return '—';
 		if (typeof item.value === 'boolean') return item.value ? 'Yes' : 'No';
-		return String(item.value) + (item.unit ? ' ' + item.unit : '');
+		const displayedValue = item.type === 'number' ? formatNumber(item.value) : String(item.value);
+		return displayedValue + (item.unit ? ' ' + item.unit : '');
 	}
 
-	function numericSeries(field: TrackerValue): Array<{ x: number; y: number; value: number; at: string }> {
+	function numericSeries(field: TrackerValue): Array<{ x: number; y: number; value: number; displayedValue: string; at: string }> {
 		const points = entries.slice().reverse().flatMap((entry) => {
 			const item = entry.values.find((value) => value.key === field.key);
 			if (!item || item.type !== 'number' || typeof item.value !== 'string') return [];
 			const value = Number(item.value);
-			return Number.isFinite(value) ? [{ value, at: entry.recorded_at }] : [];
+			return Number.isFinite(value) ? [{ value, displayedValue: formatNumber(item.value), at: entry.recorded_at }] : [];
 		});
 		if (points.length === 0) return [];
 
@@ -382,7 +384,7 @@
 								{:else}
 									<label class="block text-sm font-medium text-slate-200">{field.label}{field.required ? ' · required' : ''}
 										{#if field.type === 'number'}
-											<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum ?? '−∞') + ' to ' + (field.maximum ?? '∞') : ''}</span>
+										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatNumber(field.minimum)) + ' to ' + (field.maximum === null ? '∞' : formatNumber(field.maximum)) : ''}</span>
 											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Enter a decimal value" />
 										{:else if field.type === 'date'}
 											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
@@ -413,7 +415,7 @@
 										<path d="M0 30H1000M0 105H1000M0 180H1000" stroke="#1e293b" stroke-width="2" />
 										{#if series.length > 1}<polyline points={chartPoints(field)} fill="none" stroke="#67e8f9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />{/if}
 										{#each series as point (point.at + point.x)}
-											<circle cx={point.x} cy={point.y} r="8" fill="#67e8f9" stroke="#0f172a" stroke-width="4" vector-effect="non-scaling-stroke"><title>{point.value} {field.unit ?? ''} on {formatDate(point.at)}</title></circle>
+											<circle cx={point.x} cy={point.y} r="8" fill="#67e8f9" stroke="#0f172a" stroke-width="4" vector-effect="non-scaling-stroke"><title>{point.displayedValue} {field.unit ?? ''} on {formatDate(point.at)}</title></circle>
 										{/each}
 									</svg>
 								</div>

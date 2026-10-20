@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import { formatNumber } from '#lib/number-format';
 	import {
 		analyticsRanges,
 		type AnalyticsChartType,
@@ -152,15 +153,7 @@
 	}
 
 	function displayedValue(value: string, currency: boolean): string {
-		const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value);
-		if (!match) return value;
-
-		const [, sign, whole, fraction = ''] = match;
-		const groupedWhole = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(BigInt(whole));
-		const exactFraction = currency ? fraction.padEnd(2, '0').slice(0, 2) : fraction.replace(/0+$/, '');
-		const decimalSeparator = new Intl.NumberFormat().formatToParts(1.1).find((part) => part.type === 'decimal')?.value ?? '.';
-
-		return `${sign}${groupedWhole}${exactFraction ? `${decimalSeparator}${exactFraction}` : ''}`;
+		return formatNumber(value, currency ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : {});
 	}
 </script>
 
@@ -255,7 +248,7 @@
 												{#each values as value, index (index)}
 													{@const x = values.length === 1 ? 360 : 34 + index * (652 / (values.length - 1))}
 													{@const y = 166 - (value / maximum) * 132}
-													<circle cx={x} cy={y} r="3.5" fill="#67e8f9"><title>{widget.periods[index]}: {series.values[index]} {series.unit}</title></circle>
+													<circle cx={x} cy={y} r="3.5" fill="#67e8f9"><title>{widget.periods[index]}: {displayedValue(series.values[index], widget.metric_key === 'finance.expenses')} {series.unit}</title></circle>
 												{/each}
 											{:else}
 												{@const values = series.values.map((value) => Math.max(0, Number(value) || 0))}
@@ -263,7 +256,7 @@
 												{@const slot = 652 / Math.max(1, values.length)}
 												{#each values as value, index (index)}
 													{@const height = value === 0 ? 0 : Math.max(2, (value / maximum) * 132)}
-													<rect x={34 + index * slot + slot * 0.16} y={166 - height} width={Math.max(1, slot * 0.68)} height={height} rx="3" fill="#67e8f9" opacity="0.88"><title>{widget.periods[index]}: {series.values[index]} {series.unit}</title></rect>
+													<rect x={34 + index * slot + slot * 0.16} y={166 - height} width={Math.max(1, slot * 0.68)} height={height} rx="3" fill="#67e8f9" opacity="0.88"><title>{widget.periods[index]}: {displayedValue(series.values[index], widget.metric_key === 'finance.expenses')} {series.unit}</title></rect>
 												{/each}
 											{/if}
 											<text x="30" y="198" fill="#94a3b8" font-size="11">{widget.periods.length ? periodLabel(widget.periods[0], widget.range_key) : ''}</text>
