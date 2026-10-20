@@ -15,6 +15,15 @@ jobs:
   build:
     name: Validate Compose and build images
     runs-on: ubuntu-24.04
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_URL: http://localhost:18080
+      APP_PORT: '18080'
+      DB_DATABASE: metricove_ci
+      DB_USERNAME: metricove_ci
+      DB_PASSWORD: metricove_ci_only_password
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -30,3 +39,15 @@ jobs:
 
       - name: Build API regression-test target
         run: docker buildx build --platform linux/amd64 --target test --file apps/api/Dockerfile --load --tag metricove/api:test .
+
+      - name: Start Compose stack and wait for health
+        run: docker compose --env-file .env.example up --detach --wait --wait-timeout 180
+
+      - name: Smoke test gateway and API health endpoints
+        run: |
+          curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:18080/health
+          curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:18080/api/health
+
+      - name: Stop Compose stack and remove CI volumes
+        if: always()
+        run: docker compose --env-file .env.example down --volumes --remove-orphans

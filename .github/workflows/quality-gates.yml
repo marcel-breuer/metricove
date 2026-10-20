@@ -1,0 +1,154 @@
+name: Quality gates
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend quality
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pcntl, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+
+      - name: Install backend dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run backend test suite
+        working-directory: apps/api
+        run: composer test
+
+      - name: Check PHP formatting
+        working-directory: apps/api
+        run: composer pint:check
+
+      - name: Run PHP static analysis
+        working-directory: apps/api
+        run: composer analyse
+
+  frontend:
+    name: Frontend quality
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: Run frontend unit tests
+        working-directory: apps/web
+        run: bun test
+
+      - name: Check Svelte and TypeScript
+        working-directory: apps/web
+        run: bun run check
+
+      - name: Build frontend
+        working-directory: apps/web
+        run: bun run --bun build
+
+  security:
+    name: Security audit
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Audit locked PHP dependencies
+        working-directory: apps/api
+        run: composer audit --locked
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Audit locked frontend dependencies
+        working-directory: apps/web
+        run: bun audit --audit-level=high
+
+  integration:
+    name: PostgreSQL integration
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.11-alpine3.24
+        env:
+          POSTGRES_DB: metricove_test
+          POSTGRES_USER: metricove_test
+          POSTGRES_PASSWORD: metricove_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U metricove_test -d metricove_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: metricove_test
+      DB_USERNAME: metricove_test
+      DB_PASSWORD: metricove_test_password
+      DB_URL: ''
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      MAIL_MAILER: array
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pcntl, pdo_pgsql, pdo_sqlite
+          tools: composer:v2
+          coverage: none
+
+      - name: Install backend dependencies
+        working-directory: apps/api
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare isolated PostgreSQL test database
+        working-directory: apps/api
+        run: php artisan migrate:fresh --force --no-interaction
+
+      - name: Run full backend suite against PostgreSQL
+        working-directory: apps/api
+        run: composer test
