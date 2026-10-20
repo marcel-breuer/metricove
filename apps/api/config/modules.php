@@ -53,7 +53,7 @@ return [
         ],
         'pantry' => [
             'label' => 'Pantry',
-            'description' => 'Household stock, quantities, storage and expiry dates.',
+            'description' => 'Private and household food stock, quantities, storage and best-before dates.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,

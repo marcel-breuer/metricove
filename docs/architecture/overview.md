@@ -18,7 +18,7 @@ Module list: Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pan
 ## Food modules
 - **Recipes:** ingredient quantities, servings, steps, tags/categories and optional pictures.
 - **MealPlanning:** week/day/meal slots; optional recipe reference OR free-text dish.
-- **Pantry:** stock levels, units, storage location, best-before, movements.
+- **Pantry:** private-by-default or admin-shared stock levels, explicit units, storage locations, best-before status and versioned manual movement history. Expiry notices are shown in-app; stock never changes automatically.
 - **Shopping:** shared lists, items, check-off and optional imported ingredient suggestions.
 Each module must operate independently where sensible. Cross-module interactions must check both modules' enabled states and caller permissions. Pantry stock cannot be silently changed by meal planning.
 
