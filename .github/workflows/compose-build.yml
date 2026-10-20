@@ -27,15 +27,15 @@ jobs:
       COMPOSE_PROJECT_NAME: metricove-release-smoke
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Validate Compose configuration
         run: docker compose --env-file .env.example config --quiet

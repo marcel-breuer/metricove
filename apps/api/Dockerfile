@@ -1,4 +1,4 @@
-FROM serversideup/php:8.4-cli-bookworm AS vendor
+FROM serversideup/php:8.5-cli-bookworm AS vendor
 
 WORKDIR /var/www/html
 
@@ -11,7 +11,7 @@ RUN composer install \
     --no-autoloader \
     --prefer-dist
 
-FROM serversideup/php:8.4-fpm-bookworm AS runtime
+FROM serversideup/php:8.5-fpm-bookworm AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricove"
 
@@ -51,7 +51,7 @@ RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction --
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["php-fpm-healthcheck"]
 
-FROM serversideup/php:8.4-cli-bookworm AS test
+FROM serversideup/php:8.5-cli-bookworm AS test
 
 WORKDIR /var/www/html
 
