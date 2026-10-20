@@ -8,6 +8,7 @@ multi-ecosystem-groups:
       day: monday
       time: "08:00"
       timezone: Europe/Berlin
+    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
 
@@ -17,7 +18,6 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: all-dependencies
-    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
     groups:
@@ -31,7 +31,6 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: all-dependencies
-    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
     groups:
@@ -45,7 +44,6 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: all-dependencies
-    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
     groups:
@@ -62,7 +60,6 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: all-dependencies
-    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
     groups:
@@ -76,7 +73,6 @@ updates:
     patterns:
       - "*"
     multi-ecosystem-group: all-dependencies
-    open-pull-requests-limit: 1
     assignees:
       - marcel-breuer
     groups:
