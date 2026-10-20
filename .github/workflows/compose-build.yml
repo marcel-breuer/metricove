@@ -24,9 +24,15 @@ jobs:
       DB_DATABASE: metricove_ci
       DB_USERNAME: metricove_ci
       DB_PASSWORD: metricove_ci_only_password
+      COMPOSE_PROJECT_NAME: metricove-release-smoke
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
@@ -34,20 +40,42 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose --env-file .env.example config --quiet
 
-      - name: Build application images
-        run: docker compose --env-file .env.example build --parallel
+      - name: Prepare base-commit source for rollback smoke
+        id: baseline
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          base_sha="${PR_BASE_SHA:-$PUSH_BEFORE_SHA}"
+          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
+            base_sha="$(git rev-parse HEAD^)"
+          fi
+          baseline_dir="$RUNNER_TEMP/metricove-baseline"
+          mkdir -p "$baseline_dir"
+          git archive "$base_sha" | tar -x -C "$baseline_dir"
+          echo "path=$baseline_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Build base-commit images
+        env:
+          BASELINE_DIR: ${{ steps.baseline.outputs.path }}
+        run: APP_IMAGE_TAG=baseline docker compose --file "$BASELINE_DIR/compose.yaml" --env-file "$BASELINE_DIR/.env.example" build --parallel
+
+      - name: Build candidate application images
+        run: APP_IMAGE_TAG=candidate docker compose --env-file .env.example build --parallel
 
       - name: Build API regression-test target
         run: docker buildx build --platform linux/amd64 --target test --file apps/api/Dockerfile --load --tag metricove/api:test .
 
-      - name: Start Compose stack and wait for health
-        run: docker compose --env-file .env.example up --detach --wait --wait-timeout 180
-
-      - name: Smoke test gateway and API health endpoints
+      - name: Validate release images for AMD64 and ARM64 without publishing
         run: |
-          curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:18080/health
-          curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:18080/api/health
+          docker buildx build --platform linux/amd64,linux/arm64 --file apps/api/Dockerfile --target runtime --output "type=oci,dest=$RUNNER_TEMP/metricove-api.oci.tar" .
+          docker buildx build --platform linux/amd64,linux/arm64 --file apps/web/Dockerfile --target runtime --output "type=oci,dest=$RUNNER_TEMP/metricove-web.oci.tar" .
+          docker buildx build --platform linux/amd64,linux/arm64 --file docker/gateway/Dockerfile --target runtime --output "type=oci,dest=$RUNNER_TEMP/metricove-gateway.oci.tar" .
+
+      - name: Verify upgrade, health, data persistence and rollback
+        run: scripts/smoke-compose-upgrade-rollback.sh
 
       - name: Stop Compose stack and remove CI volumes
         if: always()
-        run: docker compose --env-file .env.example down --volumes --remove-orphans
+        run: APP_IMAGE_TAG=candidate docker compose --env-file .env.example down --timeout 15 --volumes --remove-orphans
