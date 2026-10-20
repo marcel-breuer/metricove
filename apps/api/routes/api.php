@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AssistantController;
+use App\Http\Controllers\Api\AiContextController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
@@ -53,6 +54,10 @@ Route::middleware('web')->group(function (): void {
         ->name('invitations.claim');
 
     Route::middleware(['auth:web', 'active-member'])->group(function (): void {
+        Route::get('/ai/context', [AiContextController::class, 'index'])->name('ai.context.index');
+        Route::post('/ai/context', [AiContextController::class, 'store'])->name('ai.context.store');
+        Route::put('/ai/context/{entry}', [AiContextController::class, 'update'])->whereNumber('entry')->name('ai.context.update');
+        Route::delete('/ai/context/{entry}', [AiContextController::class, 'destroy'])->whereNumber('entry')->name('ai.context.destroy');
         Route::post('/auth/logout', [AuthenticationController::class, 'logout'])->name('auth.logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
