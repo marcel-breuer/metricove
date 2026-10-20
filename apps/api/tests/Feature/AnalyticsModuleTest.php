@@ -132,6 +132,7 @@ class AnalyticsModuleTest extends TestCase
         $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         $this->enable($admin, ['analytics', 'finance']);
         $this->grant($viewer, 'analytics', ['view' => true, 'create' => true]);
+        $this->grant($viewer, 'finance', []);
         $this->grant($owner, 'finance', ['view' => true]);
         $category = $this->category($owner, true);
         $this->transaction($category, $owner, true, '500.00', 'EUR', CarbonImmutable::today()->format('Y-m-d'));

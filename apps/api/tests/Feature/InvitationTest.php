@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Mail\InvitationMail;
 use App\Models\HouseholdSettings;
 use App\Models\Invitation;
+use App\Models\ModuleUserPermission;
 use App\Models\User;
+use App\Services\Modules\ModuleManagementService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\PendingMail;
@@ -132,8 +134,47 @@ class InvitationTest extends TestCase
         $this->assertTrue(Hash::check($password, $member->password));
         $this->assertNotSame($password, $member->password);
         $this->assertNotNull(Invitation::query()->sole()->accepted_at);
+        $this->assertDatabaseCount('module_user_permissions', 0);
         $this->assertSame(1, User::query()->where('is_admin', true)->where('is_active', true)->count());
         $this->assertAuthenticatedAs($member, 'web');
+    }
+
+    public function test_invited_member_gets_all_capabilities_for_modules_enabled_at_claim_time(): void
+    {
+        Mail::fake();
+        $admin = $this->admin();
+        $modules = app(ModuleManagementService::class);
+        $modules->setEnabled($admin, 'tracking', true);
+        $modules->setEnabled($admin, 'utilities', true);
+        $this->sendInvitation($admin, 'recipient@example.test');
+        $token = $this->sentInvitationToken();
+        $password = Str::random(32);
+
+        $this->postJson('/api/invitations/claim', [
+            'token' => $token,
+            'name' => 'Recipient',
+            'password' => $password,
+            'password_confirmation' => $password,
+        ])->assertOk();
+
+        $member = User::query()->where('email', 'recipient@example.test')->sole();
+        $this->assertSame(
+            ['tracking' => [true, true, true, true], 'utilities' => [true, true, true, true]],
+            ModuleUserPermission::query()
+                ->where('user_id', $member->id)
+                ->orderBy('module_key')
+                ->get()
+                ->mapWithKeys(fn (ModuleUserPermission $permission): array => [
+                    $permission->module_key => array_values($permission->capabilities()),
+                ])
+                ->all(),
+        );
+        $this->assertDatabaseCount('household_audit_events', 4);
+        $this->assertDatabaseHas('household_audit_events', [
+            'actor_user_id' => null,
+            'subject_user_id' => $member->id,
+            'action' => 'member.module_permissions_initialized',
+        ]);
     }
 
     public function test_claim_is_single_use_and_invalid_claims_have_a_generic_response(): void

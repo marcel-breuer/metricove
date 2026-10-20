@@ -4,6 +4,8 @@
 	import { onMount, setContext, tick } from 'svelte';
 	import type { LayoutProps } from './$types';
 	import { csrfToken, type ApiResponse, type AuthUser } from '#lib/auth';
+	import Button from '#lib/ui/Button.svelte';
+	import Panel from '#lib/ui/Panel.svelte';
 	import {
 		APP_SHELL_CONTEXT,
 		type AppShellContext,
@@ -206,7 +208,7 @@
 </script>
 
 <svelte:head>
-	<meta name="color-scheme" content="dark" />
+	<meta name="color-scheme" content="light dark" />
 </svelte:head>
 
 <svelte:window onkeydown={handleWindowKeydown} />
@@ -262,7 +264,7 @@
 				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-slate-800 text-sm font-semibold text-cyan-200" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
 				<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{currentUser?.name ?? 'Loading account'}</span><span class="mt-0.5 block text-xs text-slate-400">Profile & account</span></span>
 			</a>
-			<button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 transition hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Sign out</button>
+			<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">Sign out</Button>
 		</div>
 	</aside>
 
@@ -277,10 +279,10 @@
 					<p class="hidden text-xs text-slate-500 sm:block">Your household, in one private place</p>
 				</div>
 			</div>
-			<button bind:this={quickAddTrigger} type="button" disabled={loading || currentUser === null} onclick={() => void openQuickAdd()} aria-haspopup="dialog" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-cyan-300 px-3 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60 sm:px-4">
+			<Button bind:element={quickAddTrigger} disabled={loading || currentUser === null} onclick={() => void openQuickAdd()} aria-haspopup="dialog" class="shrink-0">
 				<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
 				<span>Quick Add</span>
-			</button>
+			</Button>
 		</header>
 
 		<main id="main-content" class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
@@ -391,7 +393,8 @@
 {#if quickAddOpen}
 	<div class="fixed inset-0 z-50 grid place-items-center p-4">
 		<button type="button" aria-label="Close Quick Add" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick={() => void closeQuickAdd()}></button>
-		<div bind:this={quickAddDialog} role="dialog" aria-modal="true" aria-labelledby="quick-add-title" tabindex="-1" class="relative w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/50 outline-none sm:p-8">
+		<div bind:this={quickAddDialog} role="dialog" aria-modal="true" aria-labelledby="quick-add-title" tabindex="-1" class="relative w-full max-w-lg outline-none">
+		<Panel padding="large" class="sm:p-8">
 			<div class="flex items-start justify-between gap-4">
 				<div><p class="text-sm font-medium text-cyan-200">Quick Add</p><h2 id="quick-add-title" class="mt-2 text-2xl font-semibold tracking-tight">Add something to your household.</h2></div>
 				<button type="button" aria-label="Close Quick Add" onclick={() => void closeQuickAdd()} class="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-700 text-slate-300 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"><span aria-hidden="true" class="text-xl">×</span></button>
@@ -401,9 +404,10 @@
 				{#if modules.some((module) => module.capabilities.create)}<p class="mt-3 text-sm text-slate-400">You have create access to {modules.filter((module) => module.capabilities.create).map((module) => module.label).join(', ')}.</p>{/if}
 			</div>
 			<div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-				<button type="button" onclick={() => void closeQuickAdd()} class="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Close</button>
+				<Button variant="secondary" onclick={() => void closeQuickAdd()}>Close</Button>
 				{#if currentUser?.is_admin}<a href="/admin/modules" onclick={() => (quickAddOpen = false)} class="rounded-xl bg-cyan-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Manage modules</a>{/if}
 			</div>
+		</Panel>
 		</div>
 	</div>
 {/if}

@@ -4,8 +4,10 @@ namespace App\Services\Modules;
 
 use App\Exceptions\ModuleNotFound;
 use App\Exceptions\ModuleStateConflict;
+use App\Models\HouseholdAuditEvent;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleState;
+use App\Models\ModuleUserPermission;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -61,14 +63,66 @@ class ModuleManagementService
                 }
             }
 
-            if ($this->states->isEnabled($moduleKey) !== $enabled && ! $module->alwaysEnabled) {
+            $wasEnabled = $this->states->isEnabled($moduleKey);
+
+            if ($wasEnabled !== $enabled && ! $module->alwaysEnabled) {
                 ModuleState::query()->updateOrCreate(
                     ['module_key' => $moduleKey],
                     ['is_enabled' => $enabled],
                 );
+
+                if ($enabled) {
+                    $this->grantEnabledModuleToActiveMembers($currentActor, $moduleKey);
+                }
             }
 
             return $this->states->catalogEntry($moduleKey);
         }, 5);
+    }
+
+    private function grantEnabledModuleToActiveMembers(User $actor, string $moduleKey): void
+    {
+        $members = User::query()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get(['id']);
+        $existingGrants = ModuleUserPermission::query()
+            ->whereIn('user_id', $members->modelKeys())
+            ->where('module_key', $moduleKey)
+            ->get()
+            ->keyBy('user_id');
+        $allCapabilities = ['view' => true, 'create' => true, 'edit' => true, 'manage' => true];
+
+        foreach ($members as $member) {
+            $existing = $existingGrants->get($member->id);
+            $before = $existing instanceof ModuleUserPermission
+                ? $existing->capabilities()
+                : ['view' => false, 'create' => false, 'edit' => false, 'manage' => false];
+
+            ModuleUserPermission::query()->updateOrCreate(
+                ['user_id' => $member->id, 'module_key' => $moduleKey],
+                [
+                    'can_view' => true,
+                    'can_create' => true,
+                    'can_edit' => true,
+                    'can_manage' => true,
+                ],
+            );
+
+            if ($before !== $allCapabilities) {
+                HouseholdAuditEvent::query()->create([
+                    'actor_user_id' => $actor->id,
+                    'subject_user_id' => $member->id,
+                    'action' => 'member.module_permissions_changed',
+                    'details' => [
+                        'module_key' => $moduleKey,
+                        'before' => $before,
+                        'after' => $allCapabilities,
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
+        }
     }
 }

@@ -94,10 +94,10 @@ class RecipesModuleTest extends TestCase
         $admin = $this->member('Recipe Admin', true);
         $owner = $this->member('Private Recipe Owner');
         $viewer = $this->member('Recipe Viewer');
+        $this->enableRecipes($admin);
         $this->grant($admin, ['view' => true, 'manage' => true]);
         $this->grant($owner, ['view' => true, 'create' => true, 'manage' => true]);
         $this->grant($viewer, ['view' => true, 'edit' => true]);
-        $this->enableRecipes($admin);
 
         $privateId = (int) $this->actingAs($owner, 'web')->postJson('/api/recipes', $this->payload())
             ->assertCreated()->json('recipe.id');

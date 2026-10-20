@@ -3,6 +3,10 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+	import Button from '#lib/ui/Button.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import Panel from '#lib/ui/Panel.svelte';
 	import { getContext } from 'svelte';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 
@@ -116,26 +120,22 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<section class="mt-12 max-w-2xl">
-			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Member access</p>
-			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Module rights.</h1>
-			<p class="mt-5 text-base leading-7 text-slate-300">{member ? `Choose the capabilities available to ${member.name}.` : 'Choose the capabilities available to this household member.'} Administrators need explicit module rights too; administrator status does not grant access to private records.</p>
-		</section>
+		<PageHeading class="mt-12 max-w-2xl" eyebrow="Member access" title="Module rights." description={`${member ? `Choose the capabilities available to ${member.name}.` : 'Choose the capabilities available to this household member.'} Administrators need explicit module rights too; administrator status does not grant access to private records.`} />
 
 		{#if message}
-			<p role="status" class="mt-8 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{message}</p>
+			<Notice class="mt-8" tone="success" message={message} />
 		{/if}
 		{#if error}
-			<p role="alert" class="mt-8 rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{error}</p>
+			<Notice class="mt-8" tone="error" message={error} />
 		{/if}
 
 		<section class="mt-10" aria-labelledby="module-rights-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h2 id="module-rights-heading" class="text-xl font-semibold">Optional module capabilities</h2>
-					<p class="mt-1 text-sm text-slate-400">Module rights are stored while a module is disabled and take effect only while it is enabled.</p>
+					<p class="mt-1 text-sm text-slate-400">Optional modules begin disabled. Enabling one grants every capability to all active members; you can adjust individual rights here.</p>
 				</div>
-				<button type="button" disabled={busyKey !== ''} onclick={() => void loadPermissions()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button>
+				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadPermissions()}>Refresh</Button>
 			</div>
 
 			{#if loading}
@@ -145,7 +145,8 @@
 			{:else}
 				<ul class="mt-5 grid gap-4 md:grid-cols-2">
 					{#each modules as module (module.key)}
-						<li class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl shadow-black/10 sm:p-6">
+						<li>
+							<Panel class="h-full sm:p-6">
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div>
 									<h3 class="text-lg font-semibold">{module.label}</h3>
@@ -154,7 +155,7 @@
 								<span class="rounded-full border px-2.5 py-1 text-xs font-medium {module.enabled ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-slate-700 bg-slate-950/60 text-slate-300'}">{module.enabled ? 'Enabled' : 'Disabled'}</span>
 							</div>
 							{#if !module.enabled}
-								<p class="mt-3 text-xs text-slate-500">Capabilities remain saved and apply if an administrator enables this module.</p>
+								<p class="mt-3 text-xs text-slate-500">Rights stay stored while disabled. Enabling the module resets all active members to full capabilities.</p>
 							{/if}
 							<fieldset class="mt-5 grid gap-3 border-t border-slate-800 pt-4 sm:grid-cols-2">
 								<legend class="sr-only">{module.label} capabilities</legend>
@@ -175,6 +176,7 @@
 									</label>
 								{/each}
 							</fieldset>
+							</Panel>
 						</li>
 					{/each}
 				</ul>

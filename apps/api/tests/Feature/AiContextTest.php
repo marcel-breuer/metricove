@@ -63,7 +63,7 @@ class AiContextTest extends TestCase
         $this->actingAs($owner, 'web')->deleteJson("/api/ai/context/{$id}")->assertOk();
         $this->assertDatabaseMissing('ai_context_entries', ['id' => $id]);
 
-        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertForbidden();
+        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertOk()->assertJsonCount(0, 'items');
     }
 
     public function test_assistant_uses_only_relevant_user_and_matching_project_context(): void

@@ -22,8 +22,8 @@ class VehiclesModuleTest extends TestCase
     public function test_shared_vehicle_odometer_is_unit_safe_chronological_and_exact(): void
     {
         $admin = $this->admin();
-        $this->grant($admin, ['view' => true, 'manage' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $this->grant($admin, ['view' => true, 'manage' => true]);
 
         $vehicleId = (int) $this->actingAs($admin, 'web')->postJson('/api/vehicles', [
             'name' => 'Family car', 'make' => 'Volvo', 'model' => 'V60', 'model_year' => 2022,
