@@ -113,6 +113,8 @@ services:
     <<: *api-image
     command: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
     environment: *laravel-environment
+    volumes:
+      - app_storage:/var/www/html/storage/app
     depends_on:
       database:
         condition: service_healthy
