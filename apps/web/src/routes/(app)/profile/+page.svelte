@@ -26,6 +26,7 @@
 	let mcpActions: McpAction[] = [];
 	let tokenName = '';
 	let tokenExpiry = 90;
+	let tokenNeverExpires = false;
 	let newSecret = '';
 	let mcpMessage = '';
 	let mcpError = '';
@@ -157,7 +158,7 @@
 			const response = await submitMcp('POST', '/api/profile/mcp/tokens', {
 				name: tokenName,
 				scopes: selectedScopes,
-				expires_in_days: tokenExpiry
+				expires_in_days: tokenNeverExpires ? null : tokenExpiry
 			});
 			const result = await response.json();
 			if (!response.ok) {
@@ -245,7 +246,7 @@
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
 				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">External access</p>
 				<h2 class="mt-2 text-2xl font-semibold">MCP access tokens</h2>
-				<p class="mt-3 text-sm leading-6 text-slate-300">Use this endpoint with a Metricove bearer token. Tokens are shown once, expire within one year, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.</p>
+				<p class="mt-3 text-sm leading-6 text-slate-300">Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.</p>
 				{#if mcpEndpoint}
 					<p class="mt-3 break-all rounded-lg bg-slate-950 px-3 py-2 font-mono text-xs text-cyan-200">{mcpEndpoint}</p>
 				{/if}
@@ -264,10 +265,16 @@
 								</label>
 							{/each}
 						</fieldset>
-						<div>
-							<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-slate-200">Expires in days</label>
-							<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
-						</div>
+						{#if !tokenNeverExpires}
+							<div>
+								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-slate-200">Expires in days</label>
+								<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+							</div>
+						{/if}
+						<label class="flex items-start gap-3 text-sm text-slate-300">
+							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-cyan-300" />
+							<span>Never expires</span>
+						</label>
 						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? 'Creating…' : 'Create MCP token'}</button>
 					</form>
 				{:else if !loading}
@@ -287,8 +294,8 @@
 					{#each mcpTokens as token}
 						<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
 							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div><p class="font-medium text-slate-100">{token.name}</p><p class="mt-1 text-xs text-slate-400">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-slate-500">Expires {token.expires_at ? new Date(token.expires_at).toLocaleDateString() : 'unknown'}{token.revoked_at ? ' · revoked' : ''}</p></div>
-								{#if !token.revoked_at && token.expires_at && new Date(token.expires_at).getTime() > Date.now()}<button type="button" onclick={() => revokeMcpToken(token.id)} class="rounded-lg border border-rose-300/30 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-300/10">Revoke</button>{/if}
+								<div><p class="font-medium text-slate-100">{token.name}</p><p class="mt-1 text-xs text-slate-400">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-slate-500">{token.expires_at ? `Expires ${new Date(token.expires_at).toLocaleDateString()}` : 'Never expires'}{token.revoked_at ? ' · revoked' : ''}</p></div>
+								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => revokeMcpToken(token.id)} class="rounded-lg border border-rose-300/30 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-300/10">Revoke</button>{/if}
 							</div>
 						</div>
 					{/each}

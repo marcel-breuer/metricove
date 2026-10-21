@@ -34,6 +34,6 @@ class McpAccessToken extends Model
 
     public function isUsable(): bool
     {
-        return $this->revoked_at === null && $this->expires_at->isFuture();
+        return $this->revoked_at === null && ($this->expires_at === null || $this->expires_at->isFuture());
     }
 }

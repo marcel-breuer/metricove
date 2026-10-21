@@ -58,6 +58,42 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.token.revoked']);
     }
 
+    public function test_non_expiring_tokens_remain_usable_and_revocable(): void
+    {
+        $admin = $this->admin();
+        $this->enableModule($admin, 'utilities');
+        $this->grant($admin, 'utilities', ['view' => true]);
+
+        $created = $this->actingAs($admin, 'web')->postJson('/api/profile/mcp/tokens', [
+            'name' => 'Long-lived utilities client',
+            'scopes' => ['utilities:view'],
+            'expires_in_days' => null,
+        ])->assertCreated()->assertJsonPath('token.expires_at', null);
+
+        $secret = $created->json('secret');
+        $token = McpAccessToken::query()->findOrFail($created->json('token.id'));
+        $this->assertNull($token->expires_at);
+        $this->assertTrue($token->isUsable());
+        $this->assertDatabaseHas('household_audit_events', [
+            'action' => 'mcp.token.created',
+        ]);
+
+        $this->mcp($secret, 'tools/list')->assertOk();
+        $this->actingAs($admin, 'web')->getJson('/api/profile/mcp')
+            ->assertOk()
+            ->assertJsonPath('tokens.0.expires_at', null);
+
+        $this->actingAs($admin, 'web')->deleteJson('/api/profile/mcp/tokens/'.$token->id)->assertOk();
+        $this->assertFalse($token->fresh()->isUsable());
+        $this->mcp($secret, 'tools/list')->assertUnauthorized();
+
+        $this->actingAs($admin, 'web')->postJson('/api/profile/mcp/tokens', [
+            'name' => 'Invalid long expiry',
+            'scopes' => ['utilities:view'],
+            'expires_in_days' => 366,
+        ])->assertUnprocessable()->assertJsonValidationErrors('expires_in_days');
+    }
+
     public function test_utility_write_requires_profile_approval_and_is_idempotent(): void
     {
         $admin = $this->admin();

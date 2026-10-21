@@ -37,14 +37,14 @@ class McpAccessController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'scopes' => ['required', 'array', 'min:1', 'max:5'],
             'scopes.*' => ['required', 'string', 'distinct'],
-            'expires_in_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'expires_in_days' => ['present', 'nullable', 'integer', 'min:1', 'max:365'],
         ]);
 
         $created = $access->createToken(
             $this->actor($request),
             $validated['name'],
             $validated['scopes'],
-            (int) $validated['expires_in_days'],
+            $validated['expires_in_days'] === null ? null : (int) $validated['expires_in_days'],
         );
 
         return response()->json([
