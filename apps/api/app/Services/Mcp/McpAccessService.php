@@ -53,7 +53,7 @@ class McpAccessService
     /** @param list<string> $scopes
      * @return array{token: McpAccessToken, secret: string}
      */
-    public function createToken(User $user, string $name, array $scopes, int $expiresInDays): array
+    public function createToken(User $user, string $name, array $scopes, ?int $expiresInDays): array
     {
         $scopes = array_values(array_unique($scopes));
         $allowed = $this->allowedScopes($user);
@@ -66,7 +66,7 @@ class McpAccessService
             throw ValidationException::withMessages(['name' => 'Enter a token name using letters, numbers, spaces, dots, underscores or hyphens.']);
         }
 
-        if ($expiresInDays < 1 || $expiresInDays > 365) {
+        if ($expiresInDays !== null && ($expiresInDays < 1 || $expiresInDays > 365)) {
             throw ValidationException::withMessages(['expires_in_days' => 'Token expiry must be between 1 and 365 days.']);
         }
 
@@ -87,14 +87,14 @@ class McpAccessService
                 'name' => trim($name),
                 'token_hash' => hash('sha256', $secret),
                 'scopes' => $scopes,
-                'expires_at' => now()->addDays($expiresInDays),
+                'expires_at' => $expiresInDays === null ? null : now()->addDays($expiresInDays),
             ]);
 
             HouseholdAuditEvent::query()->create([
                 'actor_user_id' => $actor->id,
                 'subject_user_id' => $actor->id,
                 'action' => 'mcp.token.created',
-                'details' => ['token_id' => $token->id, 'scopes' => $scopes, 'expires_at' => $token->expires_at->toISOString()],
+                'details' => ['token_id' => $token->id, 'scopes' => $scopes, 'expires_at' => $token->expires_at?->toISOString()],
             ]);
 
             return $token;
