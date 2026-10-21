@@ -33,6 +33,10 @@ updates:
     directory: "/apps/web"
     patterns:
       - "*"
+    ignore:
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     multi-ecosystem-group: all-dependencies
     assignees:
       - marcel-breuer
