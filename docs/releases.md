@@ -12,7 +12,7 @@ Metricove is pre-1.0. Use `v0.MINOR.PATCH` Git tags and matching GitHub Releases
 
 ## GitHub Actions setup
 
-Add a repository-scoped fine-grained GitHub token as the repository Actions secret `RELEASE_PLEASE_TOKEN`. Grant **Contents: read and write** and **Pull requests: read and write**. Release Please uses this token to open its reviewable pull request and publish the release. The built-in `GITHUB_TOKEN` cannot be used here because GitHub does not start follow-up pull request or release workflows for events it creates. The workflow fails with a direct error before making changes when the secret is missing. After adding it, run **Release Please** from the Actions tab on `main` to retry.
+Add the repository-scoped fine-grained GitHub token as the repository Actions secret `RELEASE_PLEASE_TOKEN_METRICOVE`. Grant **Contents: read and write** and **Pull requests: read and write**. Release Please uses this token to open its reviewable pull request and publish the release. The built-in `GITHUB_TOKEN` cannot be used here because GitHub does not start follow-up pull request or release workflows for events it creates. The workflow fails with a direct error before making changes when the secret is missing. After adding it, run **Release Please** from the Actions tab on `main` to retry.
 
 If a publish run is interrupted after some images were pushed, it can be rerun for the same release. Existing images are accepted only when both platform manifests carry the same release version and source commit; missing images are then built and published. A tag tied to any other commit fails closed and must not be overwritten.
 
