@@ -37,6 +37,13 @@ x-laravel-environment: &laravel-environment
   REDIS_CACHE_DB: "1"
   AUTORUN_ENABLED: "false"
 
+x-api-image: &api-image
+  image: ghcr.io/marcel-breuer/metricove/api:${API_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+    target: runtime
+
 services:
   gateway:
     image: ghcr.io/marcel-breuer/metricove/gateway:${GATEWAY_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
@@ -72,11 +79,7 @@ services:
       start_period: 10s
 
   api:
-    image: ghcr.io/marcel-breuer/metricove/api:${API_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-      target: runtime
+    <<: *api-image
     environment:
       <<: *laravel-environment
       AI_PROVIDER: ${AI_PROVIDER:-disabled}
@@ -107,7 +110,7 @@ services:
     stop_grace_period: 30s
 
   migrate:
-    image: ghcr.io/marcel-breuer/metricove/api:${API_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
+    <<: *api-image
     command: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
     environment: *laravel-environment
     depends_on:
@@ -122,7 +125,7 @@ services:
     restart: "no"
 
   worker:
-    image: ghcr.io/marcel-breuer/metricove/api:${API_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
+    <<: *api-image
     command: ["php", "/var/www/html/artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
     environment: *laravel-environment
     volumes:
@@ -154,7 +157,7 @@ services:
       start_period: 10s
 
   scheduler:
-    image: ghcr.io/marcel-breuer/metricove/api:${API_IMAGE_TAG:-${APP_IMAGE_TAG:-local}}
+    <<: *api-image
     command: ["php", "/var/www/html/artisan", "schedule:work"]
     environment: *laravel-environment
     volumes:
