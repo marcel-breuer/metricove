@@ -1,0 +1,95 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: metricove-release-please-main
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Create release PR or publish release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Require a workflow-capable release token
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$RELEASE_PLEASE_TOKEN" ]]; then
+            echo "::error title=Missing release token::Add the RELEASE_PLEASE_TOKEN repository Actions secret. See docs/releases.md."
+            exit 1
+          fi
+
+      - name: Require successful CI for this main commit
+        uses: actions/github-script@v9
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        with:
+          script: |
+            if (context.ref !== "refs/heads/main") {
+              throw new Error(`Release automation must run on main, not ${context.ref}.`);
+            }
+
+            const workflows = ["quality-gates.yml", "compose-build.yml"];
+            const deadline = Date.now() + 25 * 60 * 1000;
+
+            while (true) {
+              const pending = [];
+
+              for (const workflow_id of workflows) {
+                const { data } = await github.rest.actions.listWorkflowRuns({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id,
+                  branch: "main",
+                  event: "push",
+                  head_sha: process.env.EXPECTED_SHA,
+                  per_page: 100,
+                });
+                const run = data.workflow_runs
+                  .filter((item) => item.head_sha === process.env.EXPECTED_SHA
+                    && item.head_branch === "main"
+                    && item.event === "push")
+                  .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
+
+                if (!run || run.status !== "completed") {
+                  pending.push(workflow_id);
+                  continue;
+                }
+                if (run.conclusion !== "success") {
+                  throw new Error(`${workflow_id} run ${run.html_url} finished with ${run.conclusion}.`);
+                }
+
+                core.info(`${workflow_id} run ${run.run_number} passed for ${process.env.EXPECTED_SHA}.`);
+              }
+
+              if (pending.length === 0) return;
+              if (Date.now() >= deadline) {
+                throw new Error(`Timed out waiting for successful CI on ${process.env.EXPECTED_SHA}: ${pending.join(", ")}.`);
+              }
+
+              core.info(`Waiting for ${pending.join(", ")} on ${process.env.EXPECTED_SHA}.`);
+              await new Promise((resolve) => setTimeout(resolve, 15000));
+            }
+
+      - name: Create or update the release PR and publish merged releases
+        uses: googleapis/release-please-action@v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-labeling: true
