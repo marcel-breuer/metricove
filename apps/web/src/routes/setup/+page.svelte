@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import AuthShell from '#lib/ui/AuthShell.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
-	import PageHeading from '#lib/ui/PageHeading.svelte';
-	import Panel from '#lib/ui/Panel.svelte';
 	import TextField from '#lib/ui/TextField.svelte';
-	import ThemePicker from '#lib/ui/ThemePicker.svelte';
 
 	type SetupState = 'loading' | 'available' | 'complete' | 'created' | 'error';
 	type SetupResponse = {
@@ -101,81 +99,128 @@
 </script>
 
 <svelte:head>
-	<title>Set up Metricove</title>
+	<title>Set up your household · Metricove</title>
 	<meta name="description" content="Create the first administrator for this Metricove household." />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 sm:px-10 sm:py-16">
-	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col">
-		<header class="flex flex-wrap items-center justify-between gap-5">
-			<a href="/" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
-				<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
-				Metricove
+<AuthShell
+	eyebrow="One-time household setup"
+	title="Set up your household."
+	description="Create the first administrator account for this installation. Setup closes after the first account is created."
+	wide
+>
+	{#if state === 'loading'}
+		<p class="setup-status" role="status">Checking household setup…</p>
+	{:else if state === 'available'}
+		<h2 class="setup-state-title">Create your administrator account</h2>
+		<form class="setup-form" onsubmit={completeSetup} aria-busy={busy}>
+			<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
+			<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
+			<div class="setup-password-field">
+				<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required />
+				<p>Use at least 12 characters.</p>
+			</div>
+			<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required />
+			{#if formError}
+				<Notice tone="error" message={formError} />
+			{/if}
+			<Button type="submit" fullWidth disabled={busy} class="setup-submit">
+				{busy ? 'Creating account…' : 'Create administrator account'}
+			</Button>
+		</form>
+	{:else if state === 'created'}
+		<div class="setup-state" role="status" aria-live="polite">
+			<p class="setup-state-kicker">Household ready</p>
+			<h2 class="setup-state-title">Welcome, {createdName}.</h2>
+			<p class="setup-state-description">
+				Your administrator account is active. Choose the features your household wants to use; you can change them later.
+			</p>
+			<a href="/admin/modules" class="ui-button ui-button--primary ui-button--medium setup-action">
+				Choose household features
 			</a>
-			<ThemePicker class="w-48" />
-		</header>
+		</div>
+	{:else if state === 'complete'}
+		<div class="setup-state" role="status">
+			<p class="setup-state-kicker">Setup is complete</p>
+			<h2 class="setup-state-title">This household is already set up.</h2>
+			<p class="setup-state-description">Initial registration is closed for this installation.</p>
+			<a href="/login" class="ui-button ui-button--secondary ui-button--medium setup-action">
+				Go to sign in
+			</a>
+		</div>
+	{:else}
+		<div class="setup-state">
+			<p class="setup-state-title" role="alert">Setup status could not be loaded.</p>
+			<Button variant="secondary" class="setup-action" onclick={loadStatus}>
+				Try again
+			</Button>
+		</div>
+	{/if}
+</AuthShell>
 
-		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
-			<PageHeading class="max-w-xl" eyebrow="One household, one private space" title="Start with your household administrator." description="Create the first account for this installation. It becomes the active household administrator." />
+<style>
+	.setup-status,
+	.setup-state-description {
+		margin: 1.25rem 0 0;
+		color: var(--text-muted);
+		font-size: 0.9375rem;
+		line-height: 1.7;
+	}
 
-			<Panel padding="large" class="sm:p-8">
-				{#if state === 'loading'}
-					<p class="text-sm text-slate-300" role="status">Checking household setup…</p>
-				{:else if state === 'available'}
-					<h2 class="text-xl font-semibold">Create your administrator account</h2>
-					<form class="mt-6 space-y-5" onsubmit={completeSetup}>
-						<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
-						<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
-						<div class="space-y-2">
-							<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required />
-							<p class="text-xs text-slate-400">Use at least 12 characters.</p>
-						</div>
-						<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required />
-						{#if formError}
-							<Notice tone="error" message={formError} />
-						{/if}
-						<Button type="submit" fullWidth disabled={busy}>
-							{busy ? 'Creating account…' : 'Create administrator account'}
-						</Button>
-					</form>
-				{:else if state === 'created'}
-					<div role="status" aria-live="polite">
-						<p class="text-sm font-medium text-emerald-300">Household ready</p>
-						<h2 class="mt-2 text-2xl font-semibold">Welcome, {createdName}.</h2>
-						<p class="mt-3 text-sm leading-6 text-slate-300">
-							Your administrator account is active. Choose the features your household wants to use; you can change them later.
-						</p>
-						<a
-							href="/admin/modules"
-							class="mt-6 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
-						>
-							Choose household features
-						</a>
-					</div>
-				{:else if state === 'complete'}
-					<div>
-						<p class="text-sm font-medium text-emerald-300">Setup is complete</p>
-						<h2 class="mt-2 text-2xl font-semibold">This household is already set up.</h2>
-						<p class="mt-3 text-sm leading-6 text-slate-300">
-							Initial registration is closed for this installation.
-						</p>
-						<a href="/" class="mt-6 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">
-							Return home
-						</a>
-					</div>
-				{:else}
-					<div>
-						<p class="text-sm font-medium text-rose-200" role="alert">Setup status could not be loaded.</p>
-						<Button variant="secondary" class="mt-4" onclick={loadStatus}>
-							Try again
-						</Button>
-					</div>
-				{/if}
-			</Panel>
-		</section>
+	.setup-state-title {
+		margin: 1rem 0 0;
+		color: var(--text-primary);
+		font-size: 1.125rem;
+		font-weight: 650;
+		letter-spacing: -0.02em;
+		line-height: 1.35;
+	}
 
-		<footer class="border-t border-slate-800 pt-5 text-sm text-slate-500">
-			The first account is the active administrator for this installation.
-		</footer>
-	</div>
-</main>
+	.setup-form {
+		display: grid;
+		gap: 0.875rem;
+		margin-top: 0.875rem;
+	}
+
+	.setup-password-field p {
+		margin: 0.5rem 0 0;
+		color: var(--text-subtle);
+		font-size: 0.75rem;
+	}
+
+	:global(.setup-submit) {
+		min-height: 3rem;
+		margin-top: 0.25rem;
+		border-radius: 0.8rem;
+		font-size: 0.9375rem;
+	}
+
+	.setup-state-kicker {
+		margin: 1.75rem 0 0;
+		color: var(--positive-text);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.setup-state-kicker + .setup-state-title {
+		margin-top: 0.75rem;
+		font-size: 1.75rem;
+	}
+
+	.setup-action {
+		margin-top: 1.25rem;
+	}
+
+	@media (max-width: 760px) {
+		.setup-state-title {
+			margin-top: 0.875rem;
+		}
+
+		.setup-form {
+			gap: 0.75rem;
+			margin-top: 0.75rem;
+		}
+	}
+</style>
