@@ -17,7 +17,7 @@ jobs:
   release-please:
     name: Create release PR or publish release
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 65
     permissions:
       actions: read
       contents: write
@@ -44,7 +44,7 @@ jobs:
             }
 
             const workflows = ["quality-gates.yml", "compose-build.yml"];
-            const deadline = Date.now() + 25 * 60 * 1000;
+            const deadline = Date.now() + 55 * 60 * 1000;
 
             while (true) {
               const pending = [];

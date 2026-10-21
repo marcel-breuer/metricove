@@ -7,16 +7,50 @@
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true,
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": false
+      "bump-patch-for-minor-pre-major": false,
+      "version-file": "version.txt",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "apps/web/package.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "pull-request-title-pattern": "chore: release ${version}"
     }
   },
   "changelog-sections": [
-    { "type": "feat", "section": "Features" },
-    { "type": "fix", "section": "Bug Fixes" },
-    { "type": "perf", "section": "Performance" },
-    { "type": "docs", "section": "Documentation", "hidden": false },
-    { "type": "chore", "section": "Maintenance", "hidden": true },
-    { "type": "ci", "section": "Maintenance", "hidden": true },
-    { "type": "test", "section": "Tests", "hidden": true }
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "chore",
+      "section": "Maintenance",
+      "hidden": true
+    },
+    {
+      "type": "ci",
+      "section": "Maintenance",
+      "hidden": true
+    },
+    {
+      "type": "test",
+      "section": "Tests",
+      "hidden": true
+    }
   ]
 }
