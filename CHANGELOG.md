@@ -2,6 +2,16 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.2.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.2.0...metricove-v0.2.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **compose:** serialize app storage initialization ([5a7915e](https://github.com/marcel-breuer/metricove/commit/5a7915e95e690cc11f66afe1dc9b98ba6eeee7f1))
+* **compose:** serialize app storage initialization ([7c36389](https://github.com/marcel-breuer/metricove/commit/7c36389008be3ab552b5b6d3bde6d2f87bfd9090))
+* **release:** allow Release Please to tag merged releases ([081b2f7](https://github.com/marcel-breuer/metricove/commit/081b2f7a92381ab8b5831f495774e9bdf02a61d7))
+* **release:** allow Release Please to tag merged releases ([1cccec7](https://github.com/marcel-breuer/metricove/commit/1cccec7c9ff0c5c3a53e145d484f084704e64a78))
+
 ## [0.2.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.1.0...metricove-v0.2.0) (2026-10-21)
 
 
