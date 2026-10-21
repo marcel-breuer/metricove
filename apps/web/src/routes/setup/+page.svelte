@@ -143,13 +143,13 @@
 						<p class="text-sm font-medium text-emerald-300">Household ready</p>
 						<h2 class="mt-2 text-2xl font-semibold">Welcome, {createdName}.</h2>
 						<p class="mt-3 text-sm leading-6 text-slate-300">
-							Your administrator account is active and this browser session is signed in.
+							Your administrator account is active. Choose the features your household wants to use; you can change them later.
 						</p>
 						<a
-							href="/profile"
+							href="/admin/modules"
 							class="mt-6 inline-flex items-center rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
 						>
-							Continue
+							Choose household features
 						</a>
 					</div>
 				{:else if state === 'complete'}
