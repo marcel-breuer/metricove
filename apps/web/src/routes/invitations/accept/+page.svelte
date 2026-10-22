@@ -81,21 +81,21 @@
 
 		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
 			<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household invitation</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight">Create your account</h1>
+			<h1 id="invitation-form-heading" class="mt-3 text-3xl font-semibold tracking-tight">Create your account</h1>
 			<p class="mt-3 text-sm leading-6 text-slate-300">Choose the name and password you want to use for your Metricove account.</p>
-			<form class="mt-8 space-y-5" onsubmit={claimInvitation}>
+			<form class="mt-8 space-y-5" onsubmit={claimInvitation} aria-labelledby="invitation-form-heading">
 				<div>
 					<label for="name" class="mb-2 block text-sm font-medium text-slate-200">Your name</label>
 					<input id="name" name="name" autocomplete="name" bind:value={name} required maxlength="255" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 				</div>
 				<div>
 					<label for="password" class="mb-2 block text-sm font-medium text-slate-200">Password</label>
-					<input id="password" name="password" type="password" autocomplete="new-password" bind:value={password} minlength="12" required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
-					<p class="mt-2 text-xs text-slate-400">Use at least 12 characters.</p>
+					<input id="password" name="password" type="password" autocomplete="new-password" aria-describedby="invitation-password-guidance" bind:value={password} minlength="12" required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					<p id="invitation-password-guidance" class="mt-2 text-xs text-slate-400">Use at least 12 characters.</p>
 				</div>
 				<div>
 					<label for="password_confirmation" class="mb-2 block text-sm font-medium text-slate-200">Confirm password</label>
-					<input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" bind:value={confirmation} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					<input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" aria-describedby="invitation-password-guidance" bind:value={confirmation} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 				</div>
 				{#if message}
 					<p role="status" class="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">{message}</p>
