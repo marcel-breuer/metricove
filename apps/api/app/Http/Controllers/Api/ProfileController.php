@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -36,6 +37,16 @@ class ProfileController extends Controller
         return response()->json([
             'user' => $this->publicUser($user),
         ]);
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user('web');
+        abort_unless($user instanceof User, 401);
+
+        $user->forceFill(['password' => $request->validated('password')])->save();
+
+        return response()->json(['message' => 'Your password has been changed.']);
     }
 
     /**
