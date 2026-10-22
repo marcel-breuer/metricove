@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse, type AuthUser } from '#lib/auth';
@@ -261,7 +262,7 @@
 								<p class="text-sm font-medium text-slate-100">{eventLabel(event.action)}</p>
 								<p class="mt-1 text-sm text-slate-400">{eventSummary(event)} · {event.actor_user_id === null ? 'System recovery' : `Administrator #${event.actor_user_id}`}</p>
 							</div>
-							<time datetime={event.created_at} class="shrink-0 text-xs text-slate-500">{new Date(event.created_at).toLocaleString()}</time>
+							<time datetime={event.created_at} class="shrink-0 text-xs text-slate-500">{formatDateTime(event.created_at)}</time>
 						</li>
 					{/each}
 				</ol>

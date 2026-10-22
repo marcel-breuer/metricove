@@ -11,6 +11,7 @@
 		type ThemePreference
 	} from '#lib/theme';
 	import type { LayoutProps } from './$types';
+	import { setUserPreferences } from '#lib/i18n';
 
 	let { children }: LayoutProps = $props();
 	let themePreference = $state<ThemePreference>('system');
@@ -42,6 +43,11 @@
 	}
 
 	onMount(() => {
+		const browserLanguage = navigator.language.toLowerCase();
+		setUserPreferences({
+			language: browserLanguage.startsWith('de') ? 'de' : 'en',
+			number_locale: browserLanguage.startsWith('de') ? 'de-DE' : browserLanguage === 'en-gb' ? 'en-GB' : 'en-US'
+		});
 		try {
 			themePreference = parseThemePreference(window.localStorage.getItem(THEME_STORAGE_KEY));
 		} catch {

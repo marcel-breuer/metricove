@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate as formatLocaleDate } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -205,7 +206,7 @@
 	}
 
 	function formatDay(day: string, options: Intl.DateTimeFormatOptions): string {
-		return new Date(`${day}T00:00:00`).toLocaleDateString(undefined, options);
+		return formatLocaleDate(`${day}T00:00:00`, options);
 	}
 
 	function mondayOf(date: Date): string {

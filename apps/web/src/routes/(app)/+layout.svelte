@@ -5,6 +5,7 @@
 	import type { LayoutProps } from './$types';
 	import { csrfToken, type ApiResponse, type AuthUser } from '#lib/auth';
 	import Button from '#lib/ui/Button.svelte';
+	import { setUserPreferences, t } from '#lib/i18n';
 	import {
 		APP_SHELL_CONTEXT,
 		type AppShellContext,
@@ -38,7 +39,7 @@
 	setContext(APP_SHELL_CONTEXT, shellContext);
 
 	const pathname = $derived(page.url.pathname);
-	const pageTitle = $derived(titleForPath(pathname));
+	const pageTitle = $derived($t(titleForPath(pathname)));
 
 	onMount(() => {
 		void loadShell();
@@ -53,6 +54,7 @@
 		if (path === '/admin/settings') return 'General settings';
 		if (path === '/admin/invitations') return 'Invitations';
 		if (path === '/assistant') return 'Assistant';
+		if (path === '/mcp-docs') return 'MCP documentation';
 		if (path === '/modules/tracking') return 'Tracking';
 		if (path.startsWith('/modules/tracking/')) return 'Tracker history';
 		if (path.startsWith('/modules/')) {
@@ -100,6 +102,7 @@
 				return;
 			}
 			currentUser = session.user;
+			setUserPreferences(session.user);
 
 			const modulesResponse = await fetch('/api/modules', {
 				credentials: 'same-origin',
@@ -228,17 +231,18 @@
 			<div class="space-y-1">
 				<a href="/" aria-current={isActive('/') ? 'page' : undefined} class="nav-item {isActive('/') ? 'nav-item-active' : ''}">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-					Overview
+					{$t('Overview')}
 				</a>
+				<a href="/mcp-docs" aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
 			</div>
 			{#if modules.length > 0}
 				<div>
-					<p class="nav-section-label">Your modules</p>
+					<p class="nav-section-label">{$t('Your modules')}</p>
 					<div class="mt-2 space-y-1">
 						{#each modules as module (module.key)}
 							<a href={`/modules/${module.key}`} aria-current={isActive(`/modules/${module.key}`) ? 'page' : undefined} class="nav-item {isActive(`/modules/${module.key}`) ? 'nav-item-active' : ''}">
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" /><path d="M8 9h8M8 13h8M8 17h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-								{module.label}
+								{$t(module.label)}
 							</a>
 						{/each}
 					</div>
@@ -246,23 +250,23 @@
 			{/if}
 			{#if currentUser?.is_admin}
 				<div class="border-t border-slate-800 pt-5">
-					<p class="nav-section-label">Administration</p>
+					<p class="nav-section-label">{$t('Administration')}</p>
 					<div class="mt-2 space-y-1">
 						<a href="/admin/members" aria-current={isActive('/admin/members') ? 'page' : undefined} class="nav-item {isActive('/admin/members') ? 'nav-item-active' : ''}">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 11a3 3 0 1 0 0-6M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-							Members
+							{$t('Members')}
 						</a>
 						<a href="/admin/modules" aria-current={isActive('/admin/modules') ? 'page' : undefined} class="nav-item {isActive('/admin/modules') ? 'nav-item-active' : ''}">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.5V21" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-							Modules
+							{$t('Modules')}
 						</a>
 						<a href="/admin/settings" aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-							General settings
+							{$t('General settings')}
 						</a>
 						<a href="/admin/invitations" aria-current={isActive('/admin/invitations') ? 'page' : undefined} class="nav-item {isActive('/admin/invitations') ? 'nav-item-active' : ''}">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7" /><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-							Invitations
+							{$t('Invitations')}
 						</a>
 					</div>
 				</div>
@@ -271,9 +275,9 @@
 		<div class="mt-8 border-t border-slate-800 pt-4">
 			<a href="/profile" class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
 				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-slate-800 text-sm font-semibold text-cyan-200" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
-				<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{currentUser?.name ?? 'Loading account'}</span><span class="mt-0.5 block text-xs text-slate-400">Profile & account</span></span>
+				<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-slate-400">{$t('Profile & account')}</span></span>
 			</a>
-			<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">Sign out</Button>
+			<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">{$t('Sign out')}</Button>
 		</div>
 	</aside>
 
@@ -285,7 +289,7 @@
 				</button>
 				<div class="min-w-0">
 					<p class="truncate text-base font-semibold tracking-tight text-slate-100">{pageTitle}</p>
-					<p class="hidden text-xs text-slate-500 sm:block">Your household, in one private place</p>
+					<p class="hidden text-xs text-slate-500 sm:block">{$t('Your household, in one private place')}</p>
 				</div>
 			</div>
 			<form
@@ -293,7 +297,7 @@
 				onsubmit={submitAssistantSearch}
 				class="mx-auto flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 focus-within:border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-300/20 sm:max-w-2xl"
 			>
-				<label for="header-assistant-search" class="sr-only">Search your household with AI</label>
+				<label for="header-assistant-search" class="sr-only">{$t('Search your household with AI')}</label>
 				<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-slate-400">
 					<circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8" />
 					<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -305,7 +309,7 @@
 					maxlength="4000"
 					disabled={loading || currentUser === null}
 					aria-keyshortcuts="Meta+K Control+K"
-					placeholder="Search your household with AI…"
+					placeholder={$t('Search your household with AI…')}
 					class="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
 				/>
 				<kbd aria-hidden="true" class="hidden shrink-0 rounded border border-slate-700 px-1.5 py-0.5 text-[0.65rem] text-slate-400 md:inline">⌘ K</kbd>
@@ -313,7 +317,7 @@
 					type="submit"
 					disabled={loading || currentUser === null}
 					class="grid size-10 shrink-0 place-items-center rounded-lg bg-cyan-300 text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-					aria-label="Search with AI"
+					aria-label={$t('Search with AI')}
 				>
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m5 12 14 0m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
 				</button>
@@ -321,11 +325,11 @@
 		</header>
 
 		<main id="main-content" class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
-			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-cyan-300 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950">Skip to content</a>
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-cyan-300 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950">{$t('Skip to content')}</a>
 			{#if shellError}
 				<div role="alert" class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
 					<p>{shellError}</p>
-					<button type="button" onclick={() => void loadShell()} class="rounded-lg border border-rose-200/30 px-3 py-2 font-semibold hover:border-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">Try again</button>
+					<button type="button" onclick={() => void loadShell()} class="rounded-lg border border-rose-200/30 px-3 py-2 font-semibold hover:border-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t('Try again')}</button>
 				</div>
 			{/if}
 			{#if signOutError}<p role="alert" class="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{signOutError}</p>{/if}
@@ -353,8 +357,9 @@
 						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
 							<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
 						</svg>
-						Overview
+						{$t('Overview')}
 					</a>
+					<a href="/mcp-docs" onclick={() => (drawerOpen = false)} aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
 				</div>
 				{#if modules.length > 0}
 					<div>
@@ -371,7 +376,7 @@
 										<rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" />
 										<path d="M8 9h8M8 13h8M8 17h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
 									</svg>
-									{module.label}
+								{$t(module.label)}
 								</a>
 							{/each}
 						</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	let {
 		id,
 		label,
@@ -17,7 +18,7 @@
 </script>
 
 <label class="ui-field {className}" for={id}>
-	<span class="ui-field-label">{label}</span>
+	<span class="ui-field-label">{$t(label)}</span>
 	<select
 		class="ui-control"
 		{id}
@@ -25,7 +26,7 @@
 		onchange={(event) => onchange?.(event.currentTarget.value)}
 	>
 		{#each options as option (option.value)}
-			<option value={option.value}>{option.label}</option>
+			<option value={option.value}>{$t(option.label)}</option>
 		{/each}
 	</select>
 </label>

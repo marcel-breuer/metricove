@@ -6,6 +6,7 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import TextField from '#lib/ui/TextField.svelte';
+	import { t } from '#lib/i18n';
 
 	let email = '';
 	let password = '';
@@ -65,8 +66,8 @@
 </script>
 
 <svelte:head>
-	<title>Sign in · Metricove</title>
-	<meta name="description" content="Sign in to your Metricove household." />
+	<title>{$t('Sign in')} · Metricove</title>
+	<meta name="description" content={$t('Sign in to your Metricove household.')} />
 </svelte:head>
 
 <AuthShell
@@ -99,12 +100,12 @@
 				required
 			/>
 			<div class="login-forgot-row">
-				<a href="/password/forgot" class="login-forgot-link">Forgot password?</a>
+		<a href="/password/forgot" class="login-forgot-link">{$t('Forgot password?')}</a>
 			</div>
 		</div>
-		{#if error}<Notice class="login-error" tone="error" message={error} />{/if}
+		{#if error}<Notice class="login-error" tone="error" message={$t(error)} />{/if}
 		<Button type="submit" fullWidth disabled={busy} class="login-submit">
-			{busy ? 'Signing in…' : 'Sign in'}
+			{busy ? $t('Signing in…') : $t('Sign in')}
 		</Button>
 	</form>
 </AuthShell>

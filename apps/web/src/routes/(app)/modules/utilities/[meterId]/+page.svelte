@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDateTime } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
@@ -295,7 +296,7 @@
 								</form>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
-								<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label="Correction history">{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p><p class="mt-1 text-slate-400">{revision.reason}</p><time class="mt-1 block text-xs text-slate-500">{new Date(revision.changed_at).toLocaleString()}</time></li>{/each}</ol>
+								<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label="Correction history">{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p><p class="mt-1 text-slate-400">{revision.reason}</p><time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
 							{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-slate-500">Loading correction history…</p>{/if}
 						</li>
 					{/each}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate as formatLocaleDate, formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -226,12 +227,12 @@
 	}
 
 	function formatDate(value: string): string {
-		return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' });
+		return formatLocaleDate(`${value}T00:00:00`, { dateStyle: 'medium' });
 	}
 
 	function formatTimestamp(value: string | null): string {
 		if (!value) return 'Just now';
-		return new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+		return formatDateTime(value);
 	}
 </script>
 

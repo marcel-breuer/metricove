@@ -48,6 +48,10 @@ class UpdateProfileRequest extends FormRequest
                     }
                 },
             ],
+            'language' => ['sometimes', 'required', 'in:en,de'],
+            'number_locale' => ['sometimes', 'required', 'in:de-DE,en-US,en-GB'],
+            'default_currency' => ['sometimes', 'required', 'in:EUR,USD,GBP,CHF'],
+            'currency_display' => ['sometimes', 'required', 'in:code,symbol'],
         ];
     }
 }

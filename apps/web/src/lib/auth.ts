@@ -3,6 +3,10 @@ export type AuthUser = {
 	name: string;
 	email: string;
 	is_admin: boolean;
+	language: 'en' | 'de';
+	number_locale: 'de-DE' | 'en-US' | 'en-GB';
+	default_currency: 'EUR' | 'USD' | 'GBP' | 'CHF';
+	currency_display: 'code' | 'symbol';
 };
 
 export type ApiResponse = {

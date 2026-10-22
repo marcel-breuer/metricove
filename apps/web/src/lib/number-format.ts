@@ -1,5 +1,13 @@
 export type NumberInput = string | number | null | undefined;
 
+let preferredLocale = 'en-US';
+let preferredCurrencyDisplay: 'code' | 'symbol' = 'code';
+
+export function setNumberFormatPreferences(locale: string, currencyDisplay: 'code' | 'symbol'): void {
+	preferredLocale = locale;
+	preferredCurrencyDisplay = currencyDisplay;
+}
+
 export type NumberFormatOptions = {
 	locale?: string;
 	minimumFractionDigits?: number;
@@ -69,7 +77,7 @@ export function formatNumber(value: NumberInput, options: NumberFormatOptions = 
 
 	fraction = fraction.replace(/0+$/, '').padEnd(minimumFractionDigits, '0');
 	const isZero = whole === '0' && /^0*$/.test(fraction);
-	const locale = options.locale;
+	const locale = options.locale ?? preferredLocale;
 	const groupedWhole = new Intl.NumberFormat(locale, {
 		maximumFractionDigits: 0,
 		useGrouping: true
@@ -91,7 +99,7 @@ export function formatNumber(value: NumberInput, options: NumberFormatOptions = 
 export function formatMeasurement(
 	value: NumberInput,
 	unit?: string | null,
-	locale?: string
+	locale: string = preferredLocale
 ): string {
 	const normalizedUnit = unit?.trim().toLocaleLowerCase('en-US') ?? '';
 	const maximumFractionDigits = MEASUREMENT_FRACTION_DIGITS_BY_UNIT.get(normalizedUnit)
@@ -106,12 +114,26 @@ export function formatMeasurement(
 }
 
 /** Format stored money amounts to the two decimal places supported by the API. */
-export function formatCurrency(value: NumberInput, currency: string, locale?: string): string {
+export function formatCurrency(
+	value: NumberInput,
+	currency: string,
+	locale: string = preferredLocale,
+	display: 'code' | 'symbol' = preferredCurrencyDisplay
+): string {
 	const formatted = formatNumber(value, {
 		locale,
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	});
 
-	return formatted === '—' ? formatted : `${currency.toUpperCase()} ${formatted}`;
+	if (formatted === '—') return formatted;
+	if (display === 'code') return `${currency.toUpperCase()} ${formatted}`;
+
+	const parts = new Intl.NumberFormat(locale, { style: 'currency', currency, currencyDisplay: 'symbol' }).formatToParts(1);
+	const symbol = parts.find((part) => part.type === 'currency')?.value ?? currency.toUpperCase();
+	const sign = formatted.startsWith('-') ? formatted.slice(0, 1) : '';
+	const unsigned = sign ? formatted.slice(1) : formatted;
+	const hasPrefix = parts.findIndex((part) => part.type === 'currency') < parts.findIndex((part) => part.type === 'integer');
+	const spacing = parts.some((part) => part.type === 'literal' && part.value.trim() === '') ? ' ' : '';
+	return hasPrefix ? `${sign}${symbol}${spacing}${unsigned}` : `${sign}${unsigned}${spacing}${symbol}`;
 }

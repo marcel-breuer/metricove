@@ -50,7 +50,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, email: string, is_admin: bool}
+     * @return array{id: int, name: string, email: string, is_admin: bool, language: string, number_locale: string, default_currency: string, currency_display: string}
      */
     private function publicUser(User $user): array
     {
@@ -59,6 +59,10 @@ class ProfileController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'is_admin' => $user->is_admin,
+            'language' => $user->language,
+            'number_locale' => $user->number_locale,
+            'default_currency' => $user->default_currency,
+            'currency_display' => $user->currency_display,
         ];
     }
 }
