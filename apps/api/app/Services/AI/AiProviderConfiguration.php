@@ -15,11 +15,11 @@ class AiProviderConfiguration
         $settings = HouseholdSettings::query()->find(1);
 
         return [
-            'provider' => $settings?->ai_provider ?? (string) config('ai.provider', 'disabled'),
-            'base_url' => $settings?->ai_base_url ?? config('ai.base_url'),
-            'model' => $settings?->ai_model ?? config('ai.model'),
-            'api_key' => $settings?->ai_api_key ?? config('ai.api_key'),
-            'external_provider' => $settings?->ai_external_provider ?? (bool) config('ai.external_provider', false),
+            'provider' => $settings->ai_provider ?? (string) config('ai.provider', 'disabled'),
+            'base_url' => $settings->ai_base_url ?? config('ai.base_url'),
+            'model' => $settings->ai_model ?? config('ai.model'),
+            'api_key' => $settings->ai_api_key ?? config('ai.api_key'),
+            'external_provider' => $settings->ai_external_provider ?? (bool) config('ai.external_provider', false),
         ];
     }
 
