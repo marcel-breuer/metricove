@@ -63,6 +63,9 @@ Route::middleware('web')->group(function (): void {
         Route::post('/auth/logout', [AuthenticationController::class, 'logout'])->name('auth.logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/password', [ProfileController::class, 'changePassword'])
+            ->middleware('throttle:password-change')
+            ->name('profile.password');
         Route::get('/profile/mcp', [McpAccessController::class, 'index'])->name('profile.mcp.index');
         Route::post('/profile/mcp/tokens', [McpAccessController::class, 'store'])->middleware('throttle:member-manage')->name('profile.mcp.tokens.store');
         Route::delete('/profile/mcp/tokens/{token}', [McpAccessController::class, 'destroy'])->whereNumber('token')->name('profile.mcp.tokens.destroy');

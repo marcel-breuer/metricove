@@ -17,6 +17,12 @@
 	let busy = false;
 	let message = '';
 	let error = '';
+	let currentPassword = '';
+	let newPassword = '';
+	let passwordConfirmation = '';
+	let passwordBusy = false;
+	let passwordMessage = '';
+	let passwordError = '';
 	type McpToken = { id: number; name: string; scopes: string[]; expires_at: string | null; revoked_at: string | null; last_used_at: string | null; created_at: string | null };
 	type McpAction = { id: string; action: string; state: string; meter: string; reading_date: string; value: string; unit: string; note: string | null; token_name: string; expires_at: string };
 	let mcpEndpoint = '';
@@ -111,6 +117,53 @@
 			error = 'Profile could not be saved. Check your connection and try again.';
 		} finally {
 			busy = false;
+		}
+	}
+
+	async function changePassword(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		passwordMessage = '';
+		passwordError = '';
+		const token = csrfToken();
+		if (!token) {
+			passwordError = 'Reload this page and try again.';
+			return;
+		}
+
+		passwordBusy = true;
+		try {
+			const response = await fetch('/api/profile/password', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+					'X-XSRF-TOKEN': token
+				},
+				body: JSON.stringify({
+					current_password: currentPassword,
+					password: newPassword,
+					password_confirmation: passwordConfirmation
+				})
+			});
+			const result = (await response.json()) as ApiResponse;
+			if (response.status === 401) {
+				await goto('/login');
+				return;
+			}
+			if (!response.ok) {
+				passwordError = firstError(result) || result.message || 'Password could not be changed.';
+				return;
+			}
+
+			currentPassword = '';
+			newPassword = '';
+			passwordConfirmation = '';
+			passwordMessage = result.message ?? 'Your password has been changed.';
+		} catch {
+			passwordError = 'Password could not be changed. Check your connection and try again.';
+		} finally {
+			passwordBusy = false;
 		}
 	}
 
@@ -239,6 +292,30 @@
 					<p role="alert" class="text-sm text-rose-200">{error || 'Profile is unavailable.'}</p>
 					<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-cyan-200">Sign in</a>
 				{/if}
+			</Panel>
+		</section>
+
+		<section class="mb-12 max-w-2xl">
+			<Panel padding="large" class="sm:p-8">
+				<h2 class="text-xl font-semibold">Change password</h2>
+				<p class="mt-2 text-sm leading-6 text-slate-400">Confirm your current password and choose a new password with at least 12 characters.</p>
+				{#if passwordMessage}<Notice class="mt-5" tone="success" message={passwordMessage} />{/if}
+				{#if passwordError}<Notice class="mt-5" tone="error" message={passwordError} />{/if}
+				<form class="mt-6 space-y-5" onsubmit={changePassword} aria-busy={passwordBusy}>
+					<div>
+						<label for="current-password" class="mb-2 block text-sm font-medium text-slate-200">Current password</label>
+						<input id="current-password" name="current_password" type="password" autocomplete="current-password" bind:value={currentPassword} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					</div>
+					<div>
+						<label for="new-password" class="mb-2 block text-sm font-medium text-slate-200">New password</label>
+						<input id="new-password" name="password" type="password" autocomplete="new-password" bind:value={newPassword} required minlength="12" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					</div>
+					<div>
+						<label for="confirm-password" class="mb-2 block text-sm font-medium text-slate-200">Confirm new password</label>
+						<input id="confirm-password" name="password_confirmation" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required minlength="12" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					</div>
+					<Button type="submit" disabled={passwordBusy}>{passwordBusy ? 'Changing…' : 'Change password'}</Button>
+				</form>
 			</Panel>
 		</section>
 
