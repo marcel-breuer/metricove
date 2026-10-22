@@ -17,7 +17,7 @@ class UpdateAiProviderSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider' => ['required', Rule::in(['disabled', 'openai-compatible'])],
+            'provider' => ['required', Rule::in(['disabled', 'openai-compatible', 'claude', 'gemini', 'openrouter'])],
             'base_url' => ['nullable', 'string', 'url', 'max:2048'],
             'model' => ['nullable', 'string', 'max:120'],
             'api_key' => ['sometimes', 'nullable', 'string', 'max:4096'],
@@ -29,7 +29,24 @@ class UpdateAiProviderSettingsRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
-            if ($this->input('provider') !== 'openai-compatible') {
+            $provider = $this->input('provider');
+            if ($provider === 'disabled') {
+                return;
+            }
+
+            if (! is_string($this->input('model')) || trim($this->input('model')) === '') {
+                $validator->errors()->add('model', 'Enter the provider model name.');
+            }
+
+            if ($provider !== 'openai-compatible') {
+                if ($this->filled('base_url')) {
+                    $validator->errors()->add('base_url', 'The selected provider manages its own API endpoint.');
+                }
+
+                if ($provider === 'gemini' && preg_match('/\A[a-zA-Z0-9._-]{1,120}\z/', trim((string) $this->input('model'))) !== 1) {
+                    $validator->errors()->add('model', 'Enter a valid Gemini model name.');
+                }
+
                 return;
             }
 
@@ -37,9 +54,6 @@ class UpdateAiProviderSettingsRequest extends FormRequest
                 $validator->errors()->add('base_url', 'Enter the provider base URL.');
 
                 return;
-            }
-            if (! is_string($this->input('model')) || trim($this->input('model')) === '') {
-                $validator->errors()->add('model', 'Enter the provider model name.');
             }
 
             $parts = parse_url(trim((string) $this->input('base_url')));

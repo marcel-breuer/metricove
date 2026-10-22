@@ -25,7 +25,7 @@ Module list: Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pan
 Each module must operate independently where sensible. Cross-module interactions must check both modules' enabled states and caller permissions. Pantry stock cannot be silently changed by meal planning.
 
 ## AI architecture
-An optional local or remote AI provider adapter supports narrow, typed domain tools. Laravel applies the same authorization logic regardless of UI, REST or MCP caller. No direct LLM-supplied SQL. Writes require preview, explicit human approval, idempotency and audit. Core operations do not require an AI provider.
+An optional local or remote AI provider adapter supports narrow, typed domain tools. Supported remote choices include Claude, Gemini and OpenRouter alongside OpenAI-compatible endpoints. Laravel applies the same authorization logic regardless of UI, REST or MCP caller. No direct LLM-supplied SQL. Writes require preview, explicit human approval, idempotency and audit. Core operations do not require an AI provider.
 
 ## Data integrity and operations
 Money and physical quantities are decimal with explicit currency/units. Schema changes are versioned Laravel migrations; background jobs are idempotent and verify active module state at execution time. Persistent database/media backups and restore drills, secure secrets, healthchecks and tested upgrades are release requirements.
