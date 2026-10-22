@@ -34,7 +34,7 @@ class ModuleActivationTest extends TestCase
         $this->actingAs($admin, 'web')
             ->getJson('/api/admin/modules')
             ->assertOk()
-            ->assertJsonCount(12, 'modules')
+            ->assertJsonCount(11, 'modules')
             ->assertJsonPath('modules.0.key', 'core')
             ->assertJsonPath('modules.0.enabled', true)
             ->assertJsonPath('modules.0.can_disable', false)
@@ -206,8 +206,8 @@ class ModuleActivationTest extends TestCase
         $this->actingAs($admin, 'web')
             ->getJson('/api/admin/modules')
             ->assertOk()
-            ->assertJsonPath('modules.12.key', 'test_consumer')
-            ->assertJsonPath('modules.12.missing_dependencies', ['tracking']);
+            ->assertJsonPath('modules.11.key', 'test_consumer')
+            ->assertJsonPath('modules.11.missing_dependencies', ['tracking']);
 
         $this->patchJson('/api/admin/modules/test_consumer', ['enabled' => true])
             ->assertUnprocessable()

@@ -66,8 +66,6 @@ class AiContextTest extends TestCase
     public function test_assistant_uses_only_relevant_user_and_matching_project_context(): void
     {
         [, $owner, $other] = $this->members();
-        $this->grant($owner);
-        $this->grant($other);
         $this->entry($owner, 'user', null, 'preference', 'I prefer concise writing for project reports.');
         $this->entry($owner, 'project', 'budget-app', 'goal', 'Keep budget summaries focused on recurring costs.');
         $this->entry($owner, 'project', 'travel-app', 'preference', 'Use travel miles in itineraries.');
@@ -91,7 +89,6 @@ class AiContextTest extends TestCase
     public function test_opt_out_and_expired_or_disabled_entries_never_reach_provider(): void
     {
         [, $member] = $this->members();
-        $this->grant($member);
         $this->entry($member, 'user', null, 'preference', 'I prefer concise answers.');
         $this->entry($member, 'user', null, 'preference', 'Expired private note.', ['expires_at' => now()->subDay()]);
         $this->entry($member, 'user', null, 'preference', 'Disabled private note.', ['enabled' => false]);
