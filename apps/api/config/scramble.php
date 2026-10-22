@@ -1,7 +1,9 @@
 <?php
 
+use Dedoc\Scramble\OpenApiVersion;
 use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Support\Str;
 
 return [
     /*
@@ -45,7 +47,7 @@ return [
     /*
      * OpenAPI version of the resulting document.
      */
-    'openapi_version' => \Dedoc\Scramble\OpenApiVersion::V3_1,
+    'openapi_version' => OpenApiVersion::V3_1,
 
     'info' => [
         /*
@@ -164,7 +166,7 @@ return [
             'middleware' => ['auth:web'],
             'scheme' => SecurityScheme::apiKey(
                 'cookie',
-                (string) env('SESSION_COOKIE', \Illuminate\Support\Str::slug((string) env('APP_NAME', 'laravel')).'-session'),
+                (string) env('SESSION_COOKIE', Str::slug((string) env('APP_NAME', 'laravel')).'-session'),
             ),
         ],
     ],

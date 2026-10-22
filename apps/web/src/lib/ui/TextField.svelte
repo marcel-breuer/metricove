@@ -21,5 +21,5 @@
 
 <label class="ui-field {className}" for={id}>
 	<span class="ui-field-label">{$t(label)}</span>
-		<input class="ui-control" {id} bind:value placeholder={placeholder === undefined ? undefined : $t(placeholder)} {...attributes} />
+		<input class="ui-control" {id} bind:value placeholder={placeholder ? $t(placeholder) : undefined} {...attributes} />
 </label>
