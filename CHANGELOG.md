@@ -2,6 +2,44 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.4.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.3.0...metricove-v0.4.0) (2026-10-22)
+
+
+### Features
+
+* **ai:** make assistant a permission-aware core feature ([#103](https://github.com/marcel-breuer/metricove/issues/103)) ([2317766](https://github.com/marcel-breuer/metricove/commit/23177662824855365d842990cee6107b4a1e6960))
+* **ai:** make assistant a permission-aware core feature ([#103](https://github.com/marcel-breuer/metricove/issues/103)) ([acf5182](https://github.com/marcel-breuer/metricove/commit/acf51826e59150bbe2d07e6f2ca78ce0b5f29625))
+* **i18n:** add user locale preferences and MCP docs ([567fb1a](https://github.com/marcel-breuer/metricove/commit/567fb1ab9623952e4b8ff3209207d2095961fb62))
+* **i18n:** add user locale preferences and MCP docs ([567fb1a](https://github.com/marcel-breuer/metricove/commit/567fb1ab9623952e4b8ff3209207d2095961fb62))
+* **i18n:** add user locale preferences and MCP docs ([6245561](https://github.com/marcel-breuer/metricove/commit/6245561bf2451cf3c218a0e1fb7fee0aa412f493))
+* **profile:** allow members to change their password ([#104](https://github.com/marcel-breuer/metricove/issues/104)) ([99536c5](https://github.com/marcel-breuer/metricove/commit/99536c5cb483b8d7f449f2b9fbcd9f9fa668bb13))
+* **profile:** allow members to change their password ([#104](https://github.com/marcel-breuer/metricove/issues/104)) ([e00250d](https://github.com/marcel-breuer/metricove/commit/e00250d0402917d28e7cacc5d3062c6b25c75491))
+* **provider:** add Claude, Gemini and OpenRouter ([#109](https://github.com/marcel-breuer/metricove/issues/109)) ([88cb555](https://github.com/marcel-breuer/metricove/commit/88cb555fca6e4304b06990780befeba6ac7b88eb))
+* **provider:** add selectable providers ([#109](https://github.com/marcel-breuer/metricove/issues/109)) ([cae97d7](https://github.com/marcel-breuer/metricove/commit/cae97d7c199c53d69f78fab4347855232e5505a0))
+* **search:** add household search from header ([#107](https://github.com/marcel-breuer/metricove/issues/107)) ([f0ba911](https://github.com/marcel-breuer/metricove/commit/f0ba91109b49fd060b91b932e9b61aa43d50c04f))
+* **search:** replace Quick Add with household search ([#107](https://github.com/marcel-breuer/metricove/issues/107)) ([1186815](https://github.com/marcel-breuer/metricove/commit/118681579361fbb32871d3f80d3f06e9f32cc0f2))
+* **web:** add bulk module management toggle ([b51db02](https://github.com/marcel-breuer/metricove/commit/b51db02a4d79800daa3d02bc5c352a778a733a52))
+* **web:** add bulk module toggle ([#99](https://github.com/marcel-breuer/metricove/issues/99)) ([b7d0c31](https://github.com/marcel-breuer/metricove/commit/b7d0c3185878dc95fe840704604f571e16aa950e))
+
+
+### Bug Fixes
+
+* **ai:** satisfy settings configuration analysis ([#103](https://github.com/marcel-breuer/metricove/issues/103)) ([d7d5867](https://github.com/marcel-breuer/metricove/commit/d7d58674855c4abddc85fd9545f2eae898f0b83a))
+* **ci:** resolve frontend typing and PHP formatting ([446effe](https://github.com/marcel-breuer/metricove/commit/446effe3a2b2e81b6127337e4dd19e082434ff0b))
+* **coolify:** allow runtime-only secrets during compose build ([750bcb2](https://github.com/marcel-breuer/metricove/commit/750bcb29a34537e418401a76b5fa12ed72808d1f))
+* **coolify:** allow runtime-only secrets during Compose build ([3e59191](https://github.com/marcel-breuer/metricove/commit/3e59191eaa66aa13b0b6fc7db046a5fea89856ad))
+* **profile:** key password limiter by authenticated member ([#104](https://github.com/marcel-breuer/metricove/issues/104)) ([d3f0660](https://github.com/marcel-breuer/metricove/commit/d3f06603eb2cef7a069d9ca077ae09de8b471d09))
+* **provider:** correct tool argument validation ([#109](https://github.com/marcel-breuer/metricove/issues/109)) ([6e5405f](https://github.com/marcel-breuer/metricove/commit/6e5405f49f39c1adcf8c64b5829e4a6eb2b0d3bb))
+* **web:** add accessible registration guidance ([f5e865a](https://github.com/marcel-breuer/metricove/commit/f5e865aaf89a3828620eaf1d872676c9a250f6e4))
+* **web:** link registration form guidance ([#101](https://github.com/marcel-breuer/metricove/issues/101)) ([7a8446d](https://github.com/marcel-breuer/metricove/commit/7a8446d10aab34dc1c2c951c7e66f621ef540ad0))
+
+
+### Documentation
+
+* **config:** clarify SMTP placeholders ([#111](https://github.com/marcel-breuer/metricove/issues/111)) ([c0d4ef7](https://github.com/marcel-breuer/metricove/commit/c0d4ef7b0f0652d394d2a4e9dd2c0bca9d52f996))
+* **config:** clarify SMTP placeholders ([#111](https://github.com/marcel-breuer/metricove/issues/111)) ([9271150](https://github.com/marcel-breuer/metricove/commit/92711503e98e996fc673de56cf7809d6d332f59c))
+* **config:** explain SMTP host reachability ([#111](https://github.com/marcel-breuer/metricove/issues/111)) ([6e23684](https://github.com/marcel-breuer/metricove/commit/6e23684de8dc211015fded9e0c44b64f72212812))
+
 ## [0.3.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.2.1...metricove-v0.3.0) (2026-10-21)
 
 
