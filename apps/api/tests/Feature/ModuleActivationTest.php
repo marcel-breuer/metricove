@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Exceptions\ModuleDisabled;
 use App\Http\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForRequest;
 use App\Jobs\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForJob;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\ModuleManagementService;
-use App\Services\Modules\ModuleStateService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,7 +32,7 @@ class ModuleActivationTest extends TestCase
         $this->actingAs($admin, 'web')
             ->getJson('/api/admin/modules')
             ->assertOk()
-            ->assertJsonCount(12, 'modules')
+            ->assertJsonCount(11, 'modules')
             ->assertJsonPath('modules.0.key', 'core')
             ->assertJsonPath('modules.0.enabled', true)
             ->assertJsonPath('modules.0.can_disable', false)
@@ -206,8 +204,8 @@ class ModuleActivationTest extends TestCase
         $this->actingAs($admin, 'web')
             ->getJson('/api/admin/modules')
             ->assertOk()
-            ->assertJsonPath('modules.12.key', 'test_consumer')
-            ->assertJsonPath('modules.12.missing_dependencies', ['tracking']);
+            ->assertJsonPath('modules.11.key', 'test_consumer')
+            ->assertJsonPath('modules.11.missing_dependencies', ['tracking']);
 
         $this->patchJson('/api/admin/modules/test_consumer', ['enabled' => true])
             ->assertUnprocessable()
@@ -261,12 +259,7 @@ class ModuleActivationTest extends TestCase
         });
         $this->assertSame(0, $executions);
 
-        try {
-            app(ModuleStateService::class)->assertEnabled('ai');
-            $this->fail('A disabled AI module must reject typed tool execution.');
-        } catch (ModuleDisabled $exception) {
-            $this->assertSame('ai', $exception->moduleKey);
-        }
+        $this->assertArrayNotHasKey('ai', config('modules.catalog'));
 
         app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
         $this->getJson('/test/modules/tracking')->assertOk()->assertJsonPath('ok', true);
@@ -277,9 +270,6 @@ class ModuleActivationTest extends TestCase
         }));
         $this->assertSame(1, $executions);
 
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
-        app(ModuleStateService::class)->assertEnabled('ai');
-        $this->assertTrue(app(ModuleStateService::class)->isEnabled('ai'));
     }
 
     private function admin(): User

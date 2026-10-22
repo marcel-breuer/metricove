@@ -14,6 +14,7 @@ class HouseholdSettings extends Model
     {
         return [
             'setup_completed_at' => 'immutable_datetime',
+            'ai_api_key' => 'encrypted',
         ];
     }
 }

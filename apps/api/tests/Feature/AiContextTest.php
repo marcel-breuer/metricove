@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AiContextEntry;
 use App\Models\HouseholdSettings;
-use App\Models\ModuleUserPermission;
 use App\Models\User;
-use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -29,11 +27,9 @@ class AiContextTest extends TestCase
         ]);
     }
 
-    public function test_members_can_manage_only_their_own_context_and_require_ai_access(): void
+    public function test_members_can_manage_only_their_own_context_without_a_separate_ai_grant(): void
     {
         [$admin, $owner, $other] = $this->members();
-        $this->grant($owner);
-        $this->grant($other);
         $this->actingAs($owner, 'web');
 
         $response = $this->postJson('/api/ai/context', [
@@ -69,8 +65,6 @@ class AiContextTest extends TestCase
     public function test_assistant_uses_only_relevant_user_and_matching_project_context(): void
     {
         [, $owner, $other] = $this->members();
-        $this->grant($owner);
-        $this->grant($other);
         $this->entry($owner, 'user', null, 'preference', 'I prefer concise writing for project reports.');
         $this->entry($owner, 'project', 'budget-app', 'goal', 'Keep budget summaries focused on recurring costs.');
         $this->entry($owner, 'project', 'travel-app', 'preference', 'Use travel miles in itineraries.');
@@ -94,7 +88,6 @@ class AiContextTest extends TestCase
     public function test_opt_out_and_expired_or_disabled_entries_never_reach_provider(): void
     {
         [, $member] = $this->members();
-        $this->grant($member);
         $this->entry($member, 'user', null, 'preference', 'I prefer concise answers.');
         $this->entry($member, 'user', null, 'preference', 'Expired private note.', ['expires_at' => now()->subDay()]);
         $this->entry($member, 'user', null, 'preference', 'Disabled private note.', ['enabled' => false]);
@@ -116,11 +109,10 @@ class AiContextTest extends TestCase
         $this->assertStringNotContainsString('Disabled private note', $payload);
     }
 
-    public function test_context_crud_is_unavailable_when_ai_module_is_disabled(): void
+    public function test_context_is_available_as_a_core_feature(): void
     {
         [$admin] = $this->members();
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', false);
-        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertNotFound();
+        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertOk();
     }
 
     /** @return array{User, User, User} */
@@ -130,17 +122,8 @@ class AiContextTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
         $owner = User::factory()->create(['is_active' => true]);
         $other = User::factory()->create(['is_active' => true]);
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
 
         return [$admin, $owner, $other];
-    }
-
-    private function grant(User $member): void
-    {
-        ModuleUserPermission::query()->updateOrCreate(
-            ['user_id' => $member->id, 'module_key' => 'ai'],
-            ['can_view' => true, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
-        );
     }
 
     /** @param array<string, mixed> $overrides */

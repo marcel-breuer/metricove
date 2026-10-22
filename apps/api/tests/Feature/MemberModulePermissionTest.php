@@ -7,7 +7,6 @@ use App\Exceptions\ModuleDisabled;
 use App\Http\Middleware\EnsureModuleAccess as EnsureModuleAccessForRequest;
 use App\Jobs\Middleware\EnsureModuleAccess as EnsureModuleAccessForJob;
 use App\Models\HouseholdSettings;
-use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\MemberModulePermissionService;
 use App\Services\Modules\ModuleAccessService;
@@ -262,32 +261,9 @@ class MemberModulePermissionTest extends TestCase
         app(ModuleAccessService::class)->authorize($member, 'tracking', ModuleCapability::View, $record);
     }
 
-    public function test_typed_ai_and_mcp_operations_use_the_same_member_capability_check(): void
+    public function test_ai_is_not_a_separately_granted_module(): void
     {
-        $admin = $this->admin();
-        $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
-        $this->grant($admin, $member, 'ai', ['manage' => true]);
-        $access = app(ModuleAccessService::class);
-
-        try {
-            $access->authorize($member, 'ai', ModuleCapability::View);
-            $this->fail('AI/MCP callers must not treat manage as an implicit view grant.');
-        } catch (AuthorizationException) {
-            $this->assertDatabaseHas('module_user_permissions', [
-                'user_id' => $member->id,
-                'module_key' => 'ai',
-                'can_manage' => true,
-                'can_view' => false,
-            ]);
-        }
-
-        $this->grant($admin, $member, 'ai', ['view' => true, 'manage' => true]);
-        $access->authorize($member, 'ai', ModuleCapability::View);
-        $this->assertTrue((bool) ModuleUserPermission::query()
-            ->where('user_id', $member->id)
-            ->where('module_key', 'ai')
-            ->value('can_view'));
+        $this->assertArrayNotHasKey('ai', config('modules.catalog'));
     }
 
     private function admin(): User

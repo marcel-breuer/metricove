@@ -9,18 +9,24 @@ use Illuminate\Support\Facades\Http;
 
 class OpenAiCompatibleAssistantProvider implements AssistantProvider
 {
+    public function __construct(private readonly AiProviderConfiguration $configuration) {}
+
     public function isAvailable(): bool
     {
-        return config('ai.provider') === 'openai-compatible'
-            && is_string(config('ai.base_url'))
-            && $this->validBaseUrl(config('ai.base_url'))
-            && is_string(config('ai.model'))
-            && trim(config('ai.model')) !== '';
+        $configuration = $this->configuration->current();
+
+        return $configuration['provider'] === 'openai-compatible'
+            && is_string($configuration['base_url'])
+            && $this->validBaseUrl($configuration['base_url'], $configuration['external_provider'])
+            && is_string($configuration['model'])
+            && trim($configuration['model']) !== '';
     }
 
     public function isExternal(): bool
     {
-        return $this->isAvailable() && $this->externalProviderConfigured();
+        $configuration = $this->configuration->current();
+
+        return $this->isAvailable() && $configuration['external_provider'];
     }
 
     public function label(): string
@@ -40,19 +46,20 @@ class OpenAiCompatibleAssistantProvider implements AssistantProvider
             throw new AssistantProviderException('The assistant provider is not configured.');
         }
 
+        $configuration = $this->configuration->current();
         $client = Http::acceptJson()
             ->asJson()
             ->connectTimeout(5)
             ->timeout((int) config('ai.timeout_seconds', 20));
-        $apiKey = config('ai.api_key');
+        $apiKey = $configuration['api_key'];
 
         if (is_string($apiKey) && $apiKey !== '') {
             $client = $client->withToken($apiKey);
         }
 
         try {
-            $response = $client->post(rtrim((string) config('ai.base_url'), '/').'/chat/completions', [
-                'model' => trim((string) config('ai.model')),
+            $response = $client->post(rtrim((string) $configuration['base_url'], '/').'/chat/completions', [
+                'model' => trim((string) $configuration['model']),
                 'messages' => $request->messages,
                 'tools' => $request->tools,
                 'tool_choice' => 'auto',
@@ -112,7 +119,7 @@ class OpenAiCompatibleAssistantProvider implements AssistantProvider
         return new AssistantCompletion(is_string($content) ? trim($content) : null, $toolCalls);
     }
 
-    private function validBaseUrl(string $url): bool
+    private function validBaseUrl(string $url, bool $external): bool
     {
         $parts = parse_url(trim($url));
 
@@ -126,11 +133,6 @@ class OpenAiCompatibleAssistantProvider implements AssistantProvider
             return false;
         }
 
-        return ! $this->externalProviderConfigured() || strtolower((string) $parts['scheme']) === 'https';
-    }
-
-    private function externalProviderConfigured(): bool
-    {
-        return (bool) config('ai.external_provider', false);
+        return ! $external || strtolower((string) $parts['scheme']) === 'https';
     }
 }
