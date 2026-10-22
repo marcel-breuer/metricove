@@ -92,7 +92,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('password-change', function (Request $request): array {
-            $userId = $request->user('web')?->id ?? 'guest';
+            $userId = $request->user('web')->id;
 
             return [
                 Limit::perMinute(5)->by('password-change-user:'.$userId),
