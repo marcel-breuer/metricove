@@ -6,6 +6,9 @@ use App\Contracts\AssistantProvider;
 use App\Contracts\MeterPhotoOcr;
 use App\Models\User;
 use App\Services\AI\AssistantToolRegistry;
+use App\Services\AI\AiProviderConfiguration;
+use App\Services\AI\ClaudeAssistantProvider;
+use App\Services\AI\GeminiAssistantProvider;
 use App\Services\AI\OpenAiCompatibleAssistantProvider;
 use App\Services\AI\Tools\FinanceMonthSummaryTool;
 use App\Services\AI\Tools\TrackingSnapshotTool;
@@ -36,7 +39,15 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(MeterPhotoOcr::class, TesseractMeterPhotoOcr::class);
-        $this->app->bind(AssistantProvider::class, OpenAiCompatibleAssistantProvider::class);
+        $this->app->bind(AssistantProvider::class, function ($app): AssistantProvider {
+            $configuration = $app->make(AiProviderConfiguration::class);
+
+            return match ($configuration->current()['provider']) {
+                'claude' => new ClaudeAssistantProvider($configuration),
+                'gemini' => new GeminiAssistantProvider($configuration),
+                default => new OpenAiCompatibleAssistantProvider($configuration),
+            };
+        });
         $this->app->singleton(AssistantToolRegistry::class, function ($app): AssistantToolRegistry {
             return new AssistantToolRegistry($app->make(ModuleAccessService::class), [
                 $app->make(FinanceMonthSummaryTool::class),

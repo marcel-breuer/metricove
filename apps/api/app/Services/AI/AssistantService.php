@@ -89,6 +89,7 @@ class AssistantService
             $messages[] = [
                 'role' => 'assistant',
                 'content' => $completion->content,
+                'provider_data' => $completion->providerData,
                 'tool_calls' => array_map(fn (AssistantToolCall $call): array => [
                     'id' => $call->id,
                     'type' => 'function',

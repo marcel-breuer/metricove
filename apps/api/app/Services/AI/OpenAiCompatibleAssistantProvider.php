@@ -9,35 +9,44 @@ use Illuminate\Support\Facades\Http;
 
 class OpenAiCompatibleAssistantProvider implements AssistantProvider
 {
+    private const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+
     public function __construct(private readonly AiProviderConfiguration $configuration) {}
 
     public function isAvailable(): bool
     {
         $configuration = $this->configuration->current();
 
-        return $configuration['provider'] === 'openai-compatible'
-            && is_string($configuration['base_url'])
-            && $this->validBaseUrl($configuration['base_url'], $configuration['external_provider'])
+        $provider = $configuration['provider'];
+        $baseUrl = $provider === 'openrouter' ? self::OPENROUTER_BASE_URL : $configuration['base_url'];
+
+        return in_array($provider, ['openai-compatible', 'openrouter'], true)
+            && is_string($baseUrl)
+            && $this->validBaseUrl($baseUrl, $configuration['external_provider'])
             && is_string($configuration['model'])
-            && trim($configuration['model']) !== '';
+            && trim($configuration['model']) !== ''
+            && ($provider !== 'openrouter' || (is_string($configuration['api_key']) && trim($configuration['api_key']) !== ''));
     }
 
     public function isExternal(): bool
     {
         $configuration = $this->configuration->current();
 
-        return $this->isAvailable() && $configuration['external_provider'];
+        return $this->isAvailable() && ($configuration['provider'] === 'openrouter' || $configuration['external_provider']);
     }
 
     public function label(): string
     {
+        $configuration = $this->configuration->current();
+
         if (! $this->isAvailable()) {
             return 'No provider configured';
         }
 
-        return $this->isExternal()
-            ? 'External OpenAI-compatible provider'
-            : 'Local OpenAI-compatible provider';
+        return match ($configuration['provider']) {
+            'openrouter' => 'OpenRouter',
+            default => $this->isExternal() ? 'External OpenAI-compatible provider' : 'Local OpenAI-compatible provider',
+        };
     }
 
     public function complete(AssistantCompletionRequest $request): AssistantCompletion
@@ -47,6 +56,7 @@ class OpenAiCompatibleAssistantProvider implements AssistantProvider
         }
 
         $configuration = $this->configuration->current();
+        $baseUrl = $configuration['provider'] === 'openrouter' ? self::OPENROUTER_BASE_URL : (string) $configuration['base_url'];
         $client = Http::acceptJson()
             ->asJson()
             ->connectTimeout(5)
@@ -58,7 +68,7 @@ class OpenAiCompatibleAssistantProvider implements AssistantProvider
         }
 
         try {
-            $response = $client->post(rtrim((string) $configuration['base_url'], '/').'/chat/completions', [
+            $response = $client->post(rtrim($baseUrl, '/').'/chat/completions', [
                 'model' => trim((string) $configuration['model']),
                 'messages' => $request->messages,
                 'tools' => $request->tools,
