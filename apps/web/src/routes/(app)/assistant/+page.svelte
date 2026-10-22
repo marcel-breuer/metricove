@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { onMount, tick } from 'svelte';
 	import { csrfToken } from '#lib/auth';
 
 	type AssistantStatus = {
@@ -35,6 +36,17 @@
 	let contextMessage = $state('');
 	let contextError = $state('');
 	let contextBusy = $state(false);
+	let lastSearchRequestId = '';
+
+	$effect(() => {
+		const requestId = page.state.assistantSearchRequestId;
+		const requestedQuestion = page.state.assistantQuestion;
+		if (!requestId || requestId === lastSearchRequestId || !requestedQuestion) return;
+
+		lastSearchRequestId = requestId;
+		question = requestedQuestion.slice(0, 4000);
+		void tick().then(() => document.getElementById('assistant-question')?.focus());
+	});
 
 	onMount(() => {
 		void loadStatus();
