@@ -261,12 +261,7 @@ class ModuleActivationTest extends TestCase
         });
         $this->assertSame(0, $executions);
 
-        try {
-            app(ModuleStateService::class)->assertEnabled('ai');
-            $this->fail('A disabled AI module must reject typed tool execution.');
-        } catch (ModuleDisabled $exception) {
-            $this->assertSame('ai', $exception->moduleKey);
-        }
+        $this->assertArrayNotHasKey('ai', config('modules.catalog'));
 
         app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
         $this->getJson('/test/modules/tracking')->assertOk()->assertJsonPath('ok', true);
@@ -277,9 +272,6 @@ class ModuleActivationTest extends TestCase
         }));
         $this->assertSame(1, $executions);
 
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
-        app(ModuleStateService::class)->assertEnabled('ai');
-        $this->assertTrue(app(ModuleStateService::class)->isEnabled('ai'));
     }
 
     private function admin(): User

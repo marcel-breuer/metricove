@@ -318,14 +318,13 @@ class ImportModuleTest extends TestCase
         HouseholdSettings::query()->whereKey(1)->update(['setup_completed_at' => now()]);
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
 
-        foreach (['import', 'utilities', 'ai'] as $module) {
+        foreach (['import', 'utilities'] as $module) {
             $this->grant($admin, $module, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
         }
 
         $modules = app(ModuleManagementService::class);
         $modules->setEnabled($admin, 'import', true);
         $modules->setEnabled($admin, 'utilities', true);
-        $modules->setEnabled($admin, 'ai', false);
 
         return $admin;
     }

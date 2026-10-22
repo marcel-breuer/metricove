@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminMemberAuditController;
 use App\Http\Controllers\Api\AdminMemberController;
 use App\Http\Controllers\Api\AdminMemberModulePermissionController;
 use App\Http\Controllers\Api\AdminModuleController;
+use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\AiContextController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AssistantController;
@@ -242,7 +243,7 @@ Route::middleware('web')->group(function (): void {
                 ->whereNumber('meter')->name('utilities.readings.suggest');
         });
 
-        Route::prefix('ai')->name('ai.')->middleware('module.access:ai,view')->group(function (): void {
+        Route::prefix('ai')->name('ai.')->group(function (): void {
             Route::get('/assistant', [AssistantController::class, 'status'])->name('assistant.status');
             Route::post('/assistant', [AssistantController::class, 'ask'])
                 ->middleware('throttle:assistant')
@@ -320,6 +321,10 @@ Route::middleware('web')->group(function (): void {
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
+            Route::get('/settings', [AdminSettingsController::class, 'show'])->name('settings.show');
+            Route::patch('/settings', [AdminSettingsController::class, 'update'])
+                ->middleware('throttle:module-manage')
+                ->name('settings.update');
             Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
             Route::patch('/modules/{moduleKey}', [AdminModuleController::class, 'update'])
                 ->middleware('throttle:module-manage')

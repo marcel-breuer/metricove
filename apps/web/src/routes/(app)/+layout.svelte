@@ -53,7 +53,9 @@
 		if (path === '/admin/members') return 'Members';
 		if (path.startsWith('/admin/members/')) return 'Module rights';
 		if (path === '/admin/modules') return 'Modules';
+		if (path === '/admin/settings') return 'General settings';
 		if (path === '/admin/invitations') return 'Invitations';
+		if (path === '/assistant') return 'Assistant';
 		if (path === '/modules/tracking') return 'Tracking';
 		if (path.startsWith('/modules/tracking/')) return 'Tracker history';
 		if (path.startsWith('/modules/')) {
@@ -148,6 +150,14 @@
 	}
 
 	function handleWindowKeydown(event: KeyboardEvent): void {
+		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+			event.preventDefault();
+			drawerOpen = false;
+			quickAddOpen = false;
+			void goto('/assistant');
+			return;
+		}
+
 		if (event.key === 'Escape') {
 			if (quickAddOpen) void closeQuickAdd();
 			else if (drawerOpen) void closeDrawer();
@@ -251,6 +261,10 @@
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.5V21" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
 							Modules
 						</a>
+						<a href="/admin/settings" aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
+							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+							General settings
+						</a>
 						<a href="/admin/invitations" aria-current={isActive('/admin/invitations') ? 'page' : undefined} class="nav-item {isActive('/admin/invitations') ? 'nav-item-active' : ''}">
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7" /><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
 							Invitations
@@ -282,6 +296,10 @@
 			<Button bind:element={quickAddTrigger} disabled={loading || currentUser === null} onclick={() => void openQuickAdd()} aria-haspopup="dialog" class="shrink-0">
 				<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
 				<span>Quick Add</span>
+			</Button>
+			<Button variant="secondary" disabled={loading || currentUser === null} onclick={() => void goto('/assistant')} aria-keyshortcuts="Meta+K Control+K" class="shrink-0">
+				<span>Ask AI</span>
+				<kbd aria-hidden="true" class="hidden rounded border border-slate-700 px-1.5 py-0.5 text-[0.65rem] sm:inline">⌘ K</kbd>
 			</Button>
 		</header>
 
@@ -381,6 +399,9 @@
 								</svg>
 								Invitations
 							</a>
+			<a href="/admin/settings" onclick={() => (drawerOpen = false)} aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
+				<span aria-hidden="true">⚙</span>General settings
+			</a>
 						</div>
 					</div>
 				{/if}

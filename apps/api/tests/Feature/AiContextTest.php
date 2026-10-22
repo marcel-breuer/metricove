@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\AiContextEntry;
 use App\Models\HouseholdSettings;
-use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,11 +28,9 @@ class AiContextTest extends TestCase
         ]);
     }
 
-    public function test_members_can_manage_only_their_own_context_and_require_ai_access(): void
+    public function test_members_can_manage_only_their_own_context_without_a_separate_ai_grant(): void
     {
         [$admin, $owner, $other] = $this->members();
-        $this->grant($owner);
-        $this->grant($other);
         $this->actingAs($owner, 'web');
 
         $response = $this->postJson('/api/ai/context', [
@@ -116,11 +113,10 @@ class AiContextTest extends TestCase
         $this->assertStringNotContainsString('Disabled private note', $payload);
     }
 
-    public function test_context_crud_is_unavailable_when_ai_module_is_disabled(): void
+    public function test_context_is_available_as_a_core_feature(): void
     {
         [$admin] = $this->members();
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', false);
-        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertNotFound();
+        $this->actingAs($admin, 'web')->getJson('/api/ai/context')->assertOk();
     }
 
     /** @return array{User, User, User} */
@@ -130,17 +126,7 @@ class AiContextTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
         $owner = User::factory()->create(['is_active' => true]);
         $other = User::factory()->create(['is_active' => true]);
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', true);
-
         return [$admin, $owner, $other];
-    }
-
-    private function grant(User $member): void
-    {
-        ModuleUserPermission::query()->updateOrCreate(
-            ['user_id' => $member->id, 'module_key' => 'ai'],
-            ['can_view' => true, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
-        );
     }
 
     /** @param array<string, mixed> $overrides */

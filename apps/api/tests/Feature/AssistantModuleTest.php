@@ -48,8 +48,7 @@ class AssistantModuleTest extends TestCase
         $admin = $this->member(true);
         $viewer = $this->member(false);
         $owner = $this->member(false);
-        $this->enable($admin, ['ai', 'finance']);
-        $this->grant($viewer, 'ai', true);
+        $this->enable($admin, ['finance']);
         $this->grant($viewer, 'finance', true);
 
         $shared = $this->category($admin, false, 'Shared');
@@ -86,8 +85,6 @@ class AssistantModuleTest extends TestCase
     {
         $admin = $this->member(true);
         $member = $this->member(false);
-        $this->enable($admin, ['ai']);
-        $this->grant($member, 'ai', true);
         config(['ai.external_provider' => true]);
         Http::fake(['*' => Http::response($this->assistantAnswer('Hello from the opted-in provider.'))]);
 
@@ -213,8 +210,7 @@ class AssistantModuleTest extends TestCase
     {
         $admin = $this->member(true);
         $member = $this->member(false);
-        $this->enable($admin, ['ai', 'finance']);
-        $this->grant($member, 'ai', true);
+        $this->enable($admin, ['finance']);
         $this->grant($member, 'finance', false);
 
         $this->actingAs($member, 'web')->getJson('/api/ai/assistant')
@@ -239,8 +235,6 @@ class AssistantModuleTest extends TestCase
     {
         $admin = $this->member(true);
         $member = $this->member(false);
-        $this->enable($admin, ['ai']);
-        $this->grant($member, 'ai', true);
         Http::fakeSequence()->push($this->toolCall('run_shell_command', ['command' => 'id']));
 
         $this->actingAs($member, 'web')->postJson('/api/ai/assistant', ['message' => 'Run an arbitrary command'])
@@ -250,12 +244,9 @@ class AssistantModuleTest extends TestCase
         $this->assertSame(0, FinancialTransaction::query()->count());
     }
 
-    public function test_ai_module_access_and_provider_configuration_are_required(): void
+    public function test_core_assistant_requires_provider_configuration_without_module_access(): void
     {
-        $admin = $this->member(true);
         $member = $this->member(false);
-        $this->enable($admin, ['ai']);
-        $this->grant($member, 'ai', true);
         config(['ai.provider' => 'disabled']);
 
         $this->actingAs($member, 'web')->getJson('/api/ai/assistant')
@@ -266,8 +257,7 @@ class AssistantModuleTest extends TestCase
         $this->actingAs($member, 'web')->postJson('/api/ai/assistant', ['message' => 'Hello'])
             ->assertServiceUnavailable();
 
-        app(ModuleManagementService::class)->setEnabled($admin, 'ai', false);
-        $this->actingAs($member, 'web')->getJson('/api/ai/assistant')->assertNotFound();
+        $this->assertArrayNotHasKey('ai', config('modules.catalog'));
     }
 
     private function member(bool $admin): User

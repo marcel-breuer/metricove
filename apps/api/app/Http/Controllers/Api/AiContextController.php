@@ -2,13 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\ModuleDisabled;
-use App\Exceptions\ModuleNotFound;
 use App\Http\Controllers\Controller;
 use App\Models\AiContextEntry;
 use App\Models\User;
-use App\Services\Modules\ModuleAccessService;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class AiContextController extends Controller
 {
-    public function __construct(private readonly ModuleAccessService $access) {}
-
     public function index(Request $request): JsonResponse
     {
         $actor = $this->authorizeActor($request);
@@ -95,13 +89,6 @@ class AiContextController extends Controller
     {
         $actor = $request->user('web');
         abort_unless($actor instanceof User, 401);
-        try {
-            $this->access->authorize($actor, 'ai', 'view');
-        } catch (ModuleDisabled|ModuleNotFound) {
-            abort(404, 'This module is unavailable.');
-        } catch (AuthorizationException) {
-            abort(403, 'This module operation is not permitted.');
-        }
 
         return $actor->refresh();
     }

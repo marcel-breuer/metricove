@@ -79,12 +79,5 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
-        'ai' => [
-            'label' => 'AI',
-            'description' => 'Permission-bound AI actions and integrations.',
-            'version' => '0.1.0',
-            'dependencies' => ['core'],
-            'always_enabled' => false,
-        ],
     ],
 ];

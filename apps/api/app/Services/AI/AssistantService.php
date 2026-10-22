@@ -3,13 +3,11 @@
 namespace App\Services\AI;
 
 use App\Contracts\AssistantProvider;
-use App\Enums\ModuleCapability;
 use App\Exceptions\AssistantProviderException;
 use App\Exceptions\AssistantUnavailable;
 use App\Exceptions\InvalidAssistantToolCall;
 use App\Models\AiContextEntry;
 use App\Models\User;
-use App\Services\Modules\ModuleAccessService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -21,13 +19,11 @@ class AssistantService
     public function __construct(
         private readonly AssistantProvider $provider,
         private readonly AssistantToolRegistry $tools,
-        private readonly ModuleAccessService $access,
     ) {}
 
     /** @return array{available: bool, provider: string, external: bool, requires_external_consent: bool, modules: list<string>} */
     public function status(User $actor): array
     {
-        $this->access->authorize($actor, 'ai', ModuleCapability::View);
         $external = $this->provider->isExternal();
 
         return [
@@ -42,8 +38,6 @@ class AssistantService
     /** @return array{answer: string, provider: string} */
     public function ask(User $actor, string $question, bool $allowExternalDataSharing, ?string $projectKey = null): array
     {
-        $this->access->authorize($actor, 'ai', ModuleCapability::View);
-
         if (! $this->provider->isAvailable()) {
             throw new AssistantUnavailable('The assistant is not configured.');
         }
