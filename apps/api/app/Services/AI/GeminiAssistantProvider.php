@@ -127,6 +127,7 @@ class GeminiAssistantProvider implements AssistantProvider
                 if (is_string($message['content'] ?? null)) {
                     $system[] = $message['content'];
                 }
+
                 continue;
             }
 
@@ -145,6 +146,7 @@ class GeminiAssistantProvider implements AssistantProvider
                 } else {
                     $contents[] = ['role' => 'user', 'parts' => [$responsePart]];
                 }
+
                 continue;
             }
 
@@ -161,6 +163,7 @@ class GeminiAssistantProvider implements AssistantProvider
                     $toolNames[(string) data_get($call, 'id')] = (string) data_get($call, 'function.name');
                 }
                 $contents[] = $candidate;
+
                 continue;
             }
 

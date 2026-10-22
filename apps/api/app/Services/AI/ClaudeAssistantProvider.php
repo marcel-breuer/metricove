@@ -118,6 +118,7 @@ class ClaudeAssistantProvider implements AssistantProvider
                 if (is_string($message['content'] ?? null)) {
                     $system[] = $message['content'];
                 }
+
                 continue;
             }
 
@@ -129,6 +130,7 @@ class ClaudeAssistantProvider implements AssistantProvider
                 } else {
                     $messages[] = ['role' => 'user', 'content' => [$result]];
                 }
+
                 continue;
             }
 

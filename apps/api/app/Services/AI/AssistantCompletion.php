@@ -5,7 +5,7 @@ namespace App\Services\AI;
 final readonly class AssistantCompletion
 {
     /** @param list<AssistantToolCall> $toolCalls
-     * @param array<string, mixed> $providerData
+     * @param  array<string, mixed>  $providerData
      */
     public function __construct(
         public ?string $content,

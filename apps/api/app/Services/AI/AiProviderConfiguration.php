@@ -6,6 +6,7 @@ use App\Models\HouseholdAuditEvent;
 use App\Models\HouseholdSettings;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AiProviderConfiguration
 {
@@ -68,7 +69,7 @@ class AiProviderConfiguration
             }
 
             if ($this->isBuiltInExternalProvider($data['provider']) && trim((string) $settings->ai_api_key) === '') {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'api_key' => 'Enter an API key for the selected provider.',
                 ]);
             }
