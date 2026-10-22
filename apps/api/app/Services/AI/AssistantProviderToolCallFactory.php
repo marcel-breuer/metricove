@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 
 class AssistantProviderToolCallFactory
 {
-    /** @param array<string, mixed>|\stdClass $arguments */
     public static function make(mixed $id, mixed $name, mixed $arguments, bool $allowMissingId = false): AssistantToolCall
     {
         if ($allowMissingId && (! is_string($id) || $id === '')) {
