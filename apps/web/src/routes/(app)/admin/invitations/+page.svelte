@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -192,7 +193,7 @@
 								<li class="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
 									<div class="min-w-0">
 										<p class="break-all text-sm font-medium text-slate-100">{invitation.email}</p>
-										<p class="mt-1 text-xs text-slate-400">{invitation.is_expired ? 'Expired' : 'Expires'} {new Date(invitation.expires_at).toLocaleString()}</p>
+									<p class="mt-1 text-xs text-slate-400">{invitation.is_expired ? 'Expired' : 'Expires'} {formatDateTime(invitation.expires_at)}</p>
 									</div>
 									<div class="flex shrink-0 gap-2">
 										<button type="button" disabled={busy} onclick={() => void updateInvitation(invitation, 'resend')} aria-label={`Resend invitation to ${invitation.email}`} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Resend</button>

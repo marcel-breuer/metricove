@@ -44,6 +44,10 @@ class InitialSetupController extends Controller
                 'email' => $user->email,
                 'is_admin' => $user->is_admin,
                 'is_active' => $user->is_active,
+                'language' => $user->language,
+                'number_locale' => $user->number_locale,
+                'default_currency' => $user->default_currency,
+                'currency_display' => $user->currency_display,
             ],
         ], 201);
     }

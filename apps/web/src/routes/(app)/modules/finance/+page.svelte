@@ -4,6 +4,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import { formatNumber, formatCurrency } from '#lib/number-format';
+	import { defaultCurrency } from '#lib/i18n';
 	import {
 		financeFrequencies,
 		type FinanceBudget,
@@ -51,14 +52,14 @@
 	let transactionCategory = $state('');
 	let transactionDescription = $state('');
 	let transactionAmount = $state('');
-	let transactionCurrency = $state('EUR');
+	let transactionCurrency = $state($defaultCurrency);
 	let transactionDate = $state(localDate());
 	let transactionVisibility = $state<FinanceVisibility>('private');
 
 	let budgetId = $state<number | null>(null);
 	let budgetCategory = $state('');
 	let budgetAmount = $state('');
-	let budgetCurrency = $state('EUR');
+	let budgetCurrency = $state($defaultCurrency);
 	let budgetVisibility = $state<FinanceVisibility>('private');
 
 	let recurringId = $state<number | null>(null);
@@ -66,7 +67,7 @@
 	let recurringCategory = $state('');
 	let recurringDescription = $state('');
 	let recurringAmount = $state('');
-	let recurringCurrency = $state('EUR');
+	let recurringCurrency = $state($defaultCurrency);
 	let recurringFrequency = $state<FinanceFrequency>('monthly');
 	let recurringStartsOn = $state(localDate());
 	let recurringNextDueOn = $state(localDate());
@@ -156,7 +157,7 @@
 		transactionCategory = '';
 		transactionDescription = '';
 		transactionAmount = '';
-		transactionCurrency = 'EUR';
+		transactionCurrency = $defaultCurrency;
 		transactionDate = localDate();
 		transactionVisibility = canCreate ? 'private' : 'household';
 	}
@@ -165,7 +166,7 @@
 		budgetId = null;
 		budgetCategory = '';
 		budgetAmount = '';
-		budgetCurrency = 'EUR';
+		budgetCurrency = $defaultCurrency;
 		budgetVisibility = canCreate ? 'private' : 'household';
 	}
 
@@ -175,7 +176,7 @@
 		recurringCategory = '';
 		recurringDescription = '';
 		recurringAmount = '';
-		recurringCurrency = 'EUR';
+		recurringCurrency = $defaultCurrency;
 		recurringFrequency = 'monthly';
 		recurringStartsOn = localDate();
 		recurringNextDueOn = localDate();

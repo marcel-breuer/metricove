@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	let {
 		checked,
 		label,
@@ -18,12 +19,12 @@
 	type="button"
 	role="switch"
 	aria-checked={checked}
-	aria-label={label}
+	aria-label={$t(label)}
 	{disabled}
 	class="ui-switch"
 	class:ui-switch-checked={checked}
 	onclick={onchange}
 >
 	<span class="ui-switch-track" aria-hidden="true"><span class="ui-switch-thumb"></span></span>
-	<span class="ui-switch-status">{pending ? 'Saving…' : checked ? 'On' : 'Off'}</span>
+	<span class="ui-switch-status">{pending ? $t('Saving…') : checked ? $t('On') : $t('Off')}</span>
 </button>

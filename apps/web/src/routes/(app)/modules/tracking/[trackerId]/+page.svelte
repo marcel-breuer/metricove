@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDateTime } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getContext, onMount } from 'svelte';
@@ -292,7 +293,7 @@
 	}
 
 	function formatDate(value: string): string {
-		return new Date(value).toLocaleString();
+		return formatDateTime(value);
 	}
 </script>
 

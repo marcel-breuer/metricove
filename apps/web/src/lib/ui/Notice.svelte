@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	let {
 		tone = 'info',
 		message,
@@ -12,4 +13,4 @@
 	} = $props();
 </script>
 
-<p class="ui-notice ui-notice--{tone} {className}" {role}>{message}</p>
+<p class="ui-notice ui-notice--{tone} {className}" {role}>{$t(message)}</p>

@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
 	import { csrfToken } from '#lib/auth';
+	import { formatDate } from '#lib/i18n';
 
 	type AssistantStatus = {
 		available: boolean;
@@ -262,7 +263,7 @@
 				<ul class="mt-6 divide-y divide-slate-800 rounded-xl border border-slate-800">
 					{#each contextEntries as entry (entry.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{entry.kind} · {entry.scope === 'project' ? entry.project_key : 'all questions'}</p><textarea aria-label={`Edit ${entry.kind} context`} value={entry.content} onchange={(event) => void updateContext(entry, event.currentTarget.value)} maxlength="4000" rows="2" class="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-200"></textarea><p class="mt-1 text-xs text-slate-500">Expires {entry.expires_at ? new Date(entry.expires_at).toLocaleDateString() : 'never'} · updated {new Date(entry.updated_at).toLocaleDateString()}</p></div>
+							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{entry.kind} · {entry.scope === 'project' ? entry.project_key : 'all questions'}</p><textarea aria-label={`Edit ${entry.kind} context`} value={entry.content} onchange={(event) => void updateContext(entry, event.currentTarget.value)} maxlength="4000" rows="2" class="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-200"></textarea><p class="mt-1 text-xs text-slate-500">Expires {entry.expires_at ? formatDate(entry.expires_at) : 'never'} · updated {formatDate(entry.updated_at)}</p></div>
 							<button type="button" onclick={() => void deleteContext(entry.id)} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">Delete</button>
 						</li>
 					{/each}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import ThemePicker from './ThemePicker.svelte';
+	import { t } from '#lib/i18n';
 
 	let {
 		eyebrow,
@@ -22,7 +23,7 @@
 <main class="auth-shell">
 	<div class="auth-frame">
 		<header class="auth-header">
-			<a href="/" class="auth-wordmark" aria-label="Metricove home">
+			<a href="/" class="auth-wordmark" aria-label={$t('Metricove home')}>
 				<span class="auth-brand-mark" aria-hidden="true">
 					<svg viewBox="0 0 32 32" fill="none">
 						<path d="M6 23.5V9l10 8 10-8v14.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
@@ -35,11 +36,11 @@
 		</header>
 
 		<div class="auth-body">
-			<aside class="auth-brand-panel" aria-label="About Metricove">
+			<aside class="auth-brand-panel" aria-label={$t('About Metricove')}>
 				<div class="auth-brand-copy">
-					<p class="auth-brand-kicker">YOUR HOUSEHOLD, IN FOCUS</p>
-					<h2>One private place for your household.</h2>
-					<p class="auth-brand-description">A simpler way to keep the things that matter close at hand.</p>
+					<p class="auth-brand-kicker">{$t('YOUR HOUSEHOLD, IN FOCUS')}</p>
+					<h2>{$t('One private place for your household.')}</h2>
+					<p class="auth-brand-description">{$t('A simpler way to keep the things that matter close at hand.')}</p>
 				</div>
 
 				<div class="auth-art" aria-hidden="true">
@@ -57,16 +58,16 @@
 					</div>
 				</div>
 
-				<p class="auth-brand-footnote"><span></span>ONE HOUSEHOLD · YOUR SPACE</p>
+				<p class="auth-brand-footnote"><span></span>{$t('ONE HOUSEHOLD · YOUR SPACE')}</p>
 			</aside>
 
 			<section class="auth-content" class:auth-content--wide={wide} aria-labelledby="auth-title">
 				<div class="auth-form-block" class:auth-form-block--wide={wide}>
-					<p class="auth-eyebrow">{eyebrow}</p>
-					<h1 id="auth-title">{title}</h1>
-					<p class="auth-description">{description}</p>
+					<p class="auth-eyebrow">{$t(eyebrow)}</p>
+					<h1 id="auth-title">{$t(title)}</h1>
+					<p class="auth-description">{$t(description)}</p>
 					{@render children()}
-					{#if note}<p class="auth-account-note"><span class="auth-account-dot"></span>{note}</p>{/if}
+					{#if note}<p class="auth-account-note"><span class="auth-account-dot"></span>{$t(note)}</p>{/if}
 				</div>
 			</section>
 		</div>
