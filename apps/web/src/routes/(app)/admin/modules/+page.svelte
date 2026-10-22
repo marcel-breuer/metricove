@@ -110,6 +110,82 @@
 			busyKey = '';
 		}
 	}
+
+	function modulesInDependencyOrder(entries: ModuleEntry[]): ModuleEntry[] {
+		const ordered: ModuleEntry[] = [];
+		const visited = new Set<string>();
+		const byKey = new Map(entries.map((module) => [module.key, module]));
+
+		function visit(module: ModuleEntry): void {
+			if (visited.has(module.key)) return;
+			visited.add(module.key);
+			for (const dependency of module.dependencies) {
+				const required = byKey.get(dependency);
+				if (required && !required.always_enabled) visit(required);
+			}
+			ordered.push(module);
+		}
+
+		for (const module of entries) {
+			if (!module.always_enabled) visit(module);
+		}
+		return ordered;
+	}
+
+	async function toggleAllModules(): Promise<void> {
+		const optionalModules = modules.filter((module) => !module.always_enabled);
+		if (optionalModules.length === 0) return;
+
+		const enabled = optionalModules.some((module) => !module.enabled);
+		if (!enabled && !window.confirm('Disable all optional modules? Existing data and member rights will be kept. If enabled again, every active member will receive all module rights.')) return;
+
+		message = '';
+		error = '';
+		const token = csrfToken();
+		if (!token) {
+			error = 'Reload this page and try again.';
+			return;
+		}
+
+		busyKey = 'all';
+		let failure = '';
+		try {
+			const orderedModules = modulesInDependencyOrder(optionalModules);
+			const pendingModules = orderedModules.filter((module) => module.enabled !== enabled);
+			if (!enabled) pendingModules.reverse();
+
+			for (const module of pendingModules) {
+				const response = await fetch(`/api/admin/modules/${module.key}`, {
+					method: 'PATCH',
+					credentials: 'same-origin',
+					headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+					body: JSON.stringify({ enabled })
+				});
+				const result = (await response.json()) as ModuleResponse;
+				if (response.status === 401) {
+					await goto('/login');
+					return;
+				}
+				if (!response.ok) {
+					const labels = (result.module_keys ?? []).map((key) => modules.find((entry) => entry.key === key)?.label ?? key);
+					failure = [firstError(result) || result.message || `${module.label} could not be ${enabled ? 'enabled' : 'disabled'}.`, ...labels].join(' ');
+					break;
+				}
+			}
+
+			await loadModules();
+			await shell.refresh();
+			if (failure) error = failure;
+			else message = enabled ? 'All optional modules are enabled.' : 'All optional modules are disabled.';
+		} catch {
+			failure = 'Module settings could not be changed. Check your connection and try again.';
+			await loadModules();
+			await shell.refresh();
+			error = failure;
+		} finally {
+			busyKey = '';
+		}
+	}
 </script>
 
 <svelte:head>
@@ -134,7 +210,15 @@
 					<h2 id="module-list-heading" class="text-xl font-semibold">Available modules</h2>
 					<p class="mt-1 text-sm text-slate-400">{modules.filter((module) => module.enabled && !module.always_enabled).length} optional module(s) enabled</p>
 				</div>
-				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadModules()}>Refresh</Button>
+				<div class="flex flex-wrap gap-2">
+					{#if modules.some((module) => !module.always_enabled)}
+						{@const allEnabled = modules.filter((module) => !module.always_enabled).every((module) => module.enabled)}
+						<Button variant={allEnabled ? 'danger' : 'secondary'} size="small" disabled={busyKey !== ''} onclick={() => void toggleAllModules()}>
+							{busyKey === 'all' ? 'Updating modules…' : allEnabled ? 'Disable all modules' : 'Enable all modules'}
+						</Button>
+					{/if}
+					<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadModules()}>Refresh</Button>
+				</div>
 			</div>
 
 			{#if loading}
