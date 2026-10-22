@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Exceptions\ModuleDisabled;
 use App\Http\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForRequest;
 use App\Jobs\Middleware\EnsureModuleEnabled as EnsureModuleEnabledForJob;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\ModuleManagementService;
-use App\Services\Modules\ModuleStateService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;

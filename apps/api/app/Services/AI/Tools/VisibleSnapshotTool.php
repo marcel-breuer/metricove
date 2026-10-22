@@ -3,6 +3,7 @@
 namespace App\Services\AI\Tools;
 
 use App\Contracts\AssistantTool;
+use App\Exceptions\InvalidAssistantToolCall;
 use App\Models\User;
 use Closure;
 
@@ -50,7 +51,7 @@ class VisibleSnapshotTool implements AssistantTool
     public function execute(User $actor, array $arguments): array
     {
         if ($arguments !== []) {
-            throw new \App\Exceptions\InvalidAssistantToolCall('The assistant tool received invalid arguments.');
+            throw new InvalidAssistantToolCall('The assistant tool received invalid arguments.');
         }
 
         return $this->bound(($this->snapshot)($actor));

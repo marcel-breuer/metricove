@@ -7,7 +7,6 @@ use App\Exceptions\ModuleDisabled;
 use App\Http\Middleware\EnsureModuleAccess as EnsureModuleAccessForRequest;
 use App\Jobs\Middleware\EnsureModuleAccess as EnsureModuleAccessForJob;
 use App\Models\HouseholdSettings;
-use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Services\Modules\MemberModulePermissionService;
 use App\Services\Modules\ModuleAccessService;

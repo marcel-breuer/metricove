@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\AiContextEntry;
 use App\Models\HouseholdSettings;
 use App\Models\User;
-use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -123,6 +122,7 @@ class AiContextTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
         $owner = User::factory()->create(['is_active' => true]);
         $other = User::factory()->create(['is_active' => true]);
+
         return [$admin, $owner, $other];
     }
 
