@@ -4,7 +4,7 @@ x-laravel-environment: &laravel-environment
   APP_NAME: Metricove
   APP_ENV: ${APP_ENV:-production}
   APP_DEBUG: ${APP_DEBUG:-false}
-  APP_KEY: ${APP_KEY:?Run scripts/prepare-compose-env.sh before starting Metricove}
+  APP_KEY: ${APP_KEY:-}
   APP_URL: ${APP_URL:-http://localhost:8080}
   LOG_CHANNEL: stderr
   DB_CONNECTION: pgsql
@@ -12,7 +12,7 @@ x-laravel-environment: &laravel-environment
   DB_PORT: "5432"
   DB_DATABASE: ${DB_DATABASE:-metricove}
   DB_USERNAME: ${DB_USERNAME:-metricove}
-  DB_PASSWORD: ${DB_PASSWORD:?Run scripts/prepare-compose-env.sh before starting Metricove}
+  DB_PASSWORD: ${DB_PASSWORD:-}
   CACHE_STORE: redis
   QUEUE_CONNECTION: redis
   SESSION_DRIVER: ${SESSION_DRIVER:-redis}
@@ -227,7 +227,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_DATABASE:-metricove}
       POSTGRES_USER: ${DB_USERNAME:-metricove}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run scripts/prepare-compose-env.sh before starting Metricove}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
