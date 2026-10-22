@@ -112,15 +112,15 @@
 	{#if state === 'loading'}
 		<p class="setup-status" role="status">Checking household setup…</p>
 	{:else if state === 'available'}
-		<h2 class="setup-state-title">Create your administrator account</h2>
-		<form class="setup-form" onsubmit={completeSetup} aria-busy={busy}>
+		<h2 id="setup-form-heading" class="setup-state-title">Create your administrator account</h2>
+		<form class="setup-form" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
 			<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
 			<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 			<div class="setup-password-field">
-				<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required />
-				<p>Use at least 12 characters.</p>
+				<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={password} minlength={12} required />
+				<p id="setup-password-guidance">Use at least 12 characters.</p>
 			</div>
-			<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required />
+			<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={passwordConfirmation} required />
 			{#if formError}
 				<Notice tone="error" message={formError} />
 			{/if}
