@@ -2,6 +2,21 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.5.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.4.0...metricove-v0.5.0) (2026-10-23)
+
+
+### Features
+
+* **i18n:** localize route headings and auto-merge releases ([47aa17c](https://github.com/marcel-breuer/metricove/commit/47aa17c4822143f938e61d2402a78888358119cb))
+* **i18n:** translate all web route copy ([d5cf183](https://github.com/marcel-breuer/metricove/commit/d5cf1833e8348edb2b3a3b87161509d9c1b294ba))
+* **i18n:** translate all web route copy ([2c0e2aa](https://github.com/marcel-breuer/metricove/commit/2c0e2aac7a2fb0229cd9d170434a28424eeba7f2))
+
+
+### Bug Fixes
+
+* **release:** merge release PRs after checks pass ([4da802a](https://github.com/marcel-breuer/metricove/commit/4da802ad13ba39ebe550b88a1d0ddc8d910e49b9))
+* **release:** merge release PRs after checks pass ([d17753f](https://github.com/marcel-breuer/metricove/commit/d17753f1b100d0c37d0e51afa75c356d551a1125))
+
 ## [0.4.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.3.0...metricove-v0.4.0) (2026-10-22)
 
 
