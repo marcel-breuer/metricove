@@ -66,7 +66,7 @@
 </script>
 
 <svelte:head>
-	<title>{$t('Sign in')} · Metricove</title>
+	<title>{$t('Sign in')} {$t("· Metricove")}</title>
 	<meta name="description" content={$t('Sign in to your Metricove household.')} />
 </svelte:head>
 

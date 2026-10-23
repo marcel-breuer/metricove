@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>{$t('Overview')} · Metricove</title>
+	<title>{$t('Overview')} {$t("· Metricove")}</title>
 	<meta name="description" content={$t('Your household modules and everyday overview.')} />
 </svelte:head>
 

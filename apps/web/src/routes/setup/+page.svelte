@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import AuthShell from '#lib/ui/AuthShell.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -99,8 +100,8 @@
 </script>
 
 <svelte:head>
-	<title>Set up your household · Metricove</title>
-	<meta name="description" content="Create the first administrator for this Metricove household." />
+	<title>{$t("Set up your household")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Create the first administrator for this Metricove household.")} />
 </svelte:head>
 
 <AuthShell
@@ -110,49 +111,49 @@
 	wide
 >
 	{#if state === 'loading'}
-		<p class="setup-status" role="status">Checking household setup…</p>
+		<p class="setup-status" role="status">{$t("Checking household setup…")}</p>
 	{:else if state === 'available'}
-		<h2 id="setup-form-heading" class="setup-state-title">Create your administrator account</h2>
+		<h2 id="setup-form-heading" class="setup-state-title">{$t("Create your administrator account")}</h2>
 		<form class="setup-form" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
 			<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
 			<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 			<div class="setup-password-field">
 				<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={password} minlength={12} required />
-				<p id="setup-password-guidance">Use at least 12 characters.</p>
+				<p id="setup-password-guidance">{$t("Use at least 12 characters.")}</p>
 			</div>
 			<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={passwordConfirmation} required />
 			{#if formError}
-				<Notice tone="error" message={formError} />
+				<Notice tone="error" message={$t(formError)} />
 			{/if}
 			<Button type="submit" fullWidth disabled={busy} class="setup-submit">
-				{busy ? 'Creating account…' : 'Create administrator account'}
+				{$t(busy ? 'Creating account…' : 'Create administrator account')}
 			</Button>
 		</form>
 	{:else if state === 'created'}
 		<div class="setup-state" role="status" aria-live="polite">
-			<p class="setup-state-kicker">Household ready</p>
-			<h2 class="setup-state-title">Welcome, {createdName}.</h2>
+			<p class="setup-state-kicker">{$t("Household ready")}</p>
+			<h2 class="setup-state-title">{$t("Welcome,")} {createdName}.</h2>
 			<p class="setup-state-description">
-				Your administrator account is active. Choose the features your household wants to use; you can change them later.
+				{$t("Your administrator account is active. Choose the features your household wants to use; you can change them later.")}
 			</p>
 			<a href="/admin/modules" class="ui-button ui-button--primary ui-button--medium setup-action">
-				Choose household features
+				{$t("Choose household features")}
 			</a>
 		</div>
 	{:else if state === 'complete'}
 		<div class="setup-state" role="status">
-			<p class="setup-state-kicker">Setup is complete</p>
-			<h2 class="setup-state-title">This household is already set up.</h2>
-			<p class="setup-state-description">Initial registration is closed for this installation.</p>
+			<p class="setup-state-kicker">{$t("Setup is complete")}</p>
+			<h2 class="setup-state-title">{$t("This household is already set up.")}</h2>
+			<p class="setup-state-description">{$t("Initial registration is closed for this installation.")}</p>
 			<a href="/login" class="ui-button ui-button--secondary ui-button--medium setup-action">
-				Go to sign in
+				{$t("Go to sign in")}
 			</a>
 		</div>
 	{:else}
 		<div class="setup-state">
-			<p class="setup-state-title" role="alert">Setup status could not be loaded.</p>
+			<p class="setup-state-title" role="alert">{$t("Setup status could not be loaded.")}</p>
 			<Button variant="secondary" class="setup-action" onclick={loadStatus}>
-				Try again
+				{$t("Try again")}
 			</Button>
 		</div>
 	{/if}

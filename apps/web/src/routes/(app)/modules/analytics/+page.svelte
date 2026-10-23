@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -160,51 +161,51 @@
 </script>
 
 <svelte:head>
-	<title>Analytics · Metricove</title>
-	<meta name="description" content="Build private charts from the household data you can access." />
+	<title>{$t("Analytics")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Build private charts from the household data you can access.")} />
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
 	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
 		<div>
-			<p class="text-sm font-medium tracking-wide text-cyan-200">Your data, at a glance</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Analytics dashboard</h1>
+			<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Your data, at a glance")}</p>
+			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Analytics dashboard")}</h1>
 		</div>
-		<p class="max-w-xl text-sm leading-6 text-slate-400">Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private.</p>
+		<p class="max-w-xl text-sm leading-6 text-slate-400">{$t("Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private.")}</p>
 	</div>
 
-	{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</p>{/if}
-	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{message}</p>{/if}
+	{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
 
 	{#if canCreate}
 		<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
-				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">Add a chart</h2><p class="mt-1 text-sm text-slate-400">Available charts follow your current module access.</p></div>
+				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-slate-400">{$t("Available charts follow your current module access.")}</p></div>
 				<span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-400">{widgets.length} / 12 widgets</span>
 			</div>
 			{#if catalog.length === 0}
-				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">No data sources are available yet. Ask an administrator to enable a source module and grant you view access.</p>
+				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">{$t("No data sources are available yet. Ask an administrator to enable a source module and grant you view access.")}</p>
 			{:else}
 				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_1fr_1fr_auto]" onsubmit={createWidget}>
-					<label class="block text-xs font-medium text-slate-300">Data source
+					<label class="block text-xs font-medium text-slate-300">{$t("Data source")}
 						<select bind:value={metricKey} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
 							{#each catalog as metric (metric.key)}<option value={metric.key}>{metric.label} · {metric.source_label}</option>{/each}
 						</select>
 					</label>
-					<label class="block text-xs font-medium text-slate-300">Widget title
-						<input bind:value={title} maxlength="80" placeholder={catalog.find((metric) => metric.key === metricKey)?.label ?? 'A clear title'} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+					<label class="block text-xs font-medium text-slate-300">{$t("Widget title")}
+						<input bind:value={title} maxlength="80" placeholder={catalog.find((metric) => metric.key === metricKey)?.label ?? $t('A clear title')} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 					</label>
-					<label class="block text-xs font-medium text-slate-300">Time range
+					<label class="block text-xs font-medium text-slate-300">{$t("Time range")}
 						<select bind:value={rangeKey} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
 							{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}
 						</select>
 					</label>
-					<label class="block text-xs font-medium text-slate-300">Chart type
+					<label class="block text-xs font-medium text-slate-300">{$t("Chart type")}
 						<select bind:value={chartType} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-							<option value="line">Line</option><option value="bar">Bars</option>
+							<option value="line">{$t("Line")}</option><option value="bar">{$t("Bars")}</option>
 						</select>
 					</label>
-					<button disabled={saving || widgets.length >= 12} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{saving ? 'Saving…' : 'Add widget'}</button>
+					<button disabled={saving || widgets.length >= 12} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{$t(saving ? 'Saving…' : 'Add widget')}</button>
 				</form>
 			{/if}
 		</section>
@@ -213,13 +214,13 @@
 	{#if loading}
 		<div role="status" aria-live="polite" class="mx-auto flex min-h-64 max-w-2xl flex-col items-center justify-center py-12 text-center">
 			<span class="size-8 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-300" aria-hidden="true"></span>
-			<p class="mt-4 text-sm text-slate-300">Loading your charts…</p>
+			<p class="mt-4 text-sm text-slate-300">{$t("Loading your charts…")}</p>
 		</div>
 	{:else if widgets.length === 0}
 		<div class="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-900/30 px-5 py-14 text-center">
 			<div class="mx-auto grid size-14 place-items-center rounded-2xl border border-slate-700 bg-slate-950 text-xl text-cyan-200" aria-hidden="true">⌁</div>
-			<h2 class="mt-4 text-xl font-semibold text-white">Your dashboard is ready to configure.</h2>
-			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.</p>
+			<h2 class="mt-4 text-xl font-semibold text-white">{$t("Your dashboard is ready to configure.")}</h2>
+			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">{$t("Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.")}</p>
 		</div>
 	{:else}
 		<div class="mt-6 grid gap-4 xl:grid-cols-2">
@@ -227,20 +228,20 @@
 				<article class="min-w-0 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6">
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{catalog.find((metric) => metric.key === widget.metric_key)?.source_label ?? 'Source unavailable'} · {analyticsRanges.find((range) => range.value === widget.range_key)?.label}</p><h2 class="mt-1 truncate text-xl font-semibold text-white">{widget.title}</h2></div>
-						{#if canEdit}<button type="button" onclick={() => beginEdit(widget)} class="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Configure</button>{/if}
+						{#if canEdit}<button type="button" onclick={() => beginEdit(widget)} class="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Configure")}</button>{/if}
 					</div>
 
 					{#if !widget.available}
-						<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">This source is no longer available to your account. Its records are not loaded. The widget will return when view access is restored.</p>
+						<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">{$t("This source is no longer available to your account. Its records are not loaded. The widget will return when view access is restored.")}</p>
 					{:else if widget.series.length === 0}
-						<p class="mt-5 grid min-h-48 place-items-center rounded-xl border border-slate-800 bg-slate-950/60 p-5 text-center text-sm text-slate-400">No visible records match this time range.</p>
+						<p class="mt-5 grid min-h-48 place-items-center rounded-xl border border-slate-800 bg-slate-950/60 p-5 text-center text-sm text-slate-400">{$t("No visible records match this time range.")}</p>
 					{:else}
 						<div class="mt-5 grid gap-4">
 							{#each widget.series as series (series.label)}
-								<section class="min-w-0 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 sm:p-4" aria-label={`${series.label} series`}>
-									<div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-sm font-semibold text-slate-100">{series.label}</p><p class="text-xs text-slate-400">Total <span class="font-semibold tabular-nums text-slate-200">{displayedValue(series.total, widget.metric_key === 'finance.expenses')} {series.unit}</span></p></div>
+								<section class="min-w-0 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 sm:p-4" aria-label={$t('{series} series', { series: series.label })}>
+									<div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-sm font-semibold text-slate-100">{series.label}</p><p class="text-xs text-slate-400">{$t("Total")} <span class="font-semibold tabular-nums text-slate-200">{displayedValue(series.total, widget.metric_key === 'finance.expenses')} {series.unit}</span></p></div>
 									<div class="mt-3 min-w-0">
-										<svg viewBox="0 0 720 210" preserveAspectRatio="none" class="h-44 w-full overflow-visible sm:h-48" role="img" aria-label={`${widget.title}, ${series.label}, ${analyticsRanges.find((range) => range.value === widget.range_key)?.label}`}>
+										<svg viewBox="0 0 720 210" preserveAspectRatio="none" class="h-44 w-full overflow-visible sm:h-48" role="img" aria-label={`${widget.title}, ${series.label}, ${$t('range')} ${analyticsRanges.find((range) => range.value === widget.range_key)?.label}`}>
 											<line x1="28" y1="174" x2="692" y2="174" stroke="#334155" stroke-width="1" />
 											{#if widget.chart_type === 'line'}
 												{@const values = series.values.map((value) => Math.max(0, Number(value) || 0))}
@@ -272,10 +273,10 @@
 
 					{#if editingId === widget.id}
 						<form class="mt-4 grid gap-3 rounded-xl border border-cyan-300/20 bg-cyan-300/5 p-4 sm:grid-cols-2" onsubmit={(event) => { event.preventDefault(); void saveWidget(widget); }}>
-							<label class="block text-xs font-medium text-slate-300">Widget title<input bind:value={editTitle} maxlength="80" required class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none" /></label>
-							<label class="block text-xs font-medium text-slate-300">Time range<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none">{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}</select></label>
-							<label class="block text-xs font-medium text-slate-300">Chart type<select bind:value={editChart} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"><option value="line">Line</option><option value="bar">Bars</option></select></label>
-							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-3 text-xs font-semibold text-slate-950 disabled:opacity-50">Save</button><button type="button" onclick={() => { editingId = null; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200">Cancel</button><button type="button" disabled={saving} onclick={() => void removeWidget(widget)} class="ml-auto min-h-10 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-400/10 disabled:opacity-50">Remove</button></div>
+							<label class="block text-xs font-medium text-slate-300">{$t("Widget title")}<input bind:value={editTitle} maxlength="80" required class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none" /></label>
+							<label class="block text-xs font-medium text-slate-300">{$t("Time range")}<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none">{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}</select></label>
+							<label class="block text-xs font-medium text-slate-300">{$t("Chart type")}<select bind:value={editChart} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"><option value="line">{$t("Line")}</option><option value="bar">{$t("Bars")}</option></select></label>
+							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-3 text-xs font-semibold text-slate-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { editingId = null; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200">{$t("Cancel")}</button><button type="button" disabled={saving} onclick={() => void removeWidget(widget)} class="ml-auto min-h-10 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-400/10 disabled:opacity-50">{$t("Remove")}</button></div>
 						</form>
 					{/if}
 				</article>

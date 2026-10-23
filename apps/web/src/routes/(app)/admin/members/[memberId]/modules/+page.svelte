@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -114,34 +115,34 @@
 </script>
 
 <svelte:head>
-	<title>Module rights · Metricove</title>
-	<meta name="description" content="Manage module capabilities for a household member." />
+	<title>{$t("Module rights")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Manage module capabilities for a household member.")} />
 </svelte:head>
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<PageHeading class="mt-12 max-w-2xl" eyebrow="Member access" title="Module rights." description={`${member ? `Choose the capabilities available to ${member.name}.` : 'Choose the capabilities available to this household member.'} Administrators need explicit module rights too; administrator status does not grant access to private records.`} />
+		<PageHeading class="mt-12 max-w-2xl" eyebrow={$t('Member access')} title={$t('Module rights.')} description={`${member ? $t('Choose the capabilities available to {name}.', { name: member.name }) : $t('Choose the capabilities available to this household member.')}${$t(' Administrators need explicit module rights too; administrator status does not grant access to private records.')}`} />
 
 		{#if message}
-			<Notice class="mt-8" tone="success" message={message} />
+			<Notice class="mt-8" tone="success" message={$t(message)} />
 		{/if}
 		{#if error}
-			<Notice class="mt-8" tone="error" message={error} />
+			<Notice class="mt-8" tone="error" message={$t(error)} />
 		{/if}
 
 		<section class="mt-10" aria-labelledby="module-rights-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
-					<h2 id="module-rights-heading" class="text-xl font-semibold">Optional module capabilities</h2>
-					<p class="mt-1 text-sm text-slate-400">Optional modules begin disabled. Enabling one grants every capability to all active members; you can adjust individual rights here.</p>
+					<h2 id="module-rights-heading" class="text-xl font-semibold">{$t("Optional module capabilities")}</h2>
+					<p class="mt-1 text-sm text-slate-400">{$t("Optional modules begin disabled. Enabling one grants every capability to all active members; you can adjust individual rights here.")}</p>
 				</div>
-				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadPermissions()}>Refresh</Button>
+				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadPermissions()}>{$t("Refresh")}</Button>
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-slate-300">Loading module rights…</p>
+				<p role="status" class="mt-6 text-sm text-slate-300">{$t("Loading module rights…")}</p>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">No optional modules are registered.</p>
+				<p class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">{$t("No optional modules are registered.")}</p>
 			{:else}
 				<ul class="mt-5 grid gap-4 md:grid-cols-2">
 					{#each modules as module (module.key)}
@@ -149,29 +150,29 @@
 							<Panel class="h-full sm:p-6">
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div>
-									<h3 class="text-lg font-semibold">{module.label}</h3>
-									<p class="mt-2 text-sm leading-6 text-slate-300">{module.description}</p>
+									<h3 class="text-lg font-semibold">{$t(module.label)}</h3>
+									<p class="mt-2 text-sm leading-6 text-slate-300">{$t(module.description)}</p>
 								</div>
-								<span class="rounded-full border px-2.5 py-1 text-xs font-medium {module.enabled ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-slate-700 bg-slate-950/60 text-slate-300'}">{module.enabled ? 'Enabled' : 'Disabled'}</span>
+								<span class="rounded-full border px-2.5 py-1 text-xs font-medium {module.enabled ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-slate-700 bg-slate-950/60 text-slate-300'}">{$t(module.enabled ? 'Enabled' : 'Disabled')}</span>
 							</div>
 							{#if !module.enabled}
-								<p class="mt-3 text-xs text-slate-500">Rights stay stored while disabled. Enabling the module resets all active members to full capabilities.</p>
+								<p class="mt-3 text-xs text-slate-500">{$t("Rights stay stored while disabled. Enabling the module resets all active members to full capabilities.")}</p>
 							{/if}
 							<fieldset class="mt-5 grid gap-3 border-t border-slate-800 pt-4 sm:grid-cols-2">
-								<legend class="sr-only">{module.label} capabilities</legend>
+										<legend class="sr-only">{$t('{module} capabilities', { module: module.label })}</legend>
 								{#each capabilities as capability (capability.key)}
 									<label class="flex min-w-0 items-start gap-3 rounded-xl border border-slate-800 px-3 py-3">
 										<input
 											type="checkbox"
 											checked={module.capabilities[capability.key]}
 											disabled={busyKey !== ''}
-											aria-label={`${capability.label} permission for ${module.label}`}
+											aria-label={$t('{capability} permission for {module}', { capability: $t(capability.label), module: $t(module.label) })}
 											onchange={(event) => void updateCapability(module, capability.key, event)}
 											class="mt-0.5 size-4 shrink-0 accent-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
 										/>
 										<span class="min-w-0">
-											<span class="block text-sm font-medium text-slate-100">{capability.label}</span>
-											<span class="mt-1 block text-xs leading-5 text-slate-400">{capability.description}</span>
+											<span class="block text-sm font-medium text-slate-100">{$t(capability.label)}</span>
+											<span class="mt-1 block text-xs leading-5 text-slate-400">{$t(capability.description)}</span>
 										</span>
 									</label>
 								{/each}
@@ -183,6 +184,6 @@
 			{/if}
 		</section>
 
-		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/admin/members" class="hover:text-slate-300">Return to household members</a></footer>
+		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/admin/members" class="hover:text-slate-300">{$t("Return to household members")}</a></footer>
 	</div>
 </section>

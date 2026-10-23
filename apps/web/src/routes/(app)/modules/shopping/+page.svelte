@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -401,85 +402,85 @@
 </script>
 
 <svelte:head>
-	<title>Shopping · Metricove</title>
-	<meta name="description" content="Keep shared shopping lists organized, current and easy to restore." />
+	<title>{$t("Shopping")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Keep shared shopping lists organized, current and easy to restore.")} />
 </svelte:head>
 
 <div class="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
 	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
 		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Food · Shopping</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">The list everyone can trust</h1>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{$t("Food · Shopping")}</p>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("The list everyone can trust")}</h1>
+			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.")}</p>
 		</div>
 		{#if activeList}
 			<div class="flex gap-2 text-xs text-slate-400">
-				<span class="rounded-full border border-slate-700 px-3 py-2">{openItems.length} to buy</span>
+				<span class="rounded-full border border-slate-700 px-3 py-2">{openItems.length} {$t("to buy")}</span>
 				<span class="rounded-full border border-slate-700 px-3 py-2">{checkedItems.length} checked</span>
 			</div>
 		{/if}
 	</header>
 
-	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{message}</p>{/if}
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{error}</p>{/if}
+	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
+	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">Loading your shopping lists…</div>
+		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">{$t("Loading your shopping lists…")}</div>
 	{:else if !canView}
 		<section class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8">
-			<p class="text-sm font-medium text-amber-200">Shopping View access is required.</p>
-			<h2 class="mt-2 text-xl font-semibold text-white">Your lists stay private to the right members.</h2>
-			<p class="mt-3 text-sm leading-6 text-slate-400">Ask a household administrator to enable Shopping and grant your account View access.</p>
+			<p class="text-sm font-medium text-amber-200">{$t("Shopping View access is required.")}</p>
+			<h2 class="mt-2 text-xl font-semibold text-white">{$t("Your lists stay private to the right members.")}</h2>
+			<p class="mt-3 text-sm leading-6 text-slate-400">{$t("Ask a household administrator to enable Shopping and grant your account View access.")}</p>
 		</section>
 	{:else}
 		<div class="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
 			<aside class="space-y-4">
 				<section class="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
-						<h2 class="text-sm font-semibold text-white">Your lists</h2>
+						<h2 class="text-sm font-semibold text-white">{$t("Your lists")}</h2>
 						<span class="text-xs text-slate-500">{lists.length} / 100</span>
 					</div>
 					{#if lists.length}
-						<nav aria-label="Shopping lists" class="space-y-2">
+						<nav aria-label={$t("Shopping lists")} class="space-y-2">
 							{#each lists as list (list.id)}
 								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 {activeListId === list.id ? 'border-cyan-300/50 bg-cyan-300/10' : 'border-slate-800 bg-slate-950/40 hover:border-slate-600'}">
 									<span class="flex items-center justify-between gap-2">
 										<span class="truncate text-sm font-medium text-white">{list.name}</span>
-										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] uppercase tracking-wide text-cyan-300">Shared</span>{/if}
+										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] uppercase tracking-wide text-cyan-300">{$t("Shared")}</span>{/if}
 									</span>
-									<span class="mt-1 block text-xs text-slate-500">{list.open_item_count} open · {list.item_count} total</span>
+									<span class="mt-1 block text-xs text-slate-500">{list.open_item_count} {$t("open ·")} {list.item_count} total</span>
 								</button>
 							{/each}
 						</nav>
 					{:else}
-						<p class="rounded-xl border border-dashed border-slate-700 px-3 py-4 text-xs leading-5 text-slate-400">No lists yet. Create one to start collecting what you need.</p>
+						<p class="rounded-xl border border-dashed border-slate-700 px-3 py-4 text-xs leading-5 text-slate-400">{$t("No lists yet. Create one to start collecting what you need.")}</p>
 					{/if}
 				</section>
 
 				{#if canCreateList}
 					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-						<h2 class="text-sm font-semibold text-white">Create a list</h2>
-						<label class="block text-xs font-medium text-slate-400">List name
-							<input bind:value={listName} maxlength="160" required placeholder="Weekly groceries" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+						<h2 class="text-sm font-semibold text-white">{$t("Create a list")}</h2>
+						<label class="block text-xs font-medium text-slate-400">{$t("List name")}
+							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 						</label>
 						{#if canManageShared}
-							<label class="block text-xs font-medium text-slate-400">Who can see it?
+							<label class="block text-xs font-medium text-slate-400">{$t("Who can see it?")}
 								<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-									<option value="private">Only me</option>
-									<option value="household">Household</option>
+									<option value="private">{$t("Only me")}</option>
+									<option value="household">{$t("Household")}</option>
 								</select>
 							</label>
 						{/if}
-						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{saving ? 'Creating…' : 'Create list'}</button>
+						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
 					</form>
 				{/if}
 			</aside>
 
 			{#if !activeList}
 				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
-					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Ready when you are</p>
-					<h2 class="mt-3 text-2xl font-semibold text-white">Start with one thing.</h2>
-					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.'}</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{$t("Ready when you are")}</p>
+					<h2 class="mt-3 text-2xl font-semibold text-white">{$t("Start with one thing.")}</h2>
+					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
 				</section>
 			{:else}
 				<section class="min-w-0 space-y-4">
@@ -487,59 +488,59 @@
 						<form onsubmit={addItem} class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-4 shadow-lg shadow-cyan-950/10 sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
-									<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Quick add</p>
-									<h2 class="mt-1 text-lg font-semibold text-white">What do you need?</h2>
+									<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Quick add")}</p>
+									<h2 class="mt-1 text-lg font-semibold text-white">{$t("What do you need?")}</h2>
 								</div>
-								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">Shared list</span>{/if}
+								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">{$t("Shared list")}</span>{/if}
 							</div>
 							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]">
-								<label class="text-xs font-medium text-slate-400">Item
-									<input bind:value={quickName} maxlength="180" required placeholder="Apples, olive oil…" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								<label class="text-xs font-medium text-slate-400">{$t("Item")}
+									<input bind:value={quickName} maxlength="180" required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">Quantity <span class="font-normal text-slate-600">optional</span>
+								<label class="text-xs font-medium text-slate-400">{$t("Quantity")} <span class="font-normal text-slate-600">optional</span>
 									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">Unit <span class="font-normal text-slate-600">optional</span>
-									<input bind:value={quickUnit} maxlength="32" placeholder="kg, cans" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								<label class="text-xs font-medium text-slate-400">{$t("Unit")} <span class="font-normal text-slate-600">optional</span>
+									<input bind:value={quickUnit} maxlength="32" placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
-								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{saving ? 'Adding…' : 'Add item'}</button>
+								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>
 							</div>
-							<p class="mt-2 text-xs text-slate-500">Add both quantity and unit, or leave both blank. No unit conversions are applied.</p>
+							<p class="mt-2 text-xs text-slate-500">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
 						</form>
 					{/if}
 
 					{#if activeList.can_add_items}
 						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Optional connection</p>
-								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">Suggestions from meal plans</h2>
-								<p class="mt-2 text-sm leading-6 text-slate-400">Review recipe ingredients before adding them. Free-text meals stay untouched, pantry stock is read-only, and units are never converted.</p>
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">{$t("Optional connection")}</p>
+								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Suggestions from meal plans")}</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Review recipe ingredients before adding them. Free-text meals stay untouched, pantry stock is read-only, and units are never converted.")}</p>
 							</div>
 							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-								<label class="block text-xs font-medium text-slate-400">Week starting Monday
+								<label class="block text-xs font-medium text-slate-400">{$t("Week starting Monday")}
 									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
 								</label>
 								<label class="flex min-h-11 items-center gap-2 rounded-xl border border-slate-800 px-3 py-2 text-xs leading-5 text-slate-300">
 									<input bind:checked={subtractPantry} onchange={invalidateMealPreview} type="checkbox" class="size-4 shrink-0 accent-violet-300" />
-									<span>Subtract visible Pantry stock in the preview</span>
+									<span>{$t("Subtract visible Pantry stock in the preview")}</span>
 								</label>
-								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-violet-300/40 px-4 text-sm font-semibold text-violet-100 hover:bg-violet-300/10 disabled:opacity-60">{suggestionLoading ? 'Preparing…' : 'Review suggestions'}</button>
+								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-violet-300/40 px-4 text-sm font-semibold text-violet-100 hover:bg-violet-300/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</button>
 							</form>
 
 							{#if suggestionPreview}
 								<div class="mt-4 space-y-3 border-t border-slate-800 pt-4" aria-live="polite">
 									{#if !suggestionPreview.availability.meal_planning}
-										<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">Meal Planning is disabled or unavailable to your account. No plan data was loaded.</p>
+										<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</p>
 									{:else}
 										{#if subtractPantry && !suggestionPreview.availability.pantry}
-											<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">Pantry is disabled or unavailable to your account. Suggestions show the full recipe quantities.</p>
+											<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">{$t("Pantry is disabled or unavailable to your account. Suggestions show the full recipe quantities.")}</p>
 										{:else if suggestionPreview.availability.pantry && !subtractPantry}
-											<p class="text-xs text-slate-500">Pantry was not read. Select the option above and review again to account for stock you can view.</p>
+											<p class="text-xs text-slate-500">{$t("Pantry was not read. Select the option above and review again to account for stock you can view.")}</p>
 										{/if}
 										{#if suggestionPreview.suggestions.length === 0}
-											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">No importable recipe ingredients were found for this week.</p>
+											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">{$t("No importable recipe ingredients were found for this week.")}</p>
 										{:else}
-											<p class="text-xs text-slate-400">All suggestions are selected. Review the quantities and uncheck anything you do not want to add.</p>
+											<p class="text-xs text-slate-400">{$t("All suggestions are selected. Review the quantities and uncheck anything you do not want to add.")}</p>
 											<div class="max-h-80 space-y-2 overflow-y-auto">
 												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
 													<label class="flex min-h-12 items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-3">
@@ -549,18 +550,18 @@
 																<span class="break-words text-sm font-medium text-white">{suggestion.name}</span>
 																<span class="text-sm tabular-nums text-violet-100">{formatMeasurement(suggestion.quantity, suggestion.unit)} {suggestion.unit}</span>
 															</span>
-															{#if suggestion.pantry_status === 'unit_mismatch'}<span class="mt-1 block text-xs text-amber-200">Visible Pantry stock uses a different unit; nothing was subtracted.</span>{/if}
-														{#if suggestion.pantry_status === 'unavailable'}<span class="mt-1 block text-xs text-amber-200">Pantry was unavailable; the full amount is shown.</span>{/if}
-														{#if formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit) !== '0'}<span class="mt-1 block text-xs text-emerald-200">After previewing {formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit)} {suggestion.unit} of visible stock.</span>{/if}
+															{#if suggestion.pantry_status === 'unit_mismatch'}<span class="mt-1 block text-xs text-amber-200">{$t("Visible Pantry stock uses a different unit; nothing was subtracted.")}</span>{/if}
+														{#if suggestion.pantry_status === 'unavailable'}<span class="mt-1 block text-xs text-amber-200">{$t("Pantry was unavailable; the full amount is shown.")}</span>{/if}
+														{#if formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit) !== '0'}<span class="mt-1 block text-xs text-emerald-200">{$t("After previewing")} {formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit)} {suggestion.unit} {$t("of visible stock.")}</span>{/if}
 														</span>
 													</label>
 												{/each}
 											</div>
-											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} free-text meal(s) have no recipe ingredients to suggest.</p>{/if}
-											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-slate-500">Some linked recipes are unavailable to your account and were skipped.</p>{/if}
-											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-amber-200">Some quantities cannot be represented exactly in Shopping and were skipped.</p>{/if}
-											{#if suggestionPreview.skipped.covered_by_pantry > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.covered_by_pantry} ingredient group(s) are covered by visible Pantry stock. Stock remains unchanged.</p>{/if}
-											<p class="text-xs leading-5 text-slate-500">Adding suggestions copies items into this list only. Confirming will not change meal plans, recipes or Pantry stock.</p>
+											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
+											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-slate-500">{$t("Some linked recipes are unavailable to your account and were skipped.")}</p>{/if}
+											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-amber-200">{$t("Some quantities cannot be represented exactly in Shopping and were skipped.")}</p>{/if}
+											{#if suggestionPreview.skipped.covered_by_pantry > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.covered_by_pantry} {$t("ingredient group(s) are covered by visible Pantry stock. Stock remains unchanged.")}</p>{/if}
+											<p class="text-xs leading-5 text-slate-500">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans, recipes or Pantry stock.")}</p>
 											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-violet-300 px-4 text-sm font-semibold text-slate-950 hover:bg-violet-200 disabled:opacity-50">{suggestionImporting ? 'Adding…' : `Add ${selectedSuggestionIds.length} selected item${selectedSuggestionIds.length === 1 ? '' : 's'} to this list`}</button>
 										{/if}
 									{/if}
@@ -576,68 +577,68 @@
 									<h2 class="truncate text-xl font-semibold text-white">{activeList.name}</h2>
 									<span class="rounded-full border border-slate-700 px-2.5 py-1 text-[0.65rem] uppercase tracking-wide {activeList.visibility === 'household' ? 'text-cyan-200' : 'text-slate-400'}">{activeList.visibility}</span>
 								</div>
-								<p class="mt-1 text-xs text-slate-500">{activeList.open_item_count} left to buy · {activeList.item_count} total</p>
+								<p class="mt-1 text-xs text-slate-500">{activeList.open_item_count} {$t("left to buy ·")} {activeList.item_count} total</p>
 							</div>
 							<div class="flex flex-wrap items-center gap-2">
-								<label class="sr-only" for="shopping-filter">Show items</label>
+								<label class="sr-only" for="shopping-filter">{$t("Show items")}</label>
 								<select id="shopping-filter" bind:value={filter} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
-									<option value="open">To buy</option>
-									<option value="checked">Checked</option>
-									<option value="all">All items</option>
+									<option value="open">{$t("To buy")}</option>
+									<option value="checked">{$t("Checked")}</option>
+									<option value="all">{$t("All items")}</option>
 								</select>
-								<label class="sr-only" for="shopping-sort">Sort items</label>
+								<label class="sr-only" for="shopping-sort">{$t("Sort items")}</label>
 								<select id="shopping-sort" bind:value={sortMode} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
-									<option value="manual">List order</option>
-									<option value="name">Name A–Z</option>
+									<option value="manual">{$t("List order")}</option>
+									<option value="name">{$t("Name A–Z")}</option>
 								</select>
 								{#if activeList.can_edit}
 									<form onsubmit={renameList} class="flex gap-2">
-										<label class="sr-only" for="shopping-list-name">Rename list</label>
+										<label class="sr-only" for="shopping-list-name">{$t("Rename list")}</label>
 										<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="min-h-10 w-32 rounded-lg border border-slate-700 bg-slate-950 px-2.5 text-xs text-slate-200 sm:w-40" />
-										<button type="submit" disabled={saving} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">Rename</button>
+										<button type="submit" disabled={saving} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Rename")}</button>
 									</form>
 								{/if}
 							</div>
 						</header>
 
 						{#if listLoading}
-							<p class="p-6 text-sm text-slate-400">Loading items…</p>
+							<p class="p-6 text-sm text-slate-400">{$t("Loading items…")}</p>
 						{:else if visibleItems.length}
-							<ul aria-label="Shopping items" class="divide-y divide-slate-800/80">
+							<ul aria-label={$t("Shopping items")} class="divide-y divide-slate-800/80">
 								{#each visibleItems as item (item.id)}
 									<li class="flex min-w-0 items-start gap-3 px-4 py-4 sm:items-center sm:px-5">
 										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-950 text-cyan-300 focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-50 sm:mt-0" />
 										<div class="min-w-0 flex-1">
 											<p class="break-words text-sm font-medium {item.is_checked ? 'text-slate-500 line-through' : 'text-white'}">{item.name}</p>
-											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}Quantity not set{/if}{#if item.is_checked && item.checked_at}<span> · Checked {formatDate(item.checked_at)}</span>{/if}</p>
+											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}</p>
 										</div>
 										{#if item.can_edit}
 											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
 												{#if item.is_checked}
-													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-cyan-300/30 px-2.5 text-xs font-medium text-cyan-200 hover:bg-cyan-300/10">Put back</button>
+													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-cyan-300/30 px-2.5 text-xs font-medium text-cyan-200 hover:bg-cyan-300/10">{$t("Put back")}</button>
 												{:else}
 													<button type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={'Move ' + item.name + ' up'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↑</button>
 													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↓</button>
 												{/if}
-												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">Edit</button>
-												<button type="button" onclick={() => void removeItem(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">Remove</button>
+												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Edit")}</button>
+												<button type="button" onclick={() => void removeItem(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
 											</div>
 										{/if}
 									</li>
 									{#if editingItemId === item.id}
 										<li class="border-t border-slate-800 bg-slate-950/50 px-4 py-4 sm:px-5">
 											<form onsubmit={(event) => saveItem(event, item)} class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto_auto]">
-												<label class="text-xs font-medium text-slate-400">Item name
+												<label class="text-xs font-medium text-slate-400">{$t("Item name")}
 													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 												</label>
-												<label class="text-xs font-medium text-slate-400">Quantity
+												<label class="text-xs font-medium text-slate-400">{$t("Quantity")}
 													<input bind:value={editQuantity} type="text" inputmode="decimal" maxlength="15" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 												</label>
-												<label class="text-xs font-medium text-slate-400">Unit
+												<label class="text-xs font-medium text-slate-400">{$t("Unit")}
 													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 												</label>
-												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-xs font-semibold text-slate-950">Save</button>
-												<button type="button" onclick={() => (editingItemId = null)} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">Cancel</button>
+												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-xs font-semibold text-slate-950">{$t("Save")}</button>
+												<button type="button" onclick={() => (editingItemId = null)} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">{$t("Cancel")}</button>
 											</form>
 										</li>
 									{/if}
@@ -646,19 +647,19 @@
 						{:else}
 							<div class="px-5 py-10 text-center">
 								<p class="text-sm font-medium text-white">{items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.'}</p>
-								<p class="mt-1 text-xs text-slate-500">{filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.'}</p>
+								<p class="mt-1 text-xs text-slate-500">{$t(filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.')}</p>
 							</div>
 						{/if}
 					</div>
 
 					<section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
 						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-slate-200 hover:bg-slate-900 sm:px-5">
-							<span>List activity</span><span class="text-xs text-slate-500">{historyOpen ? 'Hide' : 'Show last 100 events'} <span aria-hidden="true">{historyOpen ? '−' : '+'}</span></span>
+							<span>{$t("List activity")}</span><span class="text-xs text-slate-500">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
 						</button>
 						{#if historyOpen}
 							<div class="border-t border-slate-800 px-4 py-3 sm:px-5">
 								{#if historyLoading}
-									<p class="py-3 text-xs text-slate-500">Loading activity…</p>
+									<p class="py-3 text-xs text-slate-500">{$t("Loading activity…")}</p>
 								{:else if activity.length}
 									<ol class="divide-y divide-slate-800/70">
 										{#each activity as entry (entry.id)}
@@ -669,7 +670,7 @@
 										{/each}
 									</ol>
 								{:else}
-									<p class="py-3 text-xs text-slate-500">No list activity yet.</p>
+									<p class="py-3 text-xs text-slate-500">{$t("No list activity yet.")}</p>
 								{/if}
 							</div>
 						{/if}

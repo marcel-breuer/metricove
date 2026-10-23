@@ -223,11 +223,11 @@
 
 <div class="app-shell min-h-screen bg-slate-950 text-slate-100 lg:flex">
 	<aside class="hidden w-64 shrink-0 border-r border-slate-800 bg-slate-950 px-4 py-6 lg:flex lg:flex-col">
-		<a href="/" class="mb-9 flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-white" aria-label="Metricove overview">
+		<a href="/" class="mb-9 flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-white" aria-label={$t("Metricove overview")}>
 			<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg text-cyan-300" aria-hidden="true">M</span>
 			<span>Metric<span class="text-cyan-300">ove</span></span>
 		</a>
-		<nav aria-label="Main navigation" class="flex-1 space-y-7">
+		<nav aria-label={$t("Main navigation")} class="flex-1 space-y-7">
 			<div class="space-y-1">
 				<a href="/" aria-current={isActive('/') ? 'page' : undefined} class="nav-item {isActive('/') ? 'nav-item-active' : ''}">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
@@ -284,7 +284,7 @@
 	<div class="min-w-0 flex-1">
 		<header class="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-4 border-b border-slate-800 bg-slate-950/95 px-4 backdrop-blur sm:px-7 lg:px-10">
 			<div class="flex min-w-0 items-center gap-3">
-				<button bind:this={drawerTrigger} type="button" aria-label="Open navigation" aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-800 text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 lg:hidden">
+				<button bind:this={drawerTrigger} type="button" aria-label={$t("Open navigation")} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-800 text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 lg:hidden">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
 				</button>
 				<div class="min-w-0">
@@ -328,11 +328,11 @@
 			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-cyan-300 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950">{$t('Skip to content')}</a>
 			{#if shellError}
 				<div role="alert" class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
-					<p>{shellError}</p>
+					<p>{$t(shellError)}</p>
 					<button type="button" onclick={() => void loadShell()} class="rounded-lg border border-rose-200/30 px-3 py-2 font-semibold hover:border-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t('Try again')}</button>
 				</div>
 			{/if}
-			{#if signOutError}<p role="alert" class="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{signOutError}</p>{/if}
+			{#if signOutError}<p role="alert" class="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(signOutError)}</p>{/if}
 			{@render children()}
 		</main>
 	</div>
@@ -340,13 +340,13 @@
 
 {#if drawerOpen}
 	<div class="fixed inset-0 z-40 lg:hidden">
-		<button type="button" aria-label="Close navigation" class="absolute inset-0 bg-slate-950/75 backdrop-blur-sm" onclick={() => void closeDrawer()}></button>
-		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Main navigation" tabindex="-1" class="mobile-drawer absolute inset-y-0 left-0 flex w-[min(21rem,88vw)] flex-col border-r border-slate-800 bg-slate-950 px-4 py-5 shadow-2xl shadow-black/40 outline-none">
+		<button type="button" aria-label={$t("Close navigation")} class="absolute inset-0 bg-slate-950/75 backdrop-blur-sm" onclick={() => void closeDrawer()}></button>
+		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t("Main navigation")} tabindex="-1" class="mobile-drawer absolute inset-y-0 left-0 flex w-[min(21rem,88vw)] flex-col border-r border-slate-800 bg-slate-950 px-4 py-5 shadow-2xl shadow-black/40 outline-none">
 			<div class="mb-8 flex items-center justify-between px-2">
-				<a href="/" aria-label="Metricove overview" onclick={() => (drawerOpen = false)} class="flex items-center gap-3 text-lg font-semibold tracking-tight text-white"><span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-cyan-300" aria-hidden="true">M</span><span>Metric<span class="text-cyan-300">ove</span></span></a>
-				<button type="button" aria-label="Close navigation" onclick={() => void closeDrawer()} class="grid size-10 place-items-center rounded-xl border border-slate-800 text-slate-300 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"><span aria-hidden="true" class="text-xl">×</span></button>
+				<a href="/" aria-label={$t("Metricove overview")} onclick={() => (drawerOpen = false)} class="flex items-center gap-3 text-lg font-semibold tracking-tight text-white"><span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-cyan-300" aria-hidden="true">M</span><span>Metric<span class="text-cyan-300">ove</span></span></a>
+				<button type="button" aria-label={$t("Close navigation")} onclick={() => void closeDrawer()} class="grid size-10 place-items-center rounded-xl border border-slate-800 text-slate-300 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"><span aria-hidden="true" class="text-xl">×</span></button>
 			</div>
-			<nav aria-label="Mobile main navigation" class="flex-1 space-y-7 overflow-y-auto">
+			<nav aria-label={$t("Mobile main navigation")} class="flex-1 space-y-7 overflow-y-auto">
 				<div class="space-y-1">
 					<a
 						href="/"
@@ -363,7 +363,7 @@
 				</div>
 				{#if modules.length > 0}
 					<div>
-						<p class="nav-section-label">Your modules</p>
+						<p class="nav-section-label">{$t("Your modules")}</p>
 						<div class="mt-2 space-y-1">
 							{#each modules as module (module.key)}
 								<a
@@ -384,7 +384,7 @@
 				{/if}
 				{#if currentUser?.is_admin}
 					<div class="border-t border-slate-800 pt-5">
-						<p class="nav-section-label">Administration</p>
+						<p class="nav-section-label">{$t("Administration")}</p>
 						<div class="mt-2 space-y-1">
 							<a
 								href="/admin/members"
@@ -395,7 +395,7 @@
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
 									<path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 11a3 3 0 1 0 0-6M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
 								</svg>
-								Members
+								{$t("Members")}
 							</a>
 							<a
 								href="/admin/modules"
@@ -407,7 +407,7 @@
 									<path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
 									<path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.5V21" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
 								</svg>
-								Modules
+								{$t("Modules")}
 							</a>
 							<a
 								href="/admin/invitations"
@@ -419,16 +419,16 @@
 									<rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7" />
 									<path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
 								</svg>
-								Invitations
+								{$t("Invitations")}
 							</a>
 			<a href="/admin/settings" onclick={() => (drawerOpen = false)} aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
-				<span aria-hidden="true">⚙</span>General settings
+				<span aria-hidden="true">⚙</span>{$t("General settings")}
 			</a>
 						</div>
 					</div>
 				{/if}
 			</nav>
-			<div class="mt-6 border-t border-slate-800 pt-4"><a href="/profile" onclick={() => (drawerOpen = false)} class="block rounded-xl px-3 py-3 text-sm font-medium text-slate-100 hover:bg-slate-900">{currentUser?.name ?? 'Profile'}<span class="mt-1 block text-xs text-slate-400">Profile & account</span></a><button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Sign out</button></div>
+			<div class="mt-6 border-t border-slate-800 pt-4"><a href="/profile" onclick={() => (drawerOpen = false)} class="block rounded-xl px-3 py-3 text-sm font-medium text-slate-100 hover:bg-slate-900">{currentUser?.name ?? 'Profile'}<span class="mt-1 block text-xs text-slate-400">{$t("Profile & account")}</span></a><button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Sign out")}</button></div>
 		</div>
 	</div>
 {/if}
