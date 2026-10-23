@@ -154,10 +154,23 @@ jobs:
               await new Promise((resolve) => setTimeout(resolve, 15000));
             }
 
-            const mutation = `mutation($pullRequestId: ID!) {
-              enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: MERGE }) {
-                pullRequest { number autoMergeRequest { enabledAt } }
-              }
-            }`;
-            const result = await github.graphql(mutation, { pullRequestId: pullRequest.node_id });
-            core.info(`Enabled auto-merge for release PR #${result.enablePullRequestAutoMerge.pullRequest.number}.`);
+            const { data: currentPullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: releasePr.number,
+            });
+            if (currentPullRequest.head.sha !== expectedSha) {
+              throw new Error(`Release PR #${releasePr.number} changed from ${expectedSha} to ${currentPullRequest.head.sha}; leaving it open for checks on the new head.`);
+            }
+
+            const mergeResult = await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: releasePr.number,
+              sha: expectedSha,
+              merge_method: "merge",
+            });
+            if (!mergeResult.data.merged) {
+              throw new Error(`GitHub did not merge release PR #${releasePr.number}: ${mergeResult.data.message}`);
+            }
+            core.info(`Merged release PR #${releasePr.number} at ${mergeResult.data.sha} after all checks passed for ${expectedSha}.`);
