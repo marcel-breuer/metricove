@@ -190,55 +190,55 @@
 </script>
 
 <svelte:head>
-	<title>{$t("Household members")} · Metricove</title>
-	<meta name="description" content="Manage member access for your Metricove household." />
+	<title>{$t("Household members")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Manage member access for your Metricove household.")} />
 </svelte:head>
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
 		<section class="mt-12 max-w-2xl">
-			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household access</p>
+			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t("Household access")}</p>
 			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{$t("Manage members.")}</h1>
-			<p class="mt-5 text-base leading-7 text-slate-300">Grant administrator access, suspend accounts or remove members. At least one active administrator must remain.</p>
+			<p class="mt-5 text-base leading-7 text-slate-300">{$t("Grant administrator access, suspend accounts or remove members. At least one active administrator must remain.")}</p>
 		</section>
 
 		{#if message}
-			<p role="status" class="mt-8 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{message}</p>
+			<p role="status" class="mt-8 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>
 		{/if}
 		{#if error}
-			<p role="alert" class="mt-8 rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{error}</p>
+			<p role="alert" class="mt-8 rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>
 		{/if}
 
 		<section class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
-					<p class="mt-1 text-sm text-slate-400">{members.filter((member) => member.is_admin && member.is_active).length} active administrator(s)</p>
+					<p class="mt-1 text-sm text-slate-400">{members.filter((member) => member.is_admin && member.is_active).length} {$t("active administrator(s)")}</p>
 				</div>
-				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button>
+				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-slate-300">Loading members…</p>
+				<p role="status" class="mt-6 text-sm text-slate-300">{$t("Loading members…")}</p>
 			{:else if members.length === 0}
-				<p class="mt-6 text-sm text-slate-400">There are no household members to show.</p>
+				<p class="mt-6 text-sm text-slate-400">{$t("There are no household members to show.")}</p>
 			{:else}
 				<ul class="mt-5 divide-y divide-slate-800">
 					{#each members as member (member.id)}
 						<li class="flex flex-col gap-5 py-5 lg:flex-row lg:items-center lg:justify-between">
 							<div class="min-w-0">
-								<p class="break-words text-base font-semibold text-slate-100">{member.name}{member.id === me?.id ? ' · You' : ''}</p>
+								<p class="break-words text-base font-semibold text-slate-100">{member.name}{$t(member.id === me?.id ? ' · You' : '')}</p>
 								<p class="mt-1 break-all text-sm text-slate-400">{member.email}</p>
 								<div class="mt-3 flex flex-wrap gap-2">
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_admin ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200' : 'border-slate-700 text-slate-300'}">{member.is_admin ? 'Administrator' : 'Member'}</span>
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_active ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-200'}">{member.is_active ? 'Active' : 'Suspended'}</span>
+									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_admin ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200' : 'border-slate-700 text-slate-300'}">{$t(member.is_admin ? 'Administrator' : 'Member')}</span>
+									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_active ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-200'}">{$t(member.is_active ? 'Active' : 'Suspended')}</span>
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-2 lg:justify-end">
-								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-cyan-300/30 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Module rights</a>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{member.is_admin ? 'Demote' : 'Promote'}</button>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50">{member.is_active ? 'Suspend' : 'Reactivate'}</button>
-								<button type="button" disabled={busy} onclick={() => void removeMember(member)} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">Remove</button>
+								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-cyan-300/30 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Module rights")}</a>
+								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t(member.is_admin ? 'Demote' : 'Promote')}</button>
+								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</button>
+								<button type="button" disabled={busy} onclick={() => void removeMember(member)} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">{$t("Remove")}</button>
 							</div>
 						</li>
 					{/each}
@@ -249,12 +249,12 @@
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="audit-heading">
 			<div>
 				<h2 id="audit-heading" class="text-xl font-semibold">{$t("Recent access history")}</h2>
-				<p class="mt-1 text-sm text-slate-400">The latest 100 role and account status changes.</p>
+				<p class="mt-1 text-sm text-slate-400">{$t("The latest 100 role and account status changes.")}</p>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 text-sm text-slate-300">Loading access history…</p>
+				<p role="status" class="mt-5 text-sm text-slate-300">{$t("Loading access history…")}</p>
 			{:else if events.length === 0}
-				<p class="mt-5 text-sm text-slate-400">No member changes have been recorded.</p>
+				<p class="mt-5 text-sm text-slate-400">{$t("No member changes have been recorded.")}</p>
 			{:else}
 				<ol class="mt-5 divide-y divide-slate-800">
 					{#each events as event (event.id)}
@@ -270,6 +270,6 @@
 			{/if}
 		</section>
 
-		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/profile" class="hover:text-slate-300">Return to your profile</a></footer>
+		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/profile" class="hover:text-slate-300">{$t("Return to your profile")}</a></footer>
 	</div>
 </section>

@@ -191,19 +191,19 @@
 </script>
 
 <svelte:head>
-	<title>{$t("AI Assistant")} · Metricove</title>
-	<meta name="description" content="Ask read-only questions about data you are allowed to see." />
+	<title>{$t("AI Assistant")} {$t("· Metricove")}</title>
+	<meta name="description" content={$t("Ask read-only questions about data you are allowed to see.")} />
 </svelte:head>
 
 <section class="mx-auto max-w-4xl space-y-6">
 	<header>
-		<p class="text-sm font-medium text-cyan-200">Metricove Assistant</p>
+		<p class="text-sm font-medium text-cyan-200">{$t("Metricove Assistant")}</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Ask your household assistant.")}</h1>
-		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools.</p>
+		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t("Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools.")}</p>
 	</header>
 
 	{#if loading}
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300" role="status">Loading assistant settings…</div>
+		<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300" role="status">{$t("Loading assistant settings…")}</div>
 	{:else if status}
 		<section aria-labelledby="provider-title" class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
@@ -211,71 +211,71 @@
 					<h2 id="provider-title" class="text-base font-semibold text-white">{$t("Provider")}</h2>
 					<p class="mt-1 text-sm text-slate-300">{status.provider}</p>
 				</div>
-				<span class="rounded-full border px-3 py-1 text-xs font-semibold {status.available ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}">{status.available ? 'Configured' : 'Not configured'}</span>
+				<span class="rounded-full border px-3 py-1 text-xs font-semibold {status.available ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}">{$t(status.available ? 'Configured' : 'Not configured')}</span>
 			</div>
 			{#if status.external}
-				<p class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100">This installation uses an external provider. Your question and any data requested through an assistant tool will be sent to that provider only after you confirm sharing for the request.</p>
+				<p class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100">{$t("This installation uses an external provider. Your question and any data requested through an assistant tool will be sent to that provider only after you confirm sharing for the request.")}</p>
 			{:else}
-				<p class="mt-4 text-sm leading-6 text-slate-400">Provider choice is controlled by this installation. No external provider is contacted unless its administrator configures one and marks it external.</p>
+				<p class="mt-4 text-sm leading-6 text-slate-400">{$t("Provider choice is controlled by this installation. No external provider is contacted unless its administrator configures one and marks it external.")}</p>
 			{/if}
 			{#if status.modules.length > 0}
-				<p class="mt-4 text-xs leading-5 text-slate-500">Read-only data tools currently available: {status.modules.join(', ')}. Tool access is checked again for every request.</p>
+				<p class="mt-4 text-xs leading-5 text-slate-500">{$t("Read-only data tools currently available:")} {status.modules.join(', ')}. Tool access is checked again for every request.</p>
 			{:else}
-				<p class="mt-4 text-xs leading-5 text-slate-500">No data modules are currently available to the assistant.</p>
+				<p class="mt-4 text-xs leading-5 text-slate-500">{$t("No data modules are currently available to the assistant.")}</p>
 			{/if}
 		</section>
 
 		<form onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-7">
-			<label for="assistant-question" class="block text-sm font-semibold text-white">What would you like to know?</label>
-			<textarea id="assistant-question" bind:value={question} maxlength="4000" rows="4" placeholder="For example: How did my visible utility readings change over the last few entries?" class="mt-3 min-h-32 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" disabled={!status.available || submitting}></textarea>
+			<label for="assistant-question" class="block text-sm font-semibold text-white">{$t("What would you like to know?")}</label>
+			<textarea id="assistant-question" bind:value={question} maxlength="4000" rows="4" placeholder={$t("For example: How did my visible utility readings change over the last few entries?")} class="mt-3 min-h-32 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" disabled={!status.available || submitting}></textarea>
 			<div class="mt-4 max-w-lg">
-				<label for="assistant-project" class="block text-sm font-medium text-slate-200">Project context key <span class="font-normal text-slate-500">(optional)</span></label>
-				<input id="assistant-project" bind:value={questionProject} maxlength="120" placeholder="e.g. budget-app" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" disabled={!status.available || submitting} />
+				<label for="assistant-project" class="block text-sm font-medium text-slate-200">{$t("Project context key")} <span class="font-normal text-slate-500">{$t("(optional)")}</span></label>
+				<input id="assistant-project" bind:value={questionProject} maxlength="120" placeholder={$t("e.g. budget-app")} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" disabled={!status.available || submitting} />
 			</div>
 			<p class="mt-2 text-right text-xs text-slate-500">{question.length}/4000</p>
 
 			{#if status.requires_external_consent}
 				<label class="mt-4 flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm leading-6 text-slate-300">
 					<input type="checkbox" bind:checked={allowExternalDataSharing} class="mt-1 size-4 shrink-0 accent-cyan-300" />
-					<span>I agree to send this question and any data requested through the assistant’s read-only tools to the external provider for this request.</span>
+					<span>{$t("I agree to send this question and any data requested through the assistant’s read-only tools to the external provider for this request.")}</span>
 				</label>
 			{/if}
 
 			<div class="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<p class="text-xs leading-5 text-slate-500">Requests and answers are not stored as chat history. The assistant cannot change records.</p>
-				<button type="submit" disabled={!status.available || submitting || !question.trim() || (status.requires_external_consent && !allowExternalDataSharing)} class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? 'Thinking…' : 'Ask assistant'}</button>
+				<p class="text-xs leading-5 text-slate-500">{$t("Requests and answers are not stored as chat history. The assistant cannot change records.")}</p>
+				<button type="submit" disabled={!status.available || submitting || !question.trim() || (status.requires_external_consent && !allowExternalDataSharing)} class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{$t(submitting ? 'Thinking…' : 'Ask assistant')}</button>
 			</div>
 		</form>
 
 		<section aria-labelledby="context-title" class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-7">
 			<div class="flex flex-wrap items-start justify-between gap-4">
-				<div><h2 id="context-title" class="text-xl font-semibold text-white">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.</p></div>
-				<label class="inline-flex items-center gap-3 text-sm text-slate-200"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-cyan-300" />Use saved context</label>
+				<div><h2 id="context-title" class="text-xl font-semibold text-white">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.")}</p></div>
+				<label class="inline-flex items-center gap-3 text-sm text-slate-200"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-cyan-300" />{$t("Use saved context")}</label>
 			</div>
 			<form onsubmit={(event) => void saveContext(event)} class="mt-6 grid gap-4 sm:grid-cols-2">
-				<div><label for="context-scope" class="block text-sm font-medium text-slate-200">Applies to</label><select id="context-scope" bind:value={contextScope} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100"><option value="user">All my questions</option><option value="project">One project key</option></select></div>
-				{#if contextScope === 'project'}<div><label for="context-project" class="block text-sm font-medium text-slate-200">Project key</label><input id="context-project" bind:value={contextProject} required maxlength="120" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>{/if}
-				<div><label for="context-kind" class="block text-sm font-medium text-slate-200">Type</label><input id="context-kind" bind:value={contextKind} required maxlength="40" placeholder="preference, goal, fact" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>
-				<div><label for="context-source" class="block text-sm font-medium text-slate-200">Source <span class="font-normal text-slate-500">(optional)</span></label><input id="context-source" bind:value={contextSource} maxlength="120" placeholder="Added by me" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>
-				<div class="sm:col-span-2"><label for="context-content" class="block text-sm font-medium text-slate-200">Context</label><textarea id="context-content" bind:value={contextContent} required maxlength="4000" rows="3" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm leading-6 text-slate-100"></textarea></div>
-				<div class="sm:col-span-2"><button type="submit" disabled={contextBusy || !contextContent.trim() || (contextScope === 'project' && !contextProject.trim())} class="rounded-xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{contextBusy ? 'Saving…' : 'Save context'}</button></div>
+				<div><label for="context-scope" class="block text-sm font-medium text-slate-200">{$t("Applies to")}</label><select id="context-scope" bind:value={contextScope} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100"><option value="user">{$t("All my questions")}</option><option value="project">{$t("One project key")}</option></select></div>
+				{#if contextScope === 'project'}<div><label for="context-project" class="block text-sm font-medium text-slate-200">{$t("Project key")}</label><input id="context-project" bind:value={contextProject} required maxlength="120" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>{/if}
+				<div><label for="context-kind" class="block text-sm font-medium text-slate-200">{$t("Type")}</label><input id="context-kind" bind:value={contextKind} required maxlength="40" placeholder={$t("preference, goal, fact")} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>
+				<div><label for="context-source" class="block text-sm font-medium text-slate-200">{$t("Source")} <span class="font-normal text-slate-500">{$t("(optional)")}</span></label><input id="context-source" bind:value={contextSource} maxlength="120" placeholder={$t("Added by me")} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>
+				<div class="sm:col-span-2"><label for="context-content" class="block text-sm font-medium text-slate-200">{$t("Context")}</label><textarea id="context-content" bind:value={contextContent} required maxlength="4000" rows="3" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm leading-6 text-slate-100"></textarea></div>
+				<div class="sm:col-span-2"><button type="submit" disabled={contextBusy || !contextContent.trim() || (contextScope === 'project' && !contextProject.trim())} class="rounded-xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save context')}</button></div>
 			</form>
 			{#if contextEntries.length}
 				<ul class="mt-6 divide-y divide-slate-800 rounded-xl border border-slate-800">
 					{#each contextEntries as entry (entry.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{entry.kind} · {entry.scope === 'project' ? entry.project_key : 'all questions'}</p><textarea aria-label={`Edit ${entry.kind} context`} value={entry.content} onchange={(event) => void updateContext(entry, event.currentTarget.value)} maxlength="4000" rows="2" class="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-200"></textarea><p class="mt-1 text-xs text-slate-500">Expires {entry.expires_at ? formatDate(entry.expires_at) : 'never'} · updated {formatDate(entry.updated_at)}</p></div>
-							<button type="button" onclick={() => void deleteContext(entry.id)} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">Delete</button>
+							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><textarea aria-label={$t('Edit {kind} context', { kind: $t(entry.kind) })} value={entry.content} onchange={(event) => void updateContext(entry, event.currentTarget.value)} maxlength="4000" rows="2" class="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-200"></textarea><p class="mt-1 text-xs text-slate-500">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
+							<button type="button" onclick={() => void deleteContext(entry.id)} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">{$t("Delete")}</button>
 						</li>
 					{/each}
 				</ul>
-			{:else}<p class="mt-5 text-sm text-slate-500">No saved context yet.</p>{/if}
+			{:else}<p class="mt-5 text-sm text-slate-500">{$t("No saved context yet.")}</p>{/if}
 			{#if contextMessage}<p role="status" class="mt-4 text-sm text-emerald-200">{contextMessage}</p>{/if}
-			{#if contextError}<p role="alert" class="mt-4 text-sm text-rose-200">{contextError}</p>{/if}
+			{#if contextError}<p role="alert" class="mt-4 text-sm text-rose-200">{$t(contextError)}</p>{/if}
 		</section>
 	{/if}
 
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</p>{/if}
+	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
 	{#if answer}
 		<section aria-labelledby="assistant-answer-title" class="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-5 sm:p-7">
 			<h2 id="assistant-answer-title" class="text-base font-semibold text-cyan-100">{$t("Answer")}</h2>

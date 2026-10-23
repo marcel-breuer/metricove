@@ -270,7 +270,7 @@
 </script>
 
 <svelte:head>
-	<title>{$t('Your profile')} · Metricove</title>
+	<title>{$t('Your profile')} {$t("· Metricove")}</title>
 	<meta name="description" content={$t('Update the name and email address used for this household account.')} />
 </svelte:head>
 
@@ -306,7 +306,7 @@
 							</label>
 							<label class="block text-sm font-medium text-slate-200" for="default-currency">{$t('Currency')}
 								<select id="default-currency" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" bind:value={$defaultCurrency}>
-									<option>EUR</option><option>USD</option><option>GBP</option><option>CHF</option>
+									<option>{$t("EUR")}</option><option>{$t("USD")}</option><option>{$t("GBP")}</option><option>{$t("CHF")}</option>
 								</select>
 							</label>
 							<label class="block text-sm font-medium text-slate-200" for="currency-display">{$t('Currency display')}
@@ -316,7 +316,7 @@
 							</label>
 						</div>
 						{#if message}<Notice tone="success" message={$t(message)} />{/if}
-						{#if error}<Notice tone="error" message={error} />{/if}
+						{#if error}<Notice tone="error" message={$t(error)} />{/if}
 						<Button type="submit" fullWidth disabled={busy}>
 							{busy ? $t('Saving…') : $t('Save profile')}
 						</Button>
@@ -364,11 +364,11 @@
 				{#if allowedScopes.length > 0}
 					<form class="mt-6 space-y-4" onsubmit={createMcpToken}>
 						<div>
-							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-slate-200">Token name</label>
+							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-slate-200">{$t("Token name")}</label>
 							<input id="mcp-token-name" bind:value={tokenName} required maxlength="100" autocomplete="off" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 						</div>
 						<fieldset class="space-y-2">
-							<legend class="mb-2 text-sm font-medium text-slate-200">Available scopes</legend>
+							<legend class="mb-2 text-sm font-medium text-slate-200">{$t("Available scopes")}</legend>
 							{#each allowedScopes as scope}
 								<label class="flex items-start gap-3 rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-300">
 									<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-cyan-300" />
@@ -378,18 +378,18 @@
 						</fieldset>
 						{#if !tokenNeverExpires}
 							<div>
-								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-slate-200">Expires in days</label>
+								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-slate-200">{$t("Expires in days")}</label>
 								<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 							</div>
 						{/if}
 						<label class="flex items-start gap-3 text-sm text-slate-300">
 							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-cyan-300" />
-							<span>Never expires</span>
+							<span>{$t("Never expires")}</span>
 						</label>
 						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
 					</form>
 				{:else if !loading}
-					<p class="mt-5 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.</p>
+					<p class="mt-5 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
 				{/if}
 				{#if newSecret}
 					<div class="mt-5 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
@@ -422,7 +422,7 @@
 					{#each mcpActions as action}
 						<article class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
 							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-slate-100">{action.meter}</h3><span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-200">{action.state}</span></div>
-							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">{$t('Date')}</dt><dd class="mt-1 text-slate-200">{action.reading_date}</dd></div><div><dt class="text-slate-500">{$t('Reading')}</dt><dd class="mt-1 text-slate-200">{formatMeasurement(action.value, action.unit)} {action.unit}</dd></div><div class="col-span-2"><dt class="text-slate-500">{$t('Requested by')}</dt><dd class="mt-1 text-slate-200">{action.token_name}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-slate-500">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-200">{action.note}</dd></div>{/if}<div class="col-span-2"><dt class="text-slate-500">{$t('Expires')}</dt><dd class="mt-1 text-slate-200">{formatDateTime(action.expires_at)}</dd></div></dl>
+							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">{$t('Date')}</dt><dd class="mt-1 text-slate-200">{formatDate(action.reading_date)}</dd></div><div><dt class="text-slate-500">{$t('Reading')}</dt><dd class="mt-1 text-slate-200">{formatMeasurement(action.value, action.unit)} {action.unit}</dd></div><div class="col-span-2"><dt class="text-slate-500">{$t('Requested by')}</dt><dd class="mt-1 text-slate-200">{action.token_name}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-slate-500">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-200">{action.note}</dd></div>{/if}<div class="col-span-2"><dt class="text-slate-500">{$t('Expires')}</dt><dd class="mt-1 text-slate-200">{formatDateTime(action.expires_at)}</dd></div></dl>
 							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-emerald-200">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Cancel approval')}</button>{/if}
 						</article>
 					{/each}
