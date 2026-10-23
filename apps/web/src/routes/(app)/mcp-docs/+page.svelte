@@ -12,7 +12,7 @@
 </script>
 
 <svelte:head>
-	<title>MCP documentation · Metricove</title>
+	<title>{$t("MCP documentation")} · Metricove</title>
 	<meta name="description" content="Authenticated documentation for connecting MCP clients to Metricove." />
 </svelte:head>
 

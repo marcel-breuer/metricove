@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -144,7 +145,7 @@
 </script>
 
 <svelte:head>
-	<title>Invitations · Metricove</title>
+	<title>{$t("Invitations")} · Metricove</title>
 	<meta name="description" content="Invite members to your Metricove household." />
 </svelte:head>
 
@@ -153,14 +154,14 @@
 		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
 			<div class="max-w-xl">
 				<p class="mb-5 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household access</p>
-				<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Invite a member.</h1>
+				<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{$t("Invite a member.")}</h1>
 				<p class="mt-6 text-base leading-7 text-slate-300">Send an invitation using only their email address. They will choose their own name and password.</p>
 				<a href="/profile" class="mt-6 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">Return to your profile</a>
 			</div>
 
 			<div class="space-y-6">
 				<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="invite-heading">
-					<h2 id="invite-heading" class="text-xl font-semibold">Send an invitation</h2>
+					<h2 id="invite-heading" class="text-xl font-semibold">{$t("Send an invitation")}</h2>
 					<form class="mt-6 space-y-5" onsubmit={createInvitation}>
 						<div>
 							<label for="email" class="mb-2 block text-sm font-medium text-slate-200">Recipient email</label>
@@ -180,7 +181,7 @@
 
 				<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="pending-heading">
 					<div class="flex flex-wrap items-center justify-between gap-3">
-						<h2 id="pending-heading" class="text-xl font-semibold">Pending invitations</h2>
+						<h2 id="pending-heading" class="text-xl font-semibold">{$t("Pending invitations")}</h2>
 						<button type="button" onclick={() => void loadInvitations()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Refresh</button>
 					</div>
 					{#if loading}

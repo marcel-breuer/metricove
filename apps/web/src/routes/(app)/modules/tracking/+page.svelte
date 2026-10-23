@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -131,7 +132,7 @@
 </script>
 
 <svelte:head>
-	<title>Tracking · Metricove</title>
+	<title>{$t("Tracking")} · Metricove</title>
 	<meta name="description" content="Build household trackers and record private measurements over time." />
 </svelte:head>
 
@@ -139,7 +140,7 @@
 	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
 		<div>
 			<p class="text-sm font-medium tracking-wide text-cyan-200">Tracking module</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Make your own measures.</h1>
+			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Make your own measures.")}</h1>
 		</div>
 		<p class="max-w-xl text-sm leading-6 text-slate-400">Build a small schema around what matters to your household. Each measurement is saved with its own owner, date and unit.</p>
 	</div>
@@ -150,14 +151,14 @@
 	{#if canView}
 		<section class="mt-8" aria-labelledby="trackers-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
-				<div><h2 id="trackers-heading" class="text-xl font-semibold text-slate-100">Your trackers</h2><p class="mt-1 text-sm text-slate-400">Shared templates are available to members with tracking access; entries stay private to each owner.</p></div>
+				<div><h2 id="trackers-heading" class="text-xl font-semibold text-slate-100">{$t("Your trackers")}</h2><p class="mt-1 text-sm text-slate-400">Shared templates are available to members with tracking access; entries stay private to each owner.</p></div>
 				<button type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button>
 			</div>
 			{#if loading}
 				<p role="status" class="mt-5 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-5 text-sm text-slate-300">Loading trackers…</p>
 			{:else if trackers.length === 0}
 				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
-					<h3 class="text-lg font-semibold text-slate-100">No trackers yet.</h3>
+					<h3 class="text-lg font-semibold text-slate-100">{$t("No trackers yet.")}</h3>
 					<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Create a private tracker for yourself, or ask an administrator to create a household template. Existing measurements are never visible to administrators unless their owner shares them.</p>
 				</div>
 			{:else}
@@ -191,7 +192,7 @@
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-tracker-heading">
 			<div class="max-w-2xl">
 				<p class="text-sm font-medium text-cyan-200">Schema builder</p>
-				<h2 id="new-tracker-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">Start with a tracker.</h2>
+				<h2 id="new-tracker-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Start with a tracker.")}</h2>
 				<p class="mt-2 text-sm leading-6 text-slate-400">Number fields require a unit and are stored as exact decimals. Field type and unit are preserved after the first saved value.</p>
 			</div>
 			<form class="mt-7 space-y-6" onsubmit={createTracker}>
@@ -212,7 +213,7 @@
 
 				<div class="border-t border-slate-800 pt-6">
 					<div class="flex flex-wrap items-end justify-between gap-3">
-						<div><h3 class="text-base font-semibold text-slate-100">Fields</h3><p class="mt-1 text-sm text-slate-400">Add numeric, text, date or yes/no fields.</p></div>
+						<div><h3 class="text-base font-semibold text-slate-100">{$t("Fields")}</h3><p class="mt-1 text-sm text-slate-400">Add numeric, text, date or yes/no fields.</p></div>
 						<button type="button" onclick={addField} class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Add field</button>
 					</div>
 					<ol class="mt-4 space-y-4">

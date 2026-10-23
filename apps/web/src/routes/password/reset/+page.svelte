@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 
@@ -74,7 +75,7 @@
 </script>
 
 <svelte:head>
-	<title>Choose a new password · Metricove</title>
+	<title>{$t("Choose a new password")} · Metricove</title>
 	<meta name="description" content="Choose a new password for your Metricove account." />
 </svelte:head>
 
@@ -87,7 +88,7 @@
 
 		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
 			<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Account recovery</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight">Choose a new password</h1>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Choose a new password")}</h1>
 			<form class="mt-8 space-y-5" onsubmit={resetPassword}>
 				<div>
 					<label for="email" class="mb-2 block text-sm font-medium text-slate-200">Email address</label>

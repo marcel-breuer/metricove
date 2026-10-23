@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -214,7 +215,7 @@
 {#if loading}
 	<div role="status" class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-300">Loading meter…</div>
 {:else if !canView}
-	<section class="mx-auto max-w-2xl rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8"><p class="text-sm font-medium text-amber-200">Utilities View access is required.</p><h1 class="mt-2 text-2xl font-semibold text-white">This meter is private to its authorized members.</h1><p class="mt-3 text-sm leading-6 text-slate-400">An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-300">Back to Utilities</a></section>
+	<section class="mx-auto max-w-2xl rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8"><p class="text-sm font-medium text-amber-200">Utilities View access is required.</p><h1 class="mt-2 text-2xl font-semibold text-white">{$t("This meter is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-slate-400">An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-300">Back to Utilities</a></section>
 {:else if meter}
 	<section class="mx-auto max-w-screen-xl">
 		<a href="/modules/utilities" class="inline-flex items-center gap-2 text-sm font-medium text-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"><span aria-hidden="true">←</span> All meters</a>
@@ -234,7 +235,7 @@
 		{/if}
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-7" aria-labelledby="trend-heading">
-			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Consumption trend</p><h2 id="trend-heading" class="mt-1 text-xl font-semibold text-slate-100">Usage between readings</h2></div><p class="text-xs text-slate-500">Latest {chartData.length} intervals · {meter.unit}</p></div>
+			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Consumption trend</p><h2 id="trend-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Usage between readings")}</h2></div><p class="text-xs text-slate-500">Latest {chartData.length} intervals · {meter.unit}</p></div>
 			{#if chartData.length === 0}
 				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-5 text-sm text-slate-400">Add a second dated reading to see consumption.</p>
 			{:else}
@@ -254,7 +255,7 @@
 		<div class="mt-8 grid gap-8 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
 			{#if canCreate}
 				<section class="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-7" aria-labelledby="add-reading-heading">
-					<p class="text-sm font-medium text-cyan-200">New reading</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-slate-100">Record the register.</h2><p class="mt-2 text-sm leading-6 text-slate-400">A reading can be added out of order when its value fits between the neighboring readings.</p>
+					<p class="text-sm font-medium text-cyan-200">New reading</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Record the register.")}</h2><p class="mt-2 text-sm leading-6 text-slate-400">A reading can be added out of order when its value fits between the neighboring readings.</p>
 					<form class="mt-5 space-y-4" onsubmit={saveReading}>
 						<label class="block text-sm font-medium text-slate-200">Reading date<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						<label class="block text-sm font-medium text-slate-200">Cumulative value <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={readingValue} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="1234.567" /></label>
@@ -269,9 +270,9 @@
 			{/if}
 
 			<section aria-labelledby="history-heading">
-				<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Reading history</p><h2 id="history-heading" class="mt-1 text-xl font-semibold text-slate-100">Chronological record</h2></div><span class="text-xs text-slate-500">{readings.length} recent readings</span></div>
+				<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Reading history</p><h2 id="history-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Chronological record")}</h2></div><span class="text-xs text-slate-500">{readings.length} recent readings</span></div>
 				{#if readings.length === 0}
-					<div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-6"><h3 class="font-semibold text-slate-100">No readings yet.</h3><p class="mt-2 text-sm leading-6 text-slate-400">Save the current register value. The next reading will establish the first usage interval.</p></div>
+					<div class="mt-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-6"><h3 class="font-semibold text-slate-100">{$t("No readings yet.")}</h3><p class="mt-2 text-sm leading-6 text-slate-400">Save the current register value. The next reading will establish the first usage interval.</p></div>
 				{:else}
 				<ol class="mt-4 space-y-3">
 					{#each [...readings].reverse() as reading (reading.id)}
@@ -306,5 +307,5 @@
 		</div>
 	</section>
 {:else}
-	<section class="mx-auto max-w-2xl rounded-2xl border border-rose-300/20 bg-rose-300/5 p-6 sm:p-8"><p class="text-sm font-medium text-rose-200">Meter unavailable</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-white">This meter could not be opened.</h1><p class="mt-3 text-sm leading-6 text-slate-400">It may have been removed, Utilities may be disabled, or you may not have a record-level grant.</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-300">Back to Utilities</a></section>
+	<section class="mx-auto max-w-2xl rounded-2xl border border-rose-300/20 bg-rose-300/5 p-6 sm:p-8"><p class="text-sm font-medium text-rose-200">Meter unavailable</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("This meter could not be opened.")}</h1><p class="mt-3 text-sm leading-6 text-slate-400">It may have been removed, Utilities may be disabled, or you may not have a record-level grant.</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-300">Back to Utilities</a></section>
 {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -160,7 +161,7 @@
 </script>
 
 <svelte:head>
-	<title>Analytics · Metricove</title>
+	<title>{$t("Analytics")} · Metricove</title>
 	<meta name="description" content="Build private charts from the household data you can access." />
 </svelte:head>
 
@@ -168,7 +169,7 @@
 	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
 		<div>
 			<p class="text-sm font-medium tracking-wide text-cyan-200">Your data, at a glance</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Analytics dashboard</h1>
+			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Analytics dashboard")}</h1>
 		</div>
 		<p class="max-w-xl text-sm leading-6 text-slate-400">Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private.</p>
 	</div>
@@ -179,7 +180,7 @@
 	{#if canCreate}
 		<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
-				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">Add a chart</h2><p class="mt-1 text-sm text-slate-400">Available charts follow your current module access.</p></div>
+				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-slate-400">Available charts follow your current module access.</p></div>
 				<span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-400">{widgets.length} / 12 widgets</span>
 			</div>
 			{#if catalog.length === 0}
@@ -218,7 +219,7 @@
 	{:else if widgets.length === 0}
 		<div class="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-900/30 px-5 py-14 text-center">
 			<div class="mx-auto grid size-14 place-items-center rounded-2xl border border-slate-700 bg-slate-950 text-xl text-cyan-200" aria-hidden="true">⌁</div>
-			<h2 class="mt-4 text-xl font-semibold text-white">Your dashboard is ready to configure.</h2>
+			<h2 class="mt-4 text-xl font-semibold text-white">{$t("Your dashboard is ready to configure.")}</h2>
 			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.</p>
 		</div>
 	{:else}

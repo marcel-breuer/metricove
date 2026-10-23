@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -189,7 +190,7 @@
 </script>
 
 <svelte:head>
-	<title>Household members · Metricove</title>
+	<title>{$t("Household members")} · Metricove</title>
 	<meta name="description" content="Manage member access for your Metricove household." />
 </svelte:head>
 
@@ -197,7 +198,7 @@
 	<div class="mx-auto max-w-5xl">
 		<section class="mt-12 max-w-2xl">
 			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household access</p>
-			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Manage members.</h1>
+			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{$t("Manage members.")}</h1>
 			<p class="mt-5 text-base leading-7 text-slate-300">Grant administrator access, suspend accounts or remove members. At least one active administrator must remain.</p>
 		</section>
 
@@ -211,7 +212,7 @@
 		<section class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
-					<h2 id="members-heading" class="text-xl font-semibold">Household members</h2>
+					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
 					<p class="mt-1 text-sm text-slate-400">{members.filter((member) => member.is_admin && member.is_active).length} active administrator(s)</p>
 				</div>
 				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button>
@@ -247,7 +248,7 @@
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="audit-heading">
 			<div>
-				<h2 id="audit-heading" class="text-xl font-semibold">Recent access history</h2>
+				<h2 id="audit-heading" class="text-xl font-semibold">{$t("Recent access history")}</h2>
 				<p class="mt-1 text-sm text-slate-400">The latest 100 role and account status changes.</p>
 			</div>
 			{#if loading}

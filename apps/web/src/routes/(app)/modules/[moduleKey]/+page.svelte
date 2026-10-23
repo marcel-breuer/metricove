@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { getContext } from 'svelte';
 	import type { AppShellContext } from '#lib/app-shell';
@@ -23,7 +24,7 @@
 		<p class="mt-3 max-w-2xl text-base leading-7 text-slate-300">{module.description}</p>
 		<div class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
 			<div class="grid size-12 place-items-center rounded-xl bg-cyan-300/10 text-2xl text-cyan-200" aria-hidden="true">◇</div>
-			<h2 class="mt-5 text-xl font-semibold text-slate-100">This module is ready for its data tools.</h2>
+			<h2 class="mt-5 text-xl font-semibold text-slate-100">{$t("This module is ready for its data tools.")}</h2>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">The module is enabled and you have access. Its records and entry forms are being delivered in the upcoming module work.</p>
 			<p class="mt-5 text-xs text-slate-500">Available capabilities: {Object.entries(module.capabilities).filter(([, allowed]) => allowed).map(([capability]) => capability).join(', ')}</p>
 		</div>
@@ -32,7 +33,7 @@
 {:else}
 	<section class="mx-auto max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
 		<p class="text-sm font-medium text-amber-200">Module unavailable</p>
-		<h1 class="mt-2 text-2xl font-semibold tracking-tight text-white">You do not have access to this module.</h1>
+		<h1 class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("You do not have access to this module.")}</h1>
 		<p class="mt-3 text-sm leading-6 text-slate-400">An active household administrator can enable modules and grant member capabilities.</p>
 		<a href="/" class="mt-6 inline-flex rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Return to overview</a>
 	</section>

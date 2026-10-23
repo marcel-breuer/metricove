@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 
@@ -68,7 +69,7 @@
 </script>
 
 <svelte:head>
-	<title>Accept invitation · Metricove</title>
+	<title>{$t("Accept invitation")} · Metricove</title>
 	<meta name="description" content="Choose your name and password to join a Metricove household." />
 </svelte:head>
 
@@ -81,7 +82,7 @@
 
 		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
 			<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Household invitation</p>
-			<h1 id="invitation-form-heading" class="mt-3 text-3xl font-semibold tracking-tight">Create your account</h1>
+			<h1 id="invitation-form-heading" class="mt-3 text-3xl font-semibold tracking-tight">{$t("Create your account")}</h1>
 			<p class="mt-3 text-sm leading-6 text-slate-300">Choose the name and password you want to use for your Metricove account.</p>
 			<form class="mt-8 space-y-5" onsubmit={claimInvitation} aria-labelledby="invitation-form-heading">
 				<div>

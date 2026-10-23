@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -114,7 +115,7 @@
 </script>
 
 <svelte:head>
-	<title>Module rights · Metricove</title>
+	<title>{$t("Module rights")} · Metricove</title>
 	<meta name="description" content="Manage module capabilities for a household member." />
 </svelte:head>
 
@@ -132,7 +133,7 @@
 		<section class="mt-10" aria-labelledby="module-rights-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
-					<h2 id="module-rights-heading" class="text-xl font-semibold">Optional module capabilities</h2>
+					<h2 id="module-rights-heading" class="text-xl font-semibold">{$t("Optional module capabilities")}</h2>
 					<p class="mt-1 text-sm text-slate-400">Optional modules begin disabled. Enabling one grants every capability to all active members; you can adjust individual rights here.</p>
 				</div>
 				<Button variant="secondary" size="small" disabled={busyKey !== ''} onclick={() => void loadPermissions()}>Refresh</Button>

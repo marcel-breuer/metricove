@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -76,13 +77,13 @@
 </script>
 
 <svelte:head>
-	<title>Vehicles · Metricove</title>
+	<title>{$t("Vehicles")} · Metricove</title>
 	<meta name="description" content="Keep private or shared vehicle, mileage, service and cost records." />
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
 	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Vehicles module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Every mile, in one place.</h1></div>
+		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Vehicles module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Every mile, in one place.")}</h1></div>
 		<p class="max-w-xl text-sm leading-6 text-slate-400">Track odometer history, service, insurance dates and running costs. Keep a vehicle private or share it with the household.</p>
 	</div>
 	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{message}</p>{/if}
@@ -90,11 +91,11 @@
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="vehicles-heading">
-			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="vehicles-heading" class="text-xl font-semibold text-slate-100">Your vehicles</h2><p class="mt-1 text-sm text-slate-400">Private records are visible to their owner and explicitly authorized members.</p></div><button type="button" onclick={() => void loadVehicles()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button></div>
+			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="vehicles-heading" class="text-xl font-semibold text-slate-100">{$t("Your vehicles")}</h2><p class="mt-1 text-sm text-slate-400">Private records are visible to their owner and explicitly authorized members.</p></div><button type="button" onclick={() => void loadVehicles()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button></div>
 			{#if loading}
 				<p role="status" class="mt-5 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-5 text-sm text-slate-300">Loading vehicles…</p>
 			{:else if vehicles.length === 0}
-				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">No vehicles yet.</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add a private vehicle for your own records, or ask an active administrator to create a shared household vehicle.</p></div>
+				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No vehicles yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add a private vehicle for your own records, or ask an active administrator to create a shared household vehicle.</p></div>
 			{:else}
 				<ul class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 					{#each vehicles as vehicle (vehicle.id)}
@@ -112,7 +113,7 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-vehicle-heading">
-			<p class="text-sm font-medium text-cyan-200">Add to the fleet</p><h2 id="new-vehicle-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">Set up a vehicle.</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.</p>
+			<p class="text-sm font-medium text-cyan-200">Add to the fleet</p><h2 id="new-vehicle-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Set up a vehicle.")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.</p>
 			<form class="mt-7 grid gap-4 sm:grid-cols-2" onsubmit={createVehicle}>
 				<label class="block text-sm font-medium text-slate-200">Display name<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Daily car" /></label>
 				<label class="block text-sm font-medium text-slate-200">Make<input bind:value={make} required maxlength="80" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Volvo" /></label>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -401,7 +402,7 @@
 </script>
 
 <svelte:head>
-	<title>Shopping · Metricove</title>
+	<title>{$t("Shopping")} · Metricove</title>
 	<meta name="description" content="Keep shared shopping lists organized, current and easy to restore." />
 </svelte:head>
 
@@ -409,7 +410,7 @@
 	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Food · Shopping</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">The list everyone can trust</h1>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("The list everyone can trust")}</h1>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.</p>
 		</div>
 		{#if activeList}
@@ -428,7 +429,7 @@
 	{:else if !canView}
 		<section class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8">
 			<p class="text-sm font-medium text-amber-200">Shopping View access is required.</p>
-			<h2 class="mt-2 text-xl font-semibold text-white">Your lists stay private to the right members.</h2>
+			<h2 class="mt-2 text-xl font-semibold text-white">{$t("Your lists stay private to the right members.")}</h2>
 			<p class="mt-3 text-sm leading-6 text-slate-400">Ask a household administrator to enable Shopping and grant your account View access.</p>
 		</section>
 	{:else}
@@ -436,7 +437,7 @@
 			<aside class="space-y-4">
 				<section class="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
-						<h2 class="text-sm font-semibold text-white">Your lists</h2>
+						<h2 class="text-sm font-semibold text-white">{$t("Your lists")}</h2>
 						<span class="text-xs text-slate-500">{lists.length} / 100</span>
 					</div>
 					{#if lists.length}
@@ -458,7 +459,7 @@
 
 				{#if canCreateList}
 					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-						<h2 class="text-sm font-semibold text-white">Create a list</h2>
+						<h2 class="text-sm font-semibold text-white">{$t("Create a list")}</h2>
 						<label class="block text-xs font-medium text-slate-400">List name
 							<input bind:value={listName} maxlength="160" required placeholder="Weekly groceries" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 						</label>
@@ -478,7 +479,7 @@
 			{#if !activeList}
 				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
 					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Ready when you are</p>
-					<h2 class="mt-3 text-2xl font-semibold text-white">Start with one thing.</h2>
+					<h2 class="mt-3 text-2xl font-semibold text-white">{$t("Start with one thing.")}</h2>
 					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.'}</p>
 				</section>
 			{:else}
@@ -488,7 +489,7 @@
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
 									<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Quick add</p>
-									<h2 class="mt-1 text-lg font-semibold text-white">What do you need?</h2>
+									<h2 class="mt-1 text-lg font-semibold text-white">{$t("What do you need?")}</h2>
 								</div>
 								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">Shared list</span>{/if}
 							</div>
@@ -512,7 +513,7 @@
 						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
 								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Optional connection</p>
-								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">Suggestions from meal plans</h2>
+								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Suggestions from meal plans")}</h2>
 								<p class="mt-2 text-sm leading-6 text-slate-400">Review recipe ingredients before adding them. Free-text meals stay untouched, pantry stock is read-only, and units are never converted.</p>
 							</div>
 							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 
@@ -53,7 +54,7 @@
 </script>
 
 <svelte:head>
-	<title>Reset password · Metricove</title>
+	<title>{$t("Reset password")} · Metricove</title>
 	<meta name="description" content="Request a password reset for your Metricove account." />
 </svelte:head>
 
@@ -66,7 +67,7 @@
 
 		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
 			<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">Account recovery</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight">Reset your password</h1>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Reset your password")}</h1>
 			<p class="mt-3 text-sm leading-6 text-slate-300">Enter your account email. If it matches an account, we will send a reset link.</p>
 
 			<form class="mt-8 space-y-5" onsubmit={requestReset}>

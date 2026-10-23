@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -328,13 +329,13 @@
 </script>
 
 <svelte:head>
-	<title>Finance · Metricove</title>
+	<title>{$t("Finance")} · Metricove</title>
 	<meta name="description" content="Track private or shared income, spending, recurring entries and monthly budgets." />
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
 	<div class="flex flex-col gap-5 border-b border-slate-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Finance module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">A clearer view of your money.</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Record income and spending, set a monthly category budget and keep recurring charges ready to record when they are due.</p></div>
+		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Finance module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("A clearer view of your money.")}</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Record income and spending, set a monthly category budget and keep recurring charges ready to record when they are due.</p></div>
 		<div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-1" aria-label="Budget month">
 			<button type="button" class="min-h-10 min-w-10 rounded-lg text-lg text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-cyan-300" aria-label="Previous month" onclick={() => shiftMonth(-1)}>‹</button>
 			<label class="sr-only" for="finance-month">Budget month</label><input id="finance-month" type="month" bind:value={month} class="min-h-10 w-36 rounded-lg border-0 bg-transparent px-2 text-sm text-white focus:ring-2 focus:ring-cyan-300/30" />
@@ -380,7 +381,7 @@
 		{/if}
 
 		<section class="mt-8" aria-labelledby="transactions-title">
-			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Activity</p><h2 id="transactions-title" class="mt-1 text-2xl font-semibold text-white">Transactions</h2></div><p class="text-sm text-slate-400">Showing up to 200 records for {month}.</p></div>
+			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">Activity</p><h2 id="transactions-title" class="mt-1 text-2xl font-semibold text-white">{$t("Transactions")}</h2></div><p class="text-sm text-slate-400">Showing up to 200 records for {month}.</p></div>
 			{#if visibleTransactions.length === 0}<p class="mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5 text-sm text-slate-400">No transactions are visible for this month.</p>{:else}
 				<ul class="mt-4 divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
 					{#each visibleTransactions as transaction (transaction.id)}
@@ -392,7 +393,7 @@
 
 		<div class="mt-8 grid gap-6 xl:grid-cols-2">
 			<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="budgets-title">
-				<p class="text-sm font-medium text-cyan-200">Plan</p><h2 id="budgets-title" class="mt-1 text-xl font-semibold text-white">Monthly budgets</h2>
+				<p class="text-sm font-medium text-cyan-200">Plan</p><h2 id="budgets-title" class="mt-1 text-xl font-semibold text-white">{$t("Monthly budgets")}</h2>
 				{#if (canCreate || canManageShared) && expenseCategories.length > 0}
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveBudget}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">Expense category<select bind:value={budgetCategory} required={budgetId === null} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">Choose a category</option>{#each expenseCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
@@ -408,7 +409,7 @@
 			</section>
 
 			<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="category-title">
-				<p class="text-sm font-medium text-cyan-200">Organize</p><h2 id="category-title" class="mt-1 text-xl font-semibold text-white">Categories</h2>
+				<p class="text-sm font-medium text-cyan-200">Organize</p><h2 id="category-title" class="mt-1 text-xl font-semibold text-white">{$t("Categories")}</h2>
 				{#if canCreate || canManageShared}
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveCategory}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">Name<input bind:value={categoryName} required maxlength="80" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Housing" /></label>
@@ -421,7 +422,7 @@
 		</div>
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="recurring-title">
-			<div><p class="text-sm font-medium text-cyan-200">On a schedule</p><h2 id="recurring-title" class="mt-1 text-xl font-semibold text-white">Recurring entries</h2><p class="mt-1 text-sm text-slate-400">A due occurrence is added to transactions only when you record it.</p></div>
+			<div><p class="text-sm font-medium text-cyan-200">On a schedule</p><h2 id="recurring-title" class="mt-1 text-xl font-semibold text-white">{$t("Recurring entries")}</h2><p class="mt-1 text-sm text-slate-400">A due occurrence is added to transactions only when you record it.</p></div>
 			{#if canCreate || canManageShared}
 				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" onsubmit={saveRecurring}>
 					<label class="block text-sm font-medium text-slate-200">Type<select bind:value={recurringType} disabled={recurringId !== null && recurringCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white disabled:opacity-50"><option value="expense">Expense</option><option value="income">Income</option></select></label>

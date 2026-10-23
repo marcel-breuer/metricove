@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -194,7 +195,7 @@
 </script>
 
 <svelte:head>
-	<title>Recipes · Metricove</title>
+	<title>{$t("Recipes")} · Metricove</title>
 	<meta name="description" content="Keep household recipes, measured ingredients and preparation notes together." />
 </svelte:head>
 
@@ -202,7 +203,7 @@
 	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Food · Recipes</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Recipes worth keeping</h1>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Recipes worth keeping")}</h1>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">A private collection for your household: clear quantities, useful notes and the way you like to make it.</p>
 		</div>
 		<div class="flex items-center gap-3 text-sm text-slate-400">
@@ -229,7 +230,7 @@
 				<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="mt-auto min-h-11 rounded-xl border px-4 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 {favoriteOnly ? 'border-amber-200/50 bg-amber-200/10 text-amber-100' : 'border-slate-700 text-slate-300 hover:border-slate-500'}">★ Favorites</button>
 			</div>
 
-			<h2 id="recipe-list-title" class="sr-only">Your recipes</h2>
+			<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
 			{#if loading}
 				<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-400">Loading recipes…</div>
 			{:else if !canView}

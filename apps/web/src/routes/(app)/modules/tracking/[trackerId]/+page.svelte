@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -307,7 +308,7 @@
 {:else if error && !tracker}
 	<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
 		<p class="text-sm font-medium text-amber-200">Tracker unavailable</p>
-		<h1 class="mt-2 text-2xl font-semibold text-white">You cannot open this tracker.</h1>
+		<h1 class="mt-2 text-2xl font-semibold text-white">{$t("You cannot open this tracker.")}</h1>
 		<p role="alert" class="mt-3 text-sm leading-6 text-slate-400">{error}</p>
 		<a href="/modules/tracking" class="mt-6 inline-flex min-h-11 items-center rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Back to trackers</a>
 	</section>
@@ -335,7 +336,7 @@
 			<section class="mt-7 rounded-2xl border border-cyan-300/20 bg-slate-900/70 p-5 sm:p-8" aria-labelledby="edit-schema-heading">
 				<div class="max-w-2xl">
 					<p class="text-sm font-medium text-cyan-200">Schema builder · new revision</p>
-					<h2 id="edit-schema-heading" class="mt-2 text-2xl font-semibold text-white">Update tracker fields.</h2>
+					<h2 id="edit-schema-heading" class="mt-2 text-2xl font-semibold text-white">{$t("Update tracker fields.")}</h2>
 					<p class="mt-2 text-sm leading-6 text-slate-400">Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.</p>
 				</div>
 				<form class="mt-6 space-y-5" onsubmit={saveSchema}>
@@ -344,7 +345,7 @@
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">Description<textarea bind:value={schemaDescription} maxlength="500" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
 					</div>
 					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-5">
-						<div><h3 class="font-semibold text-slate-100">Current fields</h3><p class="mt-1 text-sm text-slate-400">Leave a field out to retire it while retaining its history.</p></div>
+						<div><h3 class="font-semibold text-slate-100">{$t("Current fields")}</h3><p class="mt-1 text-sm text-slate-400">Leave a field out to retire it while retaining its history.</p></div>
 						<button type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">Add field</button>
 					</div>
 					<ol class="space-y-3">
@@ -403,7 +404,7 @@
 		{/if}
 
 		<section class="mt-8" aria-labelledby="history-heading">
-			<div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="history-heading" class="text-xl font-semibold text-white">Measurement history</h2><p class="mt-1 text-sm text-slate-400">The latest {entries.length} entries you can view, newest first.</p></div></div>
+			<div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="history-heading" class="text-xl font-semibold text-white">{$t("Measurement history")}</h2><p class="mt-1 text-sm text-slate-400">The latest {entries.length} entries you can view, newest first.</p></div></div>
 			{#if numericColumns.length > 0}
 				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each numericColumns as field (field.key)}
@@ -428,7 +429,7 @@
 			{/if}
 
 			{#if entries.length === 0}
-				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">No measurements recorded.</h3><p class="mt-2 text-sm leading-6 text-slate-400">This history only includes entries you own or that an owner explicitly shared with you.</p></div>
+				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-slate-400">This history only includes entries you own or that an owner explicitly shared with you.</p></div>
 			{:else}
 				<div class="mt-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
 					<div class="overflow-x-auto">

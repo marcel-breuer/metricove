@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -189,7 +190,7 @@
 </script>
 
 <svelte:head>
-	<title>Modules · Metricove</title>
+	<title>{$t("Modules")} · Metricove</title>
 	<meta name="description" content="Enable optional Metricove modules for this household." />
 </svelte:head>
 
@@ -207,7 +208,7 @@
 		<section class="mt-10" aria-labelledby="module-list-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
-					<h2 id="module-list-heading" class="text-xl font-semibold">Available modules</h2>
+					<h2 id="module-list-heading" class="text-xl font-semibold">{$t("Available modules")}</h2>
 					<p class="mt-1 text-sm text-slate-400">{modules.filter((module) => module.enabled && !module.always_enabled).length} optional module(s) enabled</p>
 				</div>
 				<div class="flex flex-wrap gap-2">

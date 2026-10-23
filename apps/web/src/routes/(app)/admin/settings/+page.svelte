@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError } from '#lib/auth';
 	import Button from '#lib/ui/Button.svelte';
@@ -85,7 +86,7 @@
 </script>
 
 <svelte:head>
-	<title>General settings · Metricove</title>
+	<title>{$t("General settings")} · Metricove</title>
 	<meta name="description" content="Configure household-wide Metricove settings." />
 </svelte:head>
 

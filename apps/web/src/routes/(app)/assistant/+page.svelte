@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
 	import { csrfToken } from '#lib/auth';
@@ -190,14 +191,14 @@
 </script>
 
 <svelte:head>
-	<title>AI Assistant · Metricove</title>
+	<title>{$t("AI Assistant")} · Metricove</title>
 	<meta name="description" content="Ask read-only questions about data you are allowed to see." />
 </svelte:head>
 
 <section class="mx-auto max-w-4xl space-y-6">
 	<header>
 		<p class="text-sm font-medium text-cyan-200">Metricove Assistant</p>
-		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Ask your household assistant.</h1>
+		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Ask your household assistant.")}</h1>
 		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools.</p>
 	</header>
 
@@ -207,7 +208,7 @@
 		<section aria-labelledby="provider-title" class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div>
-					<h2 id="provider-title" class="text-base font-semibold text-white">Provider</h2>
+					<h2 id="provider-title" class="text-base font-semibold text-white">{$t("Provider")}</h2>
 					<p class="mt-1 text-sm text-slate-300">{status.provider}</p>
 				</div>
 				<span class="rounded-full border px-3 py-1 text-xs font-semibold {status.available ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}">{status.available ? 'Configured' : 'Not configured'}</span>
@@ -248,7 +249,7 @@
 
 		<section aria-labelledby="context-title" class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-7">
 			<div class="flex flex-wrap items-start justify-between gap-4">
-				<div><h2 id="context-title" class="text-xl font-semibold text-white">Saved context</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.</p></div>
+				<div><h2 id="context-title" class="text-xl font-semibold text-white">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.</p></div>
 				<label class="inline-flex items-center gap-3 text-sm text-slate-200"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-cyan-300" />Use saved context</label>
 			</div>
 			<form onsubmit={(event) => void saveContext(event)} class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -277,7 +278,7 @@
 	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{error}</p>{/if}
 	{#if answer}
 		<section aria-labelledby="assistant-answer-title" class="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-5 sm:p-7">
-			<h2 id="assistant-answer-title" class="text-base font-semibold text-cyan-100">Answer</h2>
+			<h2 id="assistant-answer-title" class="text-base font-semibold text-cyan-100">{$t("Answer")}</h2>
 			<p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-200">{answer}</p>
 		</section>
 	{/if}

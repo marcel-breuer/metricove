@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate, formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
@@ -237,7 +238,7 @@
 </script>
 
 <svelte:head>
-	<title>Pantry · Metricove</title>
+	<title>{$t("Pantry")} · Metricove</title>
 	<meta name="description" content="Track food stock, storage, quantities and best-before dates." />
 </svelte:head>
 
@@ -245,7 +246,7 @@
 	<header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">Food · Stock</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Pantry</h1>
+			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Pantry")}</h1>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Keep quantities and best-before dates together. Each stock change is recorded with its own unit and history.</p>
 		</div>
 		{#if canAdd}
@@ -333,7 +334,7 @@
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 				<div>
 					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Inventory</p>
-					<h2 id="stock-list-title" class="mt-1 text-xl font-semibold text-white">Your stock</h2>
+					<h2 id="stock-list-title" class="mt-1 text-xl font-semibold text-white">{$t("Your stock")}</h2>
 				</div>
 				<div class="flex flex-wrap gap-2" role="group" aria-label="Filter pantry items by best-before date">
 					{#each expiryFilters as option}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -82,13 +83,13 @@
 </script>
 
 <svelte:head>
-	<title>Utilities · Metricove</title>
+	<title>{$t("Utilities")} · Metricove</title>
 	<meta name="description" content="Record household electricity, gas and water meter readings." />
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
 	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Utilities module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Know what your meters use.</h1></div>
+		<div><p class="text-sm font-medium tracking-wide text-cyan-200">Utilities module</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Know what your meters use.")}</h1></div>
 		<p class="max-w-xl text-sm leading-6 text-slate-400">Keep dated electricity, gas and water readings together. Metricove derives interval usage from the cumulative register and highlights unusually large jumps.</p>
 	</div>
 	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{message}</p>{/if}
@@ -96,11 +97,11 @@
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="meters-heading">
-			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-slate-100">Meters</h2><p class="mt-1 text-sm text-slate-400">Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button></div>
+			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-slate-100">{$t("Meters")}</h2><p class="mt-1 text-sm text-slate-400">Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">Refresh</button></div>
 			{#if loading}
 				<p role="status" class="mt-5 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-5 text-sm text-slate-300">Loading meters…</p>
 			{:else if meters.length === 0}
-				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">No meters yet.</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add a private meter for your own records, or ask an active administrator to create one shared across the household.</p></div>
+				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No meters yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Add a private meter for your own records, or ask an active administrator to create one shared across the household.</p></div>
 			{:else}
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
@@ -118,7 +119,7 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-meter-heading">
-			<p class="text-sm font-medium text-cyan-200">Meter setup</p><h2 id="new-meter-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">Add a meter.</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.</p>
+			<p class="text-sm font-medium text-cyan-200">Meter setup</p><h2 id="new-meter-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Add a meter.")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.</p>
 			<form class="mt-7 grid gap-4 sm:grid-cols-2" onsubmit={createMeter}>
 				<label class="block text-sm font-medium text-slate-200">Meter name<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="Main electricity" /></label>
 				<label class="block text-sm font-medium text-slate-200">Meter type<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#each utilityMeterTypes as type}<option value={type.value}>{type.label} · {type.unit}</option>{/each}</select></label>

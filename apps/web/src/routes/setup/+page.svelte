@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import AuthShell from '#lib/ui/AuthShell.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -99,7 +100,7 @@
 </script>
 
 <svelte:head>
-	<title>Set up your household · Metricove</title>
+	<title>{$t("Set up your household")} · Metricove</title>
 	<meta name="description" content="Create the first administrator for this Metricove household." />
 </svelte:head>
 
@@ -112,7 +113,7 @@
 	{#if state === 'loading'}
 		<p class="setup-status" role="status">Checking household setup…</p>
 	{:else if state === 'available'}
-		<h2 id="setup-form-heading" class="setup-state-title">Create your administrator account</h2>
+		<h2 id="setup-form-heading" class="setup-state-title">{$t("Create your administrator account")}</h2>
 		<form class="setup-form" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
 			<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
 			<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
@@ -142,7 +143,7 @@
 	{:else if state === 'complete'}
 		<div class="setup-state" role="status">
 			<p class="setup-state-kicker">Setup is complete</p>
-			<h2 class="setup-state-title">This household is already set up.</h2>
+			<h2 class="setup-state-title">{$t("This household is already set up.")}</h2>
 			<p class="setup-state-description">Initial registration is closed for this installation.</p>
 			<a href="/login" class="ui-button ui-button--secondary ui-button--medium setup-action">
 				Go to sign in
