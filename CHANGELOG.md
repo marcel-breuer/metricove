@@ -2,6 +2,21 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.7.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.6.0...metricove-v0.7.0) (2026-10-24)
+
+
+### Features
+
+* **recipes:** import recipes from URLs and PDFs ([feaf3e6](https://github.com/marcel-breuer/metricove/commit/feaf3e67843197b6242205792ef3dbb005356f01)), closes [#132](https://github.com/marcel-breuer/metricove/issues/132)
+* **recipes:** import recipes from URLs and PDFs ([d1923bf](https://github.com/marcel-breuer/metricove/commit/d1923bf9a5573800219ac2bda9ff0c9d5c24ab6c))
+
+
+### Bug Fixes
+
+* **recipes:** satisfy static analysis for recipe import ([9dbee09](https://github.com/marcel-breuer/metricove/commit/9dbee09f909f3ae662e2b19782fcc72ca4c68718))
+* **web:** translate recipe import workflow ([dce17bf](https://github.com/marcel-breuer/metricove/commit/dce17bf1012acc866527856b267de33d7c20d134)), closes [#134](https://github.com/marcel-breuer/metricove/issues/134)
+* **web:** translate recipe import workflow ([db3f6ed](https://github.com/marcel-breuer/metricove/commit/db3f6ed08cdcb904de137a2259e04e4e022a889a))
+
 ## [0.6.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.5.0...metricove-v0.6.0) (2026-10-24)
 
 
