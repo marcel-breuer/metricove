@@ -179,6 +179,25 @@ class TrackerSchemaService
         }, 5);
     }
 
+    public function delete(User $actor, int $trackerId): void
+    {
+        DB::transaction(function () use ($actor, $trackerId): void {
+            $definition = TrackerDefinition::query()
+                ->whereKey($trackerId)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $this->access->authorize($actor, 'tracking', ModuleCapability::Manage, $definition);
+
+            $definition->entries()->lockForUpdate()->chunkById(100, function ($entries): void {
+                foreach ($entries as $entry) {
+                    $entry->delete();
+                }
+            });
+
+            $definition->delete();
+        }, 5);
+    }
+
     public function findVisible(User $actor, int $trackerId, ModuleCapability $capability): TrackerDefinition
     {
         $definition = $this->visibleDefinitions($actor, $capability)

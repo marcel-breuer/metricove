@@ -243,7 +243,7 @@ class UtilityService
                 'new_value' => $value,
                 'old_note' => $reading->note,
                 'new_note' => $note,
-                'reason' => trim($data['reason']),
+                'reason' => $this->nullableTrim($data['reason'] ?? null),
             ]);
 
             $reading->forceFill(['reading_date' => $date, 'value' => $value, 'note' => $note])->save();

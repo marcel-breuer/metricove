@@ -15,6 +15,7 @@
 	let trackers = $state<Tracker[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
+	let deletingTrackerId = $state<number | null>(null);
 	let error = $state('');
 	let message = $state('');
 	let visibility = $state<'private' | 'household'>('private');
@@ -129,6 +130,30 @@
 			saving = false;
 		}
 	}
+
+	async function deleteTracker(tracker: Tracker): Promise<void> {
+		if (!tracker.can_manage_schema || !window.confirm(`Delete “${tracker.name}” and all its measurements?`)) return;
+		const token = csrfToken();
+		if (!token) { error = 'Reload this page and try again.'; return; }
+		deletingTrackerId = tracker.id;
+		message = '';
+		error = '';
+		try {
+			const response = await fetch('/api/tracking/trackers/' + tracker.id, {
+				method: 'DELETE', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }
+			});
+			const result = (await response.json()) as ApiResponse;
+			if (response.status === 401) { await goto('/login'); return; }
+			if (!response.ok) { error = result.message ?? 'The tracker could not be deleted.'; return; }
+			message = 'Tracker deleted.';
+			await loadTrackers();
+		} catch {
+			error = 'The tracker could not be deleted. Check your connection and try again.';
+		} finally {
+			deletingTrackerId = null;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -164,8 +189,8 @@
 			{:else}
 				<ul class="mt-5 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/50">
 					{#each trackers as tracker (tracker.id)}
-						<li>
-							<a href={'/modules/tracking/' + tracker.id} class="group flex min-h-24 flex-col gap-4 p-4 transition hover:bg-slate-900 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-cyan-300 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+							<a href={'/modules/tracking/' + tracker.id} class="group flex min-h-16 min-w-0 flex-1 flex-col gap-4 transition hover:bg-slate-900 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-cyan-300 sm:flex-row sm:items-center sm:justify-between">
 								<span class="min-w-0">
 									<span class="flex flex-wrap items-center gap-2">
 										<span class="font-semibold text-slate-100">{tracker.name}</span>
@@ -176,6 +201,7 @@
 								</span>
 								<span class="inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">{$t("Open history")} <span aria-hidden="true">→</span></span>
 							</a>
+							{#if tracker.can_manage_schema}<button type="button" disabled={deletingTrackerId === tracker.id} onclick={() => void deleteTracker(tracker)} class="min-h-10 shrink-0 rounded-lg border border-rose-300/20 px-3 text-sm font-medium text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</button>{/if}
 						</li>
 					{/each}
 				</ul>

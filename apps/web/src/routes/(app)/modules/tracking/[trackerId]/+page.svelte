@@ -26,9 +26,13 @@
 	let tracker = $state<Tracker | null>(null);
 	let revisions = $state<TrackerRevision[]>([]);
 	let entries = $state<TrackerEntry[]>([]);
+	let hasMoreEntries = $state(false);
 	let loading = $state(true);
+	let loadingMoreEntries = $state(false);
 	let savingEntry = $state(false);
 	let savingSchema = $state(false);
+	let deletingEntryId = $state<number | null>(null);
+	let deletingTracker = $state(false);
 	let editingEntryId = $state<number | null>(null);
 	let schemaOpen = $state(false);
 	let error = $state('');
@@ -71,7 +75,7 @@
 			tracker = result.tracker;
 			revisions = result.schema_revisions ?? [];
 
-			const historyResponse = await fetch('/api/tracking/trackers/' + trackerId + '/entries', {
+			const historyResponse = await fetch('/api/tracking/trackers/' + trackerId + '/entries?limit=30', {
 				credentials: 'same-origin',
 				headers: { Accept: 'application/json' }
 			});
@@ -82,10 +86,38 @@
 			const history = (await historyResponse.json()) as TrackerResponse;
 			if (!historyResponse.ok) throw new Error(history.message ?? 'Measurement history is unavailable.');
 			entries = history.entries ?? [];
+			hasMoreEntries = history.has_more ?? false;
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'Tracker details could not be loaded. Check your connection and try again.';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadMoreEntries(): Promise<void> {
+		const lastEntry = entries[entries.length - 1];
+		if (!lastEntry || !hasMoreEntries || loadingMoreEntries) return;
+		loadingMoreEntries = true;
+		error = '';
+		try {
+			const cursor = new URLSearchParams({
+				limit: '30',
+				before_recorded_at: lastEntry.recorded_at,
+				before_id: String(lastEntry.id)
+			});
+			const response = await fetch('/api/tracking/trackers/' + trackerId + '/entries?' + cursor.toString(), {
+				credentials: 'same-origin',
+				headers: { Accept: 'application/json' }
+			});
+			if (response.status === 401) { await goto('/login'); return; }
+			const result = (await response.json()) as TrackerResponse;
+			if (!response.ok) throw new Error(result.message ?? 'More measurements could not be loaded.');
+			entries = [...entries, ...(result.entries ?? [])];
+			hasMoreEntries = result.has_more ?? false;
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'More measurements could not be loaded. Check your connection and try again.';
+		} finally {
+			loadingMoreEntries = false;
 		}
 	}
 
@@ -169,6 +201,54 @@
 			error = 'The measurement could not be saved. Check your connection and try again.';
 		} finally {
 			savingEntry = false;
+		}
+	}
+
+	async function deleteEntry(entry: TrackerEntry): Promise<void> {
+		if (!entry.can_edit || !window.confirm('Delete this measurement?')) return;
+		const token = csrfToken();
+		if (!token) { error = 'Reload this page and try again.'; return; }
+		deletingEntryId = entry.id;
+		message = '';
+		error = '';
+		try {
+			const response = await fetch('/api/tracking/entries/' + entry.id, {
+				method: 'DELETE', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }
+			});
+			const result = (await response.json()) as ApiResponse;
+			if (response.status === 401) { await goto('/login'); return; }
+			if (!response.ok) { error = result.message ?? 'The measurement could not be deleted.'; return; }
+			if (editingEntryId === entry.id) clearEntryForm();
+			message = 'Measurement deleted.';
+			await loadTracker();
+		} catch {
+			error = 'The measurement could not be deleted. Check your connection and try again.';
+		} finally {
+			deletingEntryId = null;
+		}
+	}
+
+	async function deleteTracker(): Promise<void> {
+		if (!tracker?.can_manage_schema || !window.confirm(`Delete “${tracker.name}” and all its measurements?`)) return;
+		const token = csrfToken();
+		if (!token) { error = 'Reload this page and try again.'; return; }
+		deletingTracker = true;
+		message = '';
+		error = '';
+		try {
+			const response = await fetch('/api/tracking/trackers/' + tracker.id, {
+				method: 'DELETE', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }
+			});
+			const result = (await response.json()) as ApiResponse;
+			if (response.status === 401) { await goto('/login'); return; }
+			if (!response.ok) { error = result.message ?? 'The tracker could not be deleted.'; return; }
+			await goto('/modules/tracking');
+		} catch {
+			error = 'The tracker could not be deleted. Check your connection and try again.';
+		} finally {
+			deletingTracker = false;
 		}
 	}
 
@@ -325,7 +405,7 @@
 				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{tracker.description}</p>{/if}
 			</div>
 			{#if tracker.can_manage_schema}
-				<button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit schema")}</button>
+				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => void deleteTracker()} class="min-h-11 rounded-xl border border-rose-300/20 px-4 text-sm font-semibold text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
 			{/if}
 		</div>
 
@@ -441,14 +521,15 @@
 										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-slate-200 sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-slate-500">{$t("Schema v")}{entry.schema_version}</span></th>
 										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-slate-300 sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
 										<td class="max-w-xs px-4 py-4 text-slate-400 sm:px-5">{entry.note ?? '—'}</td>
-										<td class="px-4 py-4 text-right">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit")}</button>{/if}</td>
+										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => void deleteEntry(entry)} class="rounded-lg border border-rose-300/20 px-3 py-2 text-xs font-semibold text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
 									</tr>
 								{/each}
 							</tbody>
 						</table>
 					</div>
-					<p class="border-t border-slate-800 px-4 py-3 text-xs leading-5 text-slate-500">{$t("History is limited to the latest 100 entries. Values keep the field label and unit that were active when they were saved.")}</p>
+					<p class="border-t border-slate-800 px-4 py-3 text-xs leading-5 text-slate-500">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
 				</div>
+				{#if hasMoreEntries}<div class="mt-4 flex justify-center"><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
 			{/if}
 		</section>
 

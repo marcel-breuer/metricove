@@ -229,7 +229,7 @@ class VehicleService
                 'new_value' => $value,
                 'old_note' => $reading->note,
                 'new_note' => $note,
-                'reason' => trim($data['reason']),
+                'reason' => $this->nullableTrim($data['reason'] ?? null),
             ]);
             $reading->forceFill(['reading_date' => $data['reading_date'], 'value' => $value, 'note' => $note])->save();
 

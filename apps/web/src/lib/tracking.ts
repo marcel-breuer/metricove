@@ -81,6 +81,7 @@ export type TrackerResponse = {
 	tracker?: Tracker;
 	trackers?: Tracker[];
 	entries?: TrackerEntry[];
+	has_more?: boolean;
 	schema_revisions?: TrackerRevision[];
 	errors?: Record<string, string[]>;
 };

@@ -52,7 +52,7 @@ class TrackingSnapshotTool implements AssistantTool
         $trackers = [];
 
         foreach (array_slice($allTrackers, 0, 8) as $tracker) {
-            $entries = array_slice($this->entries->history($actor, (int) $tracker['id']), -5);
+            $entries = $this->entries->history($actor, (int) $tracker['id'], limit: 5)['entries'];
             $fields = array_slice($tracker['fields'], 0, 12);
             $trackers[] = [
                 'name' => $tracker['name'],

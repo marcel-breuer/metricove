@@ -164,6 +164,7 @@ const german: Record<string, string> = {
 	'This meter could not be opened.': 'Dieser Zähler konnte nicht geöffnet werden.',
 	'You cannot open this tracker.': 'Du kannst diesen Tracker nicht öffnen.', 'Update tracker fields.': 'Tracker-Felder bearbeiten.',
 	'Edit measurement': 'Messung bearbeiten', 'Record a measurement': 'Messung erfassen', 'Measurement history': 'Messverlauf',
+	'Load more measurements': 'Weitere Messungen laden', 'Showing {count} measurements. Values keep the field label and unit that were active when they were saved.': 'Es werden {count} Messungen angezeigt. Werte behalten die Feldbezeichnung und Einheit, die beim Speichern galten.',
 	'Create your account': 'Konto erstellen', 'Reset your password': 'Setze dein Passwort zurück.',
 	'Choose a new password': 'Wähle ein neues Passwort', 'Set up your household': 'Richte deinen Haushalt ein',
 	'Create your administrator account': 'Erstelle dein Administratorkonto', 'Welcome,': 'Willkommen,',
