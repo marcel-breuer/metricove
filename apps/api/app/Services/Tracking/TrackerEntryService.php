@@ -25,20 +25,45 @@ class TrackerEntryService
         private readonly TrackerSchemaService $schemas,
     ) {}
 
-    /** @return list<array<string, mixed>> */
-    public function history(User $actor, int $trackerId): array
+    /** @return array{entries: list<array<string, mixed>>, has_more: bool} */
+    public function history(
+        User $actor,
+        int $trackerId,
+        int $limit = 30,
+        ?string $beforeRecordedAt = null,
+        ?int $beforeId = null,
+    ): array
     {
         $definition = $this->schemas->findVisible($actor, $trackerId, ModuleCapability::View);
         $this->access->authorize($actor, 'tracking', ModuleCapability::View, $definition);
 
-        return $this->visibleEntries($actor, $definition)
+        $query = $this->visibleEntries($actor, $definition);
+
+        if ($beforeRecordedAt !== null && $beforeId !== null) {
+            $cursorDate = CarbonImmutable::parse($beforeRecordedAt);
+            $query->where(function (Builder $cursor) use ($cursorDate, $beforeId): void {
+                $cursor->where('recorded_at', '<', $cursorDate)
+                    ->orWhere(function (Builder $sameTime) use ($cursorDate, $beforeId): void {
+                        $sameTime->where('recorded_at', $cursorDate)
+                            ->where('id', '<', $beforeId);
+                    });
+            });
+        }
+
+        $page = $query
             ->with(['values' => fn (HasMany $query) => $query->orderBy('id')])
             ->orderByDesc('recorded_at')
             ->orderByDesc('id')
-            ->limit(100)
-            ->get()
-            ->map(fn (TrackerEntry $entry): array => $this->present($actor, $entry))
-            ->all();
+            ->limit($limit + 1)
+            ->get();
+        $hasMore = $page->count() > $limit;
+
+        return [
+            'entries' => $page->take($limit)
+                ->map(fn (TrackerEntry $entry): array => $this->present($actor, $entry))
+                ->all(),
+            'has_more' => $hasMore,
+        ];
     }
 
     /** @param array<string, mixed> $data
@@ -118,6 +143,24 @@ class TrackerEntryService
             $this->writeValues($entry, $values, $fields);
 
             return $this->present($actor, $entry->fresh(['values']));
+        }, 5);
+    }
+
+    public function delete(User $actor, int $entryId): void
+    {
+        DB::transaction(function () use ($actor, $entryId): void {
+            $entry = TrackerEntry::query()
+                ->whereKey($entryId)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $definition = TrackerDefinition::query()
+                ->whereKey($entry->tracker_definition_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->access->authorize($actor, 'tracking', ModuleCapability::Edit, $entry);
+            $this->access->authorize($actor, 'tracking', ModuleCapability::Edit, $definition);
+            $entry->delete();
         }, 5);
     }
 

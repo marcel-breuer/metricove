@@ -43,9 +43,28 @@ class TrackingController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, int $tracker, TrackerSchemaService $trackers): JsonResponse
+    {
+        $trackers->delete($this->actor($request), $tracker);
+
+        return response()->json(['message' => 'Tracker deleted.']);
+    }
+
     public function entries(Request $request, int $tracker, TrackerEntryService $entries): JsonResponse
     {
-        return response()->json(['entries' => $entries->history($this->actor($request), $tracker)]);
+        $filters = $request->validate([
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'before_recorded_at' => ['required_with:before_id', 'date'],
+            'before_id' => ['required_with:before_recorded_at', 'integer', 'min:1'],
+        ]);
+
+        return response()->json($entries->history(
+            $this->actor($request),
+            $tracker,
+            (int) ($filters['limit'] ?? 30),
+            isset($filters['before_recorded_at']) ? (string) $filters['before_recorded_at'] : null,
+            isset($filters['before_id']) ? (int) $filters['before_id'] : null,
+        ));
     }
 
     public function storeEntry(
@@ -68,6 +87,13 @@ class TrackingController extends Controller
             'message' => 'Tracker entry updated.',
             'entry' => $entries->update($this->actor($request), $entry, $request->validated()),
         ]);
+    }
+
+    public function destroyEntry(Request $request, int $entry, TrackerEntryService $entries): JsonResponse
+    {
+        $entries->delete($this->actor($request), $entry);
+
+        return response()->json(['message' => 'Tracker entry deleted.']);
     }
 
     private function actor(Request $request): User

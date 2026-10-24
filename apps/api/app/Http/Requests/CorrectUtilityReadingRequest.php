@@ -19,7 +19,7 @@ class CorrectUtilityReadingRequest extends FormRequest
             'reading_date' => ['required', 'date_format:Y-m-d'],
             'value' => ['required'],
             'note' => ['present', 'nullable', 'string', 'max:2000'],
-            'reason' => ['required', 'string', 'min:10', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 

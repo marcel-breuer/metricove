@@ -95,6 +95,10 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:tracking,manage')
                 ->whereNumber('tracker')
                 ->name('trackers.update');
+            Route::delete('/trackers/{tracker}', [TrackingController::class, 'destroy'])
+                ->middleware('module.access:tracking,manage')
+                ->whereNumber('tracker')
+                ->name('trackers.destroy');
             Route::get('/trackers/{tracker}/entries', [TrackingController::class, 'entries'])
                 ->middleware('module.access:tracking,view')
                 ->whereNumber('tracker')
@@ -107,6 +111,10 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:tracking,edit')
                 ->whereNumber('entry')
                 ->name('entries.update');
+            Route::delete('/entries/{entry}', [TrackingController::class, 'destroyEntry'])
+                ->middleware('module.access:tracking,edit')
+                ->whereNumber('entry')
+                ->name('entries.destroy');
         });
 
         Route::prefix('utilities')->name('utilities.')->group(function (): void {

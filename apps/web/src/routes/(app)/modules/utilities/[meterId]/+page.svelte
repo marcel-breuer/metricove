@@ -181,7 +181,7 @@
 			const response = await fetch(`/api/utilities/readings/${editingReadingId}`, {
 				method: 'PATCH', credentials: 'same-origin',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify({ reading_date: correctionDate, value: correctionValue, note: correctionNote, reason: correctionReason })
+				body: JSON.stringify({ reading_date: correctionDate, value: correctionValue, note: correctionNote, reason: correctionReason || null })
 			});
 			const result = (await response.json()) as UtilitiesResponse & ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }
@@ -292,12 +292,12 @@
 									<label class="block text-sm font-medium text-slate-200">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 									<label class="block text-sm font-medium text-slate-200">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 									<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Note")}<textarea bind:value={correctionNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
-									<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Reason for correction")}<input bind:value={correctionReason} required minlength="10" maxlength="500" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Explain why the original reading changed")} /></label>
+									<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Explain why the original reading changed")} /></label>
 									<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; }} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-medium text-slate-300 hover:border-slate-500">{$t("Cancel")}</button></div>
 								</form>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
-								<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p><p class="mt-1 text-slate-400">{revision.reason}</p><time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
+							<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-slate-400">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
 							{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-slate-500">{$t("Loading correction history…")}</p>{/if}
 						</li>
 					{/each}

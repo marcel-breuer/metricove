@@ -37,7 +37,7 @@ export type UtilityReadingRevision = {
 	new_value: string;
 	old_note: string | null;
 	new_note: string | null;
-	reason: string;
+	reason: string | null;
 	changed_at: string;
 };
 
