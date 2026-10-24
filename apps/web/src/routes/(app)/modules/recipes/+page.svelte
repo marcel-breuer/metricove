@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
@@ -39,6 +40,13 @@
 	let deleteTarget = $state<number | null>(null);
 	let formOpen = $state(false);
 	let deleteOpen = $state(false);
+	let importOpen = $state(false);
+	let importType = $state<'url' | 'pdf'>('url');
+	let importUrl = $state('');
+	let importFile = $state<File | null>(null);
+	let importBusy = $state(false);
+	let importError = $state('');
+	let importNotice = $state('');
 	const categories = $derived([...new Set(recipes.map((recipe) => recipe.category).filter((value): value is string => Boolean(value)))].sort());
 	const visibleRecipes = $derived(recipes.filter((recipe) => {
 		const matchesSearch = `${recipe.title} ${recipe.category ?? ''} ${recipe.ingredients.map((item) => item.name).join(' ')}`
@@ -51,7 +59,7 @@
 		if (!shell.loading) void loadRecipes();
 	});
 
-	async function api<T extends RecipeResponse>(path: string, method = 'GET', body?: object | FormData): Promise<T> {
+	async function api<T extends object>(path: string, method = 'GET', body?: object | FormData): Promise<T> {
 		const headers: Record<string, string> = { Accept: 'application/json' };
 		if (method !== 'GET') {
 			const token = csrfToken();
@@ -92,6 +100,70 @@
 		}
 	}
 
+	async function importRecipe(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		importBusy = true;
+		importError = '';
+		const body = new FormData();
+		const importVisibility = visibility;
+		body.set('visibility', visibility);
+		if (importType === 'url') body.set('source_url', importUrl.trim());
+		else if (importFile) body.set('file', importFile);
+		try {
+			const preview = await api<{ recipe: { title: string; category: string; servings: number; preparation_minutes: number | null; ingredients: string[]; instructions: string[] }; warnings: string[] }>('/api/recipes/import-preview', 'POST', body);
+			const parsedIngredients = preview.recipe.ingredients.slice(0, 100).map(parseImportedIngredient);
+			resetForm();
+			visibility = importVisibility;
+			title = preview.recipe.title;
+			category = preview.recipe.category;
+			servings = String(preview.recipe.servings || 2);
+			preparationMinutes = preview.recipe.preparation_minutes === null ? '' : String(preview.recipe.preparation_minutes);
+			instructions = preview.recipe.instructions.join('\n');
+			ingredients = parsedIngredients.length > 0
+				? parsedIngredients
+				: [{ name: '', quantity: '', unit: '', note: '' }];
+			importNotice = [
+				...preview.warnings,
+				...(parsedIngredients.some((item) => !item.quantity || !item.unit) ? ['Check imported ingredient quantities and units before saving.'] : [])
+			].join(' ');
+			importUrl = '';
+			importFile = null;
+			importOpen = false;
+			await tick();
+			formOpen = true;
+		} catch (cause) {
+			importError = cause instanceof Error ? cause.message : 'The recipe could not be imported.';
+		} finally {
+			importBusy = false;
+		}
+	}
+
+	function parseImportedIngredient(raw: string): RecipeIngredientInput {
+		const fractionValues: Record<string, string> = { '¼': '0.25', '½': '0.5', '¾': '0.75', '⅓': '0.3333', '⅔': '0.6667' };
+		const match = raw.trim().match(/^(?:(\d+\s+)?(\d+\s*\/\s*\d+|\d+(?:[.,]\d+)?|[¼½¾⅓⅔]))\s*(.*)$/u);
+		if (!match) return { name: raw.trim(), quantity: '', unit: '', note: '' };
+		let quantity = match[2].replace(/\s/g, '');
+		if (fractionValues[quantity]) quantity = fractionValues[quantity];
+		else if (quantity.includes('/')) {
+			const [numerator, denominator] = quantity.split('/').map(Number);
+			quantity = denominator > 0 ? String(Number((numerator / denominator).toFixed(4))) : '';
+		} else quantity = quantity.replace(',', '.');
+		if (match[1]) quantity = String(Number(match[1]) + Number(quantity));
+		const tail = match[3].trim();
+		const unitMatch = tail.match(/^(tsp|teaspoons?|tbsp|tablespoons?|cups?|ml|l|liters?|litres?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|pinches?|cloves?)\b\s*(.*)$/i);
+		return { name: unitMatch?.[2]?.trim() || tail, quantity, unit: unitMatch?.[1] ?? '', note: '' };
+	}
+
+	function chooseImportFile(event: Event): void {
+		importFile = (event.currentTarget as HTMLInputElement).files?.[0] ?? null;
+	}
+
+	function openImport(): void {
+		importError = '';
+		if (!formVisibilityOptions.includes(visibility)) visibility = canCreate ? 'private' : 'household';
+		importOpen = true;
+	}
+
 	function resetForm(): void {
 		formOpen = false;
 		recipeId = null;
@@ -106,6 +178,7 @@
 		existingPhoto = null;
 		removePhoto = false;
 		formError = '';
+		importNotice = '';
 	}
 
 	function editRecipe(recipe: Recipe): void {
@@ -214,7 +287,7 @@
 		</div>
 		<div class="flex items-center gap-3 text-sm text-slate-400">
 			<span class="rounded-full border border-slate-700 px-3 py-1.5">{recipes.length} {$t(recipes.length === 1 ? 'recipe' : 'recipes')}</span>
-			{#if canAddRecipe}<button type="button" onclick={() => { resetForm(); formOpen = true; }} class="inline-flex min-h-11 items-center rounded-xl bg-cyan-300 px-4 font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Add a recipe")}</button>{/if}
+			{#if canAddRecipe}<button type="button" onclick={openImport} class="inline-flex min-h-11 items-center rounded-xl border border-slate-700 px-4 font-semibold text-slate-100 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Import recipe")}</button><button type="button" onclick={() => { resetForm(); formOpen = true; }} class="inline-flex min-h-11 items-center rounded-xl bg-cyan-300 px-4 font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Add a recipe")}</button>{/if}
 		</div>
 	</header>
 
@@ -274,11 +347,20 @@
 		</section>
 
 		{#if canAddRecipe}
-			<div class="flex justify-end"><button type="button" onclick={() => { resetForm(); formOpen = true; }} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Add a recipe')}</button></div>
+			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
+				<div class="mb-4 grid grid-cols-2 gap-2"><button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'url' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('Web link')}</button><button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'pdf' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('PDF file')}</button></div>
+				<form onsubmit={importRecipe} class="space-y-4">
+					{#if importType === 'url'}<label class="block text-sm font-medium text-slate-200">{$t('Recipe page URL')}<input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{:else}<label class="block text-sm font-medium text-slate-200">{$t('Recipe PDF')}<input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5" /><span class="mt-1 block text-xs text-slate-500">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>{/if}
+					<label class="block text-sm font-medium text-slate-200">{$t('Save as')}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
+					{#if importError}<p role="alert" class="text-sm text-rose-200">{$t(importError)}</p>{/if}
+					<button type="submit" disabled={importBusy || (importType === 'pdf' && !importFile)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</button>
+				</form>
+			</Modal>
 			<Modal bind:open={formOpen} title={$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}>
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
 				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
 				{#if formError}<p role="alert" class="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-sm text-rose-200">{$t(formError)}</p>{/if}
+				{#if importNotice}<p role="status" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2.5 text-sm text-amber-100">{$t(importNotice)}</p>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
 					<label class="block text-sm font-medium text-slate-200">{$t("Title")}<input id="recipe-title" bind:value={title} required maxlength="180" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Category")} <span class="text-xs font-normal text-slate-500">optional</span><input bind:value={category} maxlength="80" placeholder={$t("Dinner")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label><label class="block text-sm font-medium text-slate-200">{$t("Servings")}<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label></div>

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PreviewRecipeImportRequest;
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 use App\Models\User;
+use App\Services\Recipes\RecipeImportService;
 use App\Services\Recipes\RecipeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +15,20 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RecipesController extends Controller
 {
+    public function importPreview(PreviewRecipeImportRequest $request, RecipeImportService $imports): JsonResponse
+    {
+        $actor = $this->actor($request);
+        $data = $request->validated();
+        $preview = $imports->preview(
+            $actor,
+            $data['visibility'],
+            $data['source_url'] ?? null,
+            $request->file('file'),
+        );
+
+        return response()->json($preview);
+    }
+
     public function index(Request $request, RecipeService $recipes): JsonResponse
     {
         return response()->json(['recipes' => $recipes->index($this->actor($request))]);
