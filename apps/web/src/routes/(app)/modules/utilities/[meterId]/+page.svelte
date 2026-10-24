@@ -6,6 +6,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type { UtilityMeter, UtilityReading, UtilityReadingRevision, UtilitiesResponse } from '#lib/utilities';
 
@@ -41,6 +42,9 @@
 	let correctionReason = $state('');
 	let revisionsByReading = $state<Record<number, UtilityReadingRevision[]>>({});
 	let revisionsLoading = $state<number | null>(null);
+	let meterModalOpen = $state(false);
+	let readingModalOpen = $state(false);
+	let correctionModalOpen = $state(false);
 
 	const chartData = $derived(readings.filter((reading) => reading.consumption_since_previous !== null).slice(-12));
 	const chartMaximum = $derived(Math.max(1, ...chartData.map((reading) => Number(reading.consumption_since_previous ?? 0))));
@@ -69,6 +73,7 @@
 			const result = (await response.json()) as UtilitiesResponse;
 			if (!response.ok || !result.meter) throw new Error(result.message ?? 'This meter is unavailable or you do not have access.');
 			meter = result.meter;
+			meterModalOpen = false;
 			readings = result.readings ?? [];
 			meterName = meter.name;
 			alertThreshold = meter.alert_threshold ?? '';
@@ -100,6 +105,7 @@
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok) { error = firstError(result) || result.message || 'The reading could not be saved.'; return; }
 			readingValue = ''; readingNote = ''; readingPhoto = null; readingDate = localDate();
+			readingModalOpen = false;
 			message = 'Meter reading saved.';
 			await loadMeter();
 		} catch {
@@ -162,6 +168,7 @@
 	}
 
 	function beginCorrection(reading: UtilityReading): void {
+		correctionModalOpen = true;
 		editingReadingId = reading.id;
 		correctionDate = reading.reading_date;
 		correctionValue = reading.value;
@@ -187,6 +194,7 @@
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok) { error = firstError(result) || result.message || 'The correction could not be saved.'; return; }
 			editingReadingId = null;
+			correctionModalOpen = false;
 			message = 'Correction saved. Usage intervals were recalculated.';
 			await loadMeter();
 		} catch { error = 'The correction could not be saved. Check your connection and try again.'; }
@@ -227,11 +235,14 @@
 		{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
 
 		{#if canManage}
+			<button type="button" onclick={() => (meterModalOpen = true)} class="mt-6 min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-semibold text-slate-200">{$t('Edit meter settings')}</button>
+			<Modal bind:open={meterModalOpen} title={$t('Edit meter settings')}>
 			<form class="mt-6 grid gap-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
 				<label class="block text-sm font-medium text-slate-200">{$t("Meter name")}<input bind:value={meterName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Interval alert threshold")} <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("No alert")} /></label>
 				<button type="submit" disabled={saving} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save settings')}</button>
 			</form>
+			</Modal>
 		{/if}
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-7" aria-labelledby="trend-heading">
@@ -256,6 +267,8 @@
 			{#if canCreate}
 				<section class="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-7" aria-labelledby="add-reading-heading">
 					<p class="text-sm font-medium text-cyan-200">{$t("New reading")}</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Record the register.")}</h2><p class="mt-2 text-sm leading-6 text-slate-400">{$t("A reading can be added out of order when its value fits between the neighboring readings.")}</p>
+					<button type="button" onclick={() => (readingModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Record reading')}</button>
+					<Modal bind:open={readingModalOpen} title={$t('Record the register.')}>
 					<form class="mt-5 space-y-4" onsubmit={saveReading}>
 						<label class="block text-sm font-medium text-slate-200">{$t("Reading date")}<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Cumulative value")} <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={readingValue} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="1234.567" /></label>
@@ -266,6 +279,7 @@
 						{/if}
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</button>
 					</form>
+					</Modal>
 				</section>
 			{/if}
 
@@ -288,13 +302,15 @@
 								{#if reading.revision_count > 0}<button type="button" onclick={() => void loadRevisions(reading.id)} class="rounded-lg px-2 py-1 text-sm font-medium text-slate-300 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{revisionsByReading[reading.id] ? (revisionsByReading[reading.id].length ? 'Hide correction history' : 'Correction history') : 'Correction history'}</button>{/if}
 							</div>
 							{#if editingReadingId === reading.id}
+								<Modal bind:open={correctionModalOpen} title={$t('Correct meter reading')}>
 								<form class="mt-4 grid gap-3 rounded-xl border border-cyan-300/20 bg-slate-950/60 p-4 sm:grid-cols-2" onsubmit={saveCorrection}>
 									<label class="block text-sm font-medium text-slate-200">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 									<label class="block text-sm font-medium text-slate-200">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 									<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Note")}<textarea bind:value={correctionNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
 									<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Explain why the original reading changed")} /></label>
-									<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; }} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-medium text-slate-300 hover:border-slate-500">{$t("Cancel")}</button></div>
+									<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; correctionModalOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-medium text-slate-300 hover:border-slate-500">{$t("Cancel")}</button></div>
 								</form>
+								</Modal>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
 							<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-slate-400">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>

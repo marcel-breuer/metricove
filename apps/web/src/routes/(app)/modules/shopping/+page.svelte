@@ -5,6 +5,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type {
 		MealSuggestionPreview,
@@ -44,6 +45,10 @@
 	let editingItemId = $state<number | null>(null);
 	let itemToRemove = $state<ShoppingItem | null>(null);
 	let removeModalOpen = $state(false);
+	let listModalOpen = $state(false);
+	let addItemModalOpen = $state(false);
+	let renameModalOpen = $state(false);
+	let editItemModalOpen = $state(false);
 	let editName = $state('');
 	let editQuantity = $state('');
 	let editUnit = $state('');
@@ -154,6 +159,7 @@
 			listName = '';
 			visibility = 'private';
 			message = 'Shopping list created.';
+			listModalOpen = false;
 			await loadLists(result.list?.id ?? null);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The shopping list could not be created.';
@@ -178,6 +184,7 @@
 			quickQuantity = '';
 			quickUnit = '';
 			message = 'Item added to the list.';
+			addItemModalOpen = false;
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The item could not be added.';
@@ -260,6 +267,7 @@
 	}
 
 	function startEdit(item: ShoppingItem): void {
+		editItemModalOpen = true;
 		editingItemId = item.id;
 		editName = item.name;
 		editQuantity = item.quantity ?? '';
@@ -280,6 +288,7 @@
 				unit: editUnit.trim() || null
 			});
 			editingItemId = null;
+			editItemModalOpen = false;
 			message = 'Shopping item updated.';
 			await refresh();
 		} catch (cause) {
@@ -327,6 +336,7 @@
 				name: activeList.name
 			});
 			message = 'Shopping list renamed.';
+			renameModalOpen = false;
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The list name could not be changed.';
@@ -463,6 +473,8 @@
 				</section>
 
 				{#if canCreateList}
+					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Create a list')}</button>
+					<Modal bind:open={listModalOpen} title={$t('Create a list')}>
 					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
 						<h2 class="text-sm font-semibold text-white">{$t("Create a list")}</h2>
 						<label class="block text-xs font-medium text-slate-400">{$t("List name")}
@@ -478,6 +490,7 @@
 						{/if}
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
 					</form>
+					</Modal>
 				{/if}
 			</aside>
 
@@ -490,6 +503,8 @@
 			{:else}
 				<section class="min-w-0 space-y-4">
 					{#if activeList.can_add_items}
+						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Add item')}</button>
+						<Modal bind:open={addItemModalOpen} title={$t('Add item')} description={activeList.name}>
 						<form onsubmit={addItem} class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-4 shadow-lg shadow-cyan-950/10 sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
@@ -512,6 +527,7 @@
 							</div>
 							<p class="mt-2 text-xs text-slate-500">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
 						</form>
+						</Modal>
 					{/if}
 
 					{#if activeList.can_add_items}
@@ -597,14 +613,11 @@
 									<option value="name">{$t("Name A–Z")}</option>
 								</select>
 								{#if activeList.can_edit}
-									<form onsubmit={renameList} class="flex gap-2">
-										<label class="sr-only" for="shopping-list-name">{$t("Rename list")}</label>
-										<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="min-h-10 w-32 rounded-lg border border-slate-700 bg-slate-950 px-2.5 text-xs text-slate-200 sm:w-40" />
-										<button type="submit" disabled={saving} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Rename")}</button>
-									</form>
+									<button type="button" onclick={() => (renameModalOpen = true)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Rename list")}</button>
 								{/if}
 							</div>
 						</header>
+						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-slate-200" for="shopping-list-name">{$t('List name')}<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label><button type="submit" disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Rename')}</button></form></Modal>{/if}
 
 						{#if listLoading}
 							<p class="p-6 text-sm text-slate-400">{$t("Loading items…")}</p>
@@ -631,7 +644,8 @@
 										{/if}
 									</li>
 									{#if editingItemId === item.id}
-										<li class="border-t border-slate-800 bg-slate-950/50 px-4 py-4 sm:px-5">
+										<li>
+											<Modal bind:open={editItemModalOpen} title={$t('Edit shopping item')} description={item.name}>
 											<form onsubmit={(event) => saveItem(event, item)} class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto_auto]">
 												<label class="text-xs font-medium text-slate-400">{$t("Item name")}
 													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
@@ -643,8 +657,9 @@
 													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 												</label>
 												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-xs font-semibold text-slate-950">{$t("Save")}</button>
-												<button type="button" onclick={() => (editingItemId = null)} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">{$t("Cancel")}</button>
+											<button type="button" onclick={() => { editingItemId = null; editItemModalOpen = false; }} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">{$t("Cancel")}</button>
 											</form>
+										</Modal>
 										</li>
 									{/if}
 								{/each}
