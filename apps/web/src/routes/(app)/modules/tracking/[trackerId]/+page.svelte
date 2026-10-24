@@ -6,6 +6,8 @@
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import {
 		newTrackerField,
@@ -33,6 +35,10 @@
 	let savingSchema = $state(false);
 	let deletingEntryId = $state<number | null>(null);
 	let deletingTracker = $state(false);
+	let deleteTargetEntry = $state<TrackerEntry | null>(null);
+	let deleteModalOpen = $state(false);
+	let deleteTrackerModalOpen = $state(false);
+	let entryModalOpen = $state(false);
 	let editingEntryId = $state<number | null>(null);
 	let schemaOpen = $state(false);
 	let error = $state('');
@@ -146,7 +152,7 @@
 			if (field.type === 'boolean') booleanValues[field.key] = value === true;
 			else entryValues[field.key] = value === null || value === undefined ? '' : String(value);
 		}
-		window.scrollTo({ top: 0, behavior: 'smooth' });
+		entryModalOpen = true;
 	}
 
 	async function saveEntry(event: SubmitEvent): Promise<void> {
@@ -196,6 +202,7 @@
 
 			message = updating ? 'Measurement updated.' : 'Measurement saved.';
 			clearEntryForm();
+			entryModalOpen = false;
 			await loadTracker();
 		} catch {
 			error = 'The measurement could not be saved. Check your connection and try again.';
@@ -205,7 +212,7 @@
 	}
 
 	async function deleteEntry(entry: TrackerEntry): Promise<void> {
-		if (!entry.can_edit || !window.confirm('Delete this measurement?')) return;
+		if (!entry.can_edit) return;
 		const token = csrfToken();
 		if (!token) { error = 'Reload this page and try again.'; return; }
 		deletingEntryId = entry.id;
@@ -221,6 +228,8 @@
 			if (!response.ok) { error = result.message ?? 'The measurement could not be deleted.'; return; }
 			if (editingEntryId === entry.id) clearEntryForm();
 			message = 'Measurement deleted.';
+			deleteTargetEntry = null;
+			deleteModalOpen = false;
 			await loadTracker();
 		} catch {
 			error = 'The measurement could not be deleted. Check your connection and try again.';
@@ -230,7 +239,7 @@
 	}
 
 	async function deleteTracker(): Promise<void> {
-		if (!tracker?.can_manage_schema || !window.confirm(`Delete “${tracker.name}” and all its measurements?`)) return;
+		if (!tracker?.can_manage_schema) return;
 		const token = csrfToken();
 		if (!token) { error = 'Reload this page and try again.'; return; }
 		deletingTracker = true;
@@ -244,6 +253,7 @@
 			const result = (await response.json()) as ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok) { error = result.message ?? 'The tracker could not be deleted.'; return; }
+			deleteModalOpen = false;
 			await goto('/modules/tracking');
 		} catch {
 			error = 'The tracker could not be deleted. Check your connection and try again.';
@@ -405,15 +415,15 @@
 				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{tracker.description}</p>{/if}
 			</div>
 			{#if tracker.can_manage_schema}
-				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => void deleteTracker()} class="min-h-11 rounded-xl border border-rose-300/20 px-4 text-sm font-semibold text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
+				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => (deleteTrackerModalOpen = true)} class="min-h-11 rounded-xl border border-rose-300/20 px-4 text-sm font-semibold text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
 			{/if}
 		</div>
 
 		{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
 		{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
 
-		{#if schemaOpen}
-			<section class="mt-7 rounded-2xl border border-cyan-300/20 bg-slate-900/70 p-5 sm:p-8" aria-labelledby="edit-schema-heading">
+		<Modal bind:open={schemaOpen} title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
+			<section class="rounded-2xl border border-cyan-300/20 bg-slate-900/70 p-5 sm:p-8" aria-labelledby="edit-schema-heading">
 				<div class="max-w-2xl">
 					<p class="text-sm font-medium text-cyan-200">{$t("Schema builder · new revision")}</p>
 					<h2 id="edit-schema-heading" class="mt-2 text-2xl font-semibold text-white">{$t("Update tracker fields.")}</h2>
@@ -445,13 +455,15 @@
 					</div>
 				</form>
 			</section>
-		{/if}
+		</Modal>
 
 		{#if canCreate}
-			<section class="mt-7 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-7" aria-labelledby="new-entry-heading">
+			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Record a measurement')}</button></div>
+			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
+			<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div><p class="text-sm font-medium text-cyan-200">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-slate-400">{$t("Your entries are private to your account by default.")}</p></div>
-					{#if editingEntryId}<button type="button" onclick={clearEntryForm} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm text-slate-300 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Cancel edit")}</button>{/if}
+					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm text-slate-300 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Cancel edit")}</button>{/if}
 				</div>
 				<form class="mt-5 space-y-5" onsubmit={saveEntry}>
 					<div class="grid gap-4 sm:grid-cols-2">
@@ -481,6 +493,7 @@
 					<div class="flex justify-end border-t border-slate-800 pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement'}</button></div>
 				</form>
 			</section>
+			</Modal>
 		{/if}
 
 		<section class="mt-8" aria-labelledby="history-heading">
@@ -521,7 +534,7 @@
 										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-slate-200 sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-slate-500">{$t("Schema v")}{entry.schema_version}</span></th>
 										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-slate-300 sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
 										<td class="max-w-xs px-4 py-4 text-slate-400 sm:px-5">{entry.note ?? '—'}</td>
-										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => void deleteEntry(entry)} class="rounded-lg border border-rose-300/20 px-3 py-2 text-xs font-semibold text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
+										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-rose-300/20 px-3 py-2 text-xs font-semibold text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
 									</tr>
 								{/each}
 							</tbody>
@@ -532,6 +545,8 @@
 				{#if hasMoreEntries}<div class="mt-4 flex justify-center"><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
 			{/if}
 		</section>
+		{#if deleteTargetEntry}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete measurement?')} message={$t('Delete this measurement?')} busy={deletingEntryId === deleteTargetEntry.id} onConfirm={() => void deleteEntry(deleteTargetEntry!)} />{/if}
+		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “') + tracker.name + $t('” and all its measurements?')} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
 			<details class="mt-7 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">

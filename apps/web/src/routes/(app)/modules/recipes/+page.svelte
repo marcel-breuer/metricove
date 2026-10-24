@@ -4,6 +4,8 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type { Recipe, RecipeIngredientInput, RecipeResponse, RecipeVisibility } from '#lib/recipes';
 
@@ -35,6 +37,8 @@
 	let existingPhoto = $state<string | null>(null);
 	let removePhoto = $state(false);
 	let deleteTarget = $state<number | null>(null);
+	let formOpen = $state(false);
+	let deleteOpen = $state(false);
 	const categories = $derived([...new Set(recipes.map((recipe) => recipe.category).filter((value): value is string => Boolean(value)))].sort());
 	const visibleRecipes = $derived(recipes.filter((recipe) => {
 		const matchesSearch = `${recipe.title} ${recipe.category ?? ''} ${recipe.ingredients.map((item) => item.name).join(' ')}`
@@ -89,6 +93,7 @@
 	}
 
 	function resetForm(): void {
+		formOpen = false;
 		recipeId = null;
 		title = '';
 		category = '';
@@ -104,6 +109,7 @@
 	}
 
 	function editRecipe(recipe: Recipe): void {
+		formOpen = true;
 		message = '';
 		formError = '';
 		recipeId = recipe.id;
@@ -122,7 +128,6 @@
 		photoFile = null;
 		existingPhoto = recipe.photo_url;
 		removePhoto = false;
-		window.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	function addIngredient(): void {
@@ -180,6 +185,7 @@
 		try {
 			await api<RecipeResponse>(`/api/recipes/${id}`, 'DELETE');
 			deleteTarget = null;
+			deleteOpen = false;
 			if (recipeId === id) resetForm();
 			message = 'Recipe deleted.';
 			await loadRecipes();
@@ -208,7 +214,7 @@
 		</div>
 		<div class="flex items-center gap-3 text-sm text-slate-400">
 			<span class="rounded-full border border-slate-700 px-3 py-1.5">{recipes.length} {$t(recipes.length === 1 ? 'recipe' : 'recipes')}</span>
-			{#if canAddRecipe}<a href="#recipe-form" class="inline-flex min-h-11 items-center rounded-xl bg-cyan-300 px-4 font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Add a recipe")}</a>{/if}
+			{#if canAddRecipe}<button type="button" onclick={() => { resetForm(); formOpen = true; }} class="inline-flex min-h-11 items-center rounded-xl bg-cyan-300 px-4 font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Add a recipe")}</button>{/if}
 		</div>
 	</header>
 
@@ -239,7 +245,7 @@
 				<div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center sm:p-12">
 					<p class="text-lg font-medium text-white">{$t(recipes.length === 0 ? 'Your recipe book is ready.' : 'No recipes match these filters.')}</p>
 					<p class="mt-2 text-sm leading-6 text-slate-400">{$t(recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning, pantry and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.')}</p>
-					{#if recipes.length === 0 && canAddRecipe}<button type="button" onclick={() => document.getElementById('recipe-title')?.focus()} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create the first recipe")}</button>{/if}
+					{#if recipes.length === 0 && canAddRecipe}<button type="button" onclick={() => { resetForm(); formOpen = true; }} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create the first recipe")}</button>{/if}
 				</div>
 			{:else}
 				<div class="grid gap-4 xl:grid-cols-2">
@@ -257,7 +263,7 @@
 								{#if recipe.can_edit}
 									<div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
 										<button type="button" onclick={() => editRecipe(recipe)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300/50 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200">{$t("Edit")}</button>
-										{#if deleteTarget === recipe.id}<span class="text-xs text-rose-200">{$t("Delete this recipe?")}</span><button type="button" onclick={() => void deleteRecipe(recipe.id)} class="min-h-10 rounded-lg bg-rose-400/15 px-3 text-sm font-semibold text-rose-200 hover:bg-rose-400/25">{$t("Confirm delete")}</button><button type="button" onclick={() => (deleteTarget = null)} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel")}</button>{:else}<button type="button" onclick={() => (deleteTarget = recipe.id)} class="min-h-10 px-3 text-sm text-slate-400 hover:text-rose-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t("Delete")}</button>{/if}
+											<button type="button" onclick={() => { deleteTarget = recipe.id; deleteOpen = true; }} class="min-h-10 px-3 text-sm text-slate-400 hover:text-rose-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t("Delete")}</button>
 									</div>
 								{/if}
 							</div>
@@ -268,7 +274,9 @@
 		</section>
 
 		{#if canAddRecipe}
-			<aside id="recipe-form" class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6 lg:sticky lg:top-6">
+			<div class="flex justify-end"><button type="button" onclick={() => { resetForm(); formOpen = true; }} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Add a recipe')}</button></div>
+			<Modal bind:open={formOpen} title={$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}>
+			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
 				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
 				{#if formError}<p role="alert" class="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-sm text-rose-200">{$t(formError)}</p>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
@@ -292,6 +300,8 @@
 					<div class="border-t border-slate-800 pt-4"><p class="text-xs leading-5 text-slate-500">{$t("Private recipes and photos remain hidden from administrators unless you grant access. Household recipes require an active admin with Recipes Manage.")}</p><div class="mt-4 flex gap-2"><button type="submit" disabled={saving} class="min-h-11 flex-1 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : recipeId === null ? 'Save recipe' : 'Save changes'}</button>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm text-slate-300 hover:border-slate-500">{$t("Cancel")}</button>{/if}</div></div>
 				</form>
 			</aside>
+			</Modal>
+			{#if deleteTarget !== null}<ConfirmModal bind:open={deleteOpen} title={$t('Delete recipe?')} message={$t('Delete this recipe?')} onConfirm={() => void deleteRecipe(deleteTarget!)} />{/if}
 		{:else if canView}
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-6 text-slate-400 lg:sticky lg:top-6">{$t("Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes.")}</aside>
 		{/if}

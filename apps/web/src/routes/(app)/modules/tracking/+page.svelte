@@ -4,6 +4,8 @@
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { newTrackerField, type Tracker, type TrackerFieldDraft, type TrackerResponse } from '#lib/tracking';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -16,6 +18,9 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let deletingTrackerId = $state<number | null>(null);
+	let trackerToDelete = $state<Tracker | null>(null);
+	let deleteModalOpen = $state(false);
+	let createOpen = $state(false);
 	let error = $state('');
 	let message = $state('');
 	let visibility = $state<'private' | 'household'>('private');
@@ -132,7 +137,7 @@
 	}
 
 	async function deleteTracker(tracker: Tracker): Promise<void> {
-		if (!tracker.can_manage_schema || !window.confirm(`Delete “${tracker.name}” and all its measurements?`)) return;
+		if (!tracker.can_manage_schema) return;
 		const token = csrfToken();
 		if (!token) { error = 'Reload this page and try again.'; return; }
 		deletingTrackerId = tracker.id;
@@ -147,6 +152,7 @@
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok) { error = result.message ?? 'The tracker could not be deleted.'; return; }
 			message = 'Tracker deleted.';
+			trackerToDelete = null;
 			await loadTrackers();
 		} catch {
 			error = 'The tracker could not be deleted. Check your connection and try again.';
@@ -201,7 +207,7 @@
 								</span>
 								<span class="inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">{$t("Open history")} <span aria-hidden="true">→</span></span>
 							</a>
-							{#if tracker.can_manage_schema}<button type="button" disabled={deletingTrackerId === tracker.id} onclick={() => void deleteTracker(tracker)} class="min-h-10 shrink-0 rounded-lg border border-rose-300/20 px-3 text-sm font-medium text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</button>{/if}
+							{#if tracker.can_manage_schema}<button type="button" disabled={deletingTrackerId === tracker.id} onclick={() => { trackerToDelete = tracker; deleteModalOpen = true; }} class="min-h-10 shrink-0 rounded-lg border border-rose-300/20 px-3 text-sm font-medium text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</button>{/if}
 						</li>
 					{/each}
 				</ul>
@@ -215,7 +221,9 @@
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
-		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-tracker-heading">
+		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create tracker")}</button></div>
+		<Modal bind:open={createOpen} title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
+			<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-7" aria-labelledby="new-tracker-heading">
 			<div class="max-w-2xl">
 				<p class="text-sm font-medium text-cyan-200">{$t("Schema builder")}</p>
 				<h2 id="new-tracker-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Start with a tracker.")}</h2>
@@ -282,7 +290,9 @@
 					<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create tracker')}</button>
 				</div>
 			</form>
-		</section>
+			</div>
+		</Modal>
+		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “') + trackerToDelete.name + $t('” and all its measurements?')} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}
 		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
 	{/if}

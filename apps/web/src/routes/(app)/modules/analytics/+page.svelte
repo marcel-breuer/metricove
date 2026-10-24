@@ -4,6 +4,8 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatMeasurement, formatNumber } from '#lib/number-format';
 	import {
 		analyticsRanges,
@@ -31,6 +33,10 @@
 	let rangeKey = $state<AnalyticsRange>('30d');
 	let chartType = $state<AnalyticsChartType>('line');
 	let editingId = $state<number | null>(null);
+	let createOpen = $state(false);
+	let editOpen = $state(false);
+	let widgetToRemove = $state<AnalyticsWidget | null>(null);
+	let removeOpen = $state(false);
 	let editTitle = $state('');
 	let editRange = $state<AnalyticsRange>('30d');
 	let editChart = $state<AnalyticsChartType>('line');
@@ -93,6 +99,7 @@
 			});
 			title = '';
 			message = 'Widget added to your dashboard.';
+			createOpen = false;
 			await loadDashboard();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The widget could not be added.';
@@ -102,6 +109,7 @@
 	}
 
 	function beginEdit(widget: AnalyticsWidget): void {
+		editOpen = true;
 		editingId = widget.id;
 		editTitle = widget.title;
 		editRange = widget.range_key;
@@ -121,6 +129,7 @@
 				chart_type: editChart
 			});
 			editingId = null;
+			editOpen = false;
 			message = 'Widget settings saved.';
 			await loadDashboard();
 		} catch (cause) {
@@ -139,6 +148,8 @@
 			await api<AnalyticsResponse>(`/api/analytics/widgets/${widget.id}`, 'DELETE');
 			if (editingId === widget.id) editingId = null;
 			message = 'Widget removed.';
+			widgetToRemove = null;
+			removeOpen = false;
 			await loadDashboard();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The widget could not be removed.';
@@ -178,7 +189,9 @@
 	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
 
 	{#if canCreate}
-		<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6" aria-labelledby="add-widget-heading">
+		<div class="mt-6 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950">{$t('Add a chart')}</button></div>
+		<Modal bind:open={createOpen} title={$t('Add a chart')} description={$t('Available charts follow your current module access.')}>
+		<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-slate-400">{$t("Available charts follow your current module access.")}</p></div>
 				<span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-400">{widgets.length} / 12 widgets</span>
@@ -209,6 +222,7 @@
 				</form>
 			{/if}
 		</section>
+		</Modal>
 	{/if}
 
 	{#if loading}
@@ -272,15 +286,18 @@
 					{/if}
 
 					{#if editingId === widget.id}
+						<Modal bind:open={editOpen} title={$t('Edit widget')}>
 						<form class="mt-4 grid gap-3 rounded-xl border border-cyan-300/20 bg-cyan-300/5 p-4 sm:grid-cols-2" onsubmit={(event) => { event.preventDefault(); void saveWidget(widget); }}>
 							<label class="block text-xs font-medium text-slate-300">{$t("Widget title")}<input bind:value={editTitle} maxlength="80" required class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none" /></label>
 							<label class="block text-xs font-medium text-slate-300">{$t("Time range")}<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none">{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}</select></label>
 							<label class="block text-xs font-medium text-slate-300">{$t("Chart type")}<select bind:value={editChart} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"><option value="line">{$t("Line")}</option><option value="bar">{$t("Bars")}</option></select></label>
-							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-3 text-xs font-semibold text-slate-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { editingId = null; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200">{$t("Cancel")}</button><button type="button" disabled={saving} onclick={() => void removeWidget(widget)} class="ml-auto min-h-10 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-400/10 disabled:opacity-50">{$t("Remove")}</button></div>
+							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-3 text-xs font-semibold text-slate-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { editingId = null; editOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200">{$t("Cancel")}</button><button type="button" disabled={saving} onclick={() => { widgetToRemove = widget; removeOpen = true; }} class="ml-auto min-h-10 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-400/10 disabled:opacity-50">{$t("Remove")}</button></div>
 						</form>
+						</Modal>
 					{/if}
 				</article>
 			{/each}
 		</div>
 	{/if}
+	{#if widgetToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove widget?')} message={$t('Remove this chart from your dashboard?')} onConfirm={() => void removeWidget(widgetToRemove!)} />{/if}
 </section>

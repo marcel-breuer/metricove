@@ -4,6 +4,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { vehicleFuelTypes, type Vehicle, type VehicleResponse, type VehicleVisibility } from '#lib/vehicles';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -15,6 +16,7 @@
 	let vehicles = $state<Vehicle[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
+	let createOpen = $state(false);
 	let error = $state('');
 	let message = $state('');
 	let name = $state('');
@@ -67,6 +69,7 @@
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok || !result.vehicle) { error = firstError(result) || result.message || 'The vehicle could not be created.'; return; }
 			name = ''; make = ''; model = ''; modelYear = ''; description = '';
+			createOpen = false;
 			message = visibility === 'household' ? 'Household vehicle created.' : 'Private vehicle created.';
 			if (canView) { await goto(`/modules/vehicles/${result.vehicle.id}`); return; }
 			await loadVehicles();
@@ -112,7 +115,9 @@
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
-		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-vehicle-heading">
+		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Create vehicle')}</button></div>
+		<Modal bind:open={createOpen} title={$t('Add a vehicle.')} description={$t('Keep vehicle details and records together.')}>
+		<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-vehicle-heading">
 			<p class="text-sm font-medium text-cyan-200">{$t("Add to the fleet")}</p><h2 id="new-vehicle-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Set up a vehicle.")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.")}</p>
 			<form class="mt-7 grid gap-4 sm:grid-cols-2" onsubmit={createVehicle}>
 				<label class="block text-sm font-medium text-slate-200">{$t("Display name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Daily car")} /></label>
@@ -126,6 +131,7 @@
 				<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private vehicle, insurance, mileage and cost details are hidden from administrators unless the owner grants access.")}</p><button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create vehicle')}</button></div>
 			</form>
 		</section>
+		</Modal>
 	{:else}
 		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a vehicle. Ask an administrator for Vehicles Create access.")}</p>
 	{/if}
