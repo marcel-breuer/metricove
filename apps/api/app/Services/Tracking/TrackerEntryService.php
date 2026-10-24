@@ -32,8 +32,7 @@ class TrackerEntryService
         int $limit = 30,
         ?string $beforeRecordedAt = null,
         ?int $beforeId = null,
-    ): array
-    {
+    ): array {
         $definition = $this->schemas->findVisible($actor, $trackerId, ModuleCapability::View);
         $this->access->authorize($actor, 'tracking', ModuleCapability::View, $definition);
 
