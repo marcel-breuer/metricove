@@ -7,7 +7,7 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
-	import type { MealDishType, MealPlanSlot, MealPlanVisibility, MealPlanWeek, MealType } from '#lib/meal-planning';
+	import { parseMealPlanDate, type MealDishType, type MealPlanSlot, type MealPlanVisibility, type MealPlanWeek, type MealType } from '#lib/meal-planning';
 	import type { Recipe, RecipeResponse } from '#lib/recipes';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -213,7 +213,8 @@
 	}
 
 	function formatDay(day: string, options: Intl.DateTimeFormatOptions): string {
-		return formatLocaleDate(`${day}T00:00:00`, options);
+		const date = parseMealPlanDate(day);
+		return date ? formatLocaleDate(date, options) : '';
 	}
 
 	function mondayOf(date: Date): string {
@@ -257,7 +258,7 @@
 	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
 	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
 
-	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + (mealTypes.find((entry) => entry.key === mealType)?.label ?? '')}>
+	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + (mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
 		<section id="meal-editor" aria-labelledby="meal-editor-title" class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 sm:p-7">
 			<div class="mb-5 flex items-start justify-between gap-4">
 				<div>
