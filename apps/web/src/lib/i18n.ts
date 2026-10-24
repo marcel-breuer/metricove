@@ -46,7 +46,7 @@ const german: Record<string, string> = {
 	'Profile & account': 'Profil und Konto', 'Your household, in one private place': 'Dein Haushalt, an einem privaten Ort',
 	'Search your household with AI': 'Haushalt mit KI durchsuchen', 'Search your household with AI…': 'Haushalt mit KI durchsuchen…',
 	'Search with AI': 'Mit KI suchen', 'Skip to content': 'Zum Inhalt springen', 'Try again': 'Erneut versuchen',
-	'Core': 'Kern', 'Finance': 'Finanzen', 'Recipes': 'Rezepte', 'Meal Planning': 'Essensplanung', 'Pantry': 'Vorrat',
+	'Core': 'Kern', 'Finance': 'Finanzen', 'Recipes': 'Rezepte', 'Meal Planning': 'Essensplanung', 'Pantry': 'Vorrat', 'Tasks': 'Aufgaben',
 	'Shopping': 'Einkauf', 'Utilities': 'Versorger', 'Vehicles': 'Fahrzeuge', 'Analytics': 'Analysen',
 	'Import': 'Import', 'AI': 'KI', 'Metricove': 'Metricove', 'Developer reference': 'Entwicklerdokumentation',
 	'Metricove MCP': 'Metricove MCP', 'MCP documentation': 'MCP-Dokumentation',
@@ -334,6 +334,21 @@ const routeGerman: Record<string, string> = {
 	'Plan the week with free-text dishes or recipes you can access.': 'Plane die Woche mit frei eingegebenen Gerichten oder Rezepten, auf die du Zugriff hast.', 'Previous month': 'Voriger Monat', 'Previous week': 'Vorige Woche', 'Record a measurement and review its private history.': 'Erfasse einen Messwert und sieh dir den privaten Verlauf an.', 'Record household electricity, gas and water meter readings.': 'Erfasse Strom-, Gas- und Wasserzählerstände im Haushalt.', 'Remove ingredient': 'Zutat entfernen', 'Request a password reset for your Metricove account.': 'Fordere einen Link zum Zurücksetzen des Passworts für dein Metricove-Konto an.', 'Service invoice, fuel stop…': 'Werkstattrechnung, Tankstopp…', 'Shopping items': 'Einkaufsartikel', 'Shopping lists': 'Einkaufslisten', 'Steps': 'Schritte',
 	'Track food stock, storage, quantities and best-before dates.': 'Verwalte Lebensmittelvorräte, Lagerorte, Mengen und Mindesthaltbarkeitsdaten.', 'Track private or shared income, spending, recurring entries and monthly budgets.': 'Verfolge private oder gemeinsame Einnahmen, Ausgaben, wiederkehrende Buchungen und Monatsbudgets.', 'Try tomato, soup or breakfast': 'Zum Beispiel Tomate, Suppe oder Frühstück', 'Used for dinner': 'Für das Abendessen verwendet', 'Vehicle details, odometer timeline, insurance, maintenance and costs.': 'Fahrzeugdetails, Kilometerverlauf, Versicherung, Wartung und Kosten.', 'Volvo': 'Volvo', 'Weekly groceries': 'Wocheneinkauf', 'What does this tracker help you follow?': 'Was möchtest du mit diesem Tracker verfolgen?', 'Write the steps in the order you follow them…': 'Beschreibe die Schritte in der Reihenfolge, in der du sie ausführst…', 'preference, goal, fact': 'Einstellung, Ziel, Fakt', 'Preview and confirm utility reading CSV imports.': 'CSV-Importe von Zählerständen prüfen und bestätigen.'
 };
+
+Object.assign(routeGerman, {
+	'Coordinate private and shared household tasks, owners and repeatable routines.': 'Koordiniere private und gemeinsame Haushaltsaufgaben, Zuständigkeiten und wiederkehrende Routinen.',
+	'Tasks are not available': 'Aufgaben sind nicht verfügbar', 'Ask a household administrator to enable Tasks and grant your account View access.': 'Bitte eine Haushaltsadministration, Aufgaben zu aktivieren und deinem Konto Leserechte zu erteilen.',
+	'Edit task': 'Aufgabe bearbeiten', 'New task': 'Neue Aufgabe', 'Keep the next step clear.': 'Behalte den nächsten Schritt im Blick.', 'A task everyone can understand.': 'Eine Aufgabe, die alle verstehen.',
+	'Task title': 'Aufgabentitel', 'e.g. Book the car service': 'z. B. Werkstatttermin vereinbaren', 'Details': 'Details', 'Add the context someone needs to get it done.': 'Ergänze die Informationen, die zur Erledigung nötig sind.',
+	'Assignee': 'Zuständig', 'Unassigned': 'Nicht zugewiesen', 'Repeats': 'Wiederholung', 'Does not repeat': 'Keine Wiederholung', 'Every': 'Alle',
+	'Save task': 'Aufgabe speichern', 'Add task': 'Aufgabe hinzufügen', 'Tasks are private by default. Household tasks are visible to members with access.': 'Aufgaben sind standardmäßig privat. Gemeinsame Aufgaben sehen Mitglieder mit entsprechender Berechtigung.',
+	'Your tasks': 'Deine Aufgaben', 'Keep the household moving.': 'Halte den Haushalt in Bewegung.', 'Status': 'Status', 'Open': 'Offen', 'All': 'Alle', 'All priorities': 'Alle Prioritäten', 'Due date': 'Fällig am', 'Any date': 'Beliebiges Datum', 'Overdue': 'Überfällig', 'Upcoming': 'Demnächst', 'No due date': 'Kein Fälligkeitsdatum', 'Anyone': 'Alle', 'Sort by': 'Sortieren nach',
+	'Loading tasks…': 'Aufgaben werden geladen…', 'Nothing on the list yet.': 'Noch keine Aufgaben vorhanden.', 'Add a household task or adjust your filters.': 'Füge eine Haushaltsaufgabe hinzu oder passe die Filter an.', 'Due': 'Fällig', 'Assigned to': 'Zuständig:',
+	'Repeats {frequency}': 'Wiederholt sich: {frequency}', 'Repeats every {interval} {frequency}': 'Wiederholt sich alle {interval} {frequency}', 'Complete occurrence': 'Diesen Durchgang erledigen', 'Complete': 'Erledigen',
+	'Task occurrence completed. The next one is scheduled.': 'Aufgabe erledigt. Der nächste Durchgang ist eingeplant.', 'Task completed.': 'Aufgabe erledigt.', 'Task updated.': 'Aufgabe aktualisiert.', 'Task created.': 'Aufgabe erstellt.', 'Task deleted.': 'Aufgabe gelöscht.',
+	'Delete this task and its completion history?': 'Diese Aufgabe einschließlich Erledigungsverlauf löschen?', 'Completion history could not be loaded.': 'Der Erledigungsverlauf konnte nicht geladen werden.', 'Completion history': 'Erledigungsverlauf', 'No completed occurrences yet.': 'Noch keine Durchgänge erledigt.', 'Occurrence': 'Durchgang', 'Former member': 'Früheres Mitglied', 'Showing up to 200 visible tasks.': 'Es werden bis zu 200 sichtbare Aufgaben angezeigt.',
+	'Low': 'Niedrig', 'Medium': 'Mittel', 'High': 'Hoch', 'Daily': 'Täglich', 'Weekly': 'Wöchentlich', 'Monthly': 'Monatlich', 'Yearly': 'Jährlich', 'Priority': 'Priorität',
+});
 
 export const uiLanguage = writable<UiLanguage>('en');
 export const numberLocale = writable<NumberLocale>('en-US');

@@ -15,7 +15,7 @@ The household may have multiple active admins but **never fewer than one**. All 
 
 The web application supports Light, Dark and System appearance preferences. System is the default and tracks the browser preference; explicit choices are stored in the browser. Shared Svelte UI components provide consistent page headings, panels, buttons, fields, notices and switches.
 
-Module list: Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
+Module list: Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Tasks, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
 
 ## Food modules
 - **Recipes:** ingredient quantities, servings, steps, tags/categories and optional pictures.
