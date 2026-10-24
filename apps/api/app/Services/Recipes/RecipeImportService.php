@@ -86,7 +86,7 @@ class RecipeImportService
         }
 
         $length = $response->header('Content-Length');
-        if (is_string($length) && ctype_digit($length) && (int) $length > self::MAX_HTML_BYTES) {
+        if (ctype_digit($length) && (int) $length > self::MAX_HTML_BYTES) {
             throw ValidationException::withMessages(['source_url' => 'The recipe page is too large to import.']);
         }
 
@@ -170,9 +170,9 @@ class RecipeImportService
             }
         }
 
-        $title = trim((string) ($xpath->query('//meta[@property="og:title"]/@content')->item(0)?->nodeValue
-            ?? $xpath->query('//h1')->item(0)?->textContent
-            ?? $document->getElementsByTagName('title')->item(0)?->textContent
+        $title = trim((string) ($xpath->query('//meta[@property="og:title"]/@content')->item(0)->nodeValue
+            ?? $xpath->query('//h1')->item(0)->textContent
+            ?? $document->getElementsByTagName('title')->item(0)->textContent
             ?? ''));
         throw ValidationException::withMessages([
             'source_url' => $title === ''
