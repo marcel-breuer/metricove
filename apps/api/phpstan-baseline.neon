@@ -171,13 +171,13 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
 			identifier: property.notFound
-			count: 4
+			count: 3
 			path: app/Services/Finance/FinanceService.php
 
 		-
 			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Services/Finance/FinanceService.php
 
 		-
@@ -229,12 +229,6 @@ parameters:
 			path: app/Services/Finance/FinanceService.php
 
 		-
-			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$occurred_on\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Finance/FinanceService.php
-
-		-
 			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$period_start\.$#'
 			identifier: property.notFound
 			count: 2
@@ -249,7 +243,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Contracts\\ModuleResource&Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
 			identifier: property.notFound
-			count: 7
+			count: 6
 			path: app/Services/Finance/FinanceService.php
 
 		-

@@ -52,6 +52,7 @@
 	let transactionType = $state<FinanceType>('expense');
 	let transactionCategory = $state('');
 	let transactionDescription = $state('');
+	let transactionPayee = $state('');
 	let transactionAmount = $state('');
 	let transactionCurrency = $state($defaultCurrency);
 	let transactionDate = $state(localDate());
@@ -157,6 +158,7 @@
 		transactionType = 'expense';
 		transactionCategory = '';
 		transactionDescription = '';
+		transactionPayee = '';
 		transactionAmount = '';
 		transactionCurrency = $defaultCurrency;
 		transactionDate = localDate();
@@ -213,7 +215,7 @@
 		event.preventDefault();
 		clearFormMessages();
 		saving = true;
-		const payload: Record<string, unknown> = { description: transactionDescription, amount: transactionAmount, currency: transactionCurrency, occurred_on: transactionDate };
+		const payload: Record<string, unknown> = { description: transactionDescription, payee: transactionPayee || null, amount: transactionAmount, currency: transactionCurrency, occurred_on: transactionDate };
 		if (transactionCategory !== '') payload.finance_category_id = Number(transactionCategory);
 		if (transactionId === null || transactionCategory !== '') payload.type = transactionType;
 		try {
@@ -233,6 +235,7 @@
 		transactionType = transaction.type;
 		transactionCategory = transaction.finance_category_id === null ? '' : String(transaction.finance_category_id);
 		transactionDescription = transaction.description;
+		transactionPayee = transaction.payee ?? '';
 		transactionAmount = transaction.amount;
 		transactionCurrency = transaction.currency;
 		transactionDate = transaction.occurred_on;
@@ -373,6 +376,7 @@
 					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={transactionAmount} type="text" inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" required maxlength="19" placeholder="42.50" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={transactionCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={transactionDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Groceries")} /></label>
+					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Payee")}<input bind:value={transactionPayee} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Date")}<input bind:value={transactionDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					{#if !transactionId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={transactionVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 					<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-4 sm:col-span-2 xl:col-span-4 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private transactions stay visible only to their owner unless access is granted for that record.")}</p><div class="flex flex-wrap gap-2"><button type="submit" disabled={saving || categories.length === 0} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : transactionId ? 'Save changes' : 'Add transaction'}</button>{#if transactionId}<button type="button" class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-slate-500" onclick={resetTransaction}>{$t("Cancel")}</button>{/if}</div></div>
@@ -385,7 +389,7 @@
 			{#if visibleTransactions.length === 0}<p class="mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5 text-sm text-slate-400">{$t("No transactions are visible for this month.")}</p>{:else}
 				<ul class="mt-4 divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
 					{#each visibleTransactions as transaction (transaction.id)}
-						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><p class="truncate font-medium text-white">{transaction.description}</p><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {transaction.type === 'income' ? 'bg-emerald-300/10 text-emerald-200' : 'bg-rose-300/10 text-rose-200'}">{$t(transaction.type)}</span><span class="text-xs text-slate-500">{$t(transaction.visibility)}</span></div><p class="mt-1 text-sm text-slate-400">{transaction.category?.name ?? $t('Uncategorized')} · {formatDate(transaction.occurred_on)}</p></div><div class="flex items-center justify-between gap-3 sm:justify-end"><p class="whitespace-nowrap text-sm font-semibold {transaction.type === 'income' ? 'text-emerald-200' : 'text-white'}">{$t(transaction.type === 'expense' ? '−' : '+')}{formatCurrency(transaction.amount, transaction.currency)}</p>{#if canMutate(transaction.visibility)}<div class="flex gap-2"><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200 hover:border-cyan-300" aria-label={`${$t("Edit")} ${transaction.description}`} onclick={() => editTransaction(transaction)}>{$t("Edit")}</button><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-rose-200 hover:border-rose-300" aria-label={`${$t("Delete")} ${transaction.description}`} onclick={() => remove(`/api/finance/transactions/${transaction.id}`, 'transaction')}>{$t("Delete")}</button></div>{/if}</div></li>
+						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><p class="truncate font-medium text-white">{transaction.description}</p><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {transaction.type === 'income' ? 'bg-emerald-300/10 text-emerald-200' : 'bg-rose-300/10 text-rose-200'}">{$t(transaction.type)}</span><span class="text-xs text-slate-500">{$t(transaction.visibility)}</span></div>{#if transaction.payee}<p class="mt-1 text-sm text-slate-300">{$t('Payee')}: {transaction.payee}</p>{/if}<p class="mt-1 text-sm text-slate-400">{transaction.category?.name ?? $t('Uncategorized')} · {formatDate(transaction.occurred_on)}</p></div><div class="flex items-center justify-between gap-3 sm:justify-end"><p class="whitespace-nowrap text-sm font-semibold {transaction.type === 'income' ? 'text-emerald-200' : 'text-white'}">{$t(transaction.type === 'expense' ? '−' : '+')}{formatCurrency(transaction.amount, transaction.currency)}</p>{#if canMutate(transaction.visibility)}<div class="flex gap-2"><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200 hover:border-cyan-300" aria-label={`${$t("Edit")} ${transaction.description}`} onclick={() => editTransaction(transaction)}>{$t("Edit")}</button><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-rose-200 hover:border-rose-300" aria-label={`${$t("Delete")} ${transaction.description}`} onclick={() => remove(`/api/finance/transactions/${transaction.id}`, 'transaction')}>{$t("Delete")}</button></div>{/if}</div></li>
 					{/each}
 				</ul>
 			{/if}

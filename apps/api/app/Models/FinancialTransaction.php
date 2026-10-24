@@ -13,7 +13,7 @@ class FinancialTransaction extends Model implements ModuleResource
 
     protected $fillable = [
         'finance_category_id', 'finance_recurring_entry_id', 'owner_user_id', 'created_by_user_id',
-        'is_private', 'type', 'description', 'amount', 'currency', 'occurred_on', 'recurring_occurrence_on',
+        'is_private', 'type', 'description', 'payee', 'amount', 'currency', 'occurred_on', 'recurring_occurrence_on',
     ];
 
     protected function casts(): array
