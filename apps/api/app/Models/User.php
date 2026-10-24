@@ -39,6 +39,9 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
             'ai_context_enabled' => 'boolean',
+            'reminder_email_enabled' => 'boolean',
+            'reminder_lead_days' => 'integer',
+            'reminder_sources' => 'array',
             'password' => 'hashed',
         ];
     }

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\PantryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RecipesController;
+use App\Http\Controllers\Api\ReminderController;
 use App\Http\Controllers\Api\ShoppingController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UtilitiesController;
@@ -56,6 +57,11 @@ Route::middleware('web')->group(function (): void {
         ->name('invitations.claim');
 
     Route::middleware(['auth:web', 'active-member'])->group(function (): void {
+        Route::get('/reminders', [ReminderController::class, 'index'])->name('reminders.index');
+        Route::get('/reminders/preferences', [ReminderController::class, 'preferences'])->name('reminders.preferences');
+        Route::patch('/reminders/preferences', [ReminderController::class, 'updatePreferences'])->name('reminders.preferences.update');
+        Route::patch('/reminders/{reminder}', [ReminderController::class, 'update'])
+            ->whereNumber('reminder')->name('reminders.update');
         Route::get('/ai/context', [AiContextController::class, 'index'])->name('ai.context.index');
         Route::post('/ai/context', [AiContextController::class, 'store'])->name('ai.context.store');
         Route::patch('/ai/context/preferences', [AiContextController::class, 'preferences'])->name('ai.context.preferences');

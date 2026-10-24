@@ -19,6 +19,7 @@ class VehicleMaintenanceRecord extends Model implements ModuleResource
         'title',
         'service_type',
         'occurred_on',
+        'next_due_on',
         'odometer_value',
         'note',
     ];
@@ -28,6 +29,7 @@ class VehicleMaintenanceRecord extends Model implements ModuleResource
         return [
             'is_private' => 'boolean',
             'occurred_on' => 'date:Y-m-d',
+            'next_due_on' => 'date:Y-m-d',
             'odometer_value' => 'decimal:3',
         ];
     }
