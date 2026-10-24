@@ -2,6 +2,14 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.7.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.7.0...metricove-v0.7.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **web:** guard empty meal plan dates ([a8c3807](https://github.com/marcel-breuer/metricove/commit/a8c3807b45a3581e2a09a36706627bfe7ee8ea73))
+* **web:** prevent Meal Planning SSR 500 ([10634bf](https://github.com/marcel-breuer/metricove/commit/10634bf0f45a60bb20cb144ed671460603446352))
+
 ## [0.7.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.6.0...metricove-v0.7.0) (2026-10-24)
 
 
