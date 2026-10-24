@@ -45,6 +45,7 @@ export type VehicleMaintenanceRecord = {
 	title: string;
 	service_type: string;
 	occurred_on: string;
+	next_due_on?: string | null;
 	odometer_value: string | null;
 	odometer_unit: string | null;
 	note: string | null;

@@ -19,6 +19,7 @@ class StoreVehicleMaintenanceRequest extends FormRequest
             'title' => ['required', 'string', 'max:160'],
             'service_type' => ['required', 'in:service,repair,inspection,tires,registration,other'],
             'occurred_on' => ['required', 'date_format:Y-m-d'],
+            'next_due_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:occurred_on'],
             'odometer_value' => ['nullable'],
             'note' => ['nullable', 'string', 'max:2000'],
         ];

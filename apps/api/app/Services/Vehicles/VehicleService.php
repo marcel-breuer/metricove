@@ -278,6 +278,7 @@ class VehicleService
                 'title' => trim($data['title']),
                 'service_type' => $data['service_type'],
                 'occurred_on' => $data['occurred_on'],
+                'next_due_on' => $data['next_due_on'] ?? null,
                 'odometer_value' => $odometerValue,
                 'note' => $this->nullableTrim($data['note'] ?? null),
             ]);
@@ -519,6 +520,9 @@ class VehicleService
             'title' => $record->title,
             'service_type' => $record->service_type,
             'occurred_on' => $record->occurred_on->format('Y-m-d'),
+            'next_due_on' => $record->next_due_on === null
+                ? null
+                : CarbonImmutable::parse($record->next_due_on)->format('Y-m-d'),
             'odometer_value' => $record->odometer_value,
             'odometer_unit' => $vehicle?->odometer_unit,
             'note' => $record->note,

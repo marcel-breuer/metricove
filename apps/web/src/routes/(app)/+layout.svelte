@@ -48,6 +48,7 @@
 	function titleForPath(path: string): string {
 		if (path === '/') return 'Overview';
 		if (path === '/profile') return 'Profile';
+		if (path === '/reminders') return 'Reminders';
 		if (path === '/admin/members') return 'Members';
 		if (path.startsWith('/admin/members/')) return 'Module rights';
 		if (path === '/admin/modules') return 'Modules';
@@ -233,6 +234,7 @@
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
 					{$t('Overview')}
 				</a>
+				<a href="/reminders" aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">{$t('Reminders')}</a>
 				<a href="/mcp-docs" aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
 			</div>
 			{#if modules.length > 0}
@@ -360,6 +362,7 @@
 						{$t('Overview')}
 					</a>
 					<a href="/mcp-docs" onclick={() => (drawerOpen = false)} aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
+					<a href="/reminders" onclick={() => (drawerOpen = false)} aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">{$t('Reminders')}</a>
 				</div>
 				{#if modules.length > 0}
 					<div>

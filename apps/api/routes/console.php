@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AiContextEntry;
+use App\Services\Reminders\ReminderService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,3 +16,10 @@ Artisan::command('metricove:purge-ai-context', function (): void {
 })->purpose('Delete expired personal AI context entries');
 
 Schedule::command('metricove:purge-ai-context')->hourly();
+
+Artisan::command('metricove:generate-reminders', function (ReminderService $reminders): void {
+    $result = $reminders->generate();
+    $this->info("Created {$result['created']} reminders and sent {$result['sent']} opted-in reminder emails.");
+})->purpose('Generate permission-aware household reminders');
+
+Schedule::command('metricove:generate-reminders')->dailyAt('08:00')->withoutOverlapping();
