@@ -15,6 +15,7 @@ export type FinancialTransaction = {
 	finance_category_id: number | null;
 	type: FinanceType;
 	description: string;
+	payee: string | null;
 	amount: string;
 	currency: string;
 	occurred_on: string;

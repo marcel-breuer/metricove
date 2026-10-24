@@ -26,6 +26,7 @@ class UpdateFinancialTransactionRequest extends FormRequest
             'finance_category_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'type' => ['sometimes', 'required', 'in:income,expense'],
             'description' => ['sometimes', 'required', 'string', 'max:200'],
+            'payee' => ['sometimes', 'nullable', 'string', 'max:200'],
             'amount' => ['sometimes', 'required'],
             'currency' => ['sometimes', 'required', 'string', 'regex:/\A[A-Z]{3}\z/'],
             'occurred_on' => ['sometimes', 'required', 'date_format:Y-m-d'],

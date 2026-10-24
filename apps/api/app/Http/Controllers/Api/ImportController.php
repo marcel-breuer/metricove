@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ConfirmFinanceTransactionsImportRequest;
 use App\Http\Requests\ConfirmUtilityReadingsImportRequest;
+use App\Http\Requests\PreviewFinanceTransactionsImportRequest;
 use App\Http\Requests\PreviewUtilityReadingsImportRequest;
 use App\Http\Requests\SuggestUtilityReadingRequest;
 use App\Models\User;
+use App\Services\Import\FinanceTransactionImportService;
 use App\Services\Import\ImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +17,44 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportController extends Controller
 {
+    public function previewFinanceTransactions(
+        PreviewFinanceTransactionsImportRequest $request,
+        FinanceTransactionImportService $imports,
+    ): JsonResponse {
+        $selectedRows = $request->validated('selected_rows');
+        if ($request->boolean('selection_submitted')) {
+            $selectedRows ??= [];
+        }
+
+        return response()->json($imports->preview(
+            $this->actor($request),
+            $request->file('file'),
+            $request->validated('mapping'),
+            $request->validated('category_defaults'),
+            $selectedRows,
+        ));
+    }
+
+    public function confirmFinanceTransactions(
+        ConfirmFinanceTransactionsImportRequest $request,
+        FinanceTransactionImportService $imports,
+    ): JsonResponse {
+        $selectedRows = $request->validated('selected_rows');
+        if ($request->boolean('selection_submitted')) {
+            $selectedRows ??= [];
+        }
+
+        return response()->json($imports->confirm(
+            $this->actor($request),
+            $request->file('file'),
+            $request->validated('preview_token'),
+            $request->validated('idempotency_key'),
+            $request->validated('mapping'),
+            $request->validated('category_defaults'),
+            $selectedRows,
+        ));
+    }
+
     public function preview(
         PreviewUtilityReadingsImportRequest $request,
         int $meter,

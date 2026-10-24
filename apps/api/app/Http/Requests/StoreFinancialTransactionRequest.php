@@ -26,6 +26,7 @@ class StoreFinancialTransactionRequest extends FormRequest
             'finance_category_id' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'in:income,expense'],
             'description' => ['required', 'string', 'max:200'],
+            'payee' => ['nullable', 'string', 'max:200'],
             'amount' => ['required'],
             'currency' => ['required', 'string', 'regex:/\A[A-Z]{3}\z/'],
             'occurred_on' => ['required', 'date_format:Y-m-d'],

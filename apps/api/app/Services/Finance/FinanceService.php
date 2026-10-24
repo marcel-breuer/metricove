@@ -13,6 +13,7 @@ use App\Services\Modules\ModuleAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
@@ -29,9 +30,15 @@ class FinanceService
     {
         $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
 
-        return $this->visibleResources($actor, FinanceCategory::class, 'finance_categories', [ModuleCapability::View], FinanceCategory::query())
-            ->orderBy('type')->orderBy('name')->orderBy('id')
-            ->get()->map(fn (FinanceCategory $category): array => $this->presentCategory($category))->all();
+        return $this->visibleCategories($actor, ModuleCapability::View);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function importableCategories(User $actor): array
+    {
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::Create);
+
+        return $this->visibleCategories($actor, ModuleCapability::Create);
     }
 
     /** @param array<string, mixed> $data
@@ -115,6 +122,37 @@ class FinanceService
             ->all();
     }
 
+    /**
+     * Return only transactions the caller may already view, constrained to candidate dates.
+     * This supports deterministic import duplicate checks without inspecting another member's private rows.
+     *
+     * @param  list<string>  $dates
+     * @return list<array{occurred_on: string, type: string, amount: string, currency: string, description: string, payee: ?string}>
+     */
+    public function visibleTransactionsOnDates(User $actor, array $dates): array
+    {
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
+        $dates = array_values(array_unique(array_filter($dates, static fn (string $date): bool => $date !== '')));
+
+        if ($dates === []) {
+            return [];
+        }
+
+        /** @var Collection<int, FinancialTransaction> $transactions */
+        $transactions = $this->visibleResources($actor, FinancialTransaction::class, 'financial_transactions', [ModuleCapability::View], FinancialTransaction::query())
+            ->whereIn('occurred_on', $dates)
+            ->get(['occurred_on', 'type', 'amount', 'currency', 'description', 'payee']);
+
+        return $transactions->map(static fn (FinancialTransaction $transaction): array => [
+            'occurred_on' => substr((string) $transaction->getRawOriginal('occurred_on'), 0, 10),
+            'type' => $transaction->type,
+            'amount' => (string) $transaction->amount,
+            'currency' => $transaction->currency,
+            'description' => $transaction->description,
+            'payee' => $transaction->payee,
+        ])->all();
+    }
+
     /** @param array<string, mixed> $data
      * @return array<string, mixed>
      */
@@ -138,6 +176,7 @@ class FinanceService
                 'is_private' => $isPrivate,
                 'type' => $data['type'],
                 'description' => trim($data['description']),
+                'payee' => $this->normalizedPayee($data['payee'] ?? null),
                 'amount' => $amount,
                 'currency' => strtoupper($data['currency']),
                 'occurred_on' => $data['occurred_on'],
@@ -171,9 +210,13 @@ class FinanceService
                 $category = $this->findCategoryForUse($actor, $categoryId, $type, $transaction->is_private, $capability);
             }
 
-            foreach (['type', 'description', 'currency', 'occurred_on'] as $field) {
+            foreach (['type', 'description', 'payee', 'currency', 'occurred_on'] as $field) {
                 if (array_key_exists($field, $data)) {
-                    $transaction->{$field} = $field === 'description' ? trim($data[$field]) : $data[$field];
+                    $transaction->setAttribute($field, match ($field) {
+                        'description' => trim($data[$field]),
+                        'payee' => $this->normalizedPayee($data[$field]),
+                        default => $data[$field],
+                    });
                 }
             }
 
@@ -565,6 +608,14 @@ class FinanceService
         return $category;
     }
 
+    /** @return list<array<string, mixed>> */
+    private function visibleCategories(User $actor, ModuleCapability $capability): array
+    {
+        return $this->visibleResources($actor, FinanceCategory::class, 'finance_categories', [$capability], FinanceCategory::query())
+            ->orderBy('type')->orderBy('name')->orderBy('id')
+            ->get()->map(fn (FinanceCategory $category): array => $this->presentCategory($category))->all();
+    }
+
     private function assertBudgetAvailable(
         User $actor,
         FinanceCategory $category,
@@ -737,6 +788,17 @@ class FinanceService
         return $nextMonth->day(min($anchorDay, $nextMonth->daysInMonth));
     }
 
+    private function normalizedPayee(mixed $payee): ?string
+    {
+        if (! is_string($payee)) {
+            return null;
+        }
+
+        $payee = trim($payee);
+
+        return $payee === '' ? null : $payee;
+    }
+
     /** @return array<string, mixed> */
     private function presentCategory(FinanceCategory $category): array
     {
@@ -783,6 +845,7 @@ class FinanceService
             'finance_category_id' => $category === null ? null : (int) $transaction->finance_category_id,
             'type' => $transaction->type,
             'description' => $transaction->description,
+            'payee' => $transaction->payee,
             'amount' => (string) $transaction->amount,
             'currency' => $transaction->currency,
             'occurred_on' => $transaction->occurred_on->format('Y-m-d'),

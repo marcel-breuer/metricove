@@ -233,6 +233,12 @@ Route::middleware('web')->group(function (): void {
         });
 
         Route::prefix('import')->name('import.')->group(function (): void {
+            Route::post('/finance/transactions/preview', [ImportController::class, 'previewFinanceTransactions'])
+                ->middleware(['module.access:import,create', 'module.access:finance,view', 'module.access:finance,create', 'throttle:10,1'])
+                ->name('finance.transactions.preview');
+            Route::post('/finance/transactions/confirm', [ImportController::class, 'confirmFinanceTransactions'])
+                ->middleware(['module.access:import,create', 'module.access:finance,view', 'module.access:finance,create', 'throttle:10,1'])
+                ->name('finance.transactions.confirm');
             Route::get('/utilities/meters/{meter}/readings.csv', [ImportController::class, 'export'])
                 ->middleware(['module.access:import,view', 'module.access:utilities,view'])
                 ->whereNumber('meter')->name('utilities.readings.export');
