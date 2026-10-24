@@ -4,6 +4,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatNumber, formatCurrency } from '#lib/number-format';
 	import { defaultCurrency, formatDate } from '#lib/i18n';
 	import {
@@ -65,6 +66,8 @@
 	let budgetVisibility = $state<FinanceVisibility>('private');
 
 	let recurringId = $state<number | null>(null);
+	let pendingDelete = $state<{ path: string; subject: string } | null>(null);
+	let deleteOpen = $state(false);
 	let recurringType = $state<FinanceType>('expense');
 	let recurringCategory = $state('');
 	let recurringDescription = $state('');
@@ -303,15 +306,21 @@
 	}
 
 	async function remove(path: string, subject: string): Promise<void> {
-		if (!window.confirm(`Delete this ${subject}? This cannot be undone.`)) return;
 		clearFormMessages();
 		try {
 			await api<FinanceResponse>(path, 'DELETE');
 			message = `${subject[0].toUpperCase()}${subject.slice(1)} deleted.`;
+			pendingDelete = null;
+			deleteOpen = false;
 			await loadFinance();
 		} catch (cause) {
 			formError = cause instanceof Error ? cause.message : `The ${subject} could not be deleted.`;
 		}
+	}
+
+	function requestRemove(path: string, subject: string): void {
+		pendingDelete = { path, subject };
+		deleteOpen = true;
 	}
 
 	async function recordOccurrence(entry: FinanceRecurringEntry): Promise<void> {
@@ -344,6 +353,7 @@
 			<label class="sr-only" for="finance-month">{$t("Budget month")}</label><input id="finance-month" type="month" bind:value={month} class="min-h-10 w-36 rounded-lg border-0 bg-transparent px-2 text-sm text-white focus:ring-2 focus:ring-cyan-300/30" />
 			<button type="button" class="min-h-10 min-w-10 rounded-lg text-lg text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-cyan-300" aria-label={$t("Next month")} onclick={() => shiftMonth(1)}>›</button>
 		</div>
+{#if pendingDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete record?')} message={$t(`Delete this ${pendingDelete.subject}? This cannot be undone.`)} onConfirm={() => void remove(pendingDelete!.path, pendingDelete!.subject)} />{/if}
 	</div>
 
 	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
@@ -389,7 +399,7 @@
 			{#if visibleTransactions.length === 0}<p class="mt-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5 text-sm text-slate-400">{$t("No transactions are visible for this month.")}</p>{:else}
 				<ul class="mt-4 divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
 					{#each visibleTransactions as transaction (transaction.id)}
-						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><p class="truncate font-medium text-white">{transaction.description}</p><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {transaction.type === 'income' ? 'bg-emerald-300/10 text-emerald-200' : 'bg-rose-300/10 text-rose-200'}">{$t(transaction.type)}</span><span class="text-xs text-slate-500">{$t(transaction.visibility)}</span></div>{#if transaction.payee}<p class="mt-1 text-sm text-slate-300">{$t('Payee')}: {transaction.payee}</p>{/if}<p class="mt-1 text-sm text-slate-400">{transaction.category?.name ?? $t('Uncategorized')} · {formatDate(transaction.occurred_on)}</p></div><div class="flex items-center justify-between gap-3 sm:justify-end"><p class="whitespace-nowrap text-sm font-semibold {transaction.type === 'income' ? 'text-emerald-200' : 'text-white'}">{$t(transaction.type === 'expense' ? '−' : '+')}{formatCurrency(transaction.amount, transaction.currency)}</p>{#if canMutate(transaction.visibility)}<div class="flex gap-2"><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200 hover:border-cyan-300" aria-label={`${$t("Edit")} ${transaction.description}`} onclick={() => editTransaction(transaction)}>{$t("Edit")}</button><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-rose-200 hover:border-rose-300" aria-label={`${$t("Delete")} ${transaction.description}`} onclick={() => remove(`/api/finance/transactions/${transaction.id}`, 'transaction')}>{$t("Delete")}</button></div>{/if}</div></li>
+						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><p class="truncate font-medium text-white">{transaction.description}</p><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {transaction.type === 'income' ? 'bg-emerald-300/10 text-emerald-200' : 'bg-rose-300/10 text-rose-200'}">{$t(transaction.type)}</span><span class="text-xs text-slate-500">{$t(transaction.visibility)}</span></div>{#if transaction.payee}<p class="mt-1 text-sm text-slate-300">{$t('Payee')}: {transaction.payee}</p>{/if}<p class="mt-1 text-sm text-slate-400">{transaction.category?.name ?? $t('Uncategorized')} · {formatDate(transaction.occurred_on)}</p></div><div class="flex items-center justify-between gap-3 sm:justify-end"><p class="whitespace-nowrap text-sm font-semibold {transaction.type === 'income' ? 'text-emerald-200' : 'text-white'}">{$t(transaction.type === 'expense' ? '−' : '+')}{formatCurrency(transaction.amount, transaction.currency)}</p>{#if canMutate(transaction.visibility)}<div class="flex gap-2"><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200 hover:border-cyan-300" aria-label={`${$t("Edit")} ${transaction.description}`} onclick={() => editTransaction(transaction)}>{$t("Edit")}</button><button type="button" class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-rose-200 hover:border-rose-300" aria-label={`${$t("Delete")} ${transaction.description}`} onclick={() => requestRemove(`/api/finance/transactions/${transaction.id}`, 'transaction')}>{$t("Delete")}</button></div>{/if}</div></li>
 					{/each}
 				</ul>
 			{/if}
@@ -408,7 +418,7 @@
 					</form>
 				{/if}
 				{#if overview?.budgets.length}
-					<ul class="mt-5 space-y-3">{#each overview.budgets as budget (budget.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-medium text-white">{budget.category?.name ?? 'Category'} <span class="text-xs font-normal text-slate-500">{budget.visibility}</span></p><p class="mt-1 text-sm text-slate-400">{formatCurrency(budget.spent, budget.currency)} of {formatCurrency(budget.amount, budget.currency)} {$t("· remaining")} {formatCurrency(budget.remaining, budget.currency)}</p></div>{#if canMutate(budget.visibility)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editBudget(budget)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => remove(`/api/finance/budgets/${budget.id}`, 'budget')}>{$t("Delete")}</button></div>{/if}</div><div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-cyan-300" style={`width: ${Math.min(100, (Number(budget.spent) / Number(budget.amount)) * 100)}%`}></div></div></li>{/each}</ul>
+					<ul class="mt-5 space-y-3">{#each overview.budgets as budget (budget.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-medium text-white">{budget.category?.name ?? 'Category'} <span class="text-xs font-normal text-slate-500">{budget.visibility}</span></p><p class="mt-1 text-sm text-slate-400">{formatCurrency(budget.spent, budget.currency)} of {formatCurrency(budget.amount, budget.currency)} {$t("· remaining")} {formatCurrency(budget.remaining, budget.currency)}</p></div>{#if canMutate(budget.visibility)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editBudget(budget)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/budgets/${budget.id}`, 'budget')}>{$t("Delete")}</button></div>{/if}</div><div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-cyan-300" style={`width: ${Math.min(100, (Number(budget.spent) / Number(budget.amount)) * 100)}%`}></div></div></li>{/each}</ul>
 				{:else}<p class="mt-5 rounded-xl border border-dashed border-slate-700 p-4 text-sm leading-6 text-slate-400">{$t("No budget is set for this month. Add one to compare planned spending with visible expense transactions.")}</p>{/if}
 			</section>
 
@@ -421,7 +431,7 @@
 						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t(categoryId ? 'Save category' : 'Add category')}</button>{#if categoryId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetCategory}>{$t("Cancel")}</button>{/if}</div>
 					</form>
 				{/if}
-				{#if categories.length}<ul class="mt-5 divide-y divide-slate-800">{#each categories as category (category.id)}<li class="flex items-center justify-between gap-3 py-3"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-100">{category.name}</p><p class="mt-0.5 text-xs text-slate-500">{category.type} · {category.visibility}</p></div>{#if canEditCategory(category)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editCategory(category)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => remove(`/api/finance/categories/${category.id}`, 'category')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-4 text-sm text-slate-400">{$t("No categories are visible yet.")}</p>{/if}
+				{#if categories.length}<ul class="mt-5 divide-y divide-slate-800">{#each categories as category (category.id)}<li class="flex items-center justify-between gap-3 py-3"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-100">{category.name}</p><p class="mt-0.5 text-xs text-slate-500">{category.type} · {category.visibility}</p></div>{#if canEditCategory(category)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editCategory(category)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/categories/${category.id}`, 'category')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-4 text-sm text-slate-400">{$t("No categories are visible yet.")}</p>{/if}
 			</section>
 		</div>
 
@@ -442,7 +452,7 @@
 					<div class="flex flex-wrap gap-2 border-t border-slate-800 pt-3 sm:col-span-2 xl:col-span-4"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t(recurringId ? 'Save schedule' : 'Add schedule')}</button>{#if recurringId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetRecurring}>{$t("Cancel")}</button>{/if}</div>
 				</form>
 			{/if}
-			{#if recurringEntries.length}<ul class="mt-5 grid gap-3 md:grid-cols-2">{#each recurringEntries as entry (entry.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="font-medium text-white">{entry.description}</p><p class="mt-1 text-sm text-slate-400">{entry.category?.name ?? 'Category'} · {entry.frequency} · {formatCurrency(entry.amount, entry.currency)}</p><p class="mt-1 text-xs text-slate-500">{entry.is_active ? `Next due ${entry.next_due_on ?? 'date unavailable'}` : 'Paused or complete'} · {entry.visibility}</p></div>{#if canCreate && (entry.visibility === 'private' || canManageShared) && entry.is_active && entry.next_due_on}<button type="button" class="min-h-10 rounded-lg bg-emerald-300 px-3 text-xs font-semibold text-slate-950 hover:bg-emerald-200" onclick={() => recordOccurrence(entry)}>{$t("Record due entry")}</button>{/if}</div>{#if canMutate(entry.visibility)}<div class="mt-3 flex gap-2 border-t border-slate-800 pt-3"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editRecurring(entry)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => remove(`/api/finance/recurring/${entry.id}`, 'recurring entry')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-5 text-sm text-slate-400">{$t("No recurring entries are visible.")}</p>{/if}
+			{#if recurringEntries.length}<ul class="mt-5 grid gap-3 md:grid-cols-2">{#each recurringEntries as entry (entry.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="font-medium text-white">{entry.description}</p><p class="mt-1 text-sm text-slate-400">{entry.category?.name ?? 'Category'} · {entry.frequency} · {formatCurrency(entry.amount, entry.currency)}</p><p class="mt-1 text-xs text-slate-500">{entry.is_active ? `Next due ${entry.next_due_on ?? 'date unavailable'}` : 'Paused or complete'} · {entry.visibility}</p></div>{#if canCreate && (entry.visibility === 'private' || canManageShared) && entry.is_active && entry.next_due_on}<button type="button" class="min-h-10 rounded-lg bg-emerald-300 px-3 text-xs font-semibold text-slate-950 hover:bg-emerald-200" onclick={() => recordOccurrence(entry)}>{$t("Record due entry")}</button>{/if}</div>{#if canMutate(entry.visibility)}<div class="mt-3 flex gap-2 border-t border-slate-800 pt-3"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editRecurring(entry)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/recurring/${entry.id}`, 'recurring entry')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-5 text-sm text-slate-400">{$t("No recurring entries are visible.")}</p>{/if}
 		</section>
 	{/if}
 </section>

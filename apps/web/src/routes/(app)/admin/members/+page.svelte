@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse, type AuthUser } from '#lib/auth';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 
 	type Member = AuthUser & {
 		is_active: boolean;
@@ -38,6 +39,8 @@
 	let events: AuditEvent[] = [];
 	let loading = true;
 	let busy = false;
+	let memberToRemove = $state<Member | null>(null);
+	let removeModalOpen = $state(false);
 	let message = '';
 	let error = '';
 
@@ -118,7 +121,6 @@
 	}
 
 	async function removeMember(member: Member): Promise<void> {
-		if (!window.confirm(`Remove ${member.name} from this household? This cannot be undone.`)) return;
 		message = '';
 		error = '';
 		const token = csrfToken();
@@ -149,6 +151,8 @@
 				return;
 			}
 			message = result.message ?? 'Member removed.';
+			memberToRemove = null;
+			removeModalOpen = false;
 			await loadMembers();
 		} catch {
 			error = 'Member could not be removed. Check your connection and try again.';
@@ -238,13 +242,14 @@
 								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-cyan-300/30 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Module rights")}</a>
 								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t(member.is_admin ? 'Demote' : 'Promote')}</button>
 								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</button>
-								<button type="button" disabled={busy} onclick={() => void removeMember(member)} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">{$t("Remove")}</button>
+				<button type="button" disabled={busy} onclick={() => { memberToRemove = member; removeModalOpen = true; }} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">{$t("Remove")}</button>
 							</div>
 						</li>
 					{/each}
 				</ul>
 			{/if}
-		</section>
+	</section>
+	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove ') + memberToRemove.name + $t(' from this household? This cannot be undone.')} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="audit-heading">
 			<div>

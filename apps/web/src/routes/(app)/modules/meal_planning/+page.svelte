@@ -5,6 +5,8 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import type { MealDishType, MealPlanSlot, MealPlanVisibility, MealPlanWeek, MealType } from '#lib/meal-planning';
 	import type { Recipe, RecipeResponse } from '#lib/recipes';
 
@@ -30,6 +32,8 @@
 	let error = $state('');
 	let message = $state('');
 	let editorOpen = $state(false);
+	let slotToRemove = $state<MealPlanSlot | null>(null);
+	let removeOpen = $state(false);
 	let editingSlotId = $state<number | null>(null);
 	let plannedFor = $state('');
 	let mealType = $state<MealType>('dinner');
@@ -185,6 +189,8 @@
 		try {
 			await api(`/api/meal-planning/slots/${slot.id}`, 'DELETE');
 			message = 'Meal removed from the plan.';
+			slotToRemove = null;
+			removeOpen = false;
 			if (editingSlotId === slot.id) closeEditor();
 			await loadWeek();
 		} catch (cause) {
@@ -251,7 +257,7 @@
 	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
 	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
 
-	{#if editorOpen}
+	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + (mealTypes.find((entry) => entry.key === mealType)?.label ?? '')}>
 		<section id="meal-editor" aria-labelledby="meal-editor-title" class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 sm:p-7">
 			<div class="mb-5 flex items-start justify-between gap-4">
 				<div>
@@ -312,7 +318,7 @@
 				</div>
 			</form>
 		</section>
-	{/if}
+	</Modal>
 
 	{#if shell.loading || loading}
 		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">{$t("Loading your week…")}</div>
@@ -340,7 +346,7 @@
 									{#if slot.can_edit}
 										<div class="mt-3 flex gap-2">
 											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Edit")}</button>
-											<button type="button" onclick={() => removeSlot(slot)} class="min-h-9 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
+											<button type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
 										</div>
 									{/if}
 								{:else if canAdd}
@@ -359,4 +365,5 @@
 	<footer class="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 text-xs leading-5 text-slate-500">
 		{$t("Meal plans do not change pantry stock or shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
 	</footer>
+	{#if slotToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove planned meal?')} message={$t('Remove this meal from the plan?')} onConfirm={() => void removeSlot(slotToRemove!)} />{/if}
 </div>

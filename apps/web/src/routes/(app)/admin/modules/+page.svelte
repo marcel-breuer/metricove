@@ -10,6 +10,7 @@
 	import Switch from '#lib/ui/Switch.svelte';
 	import { getContext } from 'svelte';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 
@@ -38,6 +39,9 @@
 	let busyKey = '';
 	let message = '';
 	let error = '';
+	let pendingDisable = $state<ModuleEntry | null>(null);
+	let disableOpen = $state(false);
+	let disableAllOpen = $state(false);
 
 	function requiredModuleLabels(module: ModuleEntry): string[] {
 		return module.dependencies
@@ -71,9 +75,9 @@
 		}
 	}
 
-	async function setEnabled(module: ModuleEntry): Promise<void> {
+	async function setEnabled(module: ModuleEntry, confirmed = false): Promise<void> {
 		const enabled = !module.enabled;
-		if (!enabled && !window.confirm(`Disable ${$t(module.label)}? Existing data and member rights will be kept. If enabled again, every active member will receive all module rights.`)) return;
+		if (!enabled && !confirmed) { pendingDisable = module; disableOpen = true; return; }
 
 		message = '';
 		error = '';
@@ -133,12 +137,12 @@
 		return ordered;
 	}
 
-	async function toggleAllModules(): Promise<void> {
+	async function toggleAllModules(confirmed = false): Promise<void> {
 		const optionalModules = modules.filter((module) => !module.always_enabled);
 		if (optionalModules.length === 0) return;
 
 		const enabled = optionalModules.some((module) => !module.enabled);
-		if (!enabled && !window.confirm('Disable all optional modules? Existing data and member rights will be kept. If enabled again, every active member will receive all module rights.')) return;
+		if (!enabled && !confirmed) { disableAllOpen = true; return; }
 
 		message = '';
 		error = '';
@@ -269,3 +273,5 @@
 
 	</div>
 </section>
+{#if pendingDisable}<ConfirmModal bind:open={disableOpen} title={$t('Disable module?')} message={$t('Disable ') + $t(pendingDisable.label) + $t('? Existing data and member rights will be kept.')} confirmLabel={$t('Disable')} onConfirm={() => void setEnabled(pendingDisable!, true)} />{/if}
+<ConfirmModal bind:open={disableAllOpen} title={$t('Disable all optional modules?')} message={$t('Existing data and member rights will be kept. If modules are enabled again, every active member will receive all module rights.')} confirmLabel={$t('Disable all')} onConfirm={() => void toggleAllModules(true)} />

@@ -4,6 +4,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type {
 		MealSuggestionPreview,
@@ -41,6 +42,8 @@
 	let historyOpen = $state(false);
 	let historyLoading = $state(false);
 	let editingItemId = $state<number | null>(null);
+	let itemToRemove = $state<ShoppingItem | null>(null);
+	let removeModalOpen = $state(false);
 	let editName = $state('');
 	let editQuantity = $state('');
 	let editUnit = $state('');
@@ -305,6 +308,8 @@
 		try {
 			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id, 'DELETE');
 			message = 'Item removed. Its activity remains in the list history.';
+			itemToRemove = null;
+			removeModalOpen = false;
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The item could not be removed.';
@@ -621,7 +626,7 @@
 													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↓</button>
 												{/if}
 												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Edit")}</button>
-												<button type="button" onclick={() => void removeItem(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
+											<button type="button" onclick={() => { itemToRemove = item; removeModalOpen = true; }} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
 											</div>
 										{/if}
 									</li>
@@ -675,6 +680,7 @@
 							</div>
 						{/if}
 					</section>
+{#if itemToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove shopping item?')} message={$t('Remove this item? Its activity will remain in the list history.')} onConfirm={() => void removeItem(itemToRemove!)} />{/if}
 				</section>
 			{/if}
 		</div>

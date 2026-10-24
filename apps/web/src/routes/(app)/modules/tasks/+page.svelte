@@ -9,6 +9,8 @@
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import Panel from '#lib/ui/Panel.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { visibleTaskAssignees, type HouseholdTask, type TaskAssignee, type TaskCompletion, type TasksResponse } from '#lib/tasks';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -32,6 +34,9 @@
 	let assigneeFilter = $state('');
 	let sortMode = $state<'due_at' | 'priority' | 'assignee'>('due_at');
 	let editing = $state<HouseholdTask | null>(null);
+	let formOpen = $state(false);
+	let deleteTarget = $state<HouseholdTask | null>(null);
+	let deleteOpen = $state(false);
 	let title = $state('');
 	let description = $state('');
 	let dueInput = $state('');
@@ -102,6 +107,7 @@
 	}
 
 	function resetForm(): void {
+		formOpen = false;
 		editing = null;
 		title = '';
 		description = '';
@@ -115,6 +121,7 @@
 	}
 
 	function editTask(task: HouseholdTask): void {
+		formOpen = true;
 		editing = task;
 		title = task.title;
 		description = task.description ?? '';
@@ -180,12 +187,13 @@
 	}
 
 	async function deleteTask(task: HouseholdTask): Promise<void> {
-		if (!window.confirm('Delete this task and its completion history?')) return;
 		error = '';
 		message = '';
 		try {
 			await api<TasksResponse>('/api/tasks/' + task.id, 'DELETE');
 			message = 'Task deleted.';
+			deleteTarget = null;
+			deleteOpen = false;
 			if (editing?.id === task.id) resetForm();
 			await loadTasks();
 		} catch (cause) {
@@ -246,6 +254,8 @@
 		</Panel>
 	{:else}
 		{#if canCreate || canCreateShared || editing}
+			<div class="flex justify-end"><Button onclick={() => { resetForm(); formOpen = true; }}>{$t('Add task')}</Button></div>
+			<Modal bind:open={formOpen} title={$t(editing ? 'Edit task' : 'New task')}>
 			<Panel>
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<div>
@@ -303,6 +313,7 @@
 					</div>
 				</form>
 			</Panel>
+			</Modal>
 		{/if}
 
 		<Panel>
@@ -337,7 +348,7 @@
 								</div>
 								<div class="flex shrink-0 flex-wrap gap-2">
 									{#if task.can_complete}<Button size="small" onclick={() => void completeTask(task)}>{$t(task.recurrence_frequency ? 'Complete occurrence' : 'Complete')}</Button>{/if}
-									{#if task.can_edit}<Button variant="secondary" size="small" onclick={() => editTask(task)}>{$t('Edit')}</Button><Button variant="danger" size="small" onclick={() => void deleteTask(task)}>{$t('Delete')}</Button>{/if}
+									{#if task.can_edit}<Button variant="secondary" size="small" onclick={() => editTask(task)}>{$t('Edit')}</Button><Button variant="danger" size="small" onclick={() => { deleteTarget = task; deleteOpen = true; }}>{$t('Delete')}</Button>{/if}
 									<Button variant="ghost" size="small" onclick={() => void toggleHistory(task)}>{$t(historyOpen === task.id ? 'Hide history' : 'History')}</Button>
 								</div>
 							</div>
@@ -353,4 +364,5 @@
 			{/if}
 		</Panel>
 	{/if}
+	{#if deleteTarget}<ConfirmModal bind:open={deleteOpen} title={$t('Delete task?')} message={$t('Delete this task and its completion history?')} onConfirm={() => void deleteTask(deleteTarget!)} />{/if}
 </div>
