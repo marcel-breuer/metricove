@@ -17,7 +17,7 @@ LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricov
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/* \
     && install-php-extensions pdo_pgsql redis
 
@@ -57,7 +57,7 @@ WORKDIR /var/www/html
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && apt-get install -y --no-install-recommends poppler-utils tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=www-data:www-data apps/api/ ./

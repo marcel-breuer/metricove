@@ -275,6 +275,8 @@ Route::middleware('web')->group(function (): void {
         });
 
         Route::prefix('recipes')->name('recipes.')->group(function (): void {
+            Route::post('/import-preview', [RecipesController::class, 'importPreview'])
+                ->middleware(['module.enabled:recipes', 'throttle:10,1'])->name('import-preview');
             Route::get('/', [RecipesController::class, 'index'])
                 ->middleware('module.access:recipes,view')->name('index');
             Route::post('/', [RecipesController::class, 'store'])

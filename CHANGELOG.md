@@ -2,6 +2,31 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.6.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.5.0...metricove-v0.6.0) (2026-10-24)
+
+
+### Features
+
+* **core:** add permission-aware household reminders ([a0a7e85](https://github.com/marcel-breuer/metricove/commit/a0a7e85c9d13b9670e8bc007b967270071a526bd))
+* **core:** refresh reminders on current main ([0d2f771](https://github.com/marcel-breuer/metricove/commit/0d2f771ef7a67de579a0807b7619f9bdb7a7e373))
+* **import:** import finance transactions from CSV and CAMT.053 ([3f32a83](https://github.com/marcel-breuer/metricove/commit/3f32a83b065fa6fe76074da753f4e97e63aec4d7))
+* **import:** refresh finance import on current main ([8325292](https://github.com/marcel-breuer/metricove/commit/8325292be2a1013a3634c8c42bb854ca96da3b94))
+* **tasks:** add assigned recurring household tasks ([0d0182b](https://github.com/marcel-breuer/metricove/commit/0d0182bd5111c8aa99c71c0871c6a92d1a56138e))
+* **tasks:** add assigned recurring household tasks ([2114955](https://github.com/marcel-breuer/metricove/commit/2114955f48dca449fd148409ad5247216c6cb797))
+* **tracking:** add deletion and paged history ([6a63631](https://github.com/marcel-breuer/metricove/commit/6a636319d4f0b9aaf646ba2cbd55d9f394a767a8))
+* **tracking:** add deletion and paged history ([#126](https://github.com/marcel-breuer/metricove/issues/126)) ([6a63631](https://github.com/marcel-breuer/metricove/commit/6a636319d4f0b9aaf646ba2cbd55d9f394a767a8))
+* **tracking:** add deletion and paged history ([#126](https://github.com/marcel-breuer/metricove/issues/126)) ([9bedc37](https://github.com/marcel-breuer/metricove/commit/9bedc370817fe6e367a630e4fabe70b498b649a3))
+* **web:** complete CRUD modal conversion ([49e312a](https://github.com/marcel-breuer/metricove/commit/49e312a20c044fedffd07ba923a6caf4a682a34a)), closes [#130](https://github.com/marcel-breuer/metricove/issues/130)
+* **web:** finish modal conversion for CRUD workflows ([d0ddd4c](https://github.com/marcel-breuer/metricove/commit/d0ddd4cdbcccd328afab74b6bd355d66e42adff7))
+* **web:** open CRUD workflows in modals ([0d9d5e7](https://github.com/marcel-breuer/metricove/commit/0d9d5e7aa46db804a74903d06afffc59e1d3e24a))
+* **web:** open CRUD workflows in modals ([0d9d5e7](https://github.com/marcel-breuer/metricove/commit/0d9d5e7aa46db804a74903d06afffc59e1d3e24a))
+* **web:** open CRUD workflows in modals ([b2bdd03](https://github.com/marcel-breuer/metricove/commit/b2bdd03a52c88ccbd99f31302f6a264ecffe09ed))
+
+
+### Bug Fixes
+
+* **tracking:** keep paged history consumers compatible ([c6914f7](https://github.com/marcel-breuer/metricove/commit/c6914f75f97ed6846cc21e2b8be443019182adc4))
+
 ## [0.5.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.4.0...metricove-v0.5.0) (2026-10-23)
 
 
