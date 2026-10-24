@@ -46,7 +46,7 @@
 	let importFile = $state<File | null>(null);
 	let importBusy = $state(false);
 	let importError = $state('');
-	let importNotice = $state('');
+	let importNotices = $state<string[]>([]);
 	const categories = $derived([...new Set(recipes.map((recipe) => recipe.category).filter((value): value is string => Boolean(value)))].sort());
 	const visibleRecipes = $derived(recipes.filter((recipe) => {
 		const matchesSearch = `${recipe.title} ${recipe.category ?? ''} ${recipe.ingredients.map((item) => item.name).join(' ')}`
@@ -122,10 +122,10 @@
 			ingredients = parsedIngredients.length > 0
 				? parsedIngredients
 				: [{ name: '', quantity: '', unit: '', note: '' }];
-			importNotice = [
+			importNotices = [
 				...preview.warnings,
 				...(parsedIngredients.some((item) => !item.quantity || !item.unit) ? ['Check imported ingredient quantities and units before saving.'] : [])
-			].join(' ');
+			];
 			importUrl = '';
 			importFile = null;
 			importOpen = false;
@@ -178,7 +178,7 @@
 		existingPhoto = null;
 		removePhoto = false;
 		formError = '';
-		importNotice = '';
+		importNotices = [];
 	}
 
 	function editRecipe(recipe: Recipe): void {
@@ -360,7 +360,7 @@
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
 				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
 				{#if formError}<p role="alert" class="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-sm text-rose-200">{$t(formError)}</p>{/if}
-				{#if importNotice}<p role="status" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2.5 text-sm text-amber-100">{$t(importNotice)}</p>{/if}
+				{#if importNotices.length}<ul role="status" class="mt-4 list-disc space-y-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-8 py-2.5 text-sm text-amber-100">{#each importNotices as notice}<li>{$t(notice)}</li>{/each}</ul>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
 					<label class="block text-sm font-medium text-slate-200">{$t("Title")}<input id="recipe-title" bind:value={title} required maxlength="180" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Category")} <span class="text-xs font-normal text-slate-500">optional</span><input bind:value={category} maxlength="80" placeholder={$t("Dinner")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label><label class="block text-sm font-medium text-slate-200">{$t("Servings")}<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label></div>
