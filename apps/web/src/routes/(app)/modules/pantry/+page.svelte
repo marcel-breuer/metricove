@@ -5,6 +5,7 @@
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type { PantryExpiryStatus, PantryItem, PantryMovement, PantryResponse } from '#lib/pantry';
 
@@ -38,6 +39,7 @@
 	let bestBefore = $state('');
 	let visibility = $state<'private' | 'household'>('private');
 	let adjustmentItem = $state<PantryItem | null>(null);
+	let adjustmentOpen = $state(false);
 	let adjustment = $state('');
 	let adjustmentNote = $state('');
 	let historyItemId = $state<number | null>(null);
@@ -156,6 +158,7 @@
 
 	function openAdjustment(item: PantryItem): void {
 		adjustmentItem = item;
+		adjustmentOpen = true;
 		adjustment = '';
 		adjustmentNote = '';
 		error = '';
@@ -176,6 +179,7 @@
 			});
 			message = 'Stock adjustment recorded.';
 			adjustmentItem = null;
+			adjustmentOpen = false;
 			await loadItems();
 			if (historyItemId !== null) await loadHistory(historyItemId);
 		} catch (cause) {
@@ -279,7 +283,7 @@
 			</div>
 		</section>
 
-		{#if editorOpen}
+		<Modal bind:open={editorOpen} title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')}>
 			<section class="rounded-2xl border border-emerald-200/20 bg-slate-900/90 p-5 shadow-xl shadow-black/10 sm:p-6" aria-labelledby="pantry-editor-title">
 				<div class="mb-5 flex items-start justify-between gap-4">
 					<div>
@@ -328,7 +332,7 @@
 					</div>
 				</form>
 			</section>
-		{/if}
+		</Modal>
 
 		<section class="space-y-4" aria-labelledby="stock-list-title">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -376,12 +380,14 @@
 										<button type="button" aria-expanded={historyItemId === item.id} onclick={() => void toggleHistory(item)} class="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5">{$t(historyItemId === item.id ? 'Hide history' : 'History')}</button>
 									</div>
 								</div>
-								{#if adjustmentItem?.id === item.id}
+				{#if adjustmentItem?.id === item.id}
+					<Modal bind:open={adjustmentOpen} title={$t('Adjust stock')} description={item.name}>
 									<form onsubmit={saveAdjustment} class="mt-5 grid gap-3 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.04] p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
 										<label class="space-y-2 text-xs text-slate-300"><span>{$t("Change in")} {item.unit} <span class="text-slate-500">{$t("(use minus to remove)")}</span></span><input bind:value={adjustment} required inputmode="decimal" class="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/50" placeholder={$t("0.500 or -1")} /></label>
 										<label class="space-y-2 text-xs text-slate-300"><span>{$t("Note")} <span class="text-slate-500">{$t("(optional)")}</span></span><input bind:value={adjustmentNote} maxlength="500" class="w-full rounded-lg border border-white/10 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/50" placeholder={$t("Used for dinner")} /></label>
-										<div class="flex gap-2"><button disabled={saving} class="rounded-lg bg-emerald-300 px-3 py-2.5 text-xs font-semibold text-emerald-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => (adjustmentItem = null)} class="rounded-lg border border-white/10 px-3 py-2.5 text-xs text-slate-300">{$t("Cancel")}</button></div>
+						<div class="flex gap-2"><button disabled={saving} class="rounded-lg bg-emerald-300 px-3 py-2.5 text-xs font-semibold text-emerald-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { adjustmentItem = null; adjustmentOpen = false; }} class="rounded-lg border border-white/10 px-3 py-2.5 text-xs text-slate-300">{$t("Cancel")}</button></div>
 									</form>
+					</Modal>
 								{/if}
 								{#if historyItemId === item.id}
 									<div class="mt-5 border-t border-white/10 pt-4">

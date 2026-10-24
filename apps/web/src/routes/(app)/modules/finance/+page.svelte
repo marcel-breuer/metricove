@@ -5,6 +5,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
 	import { formatNumber, formatCurrency } from '#lib/number-format';
 	import { defaultCurrency, formatDate } from '#lib/i18n';
 	import {
@@ -68,6 +69,10 @@
 	let recurringId = $state<number | null>(null);
 	let pendingDelete = $state<{ path: string; subject: string } | null>(null);
 	let deleteOpen = $state(false);
+	let transactionOpen = $state(false);
+	let budgetOpen = $state(false);
+	let categoryOpen = $state(false);
+	let recurringOpen = $state(false);
 	let recurringType = $state<FinanceType>('expense');
 	let recurringCategory = $state('');
 	let recurringDescription = $state('');
@@ -150,6 +155,7 @@
 	}
 
 	function resetCategory(): void {
+		categoryOpen = false;
 		categoryId = null;
 		categoryName = '';
 		categoryType = 'expense';
@@ -157,6 +163,7 @@
 	}
 
 	function resetTransaction(): void {
+		transactionOpen = false;
 		transactionId = null;
 		transactionType = 'expense';
 		transactionCategory = '';
@@ -169,6 +176,7 @@
 	}
 
 	function resetBudget(): void {
+		budgetOpen = false;
 		budgetId = null;
 		budgetCategory = '';
 		budgetAmount = '';
@@ -177,6 +185,7 @@
 	}
 
 	function resetRecurring(): void {
+		recurringOpen = false;
 		recurringId = null;
 		recurringType = 'expense';
 		recurringCategory = '';
@@ -207,6 +216,7 @@
 	}
 
 	function editCategory(category: FinanceCategory): void {
+		categoryOpen = true;
 		clearFormMessages();
 		categoryId = category.id;
 		categoryName = category.name;
@@ -233,6 +243,7 @@
 	}
 
 	function editTransaction(transaction: FinancialTransaction): void {
+		transactionOpen = true;
 		clearFormMessages();
 		transactionId = transaction.id;
 		transactionType = transaction.type;
@@ -263,6 +274,7 @@
 	}
 
 	function editBudget(budget: FinanceBudget): void {
+		budgetOpen = true;
 		clearFormMessages();
 		budgetId = budget.id;
 		budgetCategory = budget.finance_category_id === null ? '' : String(budget.finance_category_id);
@@ -290,6 +302,7 @@
 	}
 
 	function editRecurring(entry: FinanceRecurringEntry): void {
+		recurringOpen = true;
 		clearFormMessages();
 		recurringId = entry.id;
 		recurringType = entry.type;
@@ -380,6 +393,8 @@
 			<section class="mt-7 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-7" aria-labelledby="transaction-form-title">
 				<div><p class="text-sm font-medium text-cyan-200">{$t(transactionId ? 'Edit record' : 'Quick entry')}</p><h2 id="transaction-form-title" class="mt-1 text-xl font-semibold text-white">{$t(transactionId ? 'Update a transaction.' : 'Add a transaction.')}</h2></div>
 				{#if categories.length === 0}<p class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-4 py-3 text-sm text-amber-100">{$t("Create a category below before recording a transaction.")}</p>{/if}
+				<button type="button" onclick={() => { resetTransaction(); transactionOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Add transaction')}</button>
+				<Modal bind:open={transactionOpen} title={$t(transactionId ? 'Edit transaction' : 'Add transaction')}>
 				<form class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" onsubmit={saveTransaction}>
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={transactionType} disabled={transactionId !== null && transactionCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={transactionCategory} required={transactionId === null || transactionCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each typeCategories as category (category.id)}<option value={String(category.id)}>{category.name}{$t(category.visibility === 'household' ? ' · household' : '')}</option>{/each}</select></label>
@@ -391,6 +406,7 @@
 					{#if !transactionId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={transactionVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 					<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-4 sm:col-span-2 xl:col-span-4 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private transactions stay visible only to their owner unless access is granted for that record.")}</p><div class="flex flex-wrap gap-2"><button type="submit" disabled={saving || categories.length === 0} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : transactionId ? 'Save changes' : 'Add transaction'}</button>{#if transactionId}<button type="button" class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-slate-500" onclick={resetTransaction}>{$t("Cancel")}</button>{/if}</div></div>
 				</form>
+				</Modal>
 			</section>
 		{/if}
 
@@ -409,6 +425,8 @@
 			<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="budgets-title">
 				<p class="text-sm font-medium text-cyan-200">{$t("Plan")}</p><h2 id="budgets-title" class="mt-1 text-xl font-semibold text-white">{$t("Monthly budgets")}</h2>
 				{#if (canCreate || canManageShared) && expenseCategories.length > 0}
+					<button type="button" onclick={() => { resetBudget(); budgetOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Set budget')}</button>
+					<Modal bind:open={budgetOpen} title={$t(budgetId ? 'Edit budget' : 'Set monthly budget')}>
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveBudget}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Expense category")}<select bind:value={budgetCategory} required={budgetId === null} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each expenseCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Monthly limit")}<input bind:value={budgetAmount} required inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="500.00" /></label>
@@ -416,6 +434,7 @@
 						{#if !budgetId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={budgetVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{budgetId ? 'Save budget' : `Set ${month} budget`}</button>{#if budgetId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetBudget}>{$t("Cancel")}</button>{/if}</div>
 					</form>
+					</Modal>
 				{/if}
 				{#if overview?.budgets.length}
 					<ul class="mt-5 space-y-3">{#each overview.budgets as budget (budget.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-medium text-white">{budget.category?.name ?? 'Category'} <span class="text-xs font-normal text-slate-500">{budget.visibility}</span></p><p class="mt-1 text-sm text-slate-400">{formatCurrency(budget.spent, budget.currency)} of {formatCurrency(budget.amount, budget.currency)} {$t("· remaining")} {formatCurrency(budget.remaining, budget.currency)}</p></div>{#if canMutate(budget.visibility)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editBudget(budget)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/budgets/${budget.id}`, 'budget')}>{$t("Delete")}</button></div>{/if}</div><div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-cyan-300" style={`width: ${Math.min(100, (Number(budget.spent) / Number(budget.amount)) * 100)}%`}></div></div></li>{/each}</ul>
@@ -425,11 +444,14 @@
 			<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="category-title">
 				<p class="text-sm font-medium text-cyan-200">{$t("Organize")}</p><h2 id="category-title" class="mt-1 text-xl font-semibold text-white">{$t("Categories")}</h2>
 				{#if canCreate || canManageShared}
+					<button type="button" onclick={() => { resetCategory(); categoryOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Add category')}</button>
+					<Modal bind:open={categoryOpen} title={$t(categoryId ? 'Edit category' : 'Add category')}>
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveCategory}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Name")}<input bind:value={categoryName} required maxlength="80" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Housing")} /></label>
 						{#if !categoryId}<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={categoryType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>{#if canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={categoryVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}{/if}
 						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t(categoryId ? 'Save category' : 'Add category')}</button>{#if categoryId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetCategory}>{$t("Cancel")}</button>{/if}</div>
 					</form>
+					</Modal>
 				{/if}
 				{#if categories.length}<ul class="mt-5 divide-y divide-slate-800">{#each categories as category (category.id)}<li class="flex items-center justify-between gap-3 py-3"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-100">{category.name}</p><p class="mt-0.5 text-xs text-slate-500">{category.type} · {category.visibility}</p></div>{#if canEditCategory(category)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editCategory(category)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/categories/${category.id}`, 'category')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-4 text-sm text-slate-400">{$t("No categories are visible yet.")}</p>{/if}
 			</section>
@@ -438,6 +460,8 @@
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="recurring-title">
 			<div><p class="text-sm font-medium text-cyan-200">{$t("On a schedule")}</p><h2 id="recurring-title" class="mt-1 text-xl font-semibold text-white">{$t("Recurring entries")}</h2><p class="mt-1 text-sm text-slate-400">{$t("A due occurrence is added to transactions only when you record it.")}</p></div>
 			{#if canCreate || canManageShared}
+				<button type="button" onclick={() => { resetRecurring(); recurringOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Add schedule')}</button>
+				<Modal bind:open={recurringOpen} title={$t(recurringId ? 'Edit schedule' : 'Add recurring schedule')}>
 				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" onsubmit={saveRecurring}>
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={recurringType} disabled={recurringId !== null && recurringCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={recurringCategory} required={recurringId === null || recurringCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="">{$t("Choose a category")}</option>{#each recurringCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
@@ -451,6 +475,7 @@
 					{#if recurringId}<label class="flex min-h-11 items-center gap-2 text-sm text-slate-200"><input bind:checked={recurringActive} type="checkbox" class="size-4 accent-cyan-300" />{$t("Schedule active")}</label>{:else if canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={recurringVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 					<div class="flex flex-wrap gap-2 border-t border-slate-800 pt-3 sm:col-span-2 xl:col-span-4"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t(recurringId ? 'Save schedule' : 'Add schedule')}</button>{#if recurringId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetRecurring}>{$t("Cancel")}</button>{/if}</div>
 				</form>
+				</Modal>
 			{/if}
 			{#if recurringEntries.length}<ul class="mt-5 grid gap-3 md:grid-cols-2">{#each recurringEntries as entry (entry.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="font-medium text-white">{entry.description}</p><p class="mt-1 text-sm text-slate-400">{entry.category?.name ?? 'Category'} · {entry.frequency} · {formatCurrency(entry.amount, entry.currency)}</p><p class="mt-1 text-xs text-slate-500">{entry.is_active ? `Next due ${entry.next_due_on ?? 'date unavailable'}` : 'Paused or complete'} · {entry.visibility}</p></div>{#if canCreate && (entry.visibility === 'private' || canManageShared) && entry.is_active && entry.next_due_on}<button type="button" class="min-h-10 rounded-lg bg-emerald-300 px-3 text-xs font-semibold text-slate-950 hover:bg-emerald-200" onclick={() => recordOccurrence(entry)}>{$t("Record due entry")}</button>{/if}</div>{#if canMutate(entry.visibility)}<div class="mt-3 flex gap-2 border-t border-slate-800 pt-3"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editRecurring(entry)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/recurring/${entry.id}`, 'recurring entry')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-5 text-sm text-slate-400">{$t("No recurring entries are visible.")}</p>{/if}
 		</section>

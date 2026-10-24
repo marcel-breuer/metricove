@@ -4,6 +4,8 @@
 	import { onMount, tick } from 'svelte';
 	import { csrfToken } from '#lib/auth';
 	import { formatDate } from '#lib/i18n';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 
 	type AssistantStatus = {
 		available: boolean;
@@ -38,6 +40,12 @@
 	let contextMessage = $state('');
 	let contextError = $state('');
 	let contextBusy = $state(false);
+	let contextCreateOpen = $state(false);
+	let contextEditOpen = $state(false);
+	let contextDeleteOpen = $state(false);
+	let contextToEdit = $state<ContextEntry | null>(null);
+	let contextToDelete = $state<ContextEntry | null>(null);
+	let editedContextContent = $state('');
 	let lastSearchRequestId = '';
 
 	$effect(() => {
@@ -84,34 +92,53 @@
 			if (!response.ok) throw new Error(Object.values(payload.errors ?? {}).flat()[0] ?? payload.message ?? 'Context could not be saved.');
 			contextContent = '';
 			contextSource = '';
+			contextProject = '';
+			contextScope = 'user';
+			contextCreateOpen = false;
 			contextMessage = 'Saved context. It will be used only for relevant questions.';
 			await loadContext();
 		} catch (cause) { contextError = cause instanceof Error ? cause.message : 'Context could not be saved.'; }
 		finally { contextBusy = false; }
 	}
 
-	async function updateContext(entry: ContextEntry, content: string): Promise<void> {
+	function beginContextEdit(entry: ContextEntry): void {
+		contextToEdit = entry;
+		editedContextContent = entry.content;
+		contextEditOpen = true;
+	}
+
+	async function updateContext(): Promise<void> {
+		const entry = contextToEdit;
+		if (!entry) return;
 		const token = csrfToken();
 		if (!token) { contextError = 'Reload this page and try again.'; return; }
+		contextBusy = true;
 		try {
 			const response = await fetch(`/api/ai/context/${entry.id}`, {
 				method: 'PUT', credentials: 'same-origin',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify({ scope: entry.scope, project_key: entry.project_key, kind: entry.kind, content, enabled: entry.enabled, expected_version: entry.version })
+				body: JSON.stringify({ scope: entry.scope, project_key: entry.project_key, kind: entry.kind, content: editedContextContent.trim(), enabled: entry.enabled, expected_version: entry.version })
 			});
 			const payload = await response.json();
 			if (!response.ok) throw new Error(String(Object.values(payload.errors ?? {}).flat()[0] ?? 'Context could not be updated.'));
+			contextEditOpen = false;
+			contextToEdit = null;
 			contextMessage = 'Saved context changes.';
 			await loadContext();
 		} catch (cause) { contextError = cause instanceof Error ? cause.message : 'Context could not be updated.'; }
+		finally { contextBusy = false; }
 	}
 
-	async function deleteContext(id: number): Promise<void> {
+	async function deleteContext(): Promise<void> {
+		const entry = contextToDelete;
+		if (!entry) return;
 		const token = csrfToken();
 		if (!token) { contextError = 'Reload this page and try again.'; return; }
 		try {
-			const response = await fetch(`/api/ai/context/${id}`, { method: 'DELETE', credentials: 'same-origin', headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token } });
+			const response = await fetch(`/api/ai/context/${entry.id}`, { method: 'DELETE', credentials: 'same-origin', headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token } });
 			if (!response.ok) throw new Error('Context could not be deleted.');
+			contextDeleteOpen = false;
+			contextToDelete = null;
 			contextMessage = 'Deleted saved context.';
 			await loadContext();
 		} catch (cause) { contextError = cause instanceof Error ? cause.message : 'Context could not be deleted.'; }
@@ -252,7 +279,10 @@
 				<div><h2 id="context-title" class="text-xl font-semibold text-white">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.")}</p></div>
 				<label class="inline-flex items-center gap-3 text-sm text-slate-200"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-cyan-300" />{$t("Use saved context")}</label>
 			</div>
-			<form onsubmit={(event) => void saveContext(event)} class="mt-6 grid gap-4 sm:grid-cols-2">
+			<div class="mt-6"><button type="button" onclick={() => (contextCreateOpen = true)} class="rounded-xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950">{$t("Add saved context")}</button></div>
+			<Modal bind:open={contextCreateOpen} title={$t("Save context")}>
+			<form onsubmit={(event) => void saveContext(event)} class="grid gap-4 sm:grid-cols-2">
+				{#if contextError}<p role="alert" class="sm:col-span-2 text-sm text-rose-200">{$t(contextError)}</p>{/if}
 				<div><label for="context-scope" class="block text-sm font-medium text-slate-200">{$t("Applies to")}</label><select id="context-scope" bind:value={contextScope} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100"><option value="user">{$t("All my questions")}</option><option value="project">{$t("One project key")}</option></select></div>
 				{#if contextScope === 'project'}<div><label for="context-project" class="block text-sm font-medium text-slate-200">{$t("Project key")}</label><input id="context-project" bind:value={contextProject} required maxlength="120" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>{/if}
 				<div><label for="context-kind" class="block text-sm font-medium text-slate-200">{$t("Type")}</label><input id="context-kind" bind:value={contextKind} required maxlength="40" placeholder={$t("preference, goal, fact")} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100" /></div>
@@ -260,18 +290,21 @@
 				<div class="sm:col-span-2"><label for="context-content" class="block text-sm font-medium text-slate-200">{$t("Context")}</label><textarea id="context-content" bind:value={contextContent} required maxlength="4000" rows="3" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm leading-6 text-slate-100"></textarea></div>
 				<div class="sm:col-span-2"><button type="submit" disabled={contextBusy || !contextContent.trim() || (contextScope === 'project' && !contextProject.trim())} class="rounded-xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save context')}</button></div>
 			</form>
+			</Modal>
 			{#if contextEntries.length}
 				<ul class="mt-6 divide-y divide-slate-800 rounded-xl border border-slate-800">
 					{#each contextEntries as entry (entry.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><textarea aria-label={$t('Edit {kind} context', { kind: $t(entry.kind) })} value={entry.content} onchange={(event) => void updateContext(entry, event.currentTarget.value)} maxlength="4000" rows="2" class="mt-2 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-200"></textarea><p class="mt-1 text-xs text-slate-500">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
-							<button type="button" onclick={() => void deleteContext(entry.id)} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">{$t("Delete")}</button>
+							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">{entry.content}</p><p class="mt-1 text-xs text-slate-500">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
+							<div class="flex shrink-0 gap-2"><button type="button" onclick={() => beginContextEdit(entry)} class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300">{$t("Edit")}</button><button type="button" onclick={() => { contextToDelete = entry; contextDeleteOpen = true; }} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">{$t("Delete")}</button></div>
 						</li>
 					{/each}
 				</ul>
 			{:else}<p class="mt-5 text-sm text-slate-500">{$t("No saved context yet.")}</p>{/if}
 			{#if contextMessage}<p role="status" class="mt-4 text-sm text-emerald-200">{contextMessage}</p>{/if}
 			{#if contextError}<p role="alert" class="mt-4 text-sm text-rose-200">{$t(contextError)}</p>{/if}
+			{#if contextToEdit}<Modal bind:open={contextEditOpen} title={$t('Edit saved context')}><form onsubmit={(event) => { event.preventDefault(); void updateContext(); }} class="space-y-4">{#if contextError}<p role="alert" class="text-sm text-rose-200">{$t(contextError)}</p>{/if}<label class="block text-sm font-medium text-slate-200">{$t('Context')}<textarea bind:value={editedContextContent} required maxlength="4000" rows="5" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm leading-6 text-slate-100"></textarea></label><button type="submit" disabled={contextBusy || !editedContextContent.trim()} class="rounded-xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save changes')}</button></form></Modal>{/if}
+			{#if contextToDelete}<ConfirmModal bind:open={contextDeleteOpen} title={$t('Delete saved context?')} message={$t('Delete this saved context entry?')} confirmLabel={$t('Delete')} onConfirm={() => void deleteContext()} />{/if}
 		</section>
 	{/if}
 

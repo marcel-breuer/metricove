@@ -9,6 +9,8 @@
 	import Panel from '#lib/ui/Panel.svelte';
 	import TextField from '#lib/ui/TextField.svelte';
 	import ThemePicker from '#lib/ui/ThemePicker.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { currencyDisplay, defaultCurrency, formatDate, formatDateTime, numberLocale, setUserPreferences, t, uiLanguage } from '#lib/i18n';
 
 	let user: AuthUser | null = null;
@@ -38,6 +40,9 @@
 	let mcpMessage = '';
 	let mcpError = '';
 	let mcpBusy = false;
+	let mcpCreateOpen = $state(false);
+	let mcpRevokeOpen = $state(false);
+	let tokenToRevoke = $state<McpToken | null>(null);
 
 	onMount(() => {
 		void loadProfile();
@@ -231,6 +236,7 @@
 			}
 			newSecret = result.secret;
 			tokenName = '';
+			mcpCreateOpen = false;
 			mcpMessage = result.message;
 			await loadMcpAccess();
 		} catch {
@@ -240,7 +246,7 @@
 		}
 	}
 
-	async function revokeMcpToken(id: number): Promise<void> {
+	async function revokeMcpToken(id: number): Promise<boolean> {
 		mcpError = '';
 		try {
 			const response = await submitMcp('DELETE', `/api/profile/mcp/tokens/${id}`);
@@ -249,8 +255,10 @@
 			newSecret = '';
 			mcpMessage = 'The MCP token has been revoked.';
 			await loadMcpAccess();
+			return true;
 		} catch (cause) {
 			mcpError = cause instanceof Error ? cause.message : 'The token could not be revoked.';
+			return false;
 		}
 	}
 
@@ -362,7 +370,9 @@
 					<p class="mt-3 break-all rounded-lg bg-slate-950 px-3 py-2 font-mono text-xs text-cyan-200">{mcpEndpoint}</p>
 				{/if}
 				{#if allowedScopes.length > 0}
-					<form class="mt-6 space-y-4" onsubmit={createMcpToken}>
+					<button type="button" onclick={() => (mcpCreateOpen = true)} class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:opacity-50">{$t('Create MCP token')}</button>
+					<Modal bind:open={mcpCreateOpen} title={$t('Create MCP token')}>
+					<form class="space-y-4" onsubmit={createMcpToken}>
 						<div>
 							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-slate-200">{$t("Token name")}</label>
 							<input id="mcp-token-name" bind:value={tokenName} required maxlength="100" autocomplete="off" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
@@ -386,8 +396,10 @@
 							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-cyan-300" />
 							<span>{$t("Never expires")}</span>
 						</label>
+						{#if mcpError}<p role="alert" class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(mcpError)}</p>{/if}
 						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
 					</form>
+					</Modal>
 				{:else if !loading}
 					<p class="mt-5 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
 				{/if}
@@ -406,12 +418,13 @@
 						<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div><p class="font-medium text-slate-100">{token.name}</p><p class="mt-1 text-xs text-slate-400">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-slate-500">{token.expires_at ? `${$t('Expires')} ${formatDate(token.expires_at)}` : $t('Never expires')}{token.revoked_at ? ` · ${$t('revoked')}` : ''}</p></div>
-								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => revokeMcpToken(token.id)} class="rounded-lg border border-rose-300/30 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-300/10">{$t('Revoke')}</button>{/if}
+								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => { tokenToRevoke = token; mcpRevokeOpen = true; }} class="rounded-lg border border-rose-300/30 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-300/10">{$t('Revoke')}</button>{/if}
 							</div>
 						</div>
 					{/each}
 				</div>
 			</div>
+			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token ') + tokenToRevoke.name + '?'} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
 				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t('Human approval')}</p>
