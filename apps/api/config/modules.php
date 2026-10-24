@@ -65,6 +65,13 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
+        'tasks' => [
+            'label' => 'Tasks',
+            'description' => 'Private and shared household tasks with assignments, due dates and recurring chores.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
         'analytics' => [
             'label' => 'Analytics',
             'description' => 'Private cross-module charts for data the member can view.',

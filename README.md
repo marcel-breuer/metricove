@@ -4,7 +4,7 @@
 
 > **Status:** Laravel API, SvelteKit web app, Docker Compose runtime and first-run household setup are implemented. Sign-in, invitations and product modules are still in progress.
 
-Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, and shopping lists. Household administrators enable modules and manage who may use them.
+Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, shopping lists and assigned household tasks. Household administrators enable modules and manage who may use them.
 
 ## Product principles
 
@@ -29,6 +29,7 @@ Metricove is designed for a **single household per installation**. Members can t
 | Meal Planning | Weekly breakfast/lunch/dinner plans using recipes or free-text meals |
 | Pantry | Grocery inventory, quantities, storage locations and best-before dates |
 | Shopping | Shared shopping lists, manual items and optional ingredient suggestions |
+| Tasks | Private and shared household tasks, assignments, due dates, recurring chores and completion history |
 | Analytics | Charts and comparisons for enabled and authorized modules |
 | Import | CSV import/export and assisted meter-photo recognition |
 | AI | In-app assistant, model adapters and permission-aware MCP tools |

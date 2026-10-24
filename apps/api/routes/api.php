@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\HouseholdTaskController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
@@ -321,6 +322,23 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.move');
             Route::delete('/items/{item}', [ShoppingController::class, 'deleteItem'])
                 ->middleware('module.enabled:shopping')->whereNumber('item')->name('items.destroy');
+        });
+
+        Route::prefix('tasks')->name('tasks.')->group(function (): void {
+            Route::get('/assignees', [HouseholdTaskController::class, 'assignees'])
+                ->middleware('module.access:tasks,manage')->name('assignees.index');
+            Route::get('/', [HouseholdTaskController::class, 'index'])
+                ->middleware('module.access:tasks,view')->name('index');
+            Route::post('/', [HouseholdTaskController::class, 'store'])
+                ->middleware('module.enabled:tasks')->name('store');
+            Route::get('/{task}/history', [HouseholdTaskController::class, 'history'])
+                ->middleware('module.access:tasks,view')->whereNumber('task')->name('history');
+            Route::patch('/{task}', [HouseholdTaskController::class, 'update'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->name('update');
+            Route::post('/{task}/complete', [HouseholdTaskController::class, 'complete'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->name('complete');
+            Route::delete('/{task}', [HouseholdTaskController::class, 'destroy'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->name('destroy');
         });
 
         Route::middleware('active-admin')->prefix('admin')->name('admin.')->group(function (): void {
