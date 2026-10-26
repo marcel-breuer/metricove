@@ -368,6 +368,9 @@ Route::middleware('web')->group(function (): void {
             Route::patch('/settings', [AdminSettingsController::class, 'update'])
                 ->middleware('throttle:module-manage')
                 ->name('settings.update');
+            Route::patch('/settings/network-access', [AdminSettingsController::class, 'updateNetworkAccess'])
+                ->middleware('throttle:module-manage')
+                ->name('settings.network-access.update');
             Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
             Route::patch('/modules/{moduleKey}', [AdminModuleController::class, 'update'])
                 ->middleware('throttle:module-manage')

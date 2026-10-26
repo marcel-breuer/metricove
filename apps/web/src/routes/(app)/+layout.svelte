@@ -79,6 +79,7 @@
 			const setupResponse = await fetch('/api/setup/status', {
 				headers: { Accept: 'application/json' }
 			});
+			if (setupResponse.status === 403) throw new Error('This network is not allowed to access this installation.');
 			if (setupResponse.ok) {
 				const setup = (await setupResponse.json()) as { setup_required?: boolean };
 				if (setup.setup_required) {
@@ -91,6 +92,7 @@
 				credentials: 'same-origin',
 				headers: { Accept: 'application/json' }
 			});
+			if (sessionResponse.status === 403) throw new Error('This network is not allowed to access this installation.');
 			if (sessionResponse.status === 401) {
 				await goto('/login');
 				return;
@@ -335,7 +337,11 @@
 				</div>
 			{/if}
 			{#if signOutError}<p role="alert" class="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(signOutError)}</p>{/if}
-			{@render children()}
+			{#if loading}
+				<p role="status" class="text-sm text-slate-400">{$t('Loading account')}…</p>
+			{:else if !shellError && currentUser}
+				{@render children()}
+			{/if}
 		</main>
 	</div>
 </div>

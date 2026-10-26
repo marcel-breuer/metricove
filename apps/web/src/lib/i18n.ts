@@ -424,6 +424,22 @@ Object.assign(routeGerman, {
 	'No readable recipe text was found in this PDF.': 'In diesem PDF wurde kein lesbarer Rezepttext gefunden.',
 });
 
+Object.assign(routeGerman, {
+	'Configure the assistant provider and network access for this installation. Provider credentials are encrypted at rest and never shown again after saving.': 'Konfiguriere den KI-Anbieter und den Netzwerkzugriff für diese Installation. Zugangsdaten werden verschlüsselt gespeichert und nach dem Speichern nicht erneut angezeigt.',
+	'Network access': 'Netzwerkzugriff',
+	'Leave the list empty to allow access from any IP address. When entries are saved, only matching addresses and networks can use the platform API, including sign-in and MCP.': 'Lass die Liste leer, um den Zugriff von jeder IP-Adresse zu erlauben. Sobald Einträge gespeichert sind, können nur passende Adressen und Netzwerke die Plattform-API einschließlich Anmeldung und MCP verwenden.',
+	'Observed client IP': 'Erkannte Client-IP-Adresse',
+	'The client IP could not be determined. Check the trusted proxy configuration before enabling this restriction.': 'Die Client-IP-Adresse konnte nicht ermittelt werden. Prüfe die Konfiguration vertrauenswürdiger Proxys, bevor du diese Einschränkung aktivierst.',
+	'Allowed IP addresses and networks': 'Erlaubte IP-Adressen und Netzwerke',
+	'Enter one IPv4 or IPv6 address or CIDR network per line. Commas are also accepted. Up to 100 entries are supported.': 'Gib pro Zeile eine IPv4- oder IPv6-Adresse oder ein CIDR-Netzwerk ein. Kommas werden ebenfalls akzeptiert. Es sind bis zu 100 Einträge möglich.',
+	'Include the observed address above or a network containing it. Otherwise, connect from an allowed network before managing these settings again.': 'Füge die oben erkannte Adresse oder ein Netzwerk hinzu, das sie enthält. Andernfalls musst du dich von einem erlaubten Netzwerk verbinden, um diese Einstellung erneut zu ändern.',
+	'Save network access': 'Netzwerkzugriff speichern',
+	'Network access settings saved.': 'Netzwerkzugriff gespeichert.',
+	'Network access settings could not be saved.': 'Der Netzwerkzugriff konnte nicht gespeichert werden.',
+	'Your current IP address is not included in this list. Saving it may lock you out until you connect from an allowed network. Continue?': 'Deine aktuelle IP-Adresse ist nicht in der Liste enthalten. Nach dem Speichern musst du dich eventuell von einem erlaubten Netzwerk verbinden, um wieder Zugriff zu erhalten. Fortfahren?',
+	'This network is not allowed to access this installation.': 'Dieses Netzwerk darf nicht auf diese Installation zugreifen.',
+});
+
 export const uiLanguage = writable<UiLanguage>('en');
 export const numberLocale = writable<NumberLocale>('en-US');
 export const defaultCurrency = writable('EUR');
