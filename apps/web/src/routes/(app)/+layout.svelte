@@ -40,6 +40,11 @@
 
 	const pathname = $derived(page.url.pathname);
 	const pageTitle = $derived($t(titleForPath(pathname)));
+	const trackingModule = $derived(modules.find((module) => module.key === 'tracking'));
+	const canCreateTracker = $derived(
+		trackingModule?.capabilities.create === true ||
+		(currentUser?.is_admin === true && trackingModule?.capabilities.manage === true)
+	);
 
 	onMount(() => {
 		void loadShell();
@@ -326,6 +331,13 @@
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m5 12 14 0m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
 				</button>
 			</form>
+			{#if canCreateTracker}
+				<a href="/modules/tracking?create=1" aria-label={$t('Create tracker')} class="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:px-4">
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+					<span class="hidden sm:inline">{$t('Create tracker')}</span>
+					<span class="sm:hidden">{$t('Create')}</span>
+				</a>
+			{/if}
 		</header>
 
 		<main id="main-content" class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
@@ -13,6 +14,7 @@
 	const canView = $derived(access?.capabilities.view ?? false);
 	const canCreatePrivate = $derived(access?.capabilities.create ?? false);
 	const canCreateShared = $derived(shell.currentUser?.is_admin === true && (access?.capabilities.manage ?? false));
+	const createRequested = $derived(page.url.searchParams.get('create') === '1');
 
 	let trackers = $state<Tracker[]>([]);
 	let loading = $state(true);
@@ -31,6 +33,12 @@
 
 	onMount(() => {
 		void loadTrackers();
+	});
+
+	$effect(() => {
+		if (!createRequested || (!canCreatePrivate && !canCreateShared)) return;
+		createOpen = true;
+		void goto('/modules/tracking', { replaceState: true });
 	});
 
 	async function loadTrackers(): Promise<void> {
