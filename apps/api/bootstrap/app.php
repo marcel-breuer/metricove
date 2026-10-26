@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureActiveAdmin;
 use App\Http\Middleware\EnsureActiveMember;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureModuleEnabled;
+use App\Http\Middleware\EnsureNetworkAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prependToGroup('api', EnsureNetworkAccess::class);
         $middleware->alias([
             'active-admin' => EnsureActiveAdmin::class,
             'active-member' => EnsureActiveMember::class,
