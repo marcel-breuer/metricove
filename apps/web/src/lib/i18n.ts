@@ -501,6 +501,8 @@ Object.assign(routeGerman, {
 	'Keep vehicle details and records together.': 'Bewahre Fahrzeugdaten und Einträge an einem Ort auf.',
 	'Loading…': 'Wird geladen…',
 	'New recipes are private to you.': 'Neue Rezepte sind nur für dich sichtbar.',
+	'Older odometer readings could not be loaded.': 'Ältere Kilometerstände konnten nicht geladen werden.',
+	'Older odometer readings could not be loaded. Check your connection and try again.': 'Ältere Kilometerstände konnten nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.',
 	'Record mileage': 'Kilometerstand erfassen',
 	'Record reading': 'Zählerstand erfassen',
 	'Register a meter and its units for future readings.': 'Lege einen Zähler mit seiner Einheit für künftige Messwerte an.',
