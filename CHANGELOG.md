@@ -2,6 +2,22 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.10.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.9.0...metricove-v0.10.0) (2026-10-26)
+
+
+### Features
+
+* **vehicles:** lazy-load odometer history ([#149](https://github.com/marcel-breuer/metricove/issues/149)) ([7413c31](https://github.com/marcel-breuer/metricove/commit/7413c31d4f81ccea7cf849eb42876ebc2ddea229))
+* **vehicles:** paginate odometer history ([be4f240](https://github.com/marcel-breuer/metricove/commit/be4f2404237eb1009c1fce0147ececd2281ecd77))
+
+
+### Bug Fixes
+
+* **i18n:** translate odometer history errors ([b1f15f7](https://github.com/marcel-breuer/metricove/commit/b1f15f77ca9408564e8c1aabe012cebe2815d840))
+* **vehicles:** preserve current main changes ([410c1d8](https://github.com/marcel-breuer/metricove/commit/410c1d8e19e8f9a60183ef8aa91e07cd73fee15b))
+* **vehicles:** preserve full translations in history page ([67feadc](https://github.com/marcel-breuer/metricove/commit/67feadcc31f144d6ffab1046c6d3f3d3cb7fc150))
+* **vehicles:** retain full German translations ([fdf533d](https://github.com/marcel-breuer/metricove/commit/fdf533d6d74501c3a93c576e16dd931e10d1c4cf))
+
 ## [0.9.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.8.0...metricove-v0.9.0) (2026-10-26)
 
 
