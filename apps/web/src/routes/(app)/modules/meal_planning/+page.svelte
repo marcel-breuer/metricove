@@ -258,12 +258,12 @@
 	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
 	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
 
-	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + (mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
+	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
 		<section id="meal-editor" aria-labelledby="meal-editor-title" class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 sm:p-7">
 			<div class="mb-5 flex items-start justify-between gap-4">
 				<div>
 					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')}</p>
-					<h2 id="meal-editor-title" class="mt-2 text-xl font-semibold text-white">{formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' })} · {mealTypes.find((entry) => entry.key === mealType)?.label}</h2>
+					<h2 id="meal-editor-title" class="mt-2 text-xl font-semibold text-white">{formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' })} · {$t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '')}</h2>
 				</div>
 				<button type="button" onclick={closeEditor} class="min-h-11 rounded-lg px-3 text-sm text-slate-300 hover:bg-slate-800">{$t("Close")}</button>
 			</div>
@@ -273,7 +273,7 @@
 				</label>
 				<label class="text-xs font-medium text-slate-400">{$t("Meal")}
 					<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-						{#each mealTypes as entry}<option value={entry.key}>{entry.label}</option>{/each}
+						{#each mealTypes as entry}<option value={entry.key}>{$t(entry.label)}</option>{/each}
 					</select>
 				</label>
 				{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
@@ -314,7 +314,7 @@
 					</label>
 				{/if}
 				<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-4">
-					<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{saving ? 'Saving…' : editingSlotId === null ? 'Add meal' : 'Save changes'}</button>
+					<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Saving…' : editingSlotId === null ? 'Add meal' : 'Save changes')}</button>
 					<button type="button" onclick={closeEditor} class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm text-slate-200 hover:border-slate-500">{$t("Cancel")}</button>
 				</div>
 			</form>
@@ -336,9 +336,9 @@
 					<div class="space-y-3">
 						{#each mealTypes as entry (entry.key)}
 							{@const slot = slotFor(day, entry.key)}
-							<section aria-label={entry.label} class="min-h-24 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+							<section aria-label={$t(entry.label)} class="min-h-24 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
 								<div class="flex items-center justify-between gap-2">
-									<h3 class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{entry.label}</h3>
+									<h3 class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{$t(entry.label)}</h3>
 									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-cyan-300">{$t("Household")}</span>{/if}
 								</div>
 								{#if slot}

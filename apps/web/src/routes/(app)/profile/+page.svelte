@@ -382,7 +382,7 @@
 							{#each allowedScopes as scope}
 								<label class="flex items-start gap-3 rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-300">
 									<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-cyan-300" />
-									<span>{scopeLabels[scope] || scope}<span class="mt-0.5 block font-mono text-xs text-slate-500">{scope}</span></span>
+									<span>{$t(scopeLabels[scope] || scope)}<span class="mt-0.5 block font-mono text-xs text-slate-500">{scope}</span></span>
 								</label>
 							{/each}
 						</fieldset>
@@ -424,7 +424,7 @@
 					{/each}
 				</div>
 			</div>
-			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token ') + tokenToRevoke.name + '?'} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
+			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token {name}?', { name: tokenToRevoke.name })} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
 				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t('Human approval')}</p>

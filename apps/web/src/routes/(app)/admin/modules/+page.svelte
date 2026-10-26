@@ -273,5 +273,5 @@
 
 	</div>
 </section>
-{#if pendingDisable}<ConfirmModal bind:open={disableOpen} title={$t('Disable module?')} message={$t('Disable ') + $t(pendingDisable.label) + $t('? Existing data and member rights will be kept.')} confirmLabel={$t('Disable')} onConfirm={() => void setEnabled(pendingDisable!, true)} />{/if}
+{#if pendingDisable}<ConfirmModal bind:open={disableOpen} title={$t('Disable module?')} message={$t('Disable {module}? Existing data and member rights will be kept.', { module: $t(pendingDisable.label) })} confirmLabel={$t('Disable')} onConfirm={() => void setEnabled(pendingDisable!, true)} />{/if}
 <ConfirmModal bind:open={disableAllOpen} title={$t('Disable all optional modules?')} message={$t('Existing data and member rights will be kept. If modules are enabled again, every active member will receive all module rights.')} confirmLabel={$t('Disable all')} onConfirm={() => void toggleAllModules(true)} />

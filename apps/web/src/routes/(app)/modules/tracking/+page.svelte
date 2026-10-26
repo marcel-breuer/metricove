@@ -300,7 +300,7 @@
 			</form>
 			</div>
 		</Modal>
-		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “') + trackerToDelete.name + $t('” and all its measurements?')} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
+		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}
 		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
 	{/if}

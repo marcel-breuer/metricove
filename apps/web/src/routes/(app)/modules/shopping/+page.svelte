@@ -517,10 +517,10 @@
 								<label class="text-xs font-medium text-slate-400">{$t("Item")}
 									<input bind:value={quickName} maxlength="180" required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">{$t("Quantity")} <span class="font-normal text-slate-600">optional</span>
+								<label class="text-xs font-medium text-slate-400">{$t("Quantity")} <span class="font-normal text-slate-600">{$t('optional')}</span>
 									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">{$t("Unit")} <span class="font-normal text-slate-600">optional</span>
+								<label class="text-xs font-medium text-slate-400">{$t("Unit")} <span class="font-normal text-slate-600">{$t('optional')}</span>
 									<input bind:value={quickUnit} maxlength="32" placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 								</label>
 								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>

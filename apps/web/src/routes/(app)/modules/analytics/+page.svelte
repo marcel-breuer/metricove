@@ -194,7 +194,7 @@
 		<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-white">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-slate-400">{$t("Available charts follow your current module access.")}</p></div>
-				<span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-400">{widgets.length} / 12 widgets</span>
+				<span class="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-400">{$t('{count} / 12 widgets', { count: widgets.length })}</span>
 			</div>
 			{#if catalog.length === 0}
 				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">{$t("No data sources are available yet. Ask an administrator to enable a source module and grant you view access.")}</p>
@@ -202,15 +202,15 @@
 				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_1fr_1fr_auto]" onsubmit={createWidget}>
 					<label class="block text-xs font-medium text-slate-300">{$t("Data source")}
 						<select bind:value={metricKey} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-							{#each catalog as metric (metric.key)}<option value={metric.key}>{metric.label} · {metric.source_label}</option>{/each}
+							{#each catalog as metric (metric.key)}<option value={metric.key}>{$t(metric.label)} · {$t(metric.source_label)}</option>{/each}
 						</select>
 					</label>
 					<label class="block text-xs font-medium text-slate-300">{$t("Widget title")}
-						<input bind:value={title} maxlength="80" placeholder={catalog.find((metric) => metric.key === metricKey)?.label ?? $t('A clear title')} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+						<input bind:value={title} maxlength="80" placeholder={$t(catalog.find((metric) => metric.key === metricKey)?.label ?? 'A clear title')} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 					</label>
 					<label class="block text-xs font-medium text-slate-300">{$t("Time range")}
 						<select bind:value={rangeKey} class="mt-1.5 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-							{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}
+							{#each analyticsRanges as range (range.value)}<option value={range.value}>{$t(range.label)}</option>{/each}
 						</select>
 					</label>
 					<label class="block text-xs font-medium text-slate-300">{$t("Chart type")}
@@ -289,7 +289,7 @@
 						<Modal bind:open={editOpen} title={$t('Edit widget')}>
 						<form class="mt-4 grid gap-3 rounded-xl border border-cyan-300/20 bg-cyan-300/5 p-4 sm:grid-cols-2" onsubmit={(event) => { event.preventDefault(); void saveWidget(widget); }}>
 							<label class="block text-xs font-medium text-slate-300">{$t("Widget title")}<input bind:value={editTitle} maxlength="80" required class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none" /></label>
-							<label class="block text-xs font-medium text-slate-300">{$t("Time range")}<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none">{#each analyticsRanges as range (range.value)}<option value={range.value}>{range.label}</option>{/each}</select></label>
+							<label class="block text-xs font-medium text-slate-300">{$t("Time range")}<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none">{#each analyticsRanges as range (range.value)}<option value={range.value}>{$t(range.label)}</option>{/each}</select></label>
 							<label class="block text-xs font-medium text-slate-300">{$t("Chart type")}<select bind:value={editChart} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none"><option value="line">{$t("Line")}</option><option value="bar">{$t("Bars")}</option></select></label>
 							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-3 text-xs font-semibold text-slate-950 disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { editingId = null; editOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs font-semibold text-slate-200">{$t("Cancel")}</button><button type="button" disabled={saving} onclick={() => { widgetToRemove = widget; removeOpen = true; }} class="ml-auto min-h-10 rounded-lg border border-rose-400/30 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-400/10 disabled:opacity-50">{$t("Remove")}</button></div>
 						</form>

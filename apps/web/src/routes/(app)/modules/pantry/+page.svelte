@@ -288,7 +288,7 @@
 				<div class="mb-5 flex items-start justify-between gap-4">
 					<div>
 						<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">{$t(editingItem ? 'Item details' : 'New stock line')}</p>
-						<h2 id="pantry-editor-title" class="mt-1 text-xl font-semibold text-white">{editingItem ? `Edit ${editingItem.name}` : 'Add to pantry'}</h2>
+						<h2 id="pantry-editor-title" class="mt-1 text-xl font-semibold text-white">{editingItem ? $t('Edit {name}', { name: editingItem.name }) : $t('Add to pantry')}</h2>
 					</div>
 					<button type="button" onclick={closeEditor} class="rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-white">{$t("Close")}</button>
 				</div>
@@ -327,7 +327,7 @@
 						</label>
 					{/if}
 					<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-						<button disabled={saving} class="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 disabled:opacity-50">{saving ? 'Saving…' : editingItem ? 'Save details' : 'Add item'}</button>
+						<button disabled={saving} class="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 disabled:opacity-50">{$t(saving ? 'Saving…' : editingItem ? 'Save details' : 'Add item')}</button>
 						<p class="text-xs leading-5 text-slate-500">{$t("Units stay explicit and are never converted automatically.")}</p>
 					</div>
 				</form>

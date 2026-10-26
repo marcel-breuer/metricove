@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { t } from '#lib/i18n';
 
 	let {
 		open = $bindable(false),
@@ -41,7 +42,7 @@
 				<h2 class="text-xl font-semibold text-white">{title}</h2>
 				{#if description}<p class="mt-1 text-sm leading-6 text-slate-400">{description}</p>{/if}
 			</div>
-			<button type="button" aria-label="Close dialog" onclick={close} class="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-700 text-xl text-slate-300 transition hover:border-slate-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">×</button>
+			<button type="button" aria-label={$t('Close dialog')} onclick={close} class="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-700 text-xl text-slate-300 transition hover:border-slate-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">×</button>
 		</header>
 		{@render children()}
 	</div>
