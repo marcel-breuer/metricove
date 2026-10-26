@@ -79,6 +79,11 @@ updates:
     directory: "/"
     patterns:
       - "*"
+    # PostgreSQL major upgrades need their own data-migration plan and validation.
+    ignore:
+      - dependency-name: "postgres"
+        versions:
+          - ">= 18.0.0"
     multi-ecosystem-group: all-dependencies
     assignees:
       - marcel-breuer
