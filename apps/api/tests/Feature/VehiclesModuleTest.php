@@ -11,6 +11,7 @@ use App\Models\VehicleMaintenanceRecord;
 use App\Models\VehicleOdometerReading;
 use App\Services\Modules\ModuleAccessService;
 use App\Services\Modules\ModuleManagementService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -64,6 +65,38 @@ class VehiclesModuleTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('odometer_unit');
         $this->actingAs($admin, 'web')->patchJson("/api/vehicles/{$vehicleId}", ['name' => 'Updated family car'])
             ->assertOk()->assertJsonPath('vehicle.name', 'Updated family car');
+    }
+
+    public function test_odometer_history_is_paginated_newest_first_and_returns_older_pages(): void
+    {
+        $admin = $this->admin();
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $this->grant($admin, ['view' => true, 'create' => true, 'manage' => true]);
+        $vehicleId = $this->createVehicle($admin, 'private');
+
+        for ($day = 1; $day <= 35; $day++) {
+            $date = CarbonImmutable::parse('2026-01-01')->addDays($day - 1)->format('Y-m-d');
+            $this->odometer($admin, $vehicleId, $date, (string) (50000 + $day * 100));
+        }
+
+        $initial = $this->actingAs($admin, 'web')->getJson("/api/vehicles/{$vehicleId}")
+            ->assertOk()
+            ->assertJsonCount(30, 'odometer_readings')
+            ->assertJsonPath('has_more_odometer_readings', true);
+        $this->assertSame('2026-01-06', $initial->json('odometer_readings.0.reading_date'));
+        $this->assertSame('2026-02-04', $initial->json('odometer_readings.29.reading_date'));
+
+        $oldestVisible = $initial->json('odometer_readings.0');
+        $olderPage = $this->actingAs($admin, 'web')->getJson(sprintf(
+            '/api/vehicles/%d/odometer-readings?limit=30&before_reading_date=%s&before_id=%d',
+            $vehicleId,
+            $oldestVisible['reading_date'],
+            $oldestVisible['id'],
+        ))->assertOk()->assertJsonCount(5, 'odometer_readings')->assertJsonPath('has_more_odometer_readings', false);
+
+        $this->assertSame('2026-01-01', $olderPage->json('odometer_readings.0.reading_date'));
+        $this->assertSame('2026-01-05', $olderPage->json('odometer_readings.4.reading_date'));
+        $this->assertSame('100.000', $initial->json('odometer_readings.0.distance_since_previous'));
     }
 
     public function test_odometer_corrections_keep_audit_history_and_check_neighbor_values(): void
