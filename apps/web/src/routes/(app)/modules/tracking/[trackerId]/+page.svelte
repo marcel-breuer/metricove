@@ -478,7 +478,7 @@
 								{:else}
 									<label class="block text-sm font-medium text-slate-200">{field.label}{$t(field.required ? ' · required' : '')}
 										{#if field.type === 'number'}
-										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' to ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
+										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' ' + $t('to') + ' ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
 											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Enter a decimal value")} />
 										{:else if field.type === 'date'}
 											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
@@ -490,7 +490,7 @@
 							</div>
 						{/each}
 					</div>
-					<div class="flex justify-end border-t border-slate-800 pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement'}</button></div>
+					<div class="flex justify-end border-t border-slate-800 pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
 				</form>
 			</section>
 			</Modal>
@@ -546,7 +546,7 @@
 			{/if}
 		</section>
 		{#if deleteTargetEntry}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete measurement?')} message={$t('Delete this measurement?')} busy={deletingEntryId === deleteTargetEntry.id} onConfirm={() => void deleteEntry(deleteTargetEntry!)} />{/if}
-		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “') + tracker.name + $t('” and all its measurements?')} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
+		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: tracker.name })} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
 			<details class="mt-7 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">

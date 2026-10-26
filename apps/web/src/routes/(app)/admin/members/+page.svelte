@@ -249,7 +249,7 @@
 				</ul>
 			{/if}
 	</section>
-	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove ') + memberToRemove.name + $t(' from this household? This cannot be undone.')} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
+	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove {name} from this household? This cannot be undone.', { name: memberToRemove.name })} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="audit-heading">
 			<div>

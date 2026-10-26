@@ -67,7 +67,14 @@
 	let budgetVisibility = $state<FinanceVisibility>('private');
 
 	let recurringId = $state<number | null>(null);
-	let pendingDelete = $state<{ path: string; subject: string } | null>(null);
+	const deleteMessages = {
+		transaction: 'Delete this transaction? This cannot be undone.',
+		budget: 'Delete this budget? This cannot be undone.',
+		category: 'Delete this category? This cannot be undone.',
+		'recurring entry': 'Delete this recurring entry? This cannot be undone.'
+	};
+	type DeleteSubject = keyof typeof deleteMessages;
+	let pendingDelete = $state<{ path: string; subject: DeleteSubject } | null>(null);
 	let deleteOpen = $state(false);
 	let transactionOpen = $state(false);
 	let budgetOpen = $state(false);
@@ -331,7 +338,7 @@
 		}
 	}
 
-	function requestRemove(path: string, subject: string): void {
+	function requestRemove(path: string, subject: DeleteSubject): void {
 		pendingDelete = { path, subject };
 		deleteOpen = true;
 	}
@@ -366,7 +373,7 @@
 			<label class="sr-only" for="finance-month">{$t("Budget month")}</label><input id="finance-month" type="month" bind:value={month} class="min-h-10 w-36 rounded-lg border-0 bg-transparent px-2 text-sm text-white focus:ring-2 focus:ring-cyan-300/30" />
 			<button type="button" class="min-h-10 min-w-10 rounded-lg text-lg text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-cyan-300" aria-label={$t("Next month")} onclick={() => shiftMonth(1)}>›</button>
 		</div>
-{#if pendingDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete record?')} message={$t(`Delete this ${pendingDelete.subject}? This cannot be undone.`)} onConfirm={() => void remove(pendingDelete!.path, pendingDelete!.subject)} />{/if}
+{#if pendingDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete record?')} message={$t(deleteMessages[pendingDelete.subject])} onConfirm={() => void remove(pendingDelete!.path, pendingDelete!.subject)} />{/if}
 	</div>
 
 	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
@@ -404,7 +411,7 @@
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Payee")}<input bind:value={transactionPayee} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Date")}<input bind:value={transactionDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					{#if !transactionId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={transactionVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
-					<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-4 sm:col-span-2 xl:col-span-4 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private transactions stay visible only to their owner unless access is granted for that record.")}</p><div class="flex flex-wrap gap-2"><button type="submit" disabled={saving || categories.length === 0} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : transactionId ? 'Save changes' : 'Add transaction'}</button>{#if transactionId}<button type="button" class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-slate-500" onclick={resetTransaction}>{$t("Cancel")}</button>{/if}</div></div>
+					<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-4 sm:col-span-2 xl:col-span-4 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private transactions stay visible only to their owner unless access is granted for that record.")}</p><div class="flex flex-wrap gap-2"><button type="submit" disabled={saving || categories.length === 0} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : transactionId ? 'Save changes' : 'Add transaction')}</button>{#if transactionId}<button type="button" class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-slate-500" onclick={resetTransaction}>{$t("Cancel")}</button>{/if}</div></div>
 				</form>
 				</Modal>
 			</section>
@@ -432,7 +439,7 @@
 						<label class="block text-sm font-medium text-slate-200">{$t("Monthly limit")}<input bind:value={budgetAmount} required inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="500.00" /></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={budgetCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if !budgetId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={budgetVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
-						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{budgetId ? 'Save budget' : `Set ${month} budget`}</button>{#if budgetId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetBudget}>{$t("Cancel")}</button>{/if}</div>
+						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{budgetId ? $t('Save budget') : $t('Set {month} budget', { month })}</button>{#if budgetId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetBudget}>{$t("Cancel")}</button>{/if}</div>
 					</form>
 					</Modal>
 				{/if}
@@ -468,7 +475,7 @@
 					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={recurringAmount} required inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="49.99" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={recurringCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={recurringDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={$t("Internet plan")} /></label>
-					<label class="block text-sm font-medium text-slate-200">{$t("Frequency")}<select bind:value={recurringFrequency} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each financeFrequencies as frequency}<option value={frequency.value}>{frequency.label}</option>{/each}</select></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Frequency")}<select bind:value={recurringFrequency} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each financeFrequencies as frequency}<option value={frequency.value}>{$t(frequency.label)}</option>{/each}</select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Starts on")}<input bind:value={recurringStartsOn} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Next due")}<input bind:value={recurringNextDueOn} type="date" required={recurringActive} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Ends on")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={recurringEndsOn} type="date" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>

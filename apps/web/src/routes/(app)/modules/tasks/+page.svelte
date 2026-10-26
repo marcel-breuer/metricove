@@ -242,10 +242,10 @@
 <svelte:window onfocus={updateFilters} />
 
 <div class="space-y-6">
-	<PageHeading eyebrow="Household" title="Tasks" description="Assign household work, set a due date and keep recurring chores moving." />
+	<PageHeading eyebrow={$t('Household')} title={$t('Tasks')} description={$t('Assign household work, set a due date and keep recurring chores moving.')} />
 
-	{#if error}<Notice tone="error" message={error} />{/if}
-	{#if message}<Notice tone="success" message={message} />{/if}
+	{#if error}<Notice tone="error" message={$t(error)} />{/if}
+	{#if message}<Notice tone="success" message={$t(message)} />{/if}
 
 	{#if !shell.loading && !canView}
 		<Panel>

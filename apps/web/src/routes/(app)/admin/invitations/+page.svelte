@@ -215,7 +215,7 @@
 						</ul>
 					{/if}
 				</section>
-				{#if invitationToRevoke}<ConfirmModal bind:open={revokeOpen} title={$t('Revoke invitation?')} message={$t('Revoke the invitation sent to ') + invitationToRevoke.email + '?'} confirmLabel={$t('Revoke')} busy={busy} onConfirm={() => void updateInvitation(invitationToRevoke!, 'revoke')} />{/if}
+				{#if invitationToRevoke}<ConfirmModal bind:open={revokeOpen} title={$t('Revoke invitation?')} message={$t('Revoke the invitation sent to {email}?', { email: invitationToRevoke.email })} confirmLabel={$t('Revoke')} busy={busy} onConfirm={() => void updateInvitation(invitationToRevoke!, 'revoke')} />{/if}
 			</div>
 		</section>
 

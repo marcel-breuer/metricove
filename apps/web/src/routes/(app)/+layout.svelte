@@ -437,7 +437,7 @@
 					</div>
 				{/if}
 			</nav>
-			<div class="mt-6 border-t border-slate-800 pt-4"><a href="/profile" onclick={() => (drawerOpen = false)} class="block rounded-xl px-3 py-3 text-sm font-medium text-slate-100 hover:bg-slate-900">{currentUser?.name ?? 'Profile'}<span class="mt-1 block text-xs text-slate-400">{$t("Profile & account")}</span></a><button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Sign out")}</button></div>
+			<div class="mt-6 border-t border-slate-800 pt-4"><a href="/profile" onclick={() => (drawerOpen = false)} class="block rounded-xl px-3 py-3 text-sm font-medium text-slate-100 hover:bg-slate-900">{currentUser?.name ?? $t('Profile')}<span class="mt-1 block text-xs text-slate-400">{$t("Profile & account")}</span></a><button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Sign out")}</button></div>
 		</div>
 	</div>
 {/if}

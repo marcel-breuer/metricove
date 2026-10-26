@@ -33,6 +33,7 @@
 	let readingPhoto = $state<File | null>(null);
 	let ocrWorking = $state(false);
 	let ocrMessage = $state('');
+	let ocrSuggestedValue = $state('');
 	let meterName = $state('');
 	let alertThreshold = $state('');
 	let editingReadingId = $state<number | null>(null);
@@ -133,7 +134,8 @@
 			if (!response.ok) throw new Error(result.message || 'A local reading suggestion is unavailable.');
 			if (result.value) {
 				readingValue = result.value;
-				ocrMessage = `Suggested ${formatMeasurement(result.value, meter.unit)} ${meter.unit}. Check the meter photo and save the reading yourself.`;
+				ocrSuggestedValue = result.value;
+				ocrMessage = 'Suggested {value} {unit}. Check the meter photo and save the reading yourself.';
 			} else {
 				ocrMessage = 'No single reading could be recognized. Enter the value from the photo manually.';
 			}
@@ -275,7 +277,7 @@
 						<label class="block text-sm font-medium text-slate-200">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><textarea bind:value={readingNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Meter display or context")}></textarea></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Meter photo")} <span class="font-normal text-slate-500">{$t("(optional, max 5 MB)")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; ocrMessage = ''; }} class="mt-2 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if canSuggest}
-							<div><button type="button" onclick={suggestReadingFromPhoto} disabled={!readingPhoto || ocrWorking || saving} class="min-h-10 rounded-lg border border-cyan-300/30 px-3 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(ocrWorking ? 'Reading photo locally…' : 'Suggest value from photo')}</button><p class="mt-2 text-xs leading-5 text-slate-500">{$t("Local OCR only. The suggestion is never saved until you confirm with Save reading.")}</p>{#if ocrMessage}<p role="status" class="mt-2 text-sm text-cyan-100">{ocrMessage}</p>{/if}</div>
+							<div><button type="button" onclick={suggestReadingFromPhoto} disabled={!readingPhoto || ocrWorking || saving} class="min-h-10 rounded-lg border border-cyan-300/30 px-3 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(ocrWorking ? 'Reading photo locally…' : 'Suggest value from photo')}</button><p class="mt-2 text-xs leading-5 text-slate-500">{$t("Local OCR only. The suggestion is never saved until you confirm with Save reading.")}</p>{#if ocrMessage}<p role="status" class="mt-2 text-sm text-cyan-100">{$t(ocrMessage, { value: ocrSuggestedValue ? formatMeasurement(ocrSuggestedValue, meter.unit) : '', unit: meter.unit })}</p>{/if}</div>
 						{/if}
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</button>
 					</form>

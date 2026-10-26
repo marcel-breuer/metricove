@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
+	import { t } from '#lib/i18n';
 	import Button from './Button.svelte';
 
 	let {
@@ -22,7 +23,7 @@
 <Modal bind:open {title}>
 	<p class="text-sm leading-6 text-slate-300">{message}</p>
 	<div class="mt-6 flex flex-wrap justify-end gap-3">
-		<Button variant="secondary" type="button" disabled={busy} onclick={() => (open = false)}>Cancel</Button>
-		<Button variant="danger" type="button" disabled={busy} onclick={() => void onConfirm()}>{busy ? 'Deleting…' : confirmLabel}</Button>
+		<Button variant="secondary" type="button" disabled={busy} onclick={() => (open = false)}>{$t('Cancel')}</Button>
+		<Button variant="danger" type="button" disabled={busy} onclick={() => void onConfirm()}>{busy ? $t('Working…') : $t(confirmLabel)}</Button>
 	</div>
 </Modal>
