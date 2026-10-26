@@ -1039,19 +1039,8 @@ parameters:
 			path: app/Services/Vehicles/VehicleService.php
 
 		-
-			message: '#^Parameter \#1 \$reading of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\VehicleOdometerReading, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Vehicles/VehicleService.php
-
-		-
 			message: '#^Parameter \#2 \$vehicle of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\Vehicle, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Vehicles/VehicleService.php
 
-		-
-			message: '#^Parameter \#3 \$previous of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\VehicleOdometerReading\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Vehicles/VehicleService.php

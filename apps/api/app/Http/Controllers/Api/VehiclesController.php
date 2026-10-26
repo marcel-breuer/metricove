@@ -35,6 +35,23 @@ class VehiclesController extends Controller
         return response()->json($vehicles->show($this->actor($request), $vehicle));
     }
 
+    public function odometerReadings(Request $request, int $vehicle, VehicleService $vehicles): JsonResponse
+    {
+        $filters = $request->validate([
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'before_reading_date' => ['required_with:before_id', 'date'],
+            'before_id' => ['required_with:before_reading_date', 'integer', 'min:1'],
+        ]);
+
+        return response()->json($vehicles->odometerHistory(
+            $this->actor($request),
+            $vehicle,
+            (int) ($filters['limit'] ?? 30),
+            isset($filters['before_reading_date']) ? (string) $filters['before_reading_date'] : null,
+            isset($filters['before_id']) ? (int) $filters['before_id'] : null,
+        ));
+    }
+
     public function update(UpdateVehicleRequest $request, int $vehicle, VehicleService $vehicles): JsonResponse
     {
         return response()->json([

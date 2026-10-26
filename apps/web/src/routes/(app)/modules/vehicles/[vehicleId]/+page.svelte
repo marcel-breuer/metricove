@@ -20,6 +20,9 @@
 
 	let vehicle = $state<Vehicle | null>(null);
 	let odometerReadings = $state<VehicleOdometerReading[]>([]);
+	let hasMoreOdometerReadings = $state(false);
+	let loadingMoreOdometerReadings = $state(false);
+	let odometerLoadMoreSentinel: HTMLDivElement | null = $state(null);
 	let maintenanceRecords = $state<VehicleMaintenanceRecord[]>([]);
 	let insurancePolicies = $state<VehicleInsurancePolicy[]>([]);
 	let costs = $state<VehicleCost[]>([]);
@@ -79,6 +82,18 @@
 		if (!shell.loading) void loadVehicle();
 	});
 
+	$effect(() => {
+		const sentinel = odometerLoadMoreSentinel;
+		if (!sentinel || !hasMoreOdometerReadings || typeof IntersectionObserver === 'undefined') return;
+
+		const observer = new IntersectionObserver((observations) => {
+			if (observations.some((observation) => observation.isIntersecting)) void loadMoreOdometerReadings();
+		}, { rootMargin: '320px 0px' });
+		observer.observe(sentinel);
+
+		return () => observer.disconnect();
+	});
+
 	function localDate(): string {
 		const date = new Date();
 		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -87,7 +102,7 @@
 	async function loadVehicle(): Promise<void> {
 		loading = true; error = '';
 		if (!canView || !Number.isInteger(vehicleId) || vehicleId < 1) {
-			vehicle = null; odometerReadings = []; maintenanceRecords = []; insurancePolicies = []; costs = []; loading = false; return;
+			vehicle = null; odometerReadings = []; hasMoreOdometerReadings = false; maintenanceRecords = []; insurancePolicies = []; costs = []; loading = false; return;
 		}
 		try {
 			const response = await fetch(`/api/vehicles/${vehicleId}`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -96,6 +111,7 @@
 			if (!response.ok || !result.vehicle) throw new Error(result.message ?? 'This vehicle is unavailable or you do not have access.');
 			vehicle = result.vehicle;
 			odometerReadings = result.odometer_readings ?? [];
+			hasMoreOdometerReadings = result.has_more_odometer_readings ?? false;
 			maintenanceRecords = result.maintenance_records ?? [];
 			insurancePolicies = result.insurance_policies ?? [];
 			costs = result.costs ?? [];
@@ -105,6 +121,32 @@
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The vehicle could not be loaded. Check your connection and try again.';
 		} finally { loading = false; }
+	}
+
+	async function loadMoreOdometerReadings(): Promise<void> {
+		const oldestReading = odometerReadings[0];
+		if (!oldestReading || !hasMoreOdometerReadings || loadingMoreOdometerReadings) return;
+		loadingMoreOdometerReadings = true;
+		try {
+			const cursor = new URLSearchParams({
+				limit: '30',
+				before_reading_date: oldestReading.reading_date,
+				before_id: String(oldestReading.id)
+			});
+			const response = await fetch(`/api/vehicles/${vehicleId}/odometer-readings?${cursor.toString()}`, {
+				credentials: 'same-origin',
+				headers: { Accept: 'application/json' }
+			});
+			if (response.status === 401) { await goto('/login'); return; }
+			const result = (await response.json()) as VehicleResponse;
+			if (!response.ok) throw new Error(result.message ?? 'Older odometer readings could not be loaded.');
+			odometerReadings = [...(result.odometer_readings ?? []), ...odometerReadings];
+			hasMoreOdometerReadings = result.has_more_odometer_readings ?? false;
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Older odometer readings could not be loaded. Check your connection and try again.';
+		} finally {
+			loadingMoreOdometerReadings = false;
+		}
 	}
 
 	function tokenOrError(): string | null {
@@ -301,6 +343,7 @@
 							{#if editingReadingId === reading.id}<Modal bind:open={correctionModalOpen} title={$t("Correct odometer reading")}><form class="mt-4 grid gap-3 rounded-xl border border-cyan-300/20 bg-slate-950/60 p-4 sm:grid-cols-2" onsubmit={saveCorrection}><label class="block text-sm font-medium text-slate-200">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white" /></label><label class="block text-sm font-medium text-slate-200">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white" /></label><label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Note")}<textarea bind:value={correctionNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"></textarea></label><label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white" placeholder={$t("Explain why the original reading changed")} /></label><div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; correctionModalOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm text-slate-300">{$t("Cancel")}</button></div></form></Modal>{/if}
 							{#if revisionsByReading[reading.id]?.length}<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Odometer correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-slate-400">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-slate-500">{$t("Loading correction history…")}</p>{/if}
 						</li>{/each}</ol>{/if}
+				{#if hasMoreOdometerReadings}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={odometerLoadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreOdometerReadings()} disabled={loadingMoreOdometerReadings} aria-live="polite" class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreOdometerReadings ? 'Loading…' : 'Load older odometer readings')}</button></div>{/if}
 			</section>
 		</div>
 
@@ -309,7 +352,7 @@
 
 			<section aria-labelledby="insurance-heading"><div><p class="text-sm font-medium text-cyan-200">{$t("Coverage")}</p><h2 id="insurance-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Insurance")}</h2></div>{#if canCreate}<button type="button" onclick={() => (insuranceModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t("Add insurance policy")}</button><Modal bind:open={insuranceModalOpen} title={$t("Add insurance policy")}><form class="mt-4 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-4" onsubmit={saveInsurance}><label class="block text-sm font-medium text-slate-200">{$t("Provider")}<input bind:value={insuranceProvider} required maxlength="120" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={$t("Insurance provider")} /></label><label class="block text-sm font-medium text-slate-200">{$t("Coverage")}<select bind:value={insuranceCoverage} class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="liability">{$t("Liability")}</option><option value="partial">{$t("Partial cover")}</option><option value="comprehensive">{$t("Comprehensive")}</option><option value="other">{$t("Other")}</option></select></label><div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Valid from")}<input bind:value={insuranceFrom} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white" /></label><label class="block text-sm font-medium text-slate-200">{$t("Valid until")}<input bind:value={insuranceUntil} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white" /></label></div><label class="block text-sm font-medium text-slate-200">{$t("Notes")}<textarea bind:value={insuranceNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"></textarea></label><button type="submit" disabled={saving} class="min-h-10 w-full rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t("Save policy dates")}</button></form></Modal>{/if}<ol class="mt-4 space-y-3">{#each insurancePolicies as policy (policy.id)}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold text-slate-100">{policy.provider}</p><span class="rounded-full border border-slate-700 px-2 py-0.5 text-xs capitalize text-slate-400">{policy.status}</span></div><p class="mt-1 text-xs capitalize text-slate-500">{policy.coverage_type} · {policy.valid_from} — {policy.valid_until}</p>{#if policy.note}<p class="mt-2 text-sm text-slate-400">{policy.note}</p>{/if}</li>{:else}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">{$t("No insurance records yet.")}</li>{/each}</ol></section>
 
-			<section aria-labelledby="costs-heading"><div><p class="text-sm font-medium text-cyan-200">{$t("Ownership")}</p><h2 id="costs-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Costs")}</h2></div>{#if canCreate}<button type="button" onclick={() => (costModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t("Add vehicle cost")}</button><Modal bind:open={costModalOpen} title={$t("Add vehicle cost")}><form class="mt-4 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-4" onsubmit={saveCost}><label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={costCategory} class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each vehicleCostCategories as category}<option value={category.value}>{$t(category.label)}</option>{/each}</select></label><div class="grid grid-cols-[1fr_6rem] gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={costAmount} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="125.00" /></label><label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={costCurrency} required maxlength="3" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm uppercase text-white" placeholder={$t("EUR")} /></label></div><div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Period starts")}<input bind:value={costPeriodStart} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white" /></label><label class="block text-sm font-medium text-slate-200">{$t("Period")}<select bind:value={costPeriod} class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white">{#each vehiclePeriods as period}<option value={period.value}>{$t(period.label)}</option>{/each}</select></label></div>{#if costPeriod !== 'once'}<label class="block text-sm font-medium text-slate-200">{$t("Period ends")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={costPeriodEnd} type="date" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{/if}<label class="block text-sm font-medium text-slate-200">{$t("Description")}<textarea bind:value={costDescription} maxlength="500" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" placeholder={$t("Service invoice, fuel stop…")}></textarea></label><button type="submit" disabled={saving} class="min-h-10 w-full rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t("Save cost")}</button></form></Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-slate-100">{cost.category}</p><span class="font-semibold text-cyan-100">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-slate-500">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.description}<p class="mt-2 text-sm text-slate-400">{cost.description}</p>{/if}</li>{:else}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">{$t("No vehicle costs yet.")}</li>{/each}</ol></section>
+			<section aria-labelledby="costs-heading"><div><p class="text-sm font-medium text-cyan-200">{$t("Ownership")}</p><h2 id="costs-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Costs")}</h2></div>{#if canCreate}<button type="button" onclick={() => (costModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t("Add vehicle cost")}</button><Modal bind:open={costModalOpen} title={$t("Add vehicle cost")}><form class="mt-4 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-4" onsubmit={saveCost}><label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={costCategory} class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each vehicleCostCategories as category}<option value={category.value}>{category.label}</option>{/each}</select></label><div class="grid grid-cols-[1fr_6rem] gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={costAmount} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="125.00" /></label><label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={costCurrency} required maxlength="3" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm uppercase text-white" placeholder={$t("EUR")} /></label></div><div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Period starts")}<input bind:value={costPeriodStart} type="date" required class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white" /></label><label class="block text-sm font-medium text-slate-200">{$t("Period")}<select bind:value={costPeriod} class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-white">{#each vehiclePeriods as period}<option value={period.value}>{period.label}</option>{/each}</select></label></div>{#if costPeriod !== 'once'}<label class="block text-sm font-medium text-slate-200">{$t("Period ends")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={costPeriodEnd} type="date" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{/if}<label class="block text-sm font-medium text-slate-200">{$t("Description")}<textarea bind:value={costDescription} maxlength="500" rows="2" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" placeholder={$t("Service invoice, fuel stop…")}></textarea></label><button type="submit" disabled={saving} class="min-h-10 w-full rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t("Save cost")}</button></form></Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-slate-100">{cost.category}</p><span class="font-semibold text-cyan-100">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-slate-500">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.description}<p class="mt-2 text-sm text-slate-400">{cost.description}</p>{/if}</li>{:else}<li class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">{$t("No vehicle costs yet.")}</li>{/each}</ol></section>
 		</div>
 	</section>
 {:else}

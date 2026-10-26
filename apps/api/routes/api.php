@@ -157,6 +157,10 @@ Route::middleware('web')->group(function (): void {
             Route::post('/', [VehiclesController::class, 'store'])
                 ->middleware('module.enabled:vehicles')
                 ->name('store');
+            Route::get('/{vehicle}/odometer-readings', [VehiclesController::class, 'odometerReadings'])
+                ->middleware('module.access:vehicles,view')
+                ->whereNumber('vehicle')
+                ->name('odometer.index');
             Route::get('/{vehicle}', [VehiclesController::class, 'show'])
                 ->middleware('module.access:vehicles,view')
                 ->whereNumber('vehicle')

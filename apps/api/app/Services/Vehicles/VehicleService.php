@@ -81,47 +81,80 @@ class VehicleService
         return $this->presentVehicle($vehicle);
     }
 
-    /** @return array{vehicle: array<string, mixed>, odometer_readings: list<array<string, mixed>>, maintenance_records: list<array<string, mixed>>, insurance_policies: list<array<string, mixed>>, costs: list<array<string, mixed>>} */
+    /** @return array{vehicle: array<string, mixed>, odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool, maintenance_records: list<array<string, mixed>>, insurance_policies: list<array<string, mixed>>, costs: list<array<string, mixed>>} */
     public function show(User $actor, int $vehicleId): array
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::View);
-        $readingRows = $vehicle->odometerReadings()
-            ->withCount('revisions')
-            ->orderByDesc('reading_date')
-            ->orderByDesc('id')
-            ->limit(101)
-            ->get()
-            ->reverse()
-            ->values();
-        $context = $readingRows->count() > 100 ? $readingRows->shift() : null;
-        $candidates = $context instanceof VehicleOdometerReading ? collect([$context])->concat($readingRows) : $readingRows;
-        $previous = null;
-        $readings = [];
-
-        foreach ($candidates as $reading) {
-            if (! $this->canAccess($actor, ModuleCapability::View, $reading)) {
-                $previous = null;
-
-                continue;
-            }
-
-            if ($reading === $context) {
-                $previous = $reading;
-
-                continue;
-            }
-
-            $readings[] = $this->presentOdometer($reading, $vehicle, $previous);
-            $previous = $reading;
-        }
+        $odometerHistory = $this->odometerHistory($actor, $vehicleId);
 
         return [
             'vehicle' => $this->presentVehicle($vehicle),
-            'odometer_readings' => $readings,
+            ...$odometerHistory,
             'maintenance_records' => $this->visibleChildren($actor, $vehicle, $vehicle->maintenanceRecords()->limit(100)->get()),
             'insurance_policies' => $this->visibleChildren($actor, $vehicle, $vehicle->insurancePolicies()->limit(100)->get()),
             'costs' => $this->visibleChildren($actor, $vehicle, $vehicle->costs()->limit(100)->get()),
         ];
+    }
+
+    /** @return array{odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool} */
+    public function odometerHistory(
+        User $actor,
+        int $vehicleId,
+        int $limit = 30,
+        ?string $beforeReadingDate = null,
+        ?int $beforeId = null,
+    ): array {
+        $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::View);
+        $query = $this->visibleResources(
+            $actor,
+            VehicleOdometerReading::class,
+            'vehicle_odometer_readings',
+            ModuleCapability::View,
+            VehicleOdometerReading::query()->where('vehicle_id', $vehicle->id),
+        );
+
+        if ($beforeReadingDate !== null && $beforeId !== null) {
+            $query->where(function (Builder $cursor) use ($beforeReadingDate, $beforeId): void {
+                $cursor->where('reading_date', '<', $beforeReadingDate)
+                    ->orWhere(function (Builder $sameDate) use ($beforeReadingDate, $beforeId): void {
+                        $sameDate->where('reading_date', $beforeReadingDate)->where('id', '<', $beforeId);
+                    });
+            });
+        }
+
+        $page = $query->withCount('revisions')
+            ->orderByDesc('reading_date')
+            ->orderByDesc('id')
+            ->limit($limit + 1)
+            ->get();
+        $hasMore = $page->count() > $limit;
+        $readings = $page->take($limit)->reverse()->values();
+        $presented = [];
+
+        foreach ($readings as $reading) {
+            /** @var VehicleOdometerReading $reading */
+            $readingDate = CarbonImmutable::parse($reading->reading_date)->format('Y-m-d');
+            /** @var VehicleOdometerReading|null $previous */
+            $previous = $vehicle->odometerReadings()
+                ->where(function (Builder $preceding) use ($reading, $readingDate): void {
+                    $preceding->where('reading_date', '<', $readingDate)
+                        ->orWhere(function (Builder $sameDate) use ($reading, $readingDate): void {
+                            $sameDate->where('reading_date', $readingDate)->where('id', '<', $reading->id);
+                        });
+                })
+                ->orderByDesc('reading_date')
+                ->orderByDesc('id')
+                ->first();
+            if ($previous instanceof VehicleOdometerReading && ! $this->canAccess($actor, ModuleCapability::View, $previous)) {
+                $previous = null;
+            }
+
+            if ($this->canAccess($actor, ModuleCapability::View, $reading)) {
+                $presented[] = $this->presentOdometer($reading, $vehicle, $previous);
+            }
+        }
+
+        return ['odometer_readings' => $presented, 'has_more_odometer_readings' => $hasMore];
     }
 
     /** @param array<string, mixed> $data

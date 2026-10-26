@@ -78,6 +78,7 @@ export type VehicleResponse = {
 	vehicles?: Vehicle[];
 	reading?: VehicleOdometerReading;
 	odometer_readings?: VehicleOdometerReading[];
+	has_more_odometer_readings?: boolean;
 	maintenance_record?: VehicleMaintenanceRecord;
 	maintenance_records?: VehicleMaintenanceRecord[];
 	insurance_policy?: VehicleInsurancePolicy;
