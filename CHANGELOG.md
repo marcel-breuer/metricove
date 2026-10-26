@@ -2,6 +2,27 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.9.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.8.0...metricove-v0.9.0) (2026-10-26)
+
+
+### Features
+
+* **tracking:** lazy-load history and add global create action ([#144](https://github.com/marcel-breuer/metricove/issues/144)) ([17cca79](https://github.com/marcel-breuer/metricove/commit/17cca7917b084376c4f889d2c78ebfc08b9b5ee6))
+* **tracking:** lazy-load history and add global create action ([#144](https://github.com/marcel-breuer/metricove/issues/144)) ([1092398](https://github.com/marcel-breuer/metricove/commit/109239844428cded5db6e2a5a08656a7f3e8b683))
+* **tracking:** lazy-load history and add global create action ([#146](https://github.com/marcel-breuer/metricove/issues/146)) ([17cca79](https://github.com/marcel-breuer/metricove/commit/17cca7917b084376c4f889d2c78ebfc08b9b5ee6))
+
+
+### Bug Fixes
+
+* **i18n:** translate all module dialogs and confirmation actions ([3f92c4d](https://github.com/marcel-breuer/metricove/commit/3f92c4dc0210cf26298d0eafdca10e3adf77a081))
+* **i18n:** translate all module dialogs and confirmation actions ([220213f](https://github.com/marcel-breuer/metricove/commit/220213f52ba863e5431d530226a6254b92e31e76))
+
+
+### Documentation
+
+* **tracking:** clarify create permission enforcement ([#144](https://github.com/marcel-breuer/metricove/issues/144)) ([06cdc0d](https://github.com/marcel-breuer/metricove/commit/06cdc0d2ca1596463d06ad2d571b8d87bac8f0cc))
+* **tracking:** restore complete module contract ([#144](https://github.com/marcel-breuer/metricove/issues/144)) ([1d03a07](https://github.com/marcel-breuer/metricove/commit/1d03a07ea004591f591c507a83a53f3106e91b9b))
+
 ## [0.8.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.7.1...metricove-v0.8.0) (2026-10-26)
 
 
