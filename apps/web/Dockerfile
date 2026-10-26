@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.3-slim AS dependencies
+FROM oven/bun:1.4.4-slim AS dependencies
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ FROM dependencies AS build
 COPY apps/web/ ./
 RUN bun run --bun build
 
-FROM oven/bun:1.4.3-slim AS runtime
+FROM oven/bun:1.4.4-slim AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/marcel-breuer/metricove"
 
