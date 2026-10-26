@@ -31,6 +31,7 @@
 	let hasMoreEntries = $state(false);
 	let loading = $state(true);
 	let loadingMoreEntries = $state(false);
+	let loadMoreSentinel: HTMLDivElement | null = $state(null);
 	let savingEntry = $state(false);
 	let savingSchema = $state(false);
 	let deletingEntryId = $state<number | null>(null);
@@ -57,6 +58,18 @@
 
 	onMount(() => {
 		void loadTracker();
+	});
+
+	$effect(() => {
+		const sentinel = loadMoreSentinel;
+		if (!sentinel || !hasMoreEntries || typeof IntersectionObserver === 'undefined') return;
+
+		const observer = new IntersectionObserver((observations) => {
+			if (observations.some((observation) => observation.isIntersecting)) void loadMoreEntries();
+		}, { rootMargin: '320px 0px' });
+		observer.observe(sentinel);
+
+		return () => observer.disconnect();
 	});
 
 	async function loadTracker(): Promise<void> {
@@ -542,7 +555,7 @@
 					</div>
 					<p class="border-t border-slate-800 px-4 py-3 text-xs leading-5 text-slate-500">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
 				</div>
-				{#if hasMoreEntries}<div class="mt-4 flex justify-center"><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
+				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
 			{/if}
 		</section>
 		{#if deleteTargetEntry}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete measurement?')} message={$t('Delete this measurement?')} busy={deletingEntryId === deleteTargetEntry.id} onConfirm={() => void deleteEntry(deleteTargetEntry!)} />{/if}
