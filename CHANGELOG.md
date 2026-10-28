@@ -2,6 +2,14 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.10.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.10.0...metricove-v0.10.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* make profile page state reactive ([7e64c2d](https://github.com/marcel-breuer/metricove/commit/7e64c2dd6d1e65bdd0de58d5ea8852334c9a3215))
+* **profile:** restore profile state reactivity ([fd833ac](https://github.com/marcel-breuer/metricove/commit/fd833ac3d98625a267bb7c3d5e37fe99679eb927))
+
 ## [0.10.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.9.0...metricove-v0.10.0) (2026-10-26)
 
 
