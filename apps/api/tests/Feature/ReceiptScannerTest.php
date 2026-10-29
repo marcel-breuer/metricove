@@ -12,6 +12,7 @@ use App\Services\Receipts\LocalReceiptOcr;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -219,6 +220,150 @@ class ReceiptScannerTest extends TestCase
         $this->assertDatabaseCount('financial_transactions', 0);
         $this->assertDatabaseCount('receipt_documents', 0);
         $this->assertSame([], Storage::disk('local')->allFiles('receipts'));
+    }
+
+    public function test_owner_can_share_and_revoke_a_receipt_without_sharing_its_private_finance_entry(): void
+    {
+        Storage::fake('local');
+        $owner = $this->admin();
+        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->enable($owner, ['receipts', 'finance']);
+        $noReceiptAccess = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $viewerWithoutManage = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $viewerWithoutManage->id, 'module_key' => 'receipts'],
+            ['can_view' => true, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
+        );
+        $categoryId = $this->financeCategory($owner);
+        $this->mockOcr();
+        $file = $this->imageFile('shared-invoice.png');
+        $preview = $this->actingAs($owner, 'web')->post('/api/receipts/preview', [
+            'file' => $file,
+        ], ['Accept' => 'application/json'])->assertOk();
+        $created = $this->confirmFinanceReceipt($owner, $file, $preview->json('preview_token'), $categoryId);
+        $receiptId = (int) $created->json('receipt.id');
+        $transactionId = (int) $created->json('target.id');
+
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $viewer->id, 'module_key' => 'receipts'],
+            ['can_view' => true, 'can_create' => false, 'can_edit' => true, 'can_manage' => true],
+        );
+        ModuleUserPermission::query()->where('user_id', $viewer->id)->where('module_key', 'finance')->update([
+            'can_view' => false,
+            'can_create' => false,
+            'can_edit' => false,
+            'can_manage' => false,
+        ]);
+
+        $this->actingAs($viewer, 'web')->getJson('/api/receipts')
+            ->assertOk()->assertJsonCount(0, 'receipts');
+        $this->actingAs($viewer, 'web')->get('/api/receipts/'.$receiptId.'/file')->assertNotFound();
+        $this->actingAs($viewerWithoutManage, 'web')->patchJson('/api/receipts/'.$receiptId.'/sharing', [
+            'shared_with_household' => true,
+        ])->assertForbidden();
+        $this->actingAs($noReceiptAccess, 'web')->getJson('/api/receipts')->assertForbidden();
+
+        $this->actingAs($owner, 'web')->patchJson('/api/receipts/'.$receiptId.'/sharing', [
+            'shared_with_household' => true,
+        ])->assertOk()
+            ->assertJsonPath('receipt.shared_with_household', true)
+            ->assertJsonPath('receipt.is_owner', true);
+
+        $this->assertDatabaseHas('receipt_documents', ['id' => $receiptId, 'is_private' => false]);
+        $this->actingAs($viewer, 'web')->getJson('/api/receipts')
+            ->assertOk()
+            ->assertJsonCount(1, 'receipts')
+            ->assertJsonPath('receipts.0.shared_with_household', true)
+            ->assertJsonPath('receipts.0.is_owner', false)
+            ->assertJsonPath('receipts.0.target_linked', false)
+            ->assertJsonPath('receipts.0.target_type', null)
+            ->assertJsonPath('receipts.0.target_record_id', null);
+        $this->actingAs($noReceiptAccess, 'web')->getJson('/api/receipts')->assertForbidden();
+        $this->actingAs($viewerWithoutManage, 'web')->getJson('/api/receipts')
+            ->assertOk()->assertJsonCount(1, 'receipts');
+        $this->actingAs($viewer, 'web')->get('/api/receipts/'.$receiptId.'/file')
+            ->assertOk()->assertHeaderContains('Content-Disposition', 'attachment');
+        $this->actingAs($viewer, 'web')->get('/api/receipts/'.$receiptId.'/preview')
+            ->assertOk()->assertHeaderContains('Content-Disposition', 'inline');
+        $this->actingAs($viewer, 'web')->deleteJson('/api/receipts/'.$receiptId)->assertNotFound();
+        $this->actingAs($viewer, 'web')->patchJson('/api/receipts/'.$receiptId.'/sharing', [
+            'shared_with_household' => false,
+        ])->assertNotFound();
+
+        $this->assertDatabaseHas('financial_transactions', [
+            'id' => $transactionId,
+            'owner_user_id' => $owner->id,
+            'is_private' => true,
+        ]);
+
+        $this->actingAs($owner, 'web')->patchJson('/api/receipts/'.$receiptId.'/sharing', [
+            'shared_with_household' => false,
+        ])->assertOk()->assertJsonPath('receipt.shared_with_household', false);
+        $this->assertDatabaseHas('receipt_documents', ['id' => $receiptId, 'is_private' => true]);
+        $this->actingAs($viewer, 'web')->getJson('/api/receipts')
+            ->assertOk()->assertJsonCount(0, 'receipts');
+        $this->actingAs($viewer, 'web')->get('/api/receipts/'.$receiptId.'/file')->assertNotFound();
+    }
+
+    public function test_receipt_archive_searches_and_filters_visible_rows_by_date_amount_and_currency(): void
+    {
+        Storage::fake('local');
+        $admin = $this->admin();
+        $this->enable($admin, ['receipts']);
+        $this->createArchiveReceipt($admin, 'garage-north.png', [
+            'merchant' => 'Garage Nord',
+            'invoice_number' => 'GN-1001',
+            'invoice_date' => '2026-10-12',
+            'amount' => '74.50',
+            'currency' => 'EUR',
+        ]);
+        $this->createArchiveReceipt($admin, 'market.png', [
+            'merchant' => 'Market West',
+            'invoice_number' => 'MW-2002',
+            'invoice_date' => '2026-10-15',
+            'amount' => '49.99',
+            'currency' => 'EUR',
+        ]);
+        $this->createArchiveReceipt($admin, 'garage-east.png', [
+            'merchant' => 'Garage Ost',
+            'invoice_number' => 'GO-3003',
+            'invoice_date' => '2026-09-30',
+            'amount' => '75.00',
+            'currency' => 'USD',
+        ]);
+
+        $this->actingAs($admin, 'web')->getJson('/api/receipts?search=garage&date_from=2026-10-01&date_to=2026-10-31&min_amount=50&max_amount=80&currency=EUR')
+            ->assertOk()
+            ->assertJsonCount(1, 'receipts')
+            ->assertJsonPath('receipts.0.merchant', 'Garage Nord')
+            ->assertJsonPath('pagination.total', 1)
+            ->assertJsonPath('pagination.per_page', 30)
+            ->assertJsonPath('currencies', ['EUR', 'USD']);
+
+        $this->actingAs($admin, 'web')->getJson('/api/receipts?min_amount=50')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('currency');
+    }
+
+    /** @param array{merchant: string, invoice_number: string, invoice_date: string, amount: string, currency: string} $values */
+    private function createArchiveReceipt(User $owner, string $fileName, array $values): void
+    {
+        $path = 'receipts/'.$fileName;
+        Storage::disk('local')->put($path, 'private invoice');
+        ReceiptDocument::query()->create([
+            'owner_user_id' => $owner->id,
+            'is_private' => true,
+            'file_path' => $path,
+            'mime_type' => 'application/pdf',
+            'merchant' => $values['merchant'],
+            'invoice_number' => $values['invoice_number'],
+            'invoice_date' => $values['invoice_date'],
+            'amount' => $values['amount'],
+            'currency' => $values['currency'],
+            'idempotency_key' => (string) Str::uuid(),
+            'file_digest' => hash('sha256', $fileName),
+            'request_fingerprint' => hash('sha256', $values['invoice_number']),
+        ]);
     }
 
     private function admin(): User

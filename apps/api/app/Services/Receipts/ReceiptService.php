@@ -5,8 +5,11 @@ namespace App\Services\Receipts;
 use App\Enums\ModuleCapability;
 use App\Exceptions\LocalReceiptOcrUnavailable;
 use App\Exceptions\ModuleDisabled;
+use App\Exceptions\ModuleNotFound;
+use App\Models\FinancialTransaction;
 use App\Models\ReceiptDocument;
 use App\Models\User;
+use App\Models\VehicleCost;
 use App\Services\Finance\FinanceDecimalValue;
 use App\Services\Finance\FinanceService;
 use App\Services\Modules\ModuleAccessService;
@@ -38,18 +41,92 @@ class ReceiptService
         private readonly VehicleService $vehicles,
     ) {}
 
-    /** @return list<array<string, mixed>> */
-    public function index(User $actor): array
+    /** @param array<string, mixed> $filters
+     * @return array{receipts: list<array<string, mixed>>, pagination: array{current_page: int, last_page: int, per_page: int, total: int}, currencies: list<string>}
+     */
+    public function index(User $actor, array $filters): array
     {
         $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
-
-        return $this->visibleReceipts($actor, ModuleCapability::View)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->limit(100)
-            ->get()
-            ->map(fn (ReceiptDocument $receipt): array => $this->present($receipt))
+        $visible = $this->visibleReceipts($actor, ModuleCapability::View);
+        $currencies = (clone $visible)
+            ->select('currency')
+            ->distinct()
+            ->orderBy('currency')
+            ->pluck('currency')
+            ->map(static fn (mixed $currency): string => (string) $currency)
+            ->values()
             ->all();
+        $query = clone $visible;
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $term = '%'.mb_strtolower($search).'%';
+            $query->where(function (Builder $matching) use ($term): void {
+                $matching->whereRaw('LOWER(COALESCE(merchant, \'\')) LIKE ?', [$term])
+                    ->orWhereRaw('LOWER(COALESCE(invoice_number, \'\')) LIKE ?', [$term]);
+            });
+        }
+
+        if (isset($filters['date_from']) && $filters['date_from'] !== '') {
+            $query->whereDate('invoice_date', '>=', $filters['date_from']);
+        }
+        if (isset($filters['date_to']) && $filters['date_to'] !== '') {
+            $query->whereDate('invoice_date', '<=', $filters['date_to']);
+        }
+        if (isset($filters['min_amount']) && $filters['min_amount'] !== '') {
+            $query->where('amount', '>=', $filters['min_amount']);
+        }
+        if (isset($filters['max_amount']) && $filters['max_amount'] !== '') {
+            $query->where('amount', '<=', $filters['max_amount']);
+        }
+        if (isset($filters['currency']) && $filters['currency'] !== '') {
+            $query->where('currency', strtoupper((string) $filters['currency']));
+        }
+
+        $page = $query
+            ->orderByDesc('invoice_date')
+            ->orderByDesc('id')
+            ->paginate(30);
+
+        return [
+            'receipts' => $page->getCollection()
+                ->map(fn (ReceiptDocument $receipt): array => $this->present($receipt, $actor))
+                ->all(),
+            'pagination' => [
+                'current_page' => $page->currentPage(),
+                'last_page' => $page->lastPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+            ],
+            'currencies' => $currencies,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function updateSharing(User $actor, int $receiptId, bool $sharedWithHousehold): array
+    {
+        return DB::transaction(function () use ($actor, $receiptId, $sharedWithHousehold): array {
+            $currentActor = User::query()
+                ->whereKey($actor->id)
+                ->where('is_active', true)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $currentActor instanceof User) {
+                throw new AuthorizationException('An active receipt owner is required.');
+            }
+
+            $this->access->authorize($currentActor, self::MODULE, ModuleCapability::Manage);
+            $receipt = ReceiptDocument::query()
+                ->where('owner_user_id', $currentActor->id)
+                ->whereKey($receiptId)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $receipt->is_private = ! $sharedWithHousehold;
+            $receipt->save();
+
+            return $this->present($receipt, $currentActor);
+        }, 3);
     }
 
     /** @return array{finance_available: bool, finance_categories: list<array<string, mixed>>, vehicles_available: bool, vehicles: list<array<string, mixed>>} */
@@ -139,7 +216,7 @@ class ReceiptService
 
                     return [
                         'created' => false,
-                        'receipt' => $this->present($prior),
+                        'receipt' => $this->present($prior, $actor),
                         'target' => $this->existingTarget($prior),
                     ];
                 }
@@ -202,7 +279,7 @@ class ReceiptService
 
                 return [
                     'created' => true,
-                    'receipt' => $this->present($receipt),
+                    'receipt' => $this->present($receipt, $actor),
                     'target' => ['type' => $normalized['target_type'], 'id' => $targetId, 'record' => $target],
                 ];
             }, 1);
@@ -239,7 +316,8 @@ class ReceiptService
     {
         $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit);
         $path = DB::transaction(function () use ($actor, $receiptId): string {
-            $receipt = $this->visibleReceipts($actor, ModuleCapability::Edit)
+            $receipt = ReceiptDocument::query()
+                ->where('owner_user_id', $actor->id)
                 ->whereKey($receiptId)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -366,6 +444,7 @@ class ReceiptService
 
         return ReceiptDocument::query()->where(function (Builder $query) use ($actor, $capability, $morphType): void {
             $query->where('owner_user_id', $actor->id)
+                ->orWhere('is_private', false)
                 ->orWhereExists(function (QueryBuilder $permissions) use ($actor, $capability, $morphType): void {
                     $permissions->selectRaw('1')
                         ->from('resource_user_permissions')
@@ -378,24 +457,66 @@ class ReceiptService
     }
 
     /** @return array<string, mixed> */
-    private function present(ReceiptDocument $receipt): array
+    private function present(ReceiptDocument $receipt, User $actor): array
     {
+        $target = $this->visibleTargetReference($receipt, $actor);
+
         return [
             'id' => (int) $receipt->id,
-            'target_type' => $receipt->financial_transaction_id !== null ? 'finance' : ($receipt->vehicle_cost_id !== null ? 'vehicle' : null),
-            'target_record_id' => $receipt->financial_transaction_id !== null
-                ? (int) $receipt->financial_transaction_id
-                : ($receipt->vehicle_cost_id !== null ? (int) $receipt->vehicle_cost_id : null),
+            'target_type' => $target['type'] ?? null,
+            'target_record_id' => $target['id'] ?? null,
+            'target_linked' => $target !== null || ($receipt->ownerUserId() === $actor->id && ($receipt->financial_transaction_id !== null || $receipt->vehicle_cost_id !== null)),
             'merchant' => $receipt->merchant,
             'invoice_number' => $receipt->invoice_number,
             'invoice_date' => Carbon::parse($receipt->getRawOriginal('invoice_date'))->format('Y-m-d'),
             'amount' => (string) $receipt->amount,
             'currency' => $receipt->currency,
             'tax_amount' => $receipt->tax_amount === null ? null : (string) $receipt->tax_amount,
+            'shared_with_household' => ! $receipt->isPrivate(),
+            'is_owner' => $receipt->ownerUserId() === $actor->id,
             'mime_type' => $receipt->mime_type,
             'file_url' => '/api/receipts/'.$receipt->id.'/file',
             'created_at' => $receipt->created_at?->toISOString(),
         ];
+    }
+
+    /** @return array{type: string, id: int}|null */
+    private function visibleTargetReference(ReceiptDocument $receipt, User $actor): ?array
+    {
+        if ($receipt->ownerUserId() === $actor->id) {
+            if ($receipt->financial_transaction_id !== null) {
+                return ['type' => 'finance', 'id' => (int) $receipt->financial_transaction_id];
+            }
+            if ($receipt->vehicle_cost_id !== null) {
+                return ['type' => 'vehicle', 'id' => (int) $receipt->vehicle_cost_id];
+            }
+
+            return null;
+        }
+
+        try {
+            if ($receipt->financial_transaction_id !== null) {
+                $transaction = FinancialTransaction::query()->find($receipt->financial_transaction_id);
+                if ($transaction instanceof FinancialTransaction) {
+                    $this->access->authorize($actor, 'finance', ModuleCapability::View, $transaction);
+
+                    return ['type' => 'finance', 'id' => (int) $transaction->id];
+                }
+            }
+
+            if ($receipt->vehicle_cost_id !== null) {
+                $cost = VehicleCost::query()->find($receipt->vehicle_cost_id);
+                if ($cost instanceof VehicleCost) {
+                    $this->access->authorize($actor, 'vehicles', ModuleCapability::View, $cost);
+
+                    return ['type' => 'vehicle', 'id' => (int) $cost->id];
+                }
+            }
+        } catch (AuthorizationException|ModuleDisabled|ModuleNotFound) {
+            return null;
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed>|null */

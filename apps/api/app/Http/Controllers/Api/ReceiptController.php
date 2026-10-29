@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmReceiptRequest;
 use App\Http\Requests\PreviewReceiptRequest;
+use App\Http\Requests\ReceiptIndexRequest;
+use App\Http\Requests\ReceiptSharingRequest;
 use App\Models\User;
 use App\Services\Receipts\ReceiptService;
 use Illuminate\Http\JsonResponse;
@@ -13,9 +15,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReceiptController extends Controller
 {
-    public function index(Request $request, ReceiptService $receipts): JsonResponse
+    public function index(ReceiptIndexRequest $request, ReceiptService $receipts): JsonResponse
     {
-        return response()->json(['receipts' => $receipts->index($this->actor($request))]);
+        return response()->json($receipts->index($this->actor($request), $request->validated()));
     }
 
     public function options(Request $request, ReceiptService $receipts): JsonResponse
@@ -50,6 +52,34 @@ class ReceiptController extends Controller
         $response->setPrivate();
 
         return $response;
+    }
+
+    public function previewFile(Request $request, int $receipt, ReceiptService $receipts): BinaryFileResponse
+    {
+        $file = $receipts->file($this->actor($request), $receipt);
+        $response = response()->file($file['path'], [
+            'Content-Type' => $file['mime_type'],
+            'Content-Disposition' => 'inline; filename="receipt-'.$receipt.'.'.$file['extension'].'"',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+        $response->setPrivate();
+
+        return $response;
+    }
+
+    public function updateSharing(ReceiptSharingRequest $request, int $receipt, ReceiptService $receipts): JsonResponse
+    {
+        $document = $receipts->updateSharing(
+            $this->actor($request),
+            $receipt,
+            $request->boolean('shared_with_household'),
+        );
+
+        return response()->json([
+            'message' => $document['shared_with_household'] ? 'Receipt shared with the household.' : 'Receipt is private again.',
+            'receipt' => $document,
+        ]);
     }
 
     public function destroy(Request $request, int $receipt, ReceiptService $receipts): JsonResponse

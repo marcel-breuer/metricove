@@ -12,6 +12,7 @@ return new class extends Migration
         Schema::create('receipt_documents', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('owner_user_id')->constrained('users')->cascadeOnDelete();
+            $table->boolean('is_private')->default(true);
             $table->foreignId('financial_transaction_id')->nullable()->constrained('financial_transactions')->nullOnDelete();
             $table->foreignId('vehicle_cost_id')->nullable()->constrained('vehicle_costs')->nullOnDelete();
             $table->string('file_path', 255)->unique();

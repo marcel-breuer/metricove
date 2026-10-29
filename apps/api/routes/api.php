@@ -281,6 +281,10 @@ Route::middleware('web')->group(function (): void {
                 ->middleware(['module.access:receipts,create', 'throttle:10,1'])->name('preview');
             Route::post('/confirm', [ReceiptController::class, 'confirm'])
                 ->middleware(['module.access:receipts,create', 'throttle:10,1'])->name('confirm');
+            Route::patch('/{receipt}/sharing', [ReceiptController::class, 'updateSharing'])
+                ->middleware('module.access:receipts,manage')->whereNumber('receipt')->name('sharing.update');
+            Route::get('/{receipt}/preview', [ReceiptController::class, 'previewFile'])
+                ->middleware('module.access:receipts,view')->whereNumber('receipt')->name('preview-file');
             Route::get('/{receipt}/file', [ReceiptController::class, 'file'])
                 ->middleware('module.access:receipts,view')->whereNumber('receipt')->name('file');
             Route::delete('/{receipt}', [ReceiptController::class, 'destroy'])

@@ -34,6 +34,7 @@ export type ReceiptDocument = {
 	id: number;
 	target_type: 'finance' | 'vehicle' | null;
 	target_record_id: number | null;
+	target_linked: boolean;
 	merchant: string | null;
 	invoice_number: string | null;
 	invoice_date: string;
@@ -43,11 +44,22 @@ export type ReceiptDocument = {
 	mime_type: string;
 	file_url: string;
 	created_at: string | null;
+	shared_with_household: boolean;
+	is_owner: boolean;
+};
+
+export type ReceiptPagination = {
+	current_page: number;
+	last_page: number;
+	per_page: number;
+	total: number;
 };
 
 export type ReceiptResponse = {
 	message?: string;
 	receipts?: ReceiptDocument[];
+	pagination?: ReceiptPagination;
+	currencies?: string[];
 	receipt?: ReceiptDocument;
 	preview_token?: string;
 	suggestions?: ReceiptSuggestions;

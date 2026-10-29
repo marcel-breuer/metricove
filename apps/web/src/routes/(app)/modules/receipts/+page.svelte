@@ -8,7 +8,7 @@
 	import { defaultCurrency, formatDate, t } from '#lib/i18n';
 	import { formatCurrency } from '#lib/number-format';
 	import { vehicleCostCategories } from '#lib/vehicles';
-	import type { ReceiptDocument, ReceiptOptions, ReceiptPreview, ReceiptResponse } from '#lib/receipts';
+	import type { ReceiptDocument, ReceiptOptions, ReceiptPagination, ReceiptPreview, ReceiptResponse } from '#lib/receipts';
 
 	type TargetType = 'finance' | 'vehicle';
 
@@ -17,6 +17,7 @@
 	const canView = $derived(access?.capabilities.view === true);
 	const canCreate = $derived(access?.capabilities.create === true);
 	const canEdit = $derived(access?.capabilities.edit === true);
+	const canManageSharing = $derived(access?.capabilities.manage === true);
 
 	let options = $state<ReceiptOptions>({
 		finance_available: false,
@@ -25,6 +26,15 @@
 		vehicles: []
 	});
 	let receipts = $state<ReceiptDocument[]>([]);
+	let currencies = $state<string[]>([]);
+	let pagination = $state<ReceiptPagination>({ current_page: 1, last_page: 1, per_page: 30, total: 0 });
+	let receiptPage = $state(1);
+	let receiptSearch = $state('');
+	let dateFrom = $state('');
+	let dateTo = $state('');
+	let minAmount = $state('');
+	let maxAmount = $state('');
+	let currencyFilter = $state('');
 	let selectedFile = $state<File | null>(null);
 	let fileInput = $state<HTMLInputElement>();
 	let filePreviewUrl = $state('');
@@ -44,6 +54,7 @@
 	let previewing = $state(false);
 	let confirming = $state(false);
 	let deletingId = $state<number | null>(null);
+	let sharingId = $state<number | null>(null);
 	let error = $state('');
 	let statusMessage = $state('');
 	let receiptError = $state('');
@@ -54,10 +65,11 @@
 		...(options.vehicles_available ? [{ value: 'vehicle' as const, label: 'Vehicle cost' }] : [])
 	]);
 	const expenseCategories = $derived(options.finance_categories.filter((category) => category.type === 'expense'));
+	const hasReceiptFilters = $derived(Boolean(receiptSearch.trim() || dateFrom || dateTo || minAmount || maxAmount || currencyFilter));
 	const currentReceiptTarget = (receipt: ReceiptDocument): string => {
 		if (receipt.target_type === 'finance') return 'Finance expense';
 		if (receipt.target_type === 'vehicle') return 'Vehicle cost';
-		return 'Target entry removed';
+		return receipt.target_linked ? 'Target entry removed' : 'Target entry unavailable';
 	};
 
 	$effect(() => {
@@ -82,13 +94,14 @@
 		return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
 	}
 
-	async function request<T extends ReceiptResponse>(path: string, method = 'GET', body?: FormData, idempotency?: string): Promise<T> {
+	async function request<T extends ReceiptResponse>(path: string, method = 'GET', body?: FormData | string, idempotency?: string): Promise<T> {
 		const headers: Record<string, string> = { Accept: 'application/json' };
 		if (method !== 'GET') {
 			const token = csrfToken();
 			if (!token) throw new Error('Reload this page and try again.');
 			headers['X-XSRF-TOKEN'] = token;
 		}
+		if (typeof body === 'string') headers['Content-Type'] = 'application/json';
 		if (idempotency) headers['Idempotency-Key'] = idempotency;
 		const response = await fetch(path, {
 			method,
@@ -111,8 +124,17 @@
 		try {
 			const tasks: Array<Promise<unknown>> = [];
 			if (canView) {
-				tasks.push(request<ReceiptResponse>('/api/receipts').then((result) => {
+				const query = new URLSearchParams({ page: String(receiptPage) });
+				if (receiptSearch.trim()) query.set('search', receiptSearch.trim());
+				if (dateFrom) query.set('date_from', dateFrom);
+				if (dateTo) query.set('date_to', dateTo);
+				if (minAmount) query.set('min_amount', minAmount);
+				if (maxAmount) query.set('max_amount', maxAmount);
+				if (currencyFilter) query.set('currency', currencyFilter);
+				tasks.push(request<ReceiptResponse>('/api/receipts?' + query.toString()).then((result) => {
 					receipts = result.receipts ?? [];
+					currencies = result.currencies ?? [];
+					pagination = result.pagination ?? { current_page: 1, last_page: 1, per_page: 30, total: receipts.length };
 				}));
 			} else {
 				receipts = [];
@@ -138,6 +160,34 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function applyReceiptFilters(event: SubmitEvent): void {
+		event.preventDefault();
+		clearMessages();
+		if ((minAmount || maxAmount) && !currencyFilter) {
+			error = 'Choose a currency to filter by amount.';
+			return;
+		}
+		receiptPage = 1;
+		void loadReceipts();
+	}
+
+	function clearReceiptFilters(): void {
+		receiptSearch = '';
+		dateFrom = '';
+		dateTo = '';
+		minAmount = '';
+		maxAmount = '';
+		currencyFilter = '';
+		receiptPage = 1;
+		void loadReceipts();
+	}
+
+	function changeReceiptPage(page: number): void {
+		if (page < 1 || page > pagination.last_page || page === receiptPage) return;
+		receiptPage = page;
+		void loadReceipts();
 	}
 
 	function chooseFile(event: Event): void {
@@ -235,7 +285,7 @@
 	}
 
 	async function deleteReceipt(receipt: ReceiptDocument): Promise<void> {
-		if (!canEdit || !window.confirm(get(t)('Delete this private receipt and its file?'))) return;
+		if (!canEdit || !receipt.is_owner || !window.confirm(get(t)('Delete this private receipt and its file?'))) return;
 		clearMessages();
 		receiptError = '';
 		deletingId = receipt.id;
@@ -247,6 +297,31 @@
 			receiptError = cause instanceof Error ? cause.message : 'The receipt could not be deleted.';
 		} finally {
 			deletingId = null;
+		}
+	}
+
+	async function updateReceiptSharing(receipt: ReceiptDocument): Promise<void> {
+		if (!canManageSharing || !receipt.is_owner) return;
+		const shared = !receipt.shared_with_household;
+		const message = shared
+			? get(t)('Share the original receipt and its details with household members who can view Receipts?')
+			: get(t)('Stop sharing this receipt with the household?');
+		if (!window.confirm(message)) return;
+
+		clearMessages();
+		receiptError = '';
+		sharingId = receipt.id;
+		try {
+			const result = await request<ReceiptResponse>(`/api/receipts/${receipt.id}/sharing`, 'PATCH', JSON.stringify({ shared_with_household: shared }));
+			if (result.receipt) {
+				const updated = result.receipt;
+				receipts = receipts.map((candidate) => candidate.id === receipt.id ? updated : candidate);
+			}
+			statusMessage = shared ? 'Receipt shared with the household.' : 'Receipt is private again.';
+		} catch (cause) {
+			receiptError = cause instanceof Error ? cause.message : 'Receipt sharing could not be updated.';
+		} finally {
+			sharingId = null;
 		}
 	}
 </script>
@@ -374,12 +449,42 @@
 		<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
-					<h2 id="saved-receipts-heading" class="text-xl font-semibold text-slate-100">{$t('Saved receipts')}</h2>
-					<p class="mt-1 text-sm text-slate-400">{$t('Only receipts you can view are listed here.')}</p>
+					<h2 id="saved-receipts-heading" class="text-xl font-semibold text-slate-100">{$t('Receipt archive')}</h2>
+					<p class="mt-1 text-sm text-slate-400">{$t('Private and household-shared receipts you can view are listed here.')}</p>
 				</div>
 				{#if loading}<span class="text-sm text-slate-400">{$t('Loading…')}</span>{/if}
 			</div>
 			{#if receiptError}<p role="alert" class="mt-4 rounded-xl border border-rose-300/30 bg-rose-400/10 p-4 text-sm text-rose-100">{receiptError}</p>{/if}
+			<form class="mt-5 grid gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-4 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
+				<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t('Search merchant or invoice number')}
+					<input bind:value={receiptSearch} type="search" maxlength="100" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+				</label>
+				<label class="block text-sm font-medium text-slate-200">{$t('Invoice date from')}
+					<input bind:value={dateFrom} type="date" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+				</label>
+				<label class="block text-sm font-medium text-slate-200">{$t('Invoice date to')}
+					<input bind:value={dateTo} type="date" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+				</label>
+				<label class="block text-sm font-medium text-slate-200">{$t('Minimum amount')}
+					<input bind:value={minAmount} type="number" min="0" step="0.01" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+				</label>
+				<label class="block text-sm font-medium text-slate-200">{$t('Maximum amount')}
+					<input bind:value={maxAmount} type="number" min="0" step="0.01" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+				</label>
+				<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
+					<select bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white">
+						<option value="">{$t('All currencies')}</option>
+						{#each currencies as receiptCurrency (receiptCurrency)}
+							<option value={receiptCurrency}>{receiptCurrency}</option>
+						{/each}
+					</select>
+				</label>
+				<div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4">
+					<button type="submit" disabled={loading} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t('Apply filters')}</button>
+					<button type="button" onclick={clearReceiptFilters} disabled={loading} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-medium text-slate-200 disabled:opacity-60">{$t('Clear filters')}</button>
+					<span class="ml-auto text-sm text-slate-400">{$t('Receipts found')}: {pagination.total}</span>
+				</div>
+			</form>
 			<ol class="mt-4 space-y-3">
 				{#each receipts as receipt (receipt.id)}
 					<li class="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -387,18 +492,32 @@
 							<p class="truncate font-semibold text-slate-100">{receipt.merchant ?? $t('Invoice')}</p>
 							<p class="mt-1 text-sm text-slate-400">{formatDate(receipt.invoice_date)} · {formatCurrency(receipt.amount, receipt.currency)} · {$t(currentReceiptTarget(receipt))}</p>
 							{#if receipt.invoice_number}<p class="mt-1 text-xs text-slate-500">{$t('Invoice number')}: {receipt.invoice_number}</p>{/if}
+							<span class="mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-medium {receipt.shared_with_household ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-slate-700 text-slate-300'}">{$t(receipt.shared_with_household ? 'Shared with household' : 'Private')}</span>
 						</div>
 						<div class="flex shrink-0 flex-wrap gap-2">
+							<a href={'/api/receipts/' + receipt.id + '/preview'} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-700 px-3 text-sm font-medium text-cyan-100 hover:bg-slate-800">{$t('Preview document')}</a>
 							<a href={receipt.file_url} download class="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-700 px-3 text-sm font-medium text-cyan-100 hover:bg-slate-800">{$t('Download original')}</a>
-							{#if canEdit}
+							{#if canManageSharing && receipt.is_owner}
+								<button type="button" onclick={() => updateReceiptSharing(receipt)} disabled={sharingId === receipt.id} class="min-h-10 rounded-lg border border-emerald-300/30 px-3 text-sm font-medium text-emerald-100 hover:bg-emerald-300/10 disabled:opacity-50">{$t(sharingId === receipt.id ? 'Updating sharing…' : receipt.shared_with_household ? 'Stop sharing' : 'Share with household')}</button>
+							{/if}
+							{#if canEdit && receipt.is_owner}
 								<button type="button" onclick={() => deleteReceipt(receipt)} disabled={deletingId === receipt.id} class="min-h-10 rounded-lg border border-rose-300/30 px-3 text-sm font-medium text-rose-100 hover:bg-rose-300/10 disabled:opacity-50">{$t(deletingId === receipt.id ? 'Deleting…' : 'Delete receipt')}</button>
 							{/if}
 						</div>
 					</li>
 				{:else}
-					<li class="rounded-xl border border-slate-800 bg-slate-950/40 p-5 text-sm text-slate-400">{$t(loading ? 'Loading receipts…' : 'No receipts have been saved yet.')}</li>
+					<li class="rounded-xl border border-slate-800 bg-slate-950/40 p-5 text-sm text-slate-400">{$t(loading ? 'Loading receipts…' : hasReceiptFilters ? 'No receipts match those filters.' : 'No receipts have been saved yet.')}</li>
 				{/each}
 			</ol>
+			{#if pagination.last_page > 1}
+				<div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4">
+					<p class="text-sm text-slate-400">{$t('Page')} {pagination.current_page} {$t('of')} {pagination.last_page}</p>
+					<div class="flex gap-2">
+						<button type="button" onclick={() => changeReceiptPage(receiptPage - 1)} disabled={loading || receiptPage <= 1} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm text-slate-200 disabled:opacity-50">{$t('Previous')}</button>
+						<button type="button" onclick={() => changeReceiptPage(receiptPage + 1)} disabled={loading || receiptPage >= pagination.last_page} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm text-slate-200 disabled:opacity-50">{$t('Next')}</button>
+					</div>
+				</div>
+			{/if}
 		</section>
 	{/if}
 </section>

@@ -13,6 +13,7 @@ class ReceiptDocument extends Model implements ModuleResource
 
     protected $fillable = [
         'owner_user_id',
+        'is_private',
         'financial_transaction_id',
         'vehicle_cost_id',
         'file_path',
@@ -31,6 +32,7 @@ class ReceiptDocument extends Model implements ModuleResource
     protected function casts(): array
     {
         return [
+            'is_private' => 'boolean',
             'invoice_date' => 'date:Y-m-d',
             'amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',
@@ -64,6 +66,6 @@ class ReceiptDocument extends Model implements ModuleResource
 
     public function isPrivate(): bool
     {
-        return true;
+        return (bool) $this->is_private;
     }
 }
