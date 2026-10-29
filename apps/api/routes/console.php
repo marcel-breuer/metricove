@@ -23,3 +23,10 @@ Artisan::command('metricove:generate-reminders', function (ReminderService $remi
 })->purpose('Generate permission-aware household reminders');
 
 Schedule::command('metricove:generate-reminders')->dailyAt('08:00')->withoutOverlapping();
+
+Artisan::command('metricove:generate-task-reminders', function (ReminderService $reminders): void {
+    $result = $reminders->generateTaskReminders();
+    $this->info("Created {$result['created']} task reminders and sent {$result['sent']} opted-in reminder emails.");
+})->purpose('Generate permission-aware task checklist reminders');
+
+Schedule::command('metricove:generate-task-reminders')->everyMinute()->withoutOverlapping();

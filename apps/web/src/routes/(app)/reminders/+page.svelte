@@ -7,7 +7,7 @@
 	type Reminder = { id: number; source_module: string; title: string; due_on: string; href: string; is_read: boolean };
 	type Preferences = { email_enabled: boolean; lead_days: number; sources: Record<string, boolean> };
 	type Response = ApiResponse & { reminders?: Reminder[]; unread_count?: number; preferences?: Preferences };
-	const defaultSources = { finance: true, vehicles: true, utilities: true, pantry: true };
+	const defaultSources = { finance: true, vehicles: true, utilities: true, pantry: true, tasks: true };
 	let reminders = $state<Reminder[]>([]);
 	let emailEnabled = $state(false);
 	let leadDays = $state(3);
@@ -92,7 +92,7 @@
 	<div class="border-b border-slate-800 pb-6">
 		<p class="text-sm font-medium tracking-wide text-cyan-200">{$t('Household')} · {$t('Core')}</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t('Reminders')}</h1>
-		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t('Keep upcoming bills, service dates, utility alerts and pantry dates in one place. Reminders only show records you can currently view.')}</p>
+		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t('Keep upcoming bills, service dates, utility alerts, pantry dates and task checklists in one place. Reminders only show records you can currently view.')}</p>
 	</div>
 	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
 	{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
@@ -126,7 +126,7 @@
 		<form class="mt-5 space-y-5" onsubmit={savePreferences}>
 			<label class="flex items-start gap-3 text-sm text-slate-200"><input bind:checked={emailEnabled} type="checkbox" class="mt-0.5 size-4 rounded border-slate-600 bg-slate-950 accent-cyan-300" /><span><span class="font-medium">{$t('Send reminder emails')}</span><span class="mt-1 block text-slate-400">{$t('Email details are sent only while you retain permission to view the source record.')}</span></span></label>
 			<label for="reminder-lead-days" class="block max-w-sm text-sm font-medium text-slate-200">{$t('Days in advance')}<input id="reminder-lead-days" bind:value={leadDays} type="number" min="0" max="30" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /><span class="mt-1 block text-xs text-slate-500">{$t('Choose between 0 and 30 days. Utility threshold alerts are created when a new reading exceeds the meter threshold.')}</span></label>
-			<fieldset><legend class="text-sm font-medium text-slate-200">{$t('Reminder sources')}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2">{#each Object.keys(defaultSources) as source (source)}<label class="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-3 text-sm text-slate-200"><input bind:checked={sources[source]} type="checkbox" class="size-4 rounded border-slate-600 bg-slate-950 accent-cyan-300" />{$t(source === 'vehicles' ? 'Vehicle insurance and service' : source === 'utilities' ? 'Utility threshold alerts' : source === 'pantry' ? 'Pantry best-before dates' : 'Recurring finance entries')}</label>{/each}</div></fieldset>
+				<fieldset><legend class="text-sm font-medium text-slate-200">{$t('Reminder sources')}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2">{#each Object.keys(defaultSources) as source (source)}<label class="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-3 text-sm text-slate-200"><input bind:checked={sources[source]} type="checkbox" class="size-4 rounded border-slate-600 bg-slate-950 accent-cyan-300" />{$t(source === 'vehicles' ? 'Vehicle insurance and service' : source === 'utilities' ? 'Utility threshold alerts' : source === 'pantry' ? 'Pantry best-before dates' : source === 'tasks' ? 'Task checklist reminders' : 'Recurring finance entries')}</label>{/each}</div></fieldset>
 			<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save reminder settings')}</button>
 		</form>
 	</section>

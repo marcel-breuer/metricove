@@ -5,8 +5,11 @@ namespace App\Services\Tasks;
 use App\Enums\ModuleCapability;
 use App\Exceptions\ModuleDisabled;
 use App\Exceptions\ModuleNotFound;
+use App\Models\HouseholdReminder;
 use App\Models\HouseholdSettings;
 use App\Models\HouseholdTask;
+use App\Models\HouseholdTaskChecklistItem;
+use App\Models\HouseholdTaskChecklistOccurrence;
 use App\Models\HouseholdTaskCompletion;
 use App\Models\ModuleUserPermission;
 use App\Models\User;
@@ -33,7 +36,7 @@ class HouseholdTaskService
         $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
         $canManageShared = $this->canManageShared($actor);
         $query = $this->visibleTasks($actor, [ModuleCapability::View], HouseholdTask::query())
-            ->with(['assignee', 'completions.completedBy']);
+            ->with(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
 
         $status = $filters['status'] ?? 'open';
         if ($status === 'open') {
@@ -157,6 +160,8 @@ class HouseholdTaskService
             }
             $this->assertRecurringTaskHasDueDate($frequency, $dueAt);
             $timezone = $data['timezone'] ?? $task->timezone;
+            $previousDueAt = $task->due_at;
+            $previousTimezone = $task->timezone;
             $dueDateChanged = $dueAt === null
                 ? $task->due_at !== null
                 : $task->due_at === null || ! $dueAt->equalTo($task->due_at);
@@ -199,12 +204,15 @@ class HouseholdTaskService
             }
             $task->version++;
             $task->save();
+            if ($scheduleChanged) {
+                $this->synchronizeChecklistDeadlines($task->fresh(), $previousDueAt, $previousTimezone);
+            }
 
             if ($task->isPrivate() && $assignee !== null && $assignee->id !== $task->ownerUserId() && $assignee->id !== $oldAssigneeId) {
                 $this->sharePrivateAssignment($actor, $task, $assignee);
             }
 
-            return $task->fresh(['assignee', 'completions.completedBy']);
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
         }, 3);
 
         return $this->present($actor, $task);
@@ -230,47 +238,210 @@ class HouseholdTaskService
                 throw new ConflictHttpException('This task is already complete. Refresh and try again.');
             }
 
-            $completedAt = now()->toImmutable();
-            HouseholdTaskCompletion::query()->create([
-                'task_id' => $task->id,
-                'occurrence_number' => $task->occurrence_number,
-                'completed_by_user_id' => $actor->id,
-                'completed_at' => $completedAt,
-            ]);
+            $this->finishOccurrence($actor, $task);
 
-            if ($task->recurrence_frequency === null) {
-                $task->is_completed = true;
-                $task->completed_at = $completedAt;
-                $task->completed_by_user_id = $actor->id;
-            } else {
-                $task->due_at = $this->nextDueDate($task);
-                $task->occurrence_number++;
-                $task->is_completed = false;
-                $task->completed_at = null;
-                $task->completed_by_user_id = null;
-            }
-            $task->version++;
-            $task->save();
-
-            return $task->fresh(['assignee', 'completions.completedBy']);
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
         }, 3);
 
         return $this->present($actor, $task);
     }
 
-    /** @return list<array{id: int, occurrence_number: int, completed_by: string|null, completed_at: string}> */
+    /** @return list<array{id: int, occurrence_number: int, completed_by: string|null, completed_at: string, checklist_items: list<array{title: string, is_completed: bool, completed_by: string|null, completed_at: string|null}>}> */
     public function history(User $actor, int $taskId): array
     {
         $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
         $task = $this->findVisible($actor, $taskId, ModuleCapability::View);
 
         return $task->completions()->with('completedBy')->orderByDesc('completed_at')->orderByDesc('id')->limit(100)->get()
-            ->map(fn (HouseholdTaskCompletion $completion): array => [
-                'id' => (int) $completion->id,
-                'occurrence_number' => (int) $completion->occurrence_number,
-                'completed_by' => $completion->completedBy?->name,
-                'completed_at' => $completion->completed_at->toISOString(),
-            ])->all();
+            ->map(function (HouseholdTaskCompletion $completion) use ($task): array {
+                $items = HouseholdTaskChecklistOccurrence::query()
+                    ->where('task_id', $task->id)
+                    ->where('task_occurrence_number', $completion->occurrence_number)
+                    ->with('completedBy')->orderBy('id')->get()
+                    ->map(static fn (HouseholdTaskChecklistOccurrence $item): array => [
+                        'title' => $item->title_snapshot,
+                        'is_completed' => $item->completed_at !== null,
+                        'completed_by' => $item->completedBy?->name,
+                        'completed_at' => $item->completed_at?->toISOString(),
+                    ])->all();
+
+                return [
+                    'id' => (int) $completion->id,
+                    'occurrence_number' => (int) $completion->occurrence_number,
+                    'completed_by' => $completion->completedBy?->name,
+                    'completed_at' => $completion->completed_at->toISOString(),
+                    'checklist_items' => $items,
+                ];
+            })->all();
+    }
+
+    /** @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public function addChecklistItem(User $actor, int $taskId, array $data): array
+    {
+        $task = DB::transaction(function () use ($actor, $taskId, $data): HouseholdTask {
+            $task = $this->findForEdit($actor, $taskId);
+            $this->authorizeTaskUpdate($actor, $task);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $task);
+            $this->assertVersion($task, (int) $data['expected_version']);
+            $this->assertTaskOpen($task);
+            if ($task->checklistItems()->count() >= 100) {
+                throw ValidationException::withMessages(['title' => 'A task can contain at most 100 checklist items.']);
+            }
+            $dueAt = $this->dueAt($data['due_at'] ?? null);
+            $lead = (int) ($data['reminder_lead_minutes'] ?? 0);
+            $this->assertReminderLead($dueAt, $lead);
+            $position = (int) $task->checklistItems()->max('position') + 1;
+            [$offsetDays, $localTime] = $this->itemSchedule($task, $dueAt);
+            $item = $task->checklistItems()->create([
+                'title' => trim($data['title']),
+                'position' => $position,
+                'due_offset_days' => $offsetDays,
+                'due_time' => $localTime,
+                'reminder_lead_minutes' => $lead,
+            ]);
+            HouseholdTaskChecklistOccurrence::query()->create([
+                'task_id' => $task->id,
+                'checklist_item_id' => $item->id,
+                'task_occurrence_number' => $task->occurrence_number,
+                'title_snapshot' => $item->title,
+                'due_at' => $dueAt,
+            ]);
+            $task->version++;
+            $task->save();
+
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
+        }, 3);
+
+        return $this->present($actor, $task);
+    }
+
+    /** @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public function updateChecklistItem(User $actor, int $taskId, int $itemId, array $data): array
+    {
+        $task = DB::transaction(function () use ($actor, $taskId, $itemId, $data): HouseholdTask {
+            $task = $this->findForEdit($actor, $taskId);
+            $this->authorizeTaskUpdate($actor, $task);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $task);
+            $this->assertVersion($task, (int) $data['expected_version']);
+            $this->assertTaskOpen($task);
+            $item = $task->checklistItems()->whereKey($itemId)->lockForUpdate()->firstOrFail();
+            $occurrence = $this->currentChecklistOccurrence($task, $item, true);
+            $dueAt = array_key_exists('due_at', $data) ? $this->dueAt($data['due_at']) : $occurrence->due_at;
+            $lead = (int) ($data['reminder_lead_minutes'] ?? $item->reminder_lead_minutes);
+            $this->assertReminderLead($dueAt, $lead);
+            if (array_key_exists('title', $data)) {
+                $item->title = trim($data['title']);
+                $occurrence->title_snapshot = $item->title;
+            }
+            if (array_key_exists('due_at', $data)) {
+                [$item->due_offset_days, $item->due_time] = $this->itemSchedule($task, $dueAt);
+                $occurrence->due_at = $dueAt;
+            }
+            $item->reminder_lead_minutes = $lead;
+            $item->save();
+            $occurrence->save();
+            $task->version++;
+            $task->save();
+
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
+        }, 3);
+
+        return $this->present($actor, $task);
+    }
+
+    /** @param array{item_ids: list<int>, expected_version: int} $data
+     * @return array<string, mixed>
+     */
+    public function reorderChecklistItems(User $actor, int $taskId, array $data): array
+    {
+        $task = DB::transaction(function () use ($actor, $taskId, $data): HouseholdTask {
+            $task = $this->findForEdit($actor, $taskId);
+            $this->authorizeTaskUpdate($actor, $task);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $task);
+            $this->assertVersion($task, (int) $data['expected_version']);
+            $this->assertTaskOpen($task);
+            $items = $task->checklistItems()->lockForUpdate()->get();
+            $expectedIds = $items->modelKeys();
+            $providedIds = array_map('intval', $data['item_ids']);
+            sort($expectedIds);
+            $sortedProvidedIds = $providedIds;
+            sort($sortedProvidedIds);
+            if ($expectedIds !== $sortedProvidedIds) {
+                throw ValidationException::withMessages(['item_ids' => 'Provide every checklist item exactly once.']);
+            }
+            foreach ($providedIds as $position => $id) {
+                HouseholdTaskChecklistItem::query()->whereKey($id)->where('task_id', $task->id)->update(['position' => $position]);
+            }
+            $task->version++;
+            $task->save();
+
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
+        }, 3);
+
+        return $this->present($actor, $task);
+    }
+
+    /** @param array{completed: bool|int|string, expected_version: int} $data
+     * @return array<string, mixed>
+     */
+    public function completeChecklistItem(User $actor, int $taskId, int $itemId, array $data): array
+    {
+        $task = DB::transaction(function () use ($actor, $taskId, $itemId, $data): HouseholdTask {
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit);
+            $task = $this->visibleTasks($actor, [ModuleCapability::Edit, ModuleCapability::Manage], HouseholdTask::query())
+                ->whereKey($taskId)->lockForUpdate()->firstOrFail();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $task);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $task);
+            if (! $this->mayComplete($actor, $task, $this->canManageShared($actor))) {
+                throw new AuthorizationException('Only the task owner, assignee or an authorized household administrator can update checklist progress.');
+            }
+            $this->assertVersion($task, (int) $data['expected_version']);
+            $this->assertTaskOpen($task);
+            $item = $task->checklistItems()->whereKey($itemId)->firstOrFail();
+            $occurrence = $this->currentChecklistOccurrence($task, $item, true);
+            $completed = filter_var($data['completed'], FILTER_VALIDATE_BOOLEAN);
+            if ($completed === ($occurrence->completed_at !== null)) {
+                throw new ConflictHttpException('Checklist progress already has that value. Refresh and try again.');
+            }
+            $occurrence->completed_at = $completed ? now()->toImmutable() : null;
+            $occurrence->completed_by_user_id = $completed ? $actor->id : null;
+            $occurrence->save();
+            $task->version++;
+            $task->save();
+
+            $occurrences = HouseholdTaskChecklistOccurrence::query()
+                ->where('task_id', $task->id)
+                ->where('task_occurrence_number', $task->occurrence_number);
+            if ($completed && $occurrences->exists() && ! (clone $occurrences)->whereNull('completed_at')->exists()) {
+                $this->finishOccurrence($actor, $task);
+            }
+
+            return $task->fresh(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy']);
+        }, 3);
+
+        return $this->present($actor, $task);
+    }
+
+    public function deleteChecklistItem(User $actor, int $taskId, int $itemId, int $expectedVersion): void
+    {
+        DB::transaction(function () use ($actor, $taskId, $itemId, $expectedVersion): void {
+            $task = $this->findForEdit($actor, $taskId);
+            $this->authorizeTaskUpdate($actor, $task);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $task);
+            $this->assertVersion($task, $expectedVersion);
+            $this->assertTaskOpen($task);
+            $item = $task->checklistItems()->whereKey($itemId)->firstOrFail();
+            $occurrenceIds = $item->occurrences()->pluck('id');
+            HouseholdReminder::query()->where('source_module', self::MODULE)
+                ->where('source_type', 'task_checklist_occurrence')->whereIn('source_id', $occurrenceIds)->delete();
+            $item->delete();
+            $task->version++;
+            $task->save();
+        }, 3);
     }
 
     public function delete(User $actor, int $taskId): void
@@ -278,6 +449,9 @@ class HouseholdTaskService
         DB::transaction(function () use ($actor, $taskId): void {
             $task = $this->findForEdit($actor, $taskId);
             $this->authorizeTaskUpdate($actor, $task);
+            $occurrenceIds = HouseholdTaskChecklistOccurrence::query()->where('task_id', $task->id)->pluck('id');
+            HouseholdReminder::query()->where('source_module', self::MODULE)
+                ->where('source_type', 'task_checklist_occurrence')->whereIn('source_id', $occurrenceIds)->delete();
             $task->delete();
         }, 3);
     }
@@ -286,7 +460,7 @@ class HouseholdTaskService
     {
         $this->access->authorize($actor, self::MODULE, $capability);
         $task = $this->visibleTasks($actor, [$capability], HouseholdTask::query())
-            ->with(['assignee', 'completions.completedBy'])->whereKey($taskId)->firstOrFail();
+            ->with(['assignee', 'completions.completedBy', 'checklistItems.currentOccurrence.completedBy'])->whereKey($taskId)->firstOrFail();
         $this->access->authorize($actor, self::MODULE, $capability, $task);
 
         return $task;
@@ -395,6 +569,133 @@ class HouseholdTaskService
         }
     }
 
+    private function assertTaskOpen(HouseholdTask $task): void
+    {
+        if ($task->is_completed) {
+            throw new ConflictHttpException('This task is already complete. Refresh and try again.');
+        }
+    }
+
+    private function assertReminderLead(?CarbonImmutable $dueAt, int $leadMinutes): void
+    {
+        if ($dueAt === null && $leadMinutes > 0) {
+            throw ValidationException::withMessages(['reminder_lead_minutes' => 'A reminder lead time needs a due date.']);
+        }
+    }
+
+    private function currentChecklistOccurrence(
+        HouseholdTask $task,
+        HouseholdTaskChecklistItem $item,
+        bool $lock = false,
+    ): HouseholdTaskChecklistOccurrence {
+        $query = HouseholdTaskChecklistOccurrence::query()
+            ->where('task_id', $task->id)
+            ->where('checklist_item_id', $item->id)
+            ->where('task_occurrence_number', $task->occurrence_number);
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->firstOrFail();
+    }
+
+    /** @return array{0: int|null, 1: string|null} */
+    /** @return array{?int, ?string} */
+    private function itemSchedule(HouseholdTask $task, ?CarbonImmutable $dueAt): array
+    {
+        if ($dueAt === null) {
+            return [null, null];
+        }
+
+        $localDue = $dueAt->setTimezone($task->timezone);
+        $offsetDays = null;
+        if ($task->due_at !== null) {
+            $parentDate = CarbonImmutable::parse($task->due_at)->setTimezone($task->timezone)->startOfDay();
+            $offsetDays = (int) $parentDate->diffInDays($localDue->startOfDay(), false);
+        }
+
+        return [$offsetDays, $localDue->format('H:i:s')];
+    }
+
+    private function occurrenceDueAt(HouseholdTask $task, HouseholdTaskChecklistItem $item): ?CarbonImmutable
+    {
+        if ($task->due_at === null || $item->due_offset_days === null || $item->due_time === null) {
+            return null;
+        }
+
+        return CarbonImmutable::parse($task->due_at)->setTimezone($task->timezone)->startOfDay()
+            ->addDays($item->due_offset_days)
+            ->setTimeFromTimeString((string) $item->due_time)->utc();
+    }
+
+    private function synchronizeChecklistDeadlines(
+        HouseholdTask $task,
+        ?CarbonImmutable $previousDueAt,
+        string $previousTimezone,
+    ): void {
+        foreach ($task->checklistItems()->with('currentOccurrence')->lockForUpdate()->get() as $item) {
+            $occurrence = $item->currentOccurrence;
+            if (! $occurrence instanceof HouseholdTaskChecklistOccurrence || $occurrence->completed_at !== null) {
+                continue;
+            }
+
+            if ($task->due_at === null) {
+                continue;
+            }
+
+            if ($item->due_offset_days === null && $occurrence->due_at !== null && $previousDueAt === null) {
+                $localDeadline = $occurrence->due_at->setTimezone($previousTimezone);
+                $localParent = CarbonImmutable::parse($task->due_at)->setTimezone($task->timezone)->startOfDay();
+                $item->due_offset_days = (int) $localParent->diffInDays($localDeadline->setTimezone($task->timezone)->startOfDay(), false);
+                $item->due_time = $localDeadline->setTimezone($task->timezone)->format('H:i:s');
+                $item->save();
+            }
+
+            $newDueAt = $this->occurrenceDueAt($task, $item);
+            if ($newDueAt !== null) {
+                $occurrence->due_at = $newDueAt;
+                $occurrence->save();
+            }
+        }
+    }
+
+    private function finishOccurrence(User $actor, HouseholdTask $task): void
+    {
+        $completedAt = now()->toImmutable();
+        HouseholdTaskCompletion::query()->create([
+            'task_id' => $task->id,
+            'occurrence_number' => $task->occurrence_number,
+            'completed_by_user_id' => $actor->id,
+            'completed_at' => $completedAt,
+        ]);
+
+        if ($task->recurrence_frequency === null) {
+            $task->is_completed = true;
+            $task->completed_at = $completedAt;
+            $task->completed_by_user_id = $actor->id;
+        } else {
+            $task->due_at = $this->nextDueDate($task);
+            $task->occurrence_number++;
+            $task->is_completed = false;
+            $task->completed_at = null;
+            $task->completed_by_user_id = null;
+        }
+        $task->version++;
+        $task->save();
+
+        if ($task->recurrence_frequency !== null) {
+            foreach ($task->checklistItems()->orderBy('position')->orderBy('id')->get() as $item) {
+                HouseholdTaskChecklistOccurrence::query()->create([
+                    'task_id' => $task->id,
+                    'checklist_item_id' => $item->id,
+                    'task_occurrence_number' => $task->occurrence_number,
+                    'title_snapshot' => $item->title,
+                    'due_at' => $this->occurrenceDueAt($task, $item),
+                ]);
+            }
+        }
+    }
+
     private function assertRecurringTaskHasDueDate(?string $frequency, mixed $dueAt): void
     {
         if ($frequency !== null && $dueAt === null) {
@@ -451,9 +752,8 @@ class HouseholdTaskService
     {
         $canManageShared ??= $this->canManageShared($actor);
 
-        if (! $task->relationLoaded('assignee')) {
-            $task->load('assignee');
-        }
+        $task->loadMissing(['assignee', 'checklistItems.currentOccurrence.completedBy']);
+        $canEdit = $this->canEdit($actor, $task, $canManageShared);
 
         return [
             'id' => (int) $task->id,
@@ -473,7 +773,22 @@ class HouseholdTaskService
                 'id' => (int) $task->assignee->id,
                 'name' => $task->assignee->name,
             ],
-            'can_edit' => $this->canEdit($actor, $task, $canManageShared),
+            'checklist_items' => $task->checklistItems->map(static function (HouseholdTaskChecklistItem $item): array {
+                $occurrence = $item->currentOccurrence;
+
+                return [
+                    'id' => (int) $item->id,
+                    'title' => $item->title,
+                    'position' => (int) $item->position,
+                    'due_at' => $occurrence?->due_at?->toISOString(),
+                    'reminder_lead_minutes' => (int) $item->reminder_lead_minutes,
+                    'is_completed' => $occurrence?->completed_at !== null,
+                    'completed_by' => $occurrence?->completedBy?->name,
+                    'completed_at' => $occurrence?->completed_at?->toISOString(),
+                ];
+            })->values()->all(),
+            'can_edit' => $canEdit,
+            'can_edit_checklist' => $canEdit,
             'can_complete' => $this->canComplete($actor, $task, $canManageShared),
             'created_at' => $task->created_at?->toISOString(),
             'updated_at' => $task->updated_at?->toISOString(),
