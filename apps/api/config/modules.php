@@ -86,5 +86,12 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
+        'receipts' => [
+            'label' => 'Receipts',
+            'description' => 'Private invoice scans with local OCR and reviewed expense creation.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
     ],
 ];
