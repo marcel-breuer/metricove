@@ -4,6 +4,7 @@ Always read the root [AGENTS.md](../../AGENTS.md). Then load only the skill(s) a
 
 | Task | Skill |
 | --- | --- |
+| **All frontend work** | [Frontend components and i18n](frontend-components-i18n/SKILL.md) — always use for SvelteKit UI changes |
 | New optional functionality | [Implement module](implement-module/SKILL.md) |
 | Accounts, admins and invitations | [Permissions](permissions-change/SKILL.md) |
 | Recipes, plans, pantry and shopping | [Food domain](food-domain/SKILL.md) |
