@@ -2,6 +2,21 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.12.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.11.0...metricove-v0.12.0) (2026-10-29)
+
+
+### Features
+
+* add private notes and task checklists ([1ffb2d4](https://github.com/marcel-breuer/metricove/commit/1ffb2d404a0404af4baf93c1b066bfe0180c51b3))
+* add private notes and task checklists with reminders ([03c8b6c](https://github.com/marcel-breuer/metricove/commit/03c8b6c03bbf6c46c9edcae917e70ad3962a37c3))
+
+
+### Documentation
+
+* clarify notes search behavior ([27214d5](https://github.com/marcel-breuer/metricove/commit/27214d5a195b470c09f2c2e739dd18c60c26d969))
+* **frontend:** add component reuse and i18n skill ([c430a8c](https://github.com/marcel-breuer/metricove/commit/c430a8c8e38a5e2209434046b2400ada8a1199d0))
+* **frontend:** require reusable components and localization ([cf7c69f](https://github.com/marcel-breuer/metricove/commit/cf7c69f8db5540505d2d764544b41c4820465bb2))
+
 ## [0.11.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.10.1...metricove-v0.11.0) (2026-10-29)
 
 
