@@ -4,7 +4,7 @@ namespace App\Services\Receipts;
 
 class InvoiceTextParser
 {
-    /** @return array{merchant: ?string, invoice_number: ?string, invoice_date: ?string, amount: ?string, currency: ?string, tax_amount: ?string} */
+    /** @return array{merchant: ?string, invoice_number: ?string, invoice_date: ?string, amount: ?string, currency: ?string, tax_amount: ?string, fuel_liters: ?string, fuel_unit_price: ?string, fuel_odometer_value: ?string} */
     public function parse(string $text): array
     {
         $text = mb_substr(str_replace(["\r\n", "\r"], "\n", $text), 0, 100_000);
@@ -17,6 +17,33 @@ class InvoiceTextParser
             'amount' => $this->amount($lines, '/(?:gesamtbetrag|rechnungsbetrag|zahlbetrag|zu zahlen|endbetrag|total(?:\s+due)?|amount\s+due|grand\s+total|balance\s+due)/iu'),
             'currency' => $this->currency($text),
             'tax_amount' => $this->amount($lines, '/(?:mwst|ust|vat|tax(?:\s+amount)?)/iu'),
+            'fuel_liters' => $this->fuelLiters($lines),
+            'fuel_unit_price' => $this->fuelUnitPrice($lines),
+            'fuel_odometer_value' => $this->fuelOdometerValue($lines),
+        ];
+    }
+
+    /** @return array{suggestions: array<string, ?string>, field_status: array<string, string>, review_required: list<string>} */
+    public function parseWithReview(string $text, ?float $sourceConfidence): array
+    {
+        $suggestions = $this->parse($text);
+        $fieldStatus = [];
+        $reviewRequired = [];
+
+        foreach ($suggestions as $field => $value) {
+            $status = $value === null
+                ? 'missing'
+                : ($this->hasStrongEvidence($field, $text) && ($sourceConfidence === null || $sourceConfidence >= 70) ? 'recognized' : 'uncertain');
+            $fieldStatus[$field] = $status;
+            if ($status !== 'recognized') {
+                $reviewRequired[] = $field;
+            }
+        }
+
+        return [
+            'suggestions' => $suggestions,
+            'field_status' => $fieldStatus,
+            'review_required' => $reviewRequired,
         ];
     }
 
@@ -112,6 +139,89 @@ class InvoiceTextParser
             'CHF' => 'CHF',
             default => null,
         };
+    }
+
+    /** @param list<string> $lines */
+    private function fuelLiters(array $lines): ?string
+    {
+        foreach ($lines as $line) {
+            if (preg_match('/(?<!\d)(\d{1,8}(?:[.,]\d{1,3})?)\s*(?:l|ltr|liter|liters)\b/iu', $line, $matches) === 1) {
+                return $this->normalizeDecimal($matches[1], 3, 11);
+            }
+        }
+
+        return null;
+    }
+
+    /** @param list<string> $lines */
+    private function fuelUnitPrice(array $lines): ?string
+    {
+        foreach ($lines as $line) {
+            if (preg_match('/(?<!\d)(\d{1,8}(?:[.,]\d{1,4})?)\s*(?:€|eur)?\s*\/\s*(?:l|liter)\b/iu', $line, $matches) === 1) {
+                return $this->normalizeDecimal($matches[1], 4, 10);
+            }
+            if (preg_match('/(?:preis\s*(?:pro|\/)\s*(?:liter|l)|price\s*(?:per|\/)\s*(?:liter|l))\D{0,12}(\d{1,8}(?:[.,]\d{1,4})?)/iu', $line, $matches) === 1) {
+                return $this->normalizeDecimal($matches[1], 4, 10);
+            }
+        }
+
+        return null;
+    }
+
+    /** @param list<string> $lines */
+    private function fuelOdometerValue(array $lines): ?string
+    {
+        foreach ($lines as $line) {
+            if (preg_match('/(?:kilometerstand|km\s*-?\s*stand|odometer)\D{0,12}(\d{1,17}(?:[.,]\d{1,3})?)/iu', $line, $matches) === 1) {
+                return $this->normalizeDecimal($matches[1], 3, 17);
+            }
+        }
+
+        return null;
+    }
+
+    private function hasStrongEvidence(string $field, string $text): bool
+    {
+        return match ($field) {
+            'merchant' => false,
+            'invoice_number' => preg_match('/(?:rechnungs(?:nummer|nr\.?)|invoice\s*(?:number|no\.?)|bill\s*no\.?)\s*[:#-]?\s*[A-Z0-9]/iu', $text) === 1,
+            'invoice_date' => preg_match('/(?:rechnungsdatum|invoice\s+date|datum|date)\D{0,16}\d{1,4}[.\/-]\d{1,4}[.\/-]\d{2,4}|(?:rechnungsdatum|invoice\s+date|datum|date)\D{0,16}\d{4}-\d{1,2}-\d{1,2}/iu', $text) === 1,
+            'amount' => preg_match('/(?:gesamtbetrag|rechnungsbetrag|zahlbetrag|zu zahlen|endbetrag|total(?:\s+due)?|amount\s+due|grand\s+total|balance\s+due)/iu', $text) === 1,
+            'currency' => preg_match('/\b(EUR|USD|GBP|CHF)\b|€|\$|£/iu', $text) === 1,
+            'tax_amount' => preg_match('/(?:mwst|ust|vat|tax(?:\s+amount)?)/iu', $text) === 1,
+            'fuel_liters' => preg_match('/\d{1,8}(?:[.,]\d{1,3})?\s*(?:l|ltr|liter|liters)\b/iu', $text) === 1,
+            'fuel_unit_price' => preg_match('/\d{1,8}(?:[.,]\d{1,4})?\s*(?:€|eur)?\s*\/\s*(?:l|liter)\b|(?:preis\s*(?:pro|\/)\s*(?:liter|l)|price\s*(?:per|\/)\s*(?:liter|l))/iu', $text) === 1,
+            'fuel_odometer_value' => preg_match('/(?:kilometerstand|km\s*-?\s*stand|odometer)\D{0,12}\d{1,17}/iu', $text) === 1,
+            default => false,
+        };
+    }
+
+    private function normalizeDecimal(string $value, int $fractionDigits, int $wholeDigits): ?string
+    {
+        $value = preg_replace('/[\s\x{00A0}\x{202F}]/u', '', $value) ?? '';
+        $lastComma = strrpos($value, ',');
+        $lastDot = strrpos($value, '.');
+        $decimalSeparator = $lastComma === false ? ($lastDot === false ? null : '.') : ($lastDot === false || $lastComma > $lastDot ? ',' : '.');
+
+        if ($lastComma !== false && $lastDot !== false) {
+            $thousandsSeparator = $decimalSeparator === ',' ? '.' : ',';
+            $value = str_replace($thousandsSeparator, '', $value);
+        } elseif ($decimalSeparator !== null) {
+            $fractionLength = strlen($value) - (int) strrpos($value, $decimalSeparator) - 1;
+            if ($fractionLength > $fractionDigits || $fractionLength === 3 && $fractionDigits < 3) {
+                $value = str_replace($decimalSeparator, '', $value);
+                $decimalSeparator = null;
+            }
+        }
+
+        if ($decimalSeparator === ',') {
+            $value = str_replace(',', '.', $value);
+        }
+        if (preg_match('/\A\d{1,'.$wholeDigits.'}(?:\.\d{1,'.$fractionDigits.'})?\z/', $value) !== 1) {
+            return null;
+        }
+
+        return $value;
     }
 
     private function normalizeAmount(string $value): ?string

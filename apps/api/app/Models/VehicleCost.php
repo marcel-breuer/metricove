@@ -23,6 +23,9 @@ class VehicleCost extends Model implements ModuleResource
         'period_end',
         'period',
         'description',
+        'fuel_liters',
+        'fuel_unit_price',
+        'fuel_odometer_value',
     ];
 
     protected function casts(): array
@@ -32,6 +35,9 @@ class VehicleCost extends Model implements ModuleResource
             'amount' => 'decimal:2',
             'period_start' => 'date:Y-m-d',
             'period_end' => 'date:Y-m-d',
+            'fuel_liters' => 'decimal:3',
+            'fuel_unit_price' => 'decimal:4',
+            'fuel_odometer_value' => 'decimal:3',
         ];
     }
 

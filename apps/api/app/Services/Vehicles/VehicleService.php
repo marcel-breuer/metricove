@@ -359,12 +359,33 @@ class VehicleService
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::Create);
         $amount = VehicleDecimalValue::money($data['amount']);
+        $rawFuelLiters = $data['fuel_liters'] ?? null;
+        $rawFuelUnitPrice = $data['fuel_unit_price'] ?? null;
+        $rawFuelOdometerValue = $data['fuel_odometer_value'] ?? null;
+        $fuelLiters = $rawFuelLiters === null || $rawFuelLiters === '' ? null : VehicleDecimalValue::fuelQuantity($rawFuelLiters);
+        $fuelUnitPrice = $rawFuelUnitPrice === null || $rawFuelUnitPrice === '' ? null : VehicleDecimalValue::fuelUnitPrice($rawFuelUnitPrice);
+        $fuelOdometerValue = $rawFuelOdometerValue === null || $rawFuelOdometerValue === '' ? null : VehicleDecimalValue::distance($rawFuelOdometerValue);
 
         if ($amount === null) {
             throw ValidationException::withMessages(['amount' => 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.']);
         }
+        if ($rawFuelLiters !== null && $rawFuelLiters !== '' && ($fuelLiters === null || preg_match('/\A0(?:\.0+)?\z/', $fuelLiters) === 1)) {
+            throw ValidationException::withMessages(['fuel_liters' => 'Enter a positive fuel quantity with up to 11 whole and 3 fractional digits.']);
+        }
+        if ($rawFuelUnitPrice !== null && $rawFuelUnitPrice !== '' && ($fuelUnitPrice === null || preg_match('/\A0(?:\.0+)?\z/', $fuelUnitPrice) === 1)) {
+            throw ValidationException::withMessages(['fuel_unit_price' => 'Enter a positive unit price with up to 10 whole and 4 fractional digits.']);
+        }
+        if ($rawFuelOdometerValue !== null && $rawFuelOdometerValue !== '' && $fuelOdometerValue === null) {
+            throw ValidationException::withMessages(['fuel_odometer_value' => 'Enter a non-negative odometer value with up to 17 whole and 3 fractional digits.']);
+        }
+        if (($fuelLiters === null) !== ($fuelUnitPrice === null)) {
+            throw ValidationException::withMessages(['fuel_liters' => 'Enter both fuel quantity and unit price, or leave both blank.']);
+        }
+        if ($data['category'] !== 'fuel' && ($fuelLiters !== null || $fuelUnitPrice !== null || $fuelOdometerValue !== null)) {
+            throw ValidationException::withMessages(['category' => 'Fuel details are only available for fuel costs.']);
+        }
 
-        $cost = DB::transaction(function () use ($actor, $vehicleId, $data, $amount): VehicleCost {
+        $cost = DB::transaction(function () use ($actor, $vehicleId, $data, $amount, $fuelLiters, $fuelUnitPrice, $fuelOdometerValue): VehicleCost {
             $vehicle = Vehicle::query()->whereKey($vehicleId)->lockForUpdate()->firstOrFail();
             $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $vehicle);
             $cost = $vehicle->costs()->create([
@@ -378,6 +399,9 @@ class VehicleService
                 'period_end' => $data['period_end'] ?? null,
                 'period' => $data['period'],
                 'description' => $this->nullableTrim($data['description'] ?? null),
+                'fuel_liters' => $fuelLiters,
+                'fuel_unit_price' => $fuelUnitPrice,
+                'fuel_odometer_value' => $fuelOdometerValue,
             ]);
             $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $cost);
 
@@ -590,6 +614,9 @@ class VehicleService
             'period_end' => $cost->period_end?->format('Y-m-d'),
             'period' => $cost->period,
             'description' => $cost->description,
+            'fuel_liters' => $cost->fuel_liters === null ? null : (string) $cost->fuel_liters,
+            'fuel_unit_price' => $cost->fuel_unit_price === null ? null : (string) $cost->fuel_unit_price,
+            'fuel_odometer_value' => $cost->fuel_odometer_value === null ? null : (string) $cost->fuel_odometer_value,
         ];
     }
 

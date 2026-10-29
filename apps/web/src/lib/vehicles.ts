@@ -70,6 +70,9 @@ export type VehicleCost = {
 	period_end: string | null;
 	period: 'once' | 'monthly' | 'quarterly' | 'yearly';
 	description: string | null;
+	fuel_liters: string | null;
+	fuel_unit_price: string | null;
+	fuel_odometer_value: string | null;
 };
 
 export type VehicleResponse = {

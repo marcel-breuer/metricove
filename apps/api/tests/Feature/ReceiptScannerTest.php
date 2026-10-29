@@ -58,6 +58,7 @@ class ReceiptScannerTest extends TestCase
             'amount' => '1234.56',
             'currency' => 'EUR',
             'tax_amount' => '197.10',
+            'reviewed_fields' => ['merchant', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
         ];
         $headers = [
             'Accept' => 'application/json',
@@ -141,6 +142,10 @@ class ReceiptScannerTest extends TestCase
             'amount' => '64.30',
             'currency' => 'EUR',
             'tax_amount' => '10.26',
+            'fuel_liters' => '39.20',
+            'fuel_unit_price' => '1.6400',
+            'fuel_odometer_value' => '81234',
+            'reviewed_fields' => ['merchant', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
         ], [
             'Accept' => 'application/json',
             'Idempotency-Key' => 'c16aa959-77aa-4a15-b434-f1a3f90979cc',
@@ -153,6 +158,9 @@ class ReceiptScannerTest extends TestCase
             'period' => 'once',
             'period_start' => '2026-10-29',
             'amount' => '64.30',
+            'fuel_liters' => '39.20',
+            'fuel_unit_price' => '1.6400',
+            'fuel_odometer_value' => '81234.000',
         ]);
         $this->assertDatabaseHas('receipt_documents', [
             'id' => $saved->json('receipt.id'),
@@ -212,6 +220,7 @@ class ReceiptScannerTest extends TestCase
             'invoice_date' => '2026-10-29',
             'amount' => '12.00',
             'currency' => 'EUR',
+            'reviewed_fields' => ['merchant', 'invoice_number', 'tax_amount', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
         ], [
             'Accept' => 'application/json',
             'Idempotency-Key' => 'b0d1e2b0-7771-43b4-9600-91762a8f585b',
@@ -345,12 +354,130 @@ class ReceiptScannerTest extends TestCase
             ->assertJsonValidationErrors('currency');
     }
 
+    public function test_archive_only_receipts_can_later_link_to_existing_or_new_finance_entries(): void
+    {
+        Storage::fake('local');
+        $admin = $this->admin();
+        $this->enable($admin, ['receipts', 'finance']);
+        $categoryId = $this->financeCategory($admin);
+        $existing = $this->actingAs($admin, 'web')->postJson('/api/finance/transactions', [
+            'finance_category_id' => $categoryId,
+            'type' => 'expense',
+            'description' => 'Workshop invoice',
+            'payee' => 'Werkstatt Nord',
+            'amount' => '1234.56',
+            'currency' => 'EUR',
+            'occurred_on' => '2026-10-29',
+            'visibility' => 'private',
+        ])->assertCreated();
+
+        $this->mockOcr();
+        $file = $this->imageFile('archive-only.png');
+        $preview = $this->actingAs($admin, 'web')->post('/api/receipts/preview', ['file' => $file], ['Accept' => 'application/json'])->assertOk();
+        $archived = $this->actingAs($admin, 'web')->post('/api/receipts/confirm', [
+            'file' => $file,
+            'preview_token' => $preview->json('preview_token'),
+            'confirmed' => '1',
+            'target_type' => 'archive',
+            'description' => 'Workshop invoice',
+            'merchant' => 'Werkstatt Nord',
+            'invoice_number' => 'RN-2026-104',
+            'invoice_date' => '2026-10-29',
+            'amount' => '1234.56',
+            'currency' => 'EUR',
+            'tax_amount' => '197.10',
+            'reviewed_fields' => ['merchant', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
+        ], ['Accept' => 'application/json', 'Idempotency-Key' => '0bb1a3ae-d04d-41f5-9081-761bf64f4d27'])
+            ->assertCreated()
+            ->assertJsonPath('receipt.target_type', null)
+            ->assertJsonPath('receipt.target_linked', false)
+            ->assertJsonPath('target', null);
+        $receiptId = (int) $archived->json('receipt.id');
+        $this->assertDatabaseCount('financial_transactions', 1);
+
+        $this->actingAs($admin, 'web')->getJson('/api/receipts/targets?target_type=finance&search=workshop')
+            ->assertOk()
+            ->assertJsonPath('targets.0.id', $existing->json('transaction.id'))
+            ->assertJsonPath('create_categories.0.id', $categoryId);
+        $this->actingAs($admin, 'web')->patchJson('/api/receipts/'.$receiptId.'/target', [
+            'target_type' => 'finance',
+            'target_record_id' => $existing->json('transaction.id'),
+        ])->assertOk()
+            ->assertJsonPath('receipt.target_type', 'finance')
+            ->assertJsonPath('receipt.target_record_id', $existing->json('transaction.id'))
+            ->assertJsonPath('receipt.target_category', 'finance:'.$categoryId);
+
+        $newReceiptId = $this->createArchiveReceipt($admin, 'later-entry.pdf', [
+            'merchant' => 'Different merchant',
+            'invoice_number' => 'DIFF-1',
+            'invoice_date' => '2026-10-27',
+            'amount' => '21.50',
+            'currency' => 'EUR',
+        ]);
+        $this->actingAs($admin, 'web')->postJson('/api/receipts/'.$newReceiptId.'/target', [
+            'target_type' => 'finance',
+            'finance_category_id' => $categoryId,
+        ])->assertCreated()
+            ->assertJsonPath('receipt.target_type', 'finance')
+            ->assertJsonPath('target.type', 'finance')
+            ->assertJsonPath('target.record.description', 'Invoice from Different merchant');
+
+        $this->assertDatabaseCount('financial_transactions', 2);
+        $this->actingAs($admin, 'web')->getJson('/api/receipts?target_type=finance&category=finance:'.$categoryId.'&sharing_status=private')
+            ->assertOk()->assertJsonCount(2, 'receipts');
+    }
+
+    public function test_duplicate_receipt_warning_requires_acknowledgement_but_allows_saving(): void
+    {
+        Storage::fake('local');
+        $admin = $this->admin();
+        $this->enable($admin, ['receipts']);
+        $this->createArchiveReceipt($admin, 'prior-invoice.pdf', [
+            'merchant' => 'Werkstatt Nord',
+            'invoice_number' => 'RN-2026-104',
+            'invoice_date' => '2026-10-29',
+            'amount' => '1234.56',
+            'currency' => 'EUR',
+        ]);
+        $this->mockOcr();
+        $file = $this->imageFile('possible-duplicate.png');
+        $preview = $this->actingAs($admin, 'web')->post('/api/receipts/preview', ['file' => $file], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonCount(1, 'duplicate_matches')
+            ->assertJsonFragment(['merchant_invoice_number']);
+        $payload = [
+            'file' => $file,
+            'preview_token' => $preview->json('preview_token'),
+            'confirmed' => '1',
+            'target_type' => 'archive',
+            'description' => 'Workshop invoice',
+            'merchant' => 'Werkstatt Nord',
+            'invoice_number' => 'RN-2026-104',
+            'invoice_date' => '2026-10-29',
+            'amount' => '1234.56',
+            'currency' => 'EUR',
+            'tax_amount' => '197.10',
+            'reviewed_fields' => ['merchant', 'invoice_number', 'tax_amount', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
+        ];
+
+        $this->actingAs($admin, 'web')->post('/api/receipts/confirm', $payload, [
+            'Accept' => 'application/json',
+            'Idempotency-Key' => '3beea34f-d2e9-40cb-a360-3f3e1ca8534e',
+        ])->assertUnprocessable()->assertJsonValidationErrors('duplicate_acknowledged');
+
+        $this->actingAs($admin, 'web')->post('/api/receipts/confirm', [...$payload, 'duplicate_acknowledged' => '1'], [
+            'Accept' => 'application/json',
+            'Idempotency-Key' => '2d47af0e-c775-4e7e-99bf-2531726b20fb',
+        ])->assertCreated()->assertJsonPath('receipt.target_type', null);
+        $this->assertDatabaseCount('receipt_documents', 2);
+    }
+
     /** @param array{merchant: string, invoice_number: string, invoice_date: string, amount: string, currency: string} $values */
-    private function createArchiveReceipt(User $owner, string $fileName, array $values): void
+    private function createArchiveReceipt(User $owner, string $fileName, array $values): int
     {
         $path = 'receipts/'.$fileName;
         Storage::disk('local')->put($path, 'private invoice');
-        ReceiptDocument::query()->create([
+        $receipt = ReceiptDocument::query()->create([
             'owner_user_id' => $owner->id,
             'is_private' => true,
             'file_path' => $path,
@@ -364,6 +491,8 @@ class ReceiptScannerTest extends TestCase
             'file_digest' => hash('sha256', $fileName),
             'request_fingerprint' => hash('sha256', $values['invoice_number']),
         ]);
+
+        return (int) $receipt->id;
     }
 
     private function admin(): User
@@ -394,9 +523,12 @@ class ReceiptScannerTest extends TestCase
     {
         $this->app->instance(LocalReceiptOcr::class, new class extends LocalReceiptOcr
         {
-            public function extract(UploadedFile $file): string
+            public function extractDetailed(UploadedFile $file): array
             {
-                return "Werkstatt Nord\nRechnungsnummer: RN-2026-104\nRechnungsdatum: 29.10.2026\nGesamtbetrag: 1.234,56 EUR\nMwSt. 19%: 197,10 EUR";
+                return [
+                    'text' => "Werkstatt Nord\nRechnungsnummer: RN-2026-104\nRechnungsdatum: 29.10.2026\nGesamtbetrag: 1.234,56 EUR\nMwSt. 19%: 197,10 EUR",
+                    'confidence' => 95,
+                ];
             }
         });
     }
@@ -424,6 +556,7 @@ class ReceiptScannerTest extends TestCase
             'amount' => '45.67',
             'currency' => 'EUR',
             'tax_amount' => '7.30',
+            'reviewed_fields' => ['merchant', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
         ], [
             'Accept' => 'application/json',
             'Idempotency-Key' => 'cb5027ca-0e80-4964-9b77-453c66397883',

@@ -277,12 +277,18 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:receipts,view')->name('index');
             Route::get('/options', [ReceiptController::class, 'options'])
                 ->middleware('module.access:receipts,create')->name('options');
+            Route::get('/targets', [ReceiptController::class, 'targetOptions'])
+                ->middleware('module.access:receipts,edit')->name('targets');
             Route::post('/preview', [ReceiptController::class, 'preview'])
                 ->middleware(['module.access:receipts,create', 'throttle:10,1'])->name('preview');
             Route::post('/confirm', [ReceiptController::class, 'confirm'])
                 ->middleware(['module.access:receipts,create', 'throttle:10,1'])->name('confirm');
             Route::patch('/{receipt}/sharing', [ReceiptController::class, 'updateSharing'])
                 ->middleware('module.access:receipts,manage')->whereNumber('receipt')->name('sharing.update');
+            Route::patch('/{receipt}/target', [ReceiptController::class, 'linkTarget'])
+                ->middleware('module.access:receipts,edit')->whereNumber('receipt')->name('target.link');
+            Route::post('/{receipt}/target', [ReceiptController::class, 'createTarget'])
+                ->middleware('module.access:receipts,edit')->whereNumber('receipt')->name('target.create');
             Route::get('/{receipt}/preview', [ReceiptController::class, 'previewFile'])
                 ->middleware('module.access:receipts,view')->whereNumber('receipt')->name('preview-file');
             Route::get('/{receipt}/file', [ReceiptController::class, 'file'])

@@ -19,11 +19,15 @@ class ReceiptDocument extends Model implements ModuleResource
         'file_path',
         'mime_type',
         'merchant',
+        'description',
         'invoice_number',
         'invoice_date',
         'amount',
         'currency',
         'tax_amount',
+        'fuel_liters',
+        'fuel_unit_price',
+        'fuel_odometer_value',
         'idempotency_key',
         'file_digest',
         'request_fingerprint',
@@ -36,6 +40,9 @@ class ReceiptDocument extends Model implements ModuleResource
             'invoice_date' => 'date:Y-m-d',
             'amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',
+            'fuel_liters' => 'decimal:3',
+            'fuel_unit_price' => 'decimal:4',
+            'fuel_odometer_value' => 'decimal:3',
         ];
     }
 

@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmReceiptRequest;
 use App\Http\Requests\PreviewReceiptRequest;
+use App\Http\Requests\ReceiptCreateTargetRequest;
 use App\Http\Requests\ReceiptIndexRequest;
+use App\Http\Requests\ReceiptLinkRequest;
 use App\Http\Requests\ReceiptSharingRequest;
+use App\Http\Requests\ReceiptTargetOptionsRequest;
 use App\Models\User;
 use App\Services\Receipts\ReceiptService;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +28,13 @@ class ReceiptController extends Controller
         return response()->json($receipts->options($this->actor($request)));
     }
 
+    public function targetOptions(ReceiptTargetOptionsRequest $request, ReceiptService $receipts): JsonResponse
+    {
+        $data = $request->validated();
+
+        return response()->json($receipts->targetOptions($this->actor($request), $data['target_type'], $data['search'] ?? ''));
+    }
+
     public function preview(PreviewReceiptRequest $request, ReceiptService $receipts): JsonResponse
     {
         return response()->json($receipts->preview($this->actor($request), $request->file('file')));
@@ -35,7 +45,9 @@ class ReceiptController extends Controller
         $result = $receipts->confirm($this->actor($request), $request->file('file'), $request->validated());
 
         return response()->json([
-            'message' => $result['created'] ? 'Receipt saved.' : 'This receipt was already saved.',
+            'message' => $result['created']
+                ? ($result['receipt']['target_type'] === null ? 'Receipt saved to archive.' : 'Receipt saved.')
+                : 'This receipt was already saved.',
             'receipt' => $result['receipt'],
             'target' => $result['target'],
         ], $result['created'] ? 201 : 200);
@@ -80,6 +92,25 @@ class ReceiptController extends Controller
             'message' => $document['shared_with_household'] ? 'Receipt shared with the household.' : 'Receipt is private again.',
             'receipt' => $document,
         ]);
+    }
+
+    public function linkTarget(ReceiptLinkRequest $request, int $receipt, ReceiptService $receipts): JsonResponse
+    {
+        $data = $request->validated();
+        $document = $receipts->linkTarget($this->actor($request), $receipt, $data['target_type'], (int) $data['target_record_id']);
+
+        return response()->json(['message' => 'Receipt linked to the selected entry.', 'receipt' => $document]);
+    }
+
+    public function createTarget(ReceiptCreateTargetRequest $request, int $receipt, ReceiptService $receipts): JsonResponse
+    {
+        $result = $receipts->createTarget($this->actor($request), $receipt, $request->validated());
+
+        return response()->json([
+            'message' => $result['created'] ? 'Entry created and linked to the receipt.' : 'This receipt is already linked to an entry.',
+            'receipt' => $result['receipt'],
+            'target' => $result['target'],
+        ], $result['created'] ? 201 : 200);
     }
 
     public function destroy(Request $request, int $receipt, ReceiptService $receipts): JsonResponse

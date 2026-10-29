@@ -13,6 +13,12 @@ class LocalReceiptOcr
 {
     public function extract(UploadedFile $file): string
     {
+        return $this->extractDetailed($file)['text'];
+    }
+
+    /** @return array{text: string, confidence: ?float} */
+    public function extractDetailed(UploadedFile $file): array
+    {
         $path = $file->getRealPath();
         if (! is_string($path)) {
             throw new LocalReceiptOcrUnavailable;
@@ -20,7 +26,7 @@ class LocalReceiptOcr
 
         $mimeType = $file->getMimeType();
         if ($mimeType !== 'application/pdf') {
-            return $this->recognize($path);
+            return $this->recognizeDetailed($path);
         }
 
         $directory = sys_get_temp_dir().'/metricove-receipts-'.bin2hex(random_bytes(12));
@@ -37,7 +43,7 @@ class LocalReceiptOcr
 
             $text = $this->extractPdfText($path);
             if (preg_match('/[\pL\pN]/u', $text) === 1) {
-                return mb_substr($text, 0, 100_000);
+                return ['text' => mb_substr($text, 0, 100_000), 'confidence' => null];
             }
 
             $prefix = $directory.'/page';
@@ -64,11 +70,19 @@ class LocalReceiptOcr
             }
 
             $recognized = [];
+            $confidences = [];
             foreach ($images as $image) {
-                $recognized[] = $this->recognize($image);
+                $page = $this->recognizeDetailed($image);
+                $recognized[] = $page['text'];
+                if ($page['confidence'] !== null) {
+                    $confidences[] = $page['confidence'];
+                }
             }
 
-            return mb_substr(implode("\n", $recognized), 0, 100_000);
+            return [
+                'text' => mb_substr(implode("\n", $recognized), 0, 100_000),
+                'confidence' => $confidences === [] ? null : array_sum($confidences) / count($confidences),
+            ];
         } catch (ValidationException $exception) {
             throw $exception;
         } catch (Throwable $exception) {
@@ -117,7 +131,8 @@ class LocalReceiptOcr
         return $process->getOutput();
     }
 
-    private function recognize(string $path): string
+    /** @return array{text: string, confidence: ?float} */
+    private function recognizeDetailed(string $path): array
     {
         $process = new Process([
             (string) config('receipts.ocr.tesseract_binary', '/usr/bin/tesseract'),
@@ -127,6 +142,7 @@ class LocalReceiptOcr
             (string) config('receipts.ocr.languages', 'deu+eng'),
             '--psm',
             '6',
+            'tsv',
         ]);
         $process->setTimeout((float) config('receipts.ocr.timeout_seconds', 10));
         $process->setEnv(['LC_ALL' => 'C']);
@@ -136,6 +152,28 @@ class LocalReceiptOcr
             throw new LocalReceiptOcrUnavailable;
         }
 
-        return $process->getOutput();
+        $lines = [];
+        $confidenceValues = [];
+        foreach (preg_split('/\r?\n/', trim($process->getOutput())) ?: [] as $row) {
+            $columns = explode("\t", $row);
+            if (count($columns) < 12 || ! is_numeric($columns[10])) {
+                continue;
+            }
+
+            $word = trim($columns[11]);
+            $confidence = (float) $columns[10];
+            if ($word === '' || $confidence < 0) {
+                continue;
+            }
+
+            $lineKey = implode(':', array_slice($columns, 1, 4));
+            $lines[$lineKey][] = $word;
+            $confidenceValues[] = $confidence;
+        }
+
+        return [
+            'text' => implode("\n", array_map(static fn (array $words): string => implode(' ', $words), array_values($lines))),
+            'confidence' => $confidenceValues === [] ? null : array_sum($confidenceValues) / count($confidenceValues),
+        ];
     }
 }

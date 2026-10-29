@@ -26,5 +26,9 @@
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"heic2any": "^0.0.4",
+		"pdf-lib": "^1.17.1"
 	}
 }

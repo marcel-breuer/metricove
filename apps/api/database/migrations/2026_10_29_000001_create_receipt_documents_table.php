@@ -18,11 +18,15 @@ return new class extends Migration
             $table->string('file_path', 255)->unique();
             $table->string('mime_type', 32);
             $table->string('merchant', 200)->nullable();
+            $table->string('description', 200)->nullable();
             $table->string('invoice_number', 100)->nullable();
             $table->date('invoice_date');
             $table->decimal('amount', 18, 2);
             $table->char('currency', 3);
             $table->decimal('tax_amount', 18, 2)->nullable();
+            $table->decimal('fuel_liters', 14, 3)->nullable();
+            $table->decimal('fuel_unit_price', 14, 4)->nullable();
+            $table->decimal('fuel_odometer_value', 20, 3)->nullable();
             $table->uuid('idempotency_key');
             $table->char('file_digest', 64);
             $table->char('request_fingerprint', 64);
@@ -36,6 +40,8 @@ return new class extends Migration
             DB::statement('ALTER TABLE receipt_documents ADD CONSTRAINT receipt_documents_amount_check CHECK (amount >= 0 AND (tax_amount IS NULL OR tax_amount >= 0))');
             DB::statement("ALTER TABLE receipt_documents ADD CONSTRAINT receipt_documents_currency_check CHECK (currency ~ '^[A-Z]{3}$')");
             DB::statement("ALTER TABLE receipt_documents ADD CONSTRAINT receipt_documents_mime_type_check CHECK (mime_type IN ('application/pdf', 'image/jpeg', 'image/png'))");
+            DB::statement('ALTER TABLE receipt_documents ADD CONSTRAINT receipt_documents_fuel_pair_check CHECK ((fuel_liters IS NULL) = (fuel_unit_price IS NULL))');
+            DB::statement('ALTER TABLE receipt_documents ADD CONSTRAINT receipt_documents_fuel_values_check CHECK ((fuel_liters IS NULL OR fuel_liters > 0) AND (fuel_unit_price IS NULL OR fuel_unit_price > 0) AND (fuel_odometer_value IS NULL OR fuel_odometer_value >= 0))');
         }
     }
 
