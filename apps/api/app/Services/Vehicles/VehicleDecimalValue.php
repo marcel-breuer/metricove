@@ -14,6 +14,16 @@ final class VehicleDecimalValue
         return self::normalize($value, 16, 2);
     }
 
+    public static function fuelQuantity(mixed $value): ?string
+    {
+        return self::normalize($value, 11, 3);
+    }
+
+    public static function fuelUnitPrice(mixed $value): ?string
+    {
+        return self::normalize($value, 10, 4);
+    }
+
     public static function compareDistance(string $left, string $right): int
     {
         return self::compare($left, $right, 3);

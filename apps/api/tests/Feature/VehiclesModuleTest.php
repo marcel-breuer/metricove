@@ -164,10 +164,19 @@ class VehiclesModuleTest extends TestCase
         $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
             'category' => 'fuel', 'amount' => '123.45', 'currency' => 'eur',
             'period_start' => '2026-10-02', 'period_end' => null, 'period' => 'once', 'description' => 'Fuel fill-up',
-        ])->assertCreated()->assertJsonPath('cost.amount', '123.45')->assertJsonPath('cost.currency', 'EUR');
+            'fuel_liters' => '40', 'fuel_unit_price' => '1.6', 'fuel_odometer_value' => '12006.2',
+        ])->assertCreated()->assertJsonPath('cost.amount', '123.45')->assertJsonPath('cost.currency', 'EUR')
+            ->assertJsonPath('cost.fuel_liters', '40.000')
+            ->assertJsonPath('cost.fuel_unit_price', '1.6000')
+            ->assertJsonPath('cost.fuel_odometer_value', '12006.200');
         $this->assertDatabaseHas('vehicle_costs', [
             'vehicle_id' => $vehicleId, 'amount' => '123.45', 'currency' => 'EUR', 'period' => 'once',
+            'fuel_liters' => '40.000', 'fuel_unit_price' => '1.6000', 'fuel_odometer_value' => '12006.200',
         ]);
+        $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '123.45', 'currency' => 'EUR',
+            'period_start' => '2026-10-02', 'period' => 'once', 'fuel_liters' => '40',
+        ])->assertUnprocessable()->assertJsonValidationErrors('fuel_liters');
 
         $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
             'category' => 'insurance', 'amount' => '12.345', 'currency' => 'EUR',

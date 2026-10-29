@@ -17,7 +17,7 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 - Modular Laravel/PHP backend, REST API, Laravel Policies, PostgreSQL, Redis queues, versioned migrations.
 - SvelteKit + TypeScript + Tailwind responsive web frontend; accessible and mobile-first.
 - Self-hostable with Docker Compose; current topology: Laravel API, Bun web, Nginx gateway, worker/scheduler, PostgreSQL, Redis. Only the gateway publishes a host port.
-- Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Recipes, MealPlanning, Pantry, Shopping, Analytics and Import; Health considered later. The permission-aware AI assistant is a Core app feature, not a separately enabled module.
+- Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, MealPlanning, Pantry, Shopping, Analytics and Import; Health considered later. The permission-aware AI assistant is a Core app feature, not a separately enabled module.
 - See [architecture](docs/architecture/overview.md) and [module contracts](docs/modules/README.md). The API, web scaffold and Compose runtime are implemented; household setup and product modules are still being delivered incrementally. Do not claim unimplemented product behavior exists.
 
 ## Contribution workflow
