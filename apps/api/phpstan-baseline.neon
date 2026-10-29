@@ -781,7 +781,7 @@ parameters:
 			path: app/Services/Tracking/TrackerEntryService.php
 
 		-
-			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''values''\|array\<''values''\|int, array\<int\|string, string\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{values\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
+			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''values''\|array\<''values''\|int, array\<mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{values\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Tracking/TrackerEntryService.php
@@ -805,7 +805,7 @@ parameters:
 			path: app/Services/Tracking/TrackerSchemaService.php
 
 		-
-			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''fields''\|array\<''fields''\|int, array\<int\|string, string\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{fields\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
+			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:with\(\) expects ''fields''\|array\<''fields''\|int, array\<mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>, array\{fields\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: Illuminate\\Database\\Eloquent\\Relations\\HasMany\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Tracking/TrackerSchemaService.php

@@ -78,7 +78,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Install frontend dependencies
         working-directory: apps/web
@@ -117,7 +117,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.4
 
       - name: Audit locked frontend dependencies
         working-directory: apps/web
