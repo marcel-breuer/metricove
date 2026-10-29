@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read User|null $createdBy
  * @property-read User|null $completedBy
  * @property-read Collection<int, HouseholdTaskCompletion> $completions
+ * @property-read Collection<int, HouseholdTaskChecklistItem> $checklistItems
  */
 class HouseholdTask extends Model implements ModuleResource
 {
@@ -65,6 +66,12 @@ class HouseholdTask extends Model implements ModuleResource
     public function completions(): HasMany
     {
         return $this->hasMany(HouseholdTaskCompletion::class, 'task_id');
+    }
+
+    /** @return HasMany<HouseholdTaskChecklistItem, $this> */
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(HouseholdTaskChecklistItem::class, 'task_id')->orderBy('position')->orderBy('id');
     }
 
     public function moduleKey(): string

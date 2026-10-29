@@ -72,6 +72,13 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
+        'notes' => [
+            'label' => 'Notes',
+            'description' => 'Private Markdown notes with personal folders, tags and optional household sharing.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
         'analytics' => [
             'label' => 'Analytics',
             'description' => 'Private cross-module charts for data the member can view.',

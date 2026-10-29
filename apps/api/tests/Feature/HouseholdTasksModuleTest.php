@@ -163,6 +163,102 @@ class HouseholdTasksModuleTest extends TestCase
         }
     }
 
+    public function test_checklist_items_snapshot_each_occurrence_and_the_last_completion_advances_recurring_task(): void
+    {
+        $admin = $this->member(true);
+        $assignee = $this->member();
+        $this->enable($admin, true);
+
+        $taskId = (int) $this->actingAs($admin, 'web')->postJson('/api/tasks', [
+            'title' => 'Prepare the car', 'visibility' => 'household', 'assignee_id' => $assignee->id,
+            'due_at' => '2026-10-31T12:00:00Z', 'timezone' => 'Europe/Berlin', 'priority' => 'medium',
+            'recurrence_frequency' => 'monthly', 'recurrence_interval' => 1,
+        ])->assertCreated()->json('task.id');
+
+        $first = $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Check tire pressure', 'due_at' => '2026-10-31T10:00:00+02:00',
+            'reminder_lead_minutes' => 60, 'expected_version' => 1,
+        ])->assertCreated()->assertJsonPath('task.checklist_items.0.due_at', '2026-10-31T08:00:00.000000Z');
+        $firstItemId = (int) $first->json('task.checklist_items.0.id');
+        $second = $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Pack the documents', 'due_at' => '2026-10-31T11:00:00+02:00',
+            'expected_version' => 2,
+        ])->assertCreated();
+        $secondItemId = (int) $second->json('task.checklist_items.1.id');
+        $this->actingAs($admin, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/order", [
+            'item_ids' => [$secondItemId, $firstItemId], 'expected_version' => 3,
+        ])->assertOk()->assertJsonPath('task.checklist_items.0.id', $secondItemId);
+
+        $this->actingAs($assignee, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$secondItemId}/completion", [
+            'completed' => true, 'expected_version' => 4,
+        ])->assertOk()->assertJsonPath('task.is_completed', false)
+            ->assertJsonPath('task.checklist_items.0.completed_by', $assignee->name);
+        $this->actingAs($assignee, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$firstItemId}/completion", [
+            'completed' => true, 'expected_version' => 5,
+        ])->assertOk()->assertJsonPath('task.occurrence_number', 2)
+            ->assertJsonPath('task.is_completed', false)
+            ->assertJsonPath('task.checklist_items.0.is_completed', false)
+            ->assertJsonPath('task.checklist_items.1.is_completed', false)
+            ->assertJsonPath('task.checklist_items.0.due_at', '2026-11-30T09:00:00.000000Z')
+            ->assertJsonPath('task.checklist_items.1.due_at', '2026-11-30T08:00:00.000000Z');
+
+        $this->actingAs($assignee, 'web')->getJson("/api/tasks/{$taskId}/history")->assertOk()
+            ->assertJsonPath('completions.0.occurrence_number', 1)
+            ->assertJsonPath('completions.0.checklist_items.0.title', 'Check tire pressure')
+            ->assertJsonPath('completions.0.checklist_items.0.is_completed', true)
+            ->assertJsonPath('completions.0.checklist_items.0.completed_by', $assignee->name)
+            ->assertJsonPath('completions.0.checklist_items.1.title', 'Pack the documents');
+    }
+
+    public function test_shared_task_checklist_is_readable_but_only_assignee_or_manager_can_change_progress(): void
+    {
+        $admin = $this->member(true);
+        $assignee = $this->member();
+        $observer = $this->member();
+        $this->enable($admin, true);
+
+        $taskId = (int) $this->actingAs($admin, 'web')->postJson('/api/tasks', [
+            'title' => 'Prepare recycling', 'visibility' => 'household', 'assignee_id' => $assignee->id,
+            'priority' => 'low',
+        ])->assertCreated()->json('task.id');
+        $item = $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Sort paper', 'expected_version' => 1,
+        ])->assertCreated();
+        $itemId = (int) $item->json('task.checklist_items.0.id');
+
+        $this->actingAs($observer, 'web')->getJson('/api/tasks')->assertOk()
+            ->assertJsonPath('tasks.0.checklist_items.0.title', 'Sort paper')
+            ->assertJsonPath('tasks.0.can_edit_checklist', false);
+        $this->actingAs($observer, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$itemId}/completion", [
+            'completed' => true, 'expected_version' => 2,
+        ])->assertForbidden();
+        $this->actingAs($assignee, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$itemId}/completion", [
+            'completed' => true, 'expected_version' => 2,
+        ])->assertOk()->assertJsonPath('task.is_completed', true);
+        $this->actingAs($assignee, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$itemId}", [
+            'title' => 'Changed by assignee', 'expected_version' => 3,
+        ])->assertForbidden();
+    }
+
+    public function test_checklist_changes_require_the_current_task_version_and_due_reminders_need_a_due_date(): void
+    {
+        $admin = $this->member(true);
+        $this->enable($admin, true);
+        $taskId = (int) $this->actingAs($admin, 'web')->postJson('/api/tasks', [
+            'title' => 'Check the meter', 'priority' => 'medium',
+        ])->assertCreated()->json('task.id');
+
+        $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Take a reading', 'reminder_lead_minutes' => 15, 'expected_version' => 1,
+        ])->assertUnprocessable()->assertJsonValidationErrors('reminder_lead_minutes');
+        $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Take a reading', 'expected_version' => 1,
+        ])->assertCreated();
+        $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'A stale write', 'expected_version' => 1,
+        ])->assertConflict();
+    }
+
     public function test_disabling_tasks_preserves_tasks_and_completion_history(): void
     {
         $admin = $this->member(true);

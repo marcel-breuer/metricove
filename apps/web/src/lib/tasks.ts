@@ -2,6 +2,17 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 export type TaskVisibility = 'private' | 'household';
 
+export type TaskChecklistItem = {
+	id: number;
+	title: string;
+	position: number;
+	due_at: string | null;
+	reminder_lead_minutes: number;
+	is_completed: boolean;
+	completed_by: string | null;
+	completed_at: string | null;
+};
+
 export type HouseholdTask = {
 	id: number;
 	title: string;
@@ -18,7 +29,9 @@ export type HouseholdTask = {
 	version: number;
 	assignee: { id: number; name: string } | null;
 	can_edit: boolean;
+	can_edit_checklist: boolean;
 	can_complete: boolean;
+	checklist_items: TaskChecklistItem[];
 };
 
 export type TaskAssignee = { id: number; name: string };
@@ -37,6 +50,7 @@ export type TaskCompletion = {
 	occurrence_number: number;
 	completed_by: string | null;
 	completed_at: string;
+	checklist_items: Array<{ title: string; is_completed: boolean; completed_by: string | null; completed_at: string | null }>;
 };
 
 export type TasksResponse = {

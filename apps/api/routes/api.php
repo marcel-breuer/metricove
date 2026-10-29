@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\McpAccessController;
 use App\Http\Controllers\Api\McpController;
 use App\Http\Controllers\Api\MealPlanningController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
+use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\PantryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
@@ -63,6 +64,19 @@ Route::middleware('web')->group(function (): void {
         Route::patch('/reminders/preferences', [ReminderController::class, 'updatePreferences'])->name('reminders.preferences.update');
         Route::patch('/reminders/{reminder}', [ReminderController::class, 'update'])
             ->whereNumber('reminder')->name('reminders.update');
+        Route::prefix('notes')->name('notes.')->group(function (): void {
+            Route::post('/preview', [NoteController::class, 'preview'])->middleware('module.access:notes,view')->name('preview');
+            Route::get('/', [NoteController::class, 'index'])->middleware('module.access:notes,view')->name('index');
+            Route::post('/', [NoteController::class, 'store'])->middleware('module.enabled:notes')->name('store');
+            Route::get('/folders', [NoteController::class, 'folders'])->middleware('module.access:notes,view')->name('folders.index');
+            Route::post('/folders', [NoteController::class, 'storeFolder'])->middleware('module.enabled:notes')->name('folders.store');
+            Route::patch('/folders/{folder}', [NoteController::class, 'updateFolder'])->middleware('module.enabled:notes')->whereNumber('folder')->name('folders.update');
+            Route::delete('/folders/{folder}', [NoteController::class, 'destroyFolder'])->middleware('module.enabled:notes')->whereNumber('folder')->name('folders.destroy');
+            Route::get('/{note}', [NoteController::class, 'show'])->middleware('module.access:notes,view')->whereNumber('note')->name('show');
+            Route::patch('/{note}', [NoteController::class, 'update'])->middleware('module.enabled:notes')->whereNumber('note')->name('update');
+            Route::patch('/{note}/archive', [NoteController::class, 'archive'])->middleware('module.enabled:notes')->whereNumber('note')->name('archive');
+            Route::delete('/{note}', [NoteController::class, 'destroy'])->middleware('module.enabled:notes')->whereNumber('note')->name('destroy');
+        });
         Route::get('/ai/context', [AiContextController::class, 'index'])->name('ai.context.index');
         Route::post('/ai/context', [AiContextController::class, 'store'])->name('ai.context.store');
         Route::patch('/ai/context/preferences', [AiContextController::class, 'preferences'])->name('ai.context.preferences');
@@ -389,6 +403,16 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:tasks')->whereNumber('task')->name('update');
             Route::post('/{task}/complete', [HouseholdTaskController::class, 'complete'])
                 ->middleware('module.enabled:tasks')->whereNumber('task')->name('complete');
+            Route::post('/{task}/checklist-items', [HouseholdTaskController::class, 'addChecklistItem'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->name('checklist-items.store');
+            Route::patch('/{task}/checklist-items/order', [HouseholdTaskController::class, 'reorderChecklistItems'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->name('checklist-items.order');
+            Route::patch('/{task}/checklist-items/{item}/completion', [HouseholdTaskController::class, 'completeChecklistItem'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->whereNumber('item')->name('checklist-items.completion');
+            Route::patch('/{task}/checklist-items/{item}', [HouseholdTaskController::class, 'updateChecklistItem'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->whereNumber('item')->name('checklist-items.update');
+            Route::delete('/{task}/checklist-items/{item}', [HouseholdTaskController::class, 'deleteChecklistItem'])
+                ->middleware('module.enabled:tasks')->whereNumber('task')->whereNumber('item')->name('checklist-items.destroy');
             Route::delete('/{task}', [HouseholdTaskController::class, 'destroy'])
                 ->middleware('module.enabled:tasks')->whereNumber('task')->name('destroy');
         });

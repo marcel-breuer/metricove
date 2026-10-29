@@ -11,7 +11,7 @@
 	import Panel from '#lib/ui/Panel.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
-	import { visibleTaskAssignees, type HouseholdTask, type TaskAssignee, type TaskCompletion, type TasksResponse } from '#lib/tasks';
+	import { visibleTaskAssignees, type HouseholdTask, type TaskAssignee, type TaskChecklistItem, type TaskCompletion, type TasksResponse } from '#lib/tasks';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'tasks'));
@@ -48,6 +48,16 @@
 	let interval = $state('1');
 	let historyOpen = $state<number | null>(null);
 	let histories = $state<Record<number, TaskCompletion[]>>({});
+	let checklistOpenId = $state<number | null>(null);
+	let checklistTitle = $state('');
+	let checklistDueInput = $state('');
+	let checklistLead = $state('0');
+	let editingChecklistItemId = $state<number | null>(null);
+	let checklistEditTitle = $state('');
+	let checklistEditDueInput = $state('');
+	let checklistEditLead = $state('0');
+	let checklistDeleteTarget = $state<{ task: HouseholdTask; item: TaskChecklistItem } | null>(null);
+	let checklistDeleteOpen = $state(false);
 
 	$effect(() => {
 		if (!shell.loading && canView) {
@@ -182,6 +192,104 @@
 			if (historyOpen === task.id) await loadHistory(task.id, true);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The task could not be completed.';
+			if (error.toLowerCase().includes('changed')) await loadTasks();
+		}
+	}
+
+	async function addChecklistItem(event: SubmitEvent, task: HouseholdTask): Promise<void> {
+		event.preventDefault();
+		error = '';
+		message = '';
+		try {
+			await api<TasksResponse>('/api/tasks/' + task.id + '/checklist-items', 'POST', {
+				title: checklistTitle,
+				due_at: checklistDueInput ? new Date(checklistDueInput).toISOString() : null,
+				reminder_lead_minutes: checklistDueInput ? Number(checklistLead) : 0,
+				expected_version: task.version
+			});
+			checklistTitle = '';
+			checklistDueInput = '';
+			checklistLead = '0';
+			message = 'Checklist item added.';
+			await loadTasks();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The checklist item could not be added.';
+			if (error.toLowerCase().includes('changed')) await loadTasks();
+		}
+	}
+
+	function editChecklistItem(item: TaskChecklistItem): void {
+		editingChecklistItemId = item.id;
+		checklistEditTitle = item.title;
+		checklistEditDueInput = item.due_at ? dateToLocalInput(item.due_at) : '';
+		checklistEditLead = String(item.reminder_lead_minutes);
+	}
+
+	async function saveChecklistItem(event: SubmitEvent, task: HouseholdTask, item: TaskChecklistItem): Promise<void> {
+		event.preventDefault();
+		error = '';
+		try {
+			await api<TasksResponse>('/api/tasks/' + task.id + '/checklist-items/' + item.id, 'PATCH', {
+				title: checklistEditTitle,
+				due_at: checklistEditDueInput ? new Date(checklistEditDueInput).toISOString() : null,
+				reminder_lead_minutes: checklistEditDueInput ? Number(checklistEditLead) : 0,
+				expected_version: task.version
+			});
+			editingChecklistItemId = null;
+			message = 'Checklist item updated.';
+			await loadTasks();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The checklist item could not be updated.';
+			if (error.toLowerCase().includes('changed')) await loadTasks();
+		}
+	}
+
+	async function setChecklistItemCompleted(task: HouseholdTask, item: TaskChecklistItem, completed: boolean): Promise<void> {
+		error = '';
+		message = '';
+		try {
+			await api<TasksResponse>('/api/tasks/' + task.id + '/checklist-items/' + item.id + '/completion', 'PATCH', {
+				completed,
+				expected_version: task.version
+			});
+			message = completed ? 'Checklist item completed.' : 'Checklist item reopened.';
+			await loadTasks();
+			if (historyOpen === task.id) await loadHistory(task.id, true);
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Checklist progress could not be updated.';
+			if (error.toLowerCase().includes('changed')) await loadTasks();
+		}
+	}
+
+	async function moveChecklistItem(task: HouseholdTask, item: TaskChecklistItem, direction: -1 | 1): Promise<void> {
+		const ordered = [...task.checklist_items].sort((a, b) => a.position - b.position);
+		const index = ordered.findIndex((candidate) => candidate.id === item.id);
+		const target = index + direction;
+		if (index < 0 || target < 0 || target >= ordered.length) return;
+		[ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+		try {
+			await api<TasksResponse>('/api/tasks/' + task.id + '/checklist-items/order', 'PATCH', {
+				item_ids: ordered.map((candidate) => candidate.id),
+				expected_version: task.version
+			});
+			await loadTasks();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'Checklist order could not be updated.';
+			if (error.toLowerCase().includes('changed')) await loadTasks();
+		}
+	}
+
+	async function deleteChecklistItem(): Promise<void> {
+		if (!checklistDeleteTarget) return;
+		const { task, item } = checklistDeleteTarget;
+		try {
+			await api<TasksResponse>('/api/tasks/' + task.id + '/checklist-items/' + item.id, 'DELETE', { expected_version: task.version });
+			checklistDeleteTarget = null;
+			checklistDeleteOpen = false;
+			message = 'Checklist item deleted.';
+			await loadTasks();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The checklist item could not be deleted.';
 			if (error.toLowerCase().includes('changed')) await loadTasks();
 		}
 	}
@@ -335,7 +443,7 @@
 			{:else}
 				<ul class="mt-5 space-y-3">
 					{#each tasks as task (task.id)}
-						<li class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:p-5">
+						<li id="task-{task.id}" class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:p-5">
 							<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 								<div class="min-w-0 flex-1">
 									<div class="flex flex-wrap items-center gap-2"><h3 class="text-base font-semibold text-white">{task.title}</h3><span class="rounded-full px-2.5 py-1 text-xs font-medium {task.priority === 'high' ? 'bg-rose-400/10 text-rose-200' : task.priority === 'medium' ? 'bg-amber-300/10 text-amber-200' : 'bg-slate-800 text-slate-300'}">{$t(task.priority[0].toUpperCase() + task.priority.slice(1))}</span><span class="rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-300">{$t(task.visibility === 'private' ? 'Private' : 'Shared')}</span>{#if task.is_completed}<span class="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-200">{$t('Completed')}</span>{/if}</div>
@@ -352,9 +460,48 @@
 									<Button variant="ghost" size="small" onclick={() => void toggleHistory(task)}>{$t(historyOpen === task.id ? 'Hide history' : 'History')}</Button>
 								</div>
 							</div>
+							<div class="mt-4 border-t border-slate-800 pt-3">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<p class="text-sm font-medium text-slate-200">{$t('Checklist')} <span class="text-xs text-slate-400">{task.checklist_items.filter((item) => item.is_completed).length}/{task.checklist_items.length}</span></p>
+									<Button variant="ghost" size="small" aria-expanded={checklistOpenId === task.id} onclick={() => (checklistOpenId = checklistOpenId === task.id ? null : task.id)}>{$t(checklistOpenId === task.id ? 'Hide checklist' : 'Show checklist')}</Button>
+								</div>
+								{#if checklistOpenId === task.id}
+									{#if task.checklist_items.length === 0}<p class="mt-2 text-sm text-slate-400">{$t('No checklist items yet.')}</p>{/if}
+									<ol class="mt-3 space-y-3">
+										{#each task.checklist_items as item, index (item.id)}
+											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+												{#if editingChecklistItemId === item.id}
+													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
+														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="ui-field w-full" /></label>
+														<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistEditDueInput} class="ui-field w-full" /></label>
+														<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistEditLead} disabled={!checklistEditDueInput} class="ui-field w-full"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+														<div class="flex gap-2 sm:col-span-2"><Button type="submit" size="small">{$t('Save item')}</Button><Button type="button" variant="ghost" size="small" onclick={() => (editingChecklistItemId = null)}>{$t('Cancel')}</Button></div>
+													</form>
+												{:else}
+													<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+														<label class="flex min-w-0 items-start gap-3 text-sm text-slate-200">
+															<input type="checkbox" checked={item.is_completed} disabled={!task.can_complete || task.is_completed} onchange={(event) => void setChecklistItemCompleted(task, item, event.currentTarget.checked)} class="mt-0.5 size-4 rounded border-slate-600 bg-slate-950 text-cyan-400 focus:ring-cyan-400" />
+															<span class={item.is_completed ? 'text-slate-500 line-through' : ''}>{item.title}<span class="mt-1 block text-xs text-slate-500">{#if item.due_at}{$t('Due')} {formatDateTime(item.due_at)}{#if item.reminder_lead_minutes > 0} · {$t('Reminder set')}{/if}{:else}{$t('No due date')}{/if}{#if item.completed_by} · {$t('Completed by')} {item.completed_by}{/if}</span></span>
+														</label>
+														{#if task.can_edit_checklist && !task.is_completed}<div class="flex flex-wrap gap-1"><Button variant="ghost" size="small" aria-label={$t('Move up')} disabled={index === 0} onclick={() => void moveChecklistItem(task, item, -1)}>↑</Button><Button variant="ghost" size="small" aria-label={$t('Move down')} disabled={index === task.checklist_items.length - 1} onclick={() => void moveChecklistItem(task, item, 1)}>↓</Button><Button variant="ghost" size="small" onclick={() => editChecklistItem(item)}>{$t('Edit')}</Button><Button variant="danger" size="small" onclick={() => { checklistDeleteTarget = { task, item }; checklistDeleteOpen = true; }}>{$t('Delete')}</Button></div>{/if}
+													</div>
+												{/if}
+											</li>
+										{/each}
+									</ol>
+									{#if task.can_edit_checklist && !task.is_completed}
+										<form class="mt-4 grid gap-3 border-t border-slate-800 pt-4 sm:grid-cols-2" onsubmit={(event) => void addChecklistItem(event, task)}>
+											<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('New checklist item')}</span><input required maxlength="180" bind:value={checklistTitle} placeholder={$t('e.g. Take a photo of the meter')} class="ui-field w-full" /></label>
+											<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistDueInput} class="ui-field w-full" /></label>
+											<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistLead} disabled={!checklistDueInput} class="ui-field w-full"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+											<div class="sm:col-span-2"><Button type="submit">{$t('Add checklist item')}</Button></div>
+										</form>
+									{/if}
+								{/if}
+							</div>
 							{#if historyOpen === task.id}
 								<div class="mt-4 border-t border-slate-800 pt-4"><p class="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">{$t('Completion history')}</p>
-									{#if (histories[task.id] ?? []).length === 0}<p class="mt-2 text-sm text-slate-400">{$t('No completed occurrences yet.')}</p>{:else}<ol class="mt-3 space-y-2">{#each histories[task.id] as completion (completion.id)}<li class="flex flex-wrap justify-between gap-2 text-sm text-slate-300"><span>{$t('Occurrence')} {completion.occurrence_number} · {completion.completed_by ?? $t('Former member')}</span><time datetime={completion.completed_at}>{formatDateTime(completion.completed_at)}</time></li>{/each}</ol>{/if}
+									{#if (histories[task.id] ?? []).length === 0}<p class="mt-2 text-sm text-slate-400">{$t('No completed occurrences yet.')}</p>{:else}<ol class="mt-3 space-y-3">{#each histories[task.id] as completion (completion.id)}<li class="rounded-xl border border-slate-800 p-3"><div class="flex flex-wrap justify-between gap-2 text-sm text-slate-300"><span>{$t('Occurrence')} {completion.occurrence_number} · {completion.completed_by ?? $t('Former member')}</span><time datetime={completion.completed_at}>{formatDateTime(completion.completed_at)}</time></div>{#if completion.checklist_items.length > 0}<ul class="mt-2 space-y-1 text-xs text-slate-400">{#each completion.checklist_items as item, itemIndex (`${completion.id}-${itemIndex}`)}<li>{item.is_completed ? '✓' : '○'} {item.title}{#if item.completed_by} · {item.completed_by}{/if}</li>{/each}</ul>{/if}</li>{/each}</ol>{/if}
 								</div>
 							{/if}
 						</li>
@@ -365,4 +512,5 @@
 		</Panel>
 	{/if}
 	{#if deleteTarget}<ConfirmModal bind:open={deleteOpen} title={$t('Delete task?')} message={$t('Delete this task and its completion history?')} onConfirm={() => void deleteTask(deleteTarget!)} />{/if}
+	{#if checklistDeleteTarget}<ConfirmModal bind:open={checklistDeleteOpen} title={$t('Delete checklist item?')} message={$t('Delete this checklist item from the task and future occurrences?')} onConfirm={() => void deleteChecklistItem()} />{/if}
 </div>

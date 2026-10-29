@@ -8,6 +8,8 @@ use App\Models\FinanceCategory;
 use App\Models\FinanceRecurringEntry;
 use App\Models\HouseholdReminder;
 use App\Models\HouseholdSettings;
+use App\Models\HouseholdTaskChecklistItem;
+use App\Models\HouseholdTaskChecklistOccurrence;
 use App\Models\PantryItem;
 use App\Models\ResourceUserPermission;
 use App\Models\User;
@@ -179,6 +181,52 @@ class ReminderModuleTest extends TestCase
             ->assertJsonPath('preferences.sources.finance', true);
     }
 
+    public function test_task_checklist_reminders_use_local_due_time_optional_lead_and_daily_repeats_until_completed(): void
+    {
+        [$admin, $owner] = $this->members();
+        $this->enableSources($admin);
+        $this->travelTo(CarbonImmutable::parse('2026-10-29T07:45:00Z'));
+        $taskId = (int) $this->actingAs($admin, 'web')->postJson('/api/tasks', [
+            'title' => 'Change tire', 'visibility' => 'household', 'assignee_id' => $owner->id,
+            'priority' => 'medium', 'timezone' => 'Europe/Berlin', 'due_at' => '2026-10-29T08:00:00Z',
+        ])->assertCreated()->json('task.id');
+        $item = $this->actingAs($admin, 'web')->postJson("/api/tasks/{$taskId}/checklist-items", [
+            'title' => 'Check pressure', 'due_at' => '2026-10-29T10:00:00+02:00',
+            'reminder_lead_minutes' => 15, 'expected_version' => 1,
+        ])->assertCreated();
+        $itemId = (int) $item->json('task.checklist_items.0.id');
+        $occurrenceId = HouseholdTaskChecklistOccurrence::query()->where('checklist_item_id', $itemId)->value('id');
+        $this->assertNotNull($occurrenceId);
+
+        $service = app(ReminderService::class);
+        $service->updatePreferences($owner, ['email_enabled' => true]);
+        Mail::fake();
+        $this->assertSame(['created' => 1, 'sent' => 1], $service->generateTaskReminders());
+        $this->assertSame(['created' => 0, 'sent' => 0], $service->generateTaskReminders());
+        $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
+            ->assertJsonCount(1, 'reminders')->assertJsonPath('reminders.0.source_module', 'tasks')
+            ->assertJsonPath('reminders.0.title', 'Task · Change tire · Check pressure is due')
+            ->assertJsonPath('reminders.0.due_on', '2026-10-29')
+            ->assertJsonPath('reminders.0.href', "/modules/tasks#task-{$taskId}-checklist-item-{$itemId}");
+        Mail::assertSent(UpcomingReminderMail::class, 1);
+
+        $this->travelTo(CarbonImmutable::parse('2026-10-29T08:00:00Z'));
+        $this->assertSame(['created' => 1, 'sent' => 1], $service->generateTaskReminders());
+        $this->travelTo(CarbonImmutable::parse('2026-10-30T08:01:00Z'));
+        $this->assertSame(['created' => 1, 'sent' => 1], $service->generateTaskReminders());
+        $this->assertSame(['created' => 0, 'sent' => 0], $service->generateTaskReminders());
+        Mail::assertSent(UpcomingReminderMail::class, 3);
+        $this->assertDatabaseCount('household_reminders', 3);
+
+        $this->actingAs($owner, 'web')->patchJson("/api/tasks/{$taskId}/checklist-items/{$itemId}/completion", [
+            'completed' => true, 'expected_version' => 2,
+        ])->assertOk()->assertJsonPath('task.is_completed', true);
+        $this->travelTo(CarbonImmutable::parse('2026-10-31T08:01:00Z'));
+        $this->assertSame(['created' => 0, 'sent' => 0], $service->generateTaskReminders());
+        $this->assertSame(3, HouseholdReminder::query()->count());
+        $this->assertSame(0, HouseholdTaskChecklistItem::query()->whereKey($itemId)->where('reminder_lead_minutes', 0)->count());
+    }
+
     /** @return list<User> */
     private function members(): array
     {
@@ -193,7 +241,7 @@ class ReminderModuleTest extends TestCase
 
     private function enableSources(User $admin): void
     {
-        foreach (['finance', 'vehicles', 'utilities', 'pantry'] as $module) {
+        foreach (['finance', 'vehicles', 'utilities', 'pantry', 'tasks'] as $module) {
             app(ModuleManagementService::class)->setEnabled($admin, $module, true);
         }
     }

@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompleteHouseholdTaskRequest;
+use App\Http\Requests\ReorderTaskChecklistItemsRequest;
 use App\Http\Requests\StoreHouseholdTaskRequest;
+use App\Http\Requests\StoreTaskChecklistItemRequest;
 use App\Http\Requests\UpdateHouseholdTaskRequest;
+use App\Http\Requests\UpdateTaskChecklistCompletionRequest;
+use App\Http\Requests\UpdateTaskChecklistItemRequest;
 use App\Models\User;
 use App\Services\Tasks\HouseholdTaskService;
 use Illuminate\Http\JsonResponse;
@@ -60,6 +64,46 @@ class HouseholdTaskController extends Controller
     public function history(Request $request, int $task, HouseholdTaskService $tasks): JsonResponse
     {
         return response()->json(['completions' => $tasks->history($this->actor($request), $task)]);
+    }
+
+    public function addChecklistItem(StoreTaskChecklistItemRequest $request, int $task, HouseholdTaskService $tasks): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Checklist item created.',
+            'task' => $tasks->addChecklistItem($this->actor($request), $task, $request->validated()),
+        ], 201);
+    }
+
+    public function updateChecklistItem(UpdateTaskChecklistItemRequest $request, int $task, int $item, HouseholdTaskService $tasks): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Checklist item updated.',
+            'task' => $tasks->updateChecklistItem($this->actor($request), $task, $item, $request->validated()),
+        ]);
+    }
+
+    public function completeChecklistItem(UpdateTaskChecklistCompletionRequest $request, int $task, int $item, HouseholdTaskService $tasks): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Checklist item updated.',
+            'task' => $tasks->completeChecklistItem($this->actor($request), $task, $item, $request->validated()),
+        ]);
+    }
+
+    public function reorderChecklistItems(ReorderTaskChecklistItemsRequest $request, int $task, HouseholdTaskService $tasks): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Checklist order updated.',
+            'task' => $tasks->reorderChecklistItems($this->actor($request), $task, $request->validated()),
+        ]);
+    }
+
+    public function deleteChecklistItem(Request $request, int $task, int $item, HouseholdTaskService $tasks): JsonResponse
+    {
+        $values = Validator::make($request->all(), ['expected_version' => ['required', 'integer', 'min:1']])->validate();
+        $tasks->deleteChecklistItem($this->actor($request), $task, $item, (int) $values['expected_version']);
+
+        return response()->json(['message' => 'Checklist item deleted.']);
     }
 
     public function destroy(Request $request, int $task, HouseholdTaskService $tasks): JsonResponse

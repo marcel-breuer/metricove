@@ -8,6 +8,9 @@ use App\Exceptions\ModuleNotFound;
 use App\Mail\UpcomingReminderMail;
 use App\Models\FinanceRecurringEntry;
 use App\Models\HouseholdReminder;
+use App\Models\HouseholdTask;
+use App\Models\HouseholdTaskChecklistItem;
+use App\Models\HouseholdTaskChecklistOccurrence;
 use App\Models\PantryItem;
 use App\Models\User;
 use App\Models\UtilityMeter;
@@ -30,7 +33,7 @@ use Throwable;
 
 class ReminderService
 {
-    private const SOURCES = ['finance', 'vehicles', 'utilities', 'pantry'];
+    private const SOURCES = ['finance', 'vehicles', 'utilities', 'pantry', 'tasks'];
 
     public function __construct(
         private readonly ModuleAccessService $access,
@@ -200,6 +203,93 @@ class ReminderService
         return ['created' => $created, 'sent' => $sent];
     }
 
+    /** Generate task checklist reminders at their configured local minute. */
+    public function generateTaskReminders(): array
+    {
+        if (! $this->states->isEnabled('tasks')) {
+            return ['created' => 0, 'sent' => 0];
+        }
+
+        $now = now()->toImmutable();
+        $created = 0;
+        $sent = 0;
+
+        HouseholdTaskChecklistOccurrence::query()
+            ->whereNotNull('due_at')
+            ->whereNull('completed_at')
+            ->whereHas('item')
+            ->whereHas('task', fn ($query) => $query->where('is_completed', false))
+            ->with(['task.assignee', 'task.createdBy', 'item'])
+            ->chunkById(250, function ($occurrences) use ($now, &$created, &$sent): void {
+                foreach ($occurrences as $occurrence) {
+                    $task = $occurrence->task;
+                    $item = $occurrence->item;
+                    if (! $task instanceof HouseholdTask || ! $item instanceof HouseholdTaskChecklistItem
+                        || (int) $task->occurrence_number !== (int) $occurrence->task_occurrence_number
+                        || $task->is_completed || $occurrence->completed_at !== null) {
+                        continue;
+                    }
+
+                    $recipientId = $task->assignee_user_id ?? $task->owner_user_id ?? $task->created_by_user_id;
+                    $recipient = $recipientId === null
+                        ? null
+                        : User::query()->whereKey($recipientId)->where('is_active', true)->first();
+                    if (! $recipient instanceof User
+                        || ! ($this->sourcePreferences($recipient)['tasks'] ?? false)
+                        || ! $this->canView($recipient, 'tasks', $task)) {
+                        continue;
+                    }
+
+                    $dueAt = $occurrence->due_at;
+                    $localDue = $dueAt->setTimezone($task->timezone);
+                    $localNow = $now->setTimezone($task->timezone);
+                    $scheduleKey = (int) $dueAt->timestamp;
+                    $events = [];
+
+                    if ($item->reminder_lead_minutes > 0 && $dueAt->isFuture()
+                        && $dueAt->subMinutes($item->reminder_lead_minutes)->lessThanOrEqualTo($now)) {
+                        $events[] = 'task:'.$occurrence->task_occurrence_number.':lead:'.$scheduleKey;
+                    }
+                    if ($dueAt->lessThanOrEqualTo($now)) {
+                        $events[] = 'task:'.$occurrence->task_occurrence_number.':due:'.$scheduleKey;
+                        if ($localNow->toDateString() > $localDue->toDateString()
+                            && $localNow->format('H:i') >= $localDue->format('H:i')) {
+                            $events[] = 'task:'.$occurrence->task_occurrence_number.':daily:'.$scheduleKey.':'.$localNow->format('Ymd');
+                        }
+                    }
+
+                    foreach ($events as $eventKey) {
+                        $resolved = $this->resolveTaskChecklistOccurrence($recipient, $occurrence, $eventKey);
+                        if ($resolved === null) {
+                            continue;
+                        }
+                        $reminder = HouseholdReminder::query()->firstOrCreate(
+                            [
+                                'recipient_user_id' => $recipient->id,
+                                'source_module' => 'tasks',
+                                'source_type' => 'task_checklist_occurrence',
+                                'source_id' => $occurrence->id,
+                                'occurrence_key' => $eventKey,
+                            ],
+                            [
+                                'due_on' => $resolved['due_on'],
+                                'email_requested' => $this->preferences($recipient)['email_enabled'],
+                            ],
+                        );
+                        if ($reminder->wasRecentlyCreated) {
+                            $created++;
+                        }
+                        if ($this->syncPendingEmailRequest($reminder, $this->preferences($recipient)['email_enabled'])
+                            && $this->sendEmail($recipient, $reminder)) {
+                            $sent++;
+                        }
+                    }
+                }
+            });
+
+        return ['created' => $created, 'sent' => $sent];
+    }
+
     /** @return list<array{source_module: string, source_type: string, source_id: int, occurrence_key: string, due_on: string}> */
     private function candidates(CarbonImmutable $today, CarbonImmutable $limit): array
     {
@@ -315,6 +405,10 @@ class ReminderService
     /** @return array{title: string, href: string, due_on: string}|null */
     private function resolveSource(User $member, string $module, string $type, Model $source, string $occurrence): ?array
     {
+        if ($source instanceof HouseholdTaskChecklistOccurrence) {
+            return $this->resolveTaskChecklistOccurrence($member, $source, $occurrence);
+        }
+
         if (! $this->canView($member, $module, $source)) {
             return null;
         }
@@ -398,8 +492,39 @@ class ReminderService
             'vehicle_maintenance' => VehicleMaintenanceRecord::query()->find($id),
             'utility_meter' => UtilityMeter::query()->find($id),
             'pantry_item' => PantryItem::query()->find($id),
+            'task_checklist_occurrence' => HouseholdTaskChecklistOccurrence::query()->with(['task.assignee', 'task.createdBy', 'item'])->find($id),
             default => null,
         };
+    }
+
+    /** @return array{title: string, href: string, due_on: string}|null */
+    private function resolveTaskChecklistOccurrence(User $member, HouseholdTaskChecklistOccurrence $occurrence, string $key): ?array
+    {
+        $task = $occurrence->task;
+        $item = $occurrence->item;
+        if (! $task instanceof HouseholdTask || ! $item instanceof HouseholdTaskChecklistItem
+            || $task->is_completed || $occurrence->completed_at !== null
+            || (int) $task->occurrence_number !== (int) $occurrence->task_occurrence_number
+            || $occurrence->due_at === null || ! $this->canView($member, 'tasks', $task)) {
+            return null;
+        }
+
+        $recipientId = $task->assignee_user_id ?? $task->owner_user_id ?? $task->created_by_user_id;
+        if ($recipientId !== $member->id) {
+            return null;
+        }
+
+        $validPrefix = 'task:'.$occurrence->task_occurrence_number.':';
+        if (! str_starts_with($key, $validPrefix)
+            || ! str_contains($key, ':'.(int) $occurrence->due_at->timestamp)) {
+            return null;
+        }
+
+        return [
+            'title' => 'Task · '.$task->title.' · '.$occurrence->title_snapshot.' is due',
+            'href' => '/modules/tasks#task-'.$task->id.'-checklist-item-'.$item->id,
+            'due_on' => $occurrence->due_at->setTimezone($task->timezone)->toDateString(),
+        ];
     }
 
     private function canView(User $member, string $module, Model $source): bool
