@@ -2,6 +2,21 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.11.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.10.1...metricove-v0.11.0) (2026-10-29)
+
+
+### Features
+
+* **receipts:** add household sharing and archive filters ([fbff1f8](https://github.com/marcel-breuer/metricove/commit/fbff1f8553d314afd6c9e7687a58ec7dcf28d023))
+* **receipts:** add local OCR invoice scanning ([e84d566](https://github.com/marcel-breuer/metricove/commit/e84d5660bd120e6bfbc09ef23fafe3998480b8f5))
+* **receipts:** add local OCR scanner and household sharing ([44787f3](https://github.com/marcel-breuer/metricove/commit/44787f31adb9a7258973a88ee73fcc81d85b97eb))
+* **receipts:** complete archive linking and fuel details ([8c2c4a0](https://github.com/marcel-breuer/metricove/commit/8c2c4a0a24e1492235167015dc0b2a18ee992ad2))
+
+
+### Bug Fixes
+
+* **deps:** update Symfony MIME security patch ([0321c39](https://github.com/marcel-breuer/metricove/commit/0321c39df8b0d2dac23c8dafd5b8521bcc3e1f85))
+
 ## [0.10.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.10.0...metricove-v0.10.1) (2026-10-28)
 
 
