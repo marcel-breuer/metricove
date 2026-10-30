@@ -49,16 +49,15 @@ See [architecture](docs/architecture/overview.md) and [module contract](docs/mod
 
 ## Docker Compose
 
-Docker Engine and the Docker Compose plugin are required. Prepare a private `.env` file with fresh application and database secrets, then build and start the stack:
+Install Docker Engine and the Docker Compose v2 plugin for your operating system. On Linux, your account must be allowed to access Docker; starting its service may ask for `sudo`. On macOS, install Docker Desktop. `start.sh` starts an installed Docker service or Docker Desktop when it is stopped, but it does not install Docker itself.
 
 ```sh
-./scripts/prepare-compose-env.sh
-docker compose config --quiet
-docker compose up -d --build
-docker compose ps
+./start.sh
 ```
 
-The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Open the web app at `http://localhost:8080`; the first-run administrator form is available at `/setup`. The API health endpoint is `/api/health` and the web health endpoint is `/health`.
+On first start, the script creates a private `.env` with fresh application and database secrets, validates the Compose configuration, builds the application images, starts all services, and waits for their health checks. It never replaces an existing `.env` or removes Docker volumes. Open the web app at the URL printed by the script; the first-run administrator form is available at `/setup`. The API health endpoint is `/api/health` and the web health endpoint is `/health`.
+
+Run `./start.sh` again after restarting the machine or pulling code updates. It rebuilds the local images and starts or updates the services. The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Only the gateway publishes a host port.
 
 Administrators can optionally restrict platform API access to specific IP addresses or CIDR networks under **General settings → Network access**. Leave the list empty to allow all addresses. If the installation is behind a reverse proxy, configure its exact IP address or CIDR in `TRUSTED_PROXIES`; see [network access restrictions](docs/operations/network-access.md).
 
