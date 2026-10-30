@@ -176,6 +176,11 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,view')
                 ->whereNumber('vehicle')
                 ->name('odometer.index');
+            Route::get('/{vehicle}/history/{type}', [VehiclesController::class, 'recordHistory'])
+                ->middleware('module.access:vehicles,view')
+                ->whereNumber('vehicle')
+                ->whereIn('type', ['maintenance', 'insurance', 'costs'])
+                ->name('history.index');
             Route::get('/{vehicle}', [VehiclesController::class, 'show'])
                 ->middleware('module.access:vehicles,view')
                 ->whereNumber('vehicle')

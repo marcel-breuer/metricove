@@ -81,18 +81,82 @@ class VehicleService
         return $this->presentVehicle($vehicle);
     }
 
-    /** @return array{vehicle: array<string, mixed>, odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool, maintenance_records: list<array<string, mixed>>, insurance_policies: list<array<string, mixed>>, costs: list<array<string, mixed>>} */
+    /** @return array{vehicle: array<string, mixed>, odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool, maintenance_records: list<array<string, mixed>>, has_more_maintenance_records: bool, insurance_policies: list<array<string, mixed>>, has_more_insurance_policies: bool, costs: list<array<string, mixed>>, has_more_costs: bool} */
     public function show(User $actor, int $vehicleId): array
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::View);
-        $odometerHistory = $this->odometerHistory($actor, $vehicleId);
+        $odometerHistory = $this->odometerHistory($actor, $vehicleId, 5);
 
         return [
             'vehicle' => $this->presentVehicle($vehicle),
             ...$odometerHistory,
-            'maintenance_records' => $this->visibleChildren($actor, $vehicle, $vehicle->maintenanceRecords()->limit(100)->get()),
-            'insurance_policies' => $this->visibleChildren($actor, $vehicle, $vehicle->insurancePolicies()->limit(100)->get()),
-            'costs' => $this->visibleChildren($actor, $vehicle, $vehicle->costs()->limit(100)->get()),
+            'active_insurance_count' => $this->visibleResources(
+                $actor,
+                VehicleInsurancePolicy::class,
+                'vehicle_insurance_policies',
+                ModuleCapability::View,
+                $vehicle->insurancePolicies()->getQuery(),
+            )->whereDate('valid_from', '<=', CarbonImmutable::today())
+                ->whereDate('valid_until', '>=', CarbonImmutable::today())
+                ->count(),
+            ...$this->recordHistoryPage($actor, $vehicle, 'maintenance'),
+            ...$this->recordHistoryPage($actor, $vehicle, 'insurance'),
+            ...$this->recordHistoryPage($actor, $vehicle, 'costs'),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function recordHistory(
+        User $actor,
+        int $vehicleId,
+        string $type,
+        int $limit = 5,
+        ?string $beforeDate = null,
+        ?int $beforeId = null,
+    ): array {
+        $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::View);
+
+        return $this->recordHistoryPage($actor, $vehicle, $type, $limit, $beforeDate, $beforeId);
+    }
+
+    /** @return array<string, mixed> */
+    private function recordHistoryPage(
+        User $actor,
+        Vehicle $vehicle,
+        string $type,
+        int $limit = 5,
+        ?string $beforeDate = null,
+        ?int $beforeId = null,
+    ): array {
+        [$model, $table, $dateColumn, $query, $key] = match ($type) {
+            'maintenance' => [VehicleMaintenanceRecord::class, 'vehicle_maintenance_records', 'occurred_on', $vehicle->maintenanceRecords()->getQuery(), 'maintenance_records'],
+            'insurance' => [VehicleInsurancePolicy::class, 'vehicle_insurance_policies', 'valid_from', $vehicle->insurancePolicies()->getQuery(), 'insurance_policies'],
+            'costs' => [VehicleCost::class, 'vehicle_costs', 'period_start', $vehicle->costs()->getQuery(), 'costs'],
+            default => throw new \InvalidArgumentException('Unsupported vehicle history type.'),
+        };
+
+        $query = $this->visibleResources($actor, $model, $table, ModuleCapability::View, $query);
+        if ($beforeDate !== null && $beforeId !== null) {
+            $query->where(function (Builder $cursor) use ($dateColumn, $beforeDate, $beforeId): void {
+                $cursor->where($dateColumn, '<', $beforeDate)
+                    ->orWhere(function (Builder $sameDate) use ($dateColumn, $beforeDate, $beforeId): void {
+                        $sameDate->where($dateColumn, $beforeDate)->where('id', '<', $beforeId);
+                    });
+            });
+        }
+
+        $page = $query->orderByDesc($dateColumn)->orderByDesc('id')->limit($limit + 1)->get();
+        $hasMore = $page->count() > $limit;
+        $records = $page->take($limit);
+
+        return [
+            $key => $records->map(fn (Model $record): array => match (true) {
+                $record instanceof VehicleMaintenanceRecord => $this->presentMaintenance($record, $vehicle),
+                $record instanceof VehicleInsurancePolicy => $this->presentInsurance($record),
+                $record instanceof VehicleCost => $this->presentCost($record),
+                default => [],
+            })->values()->all(),
+            'has_more_'.$key => $hasMore,
         ];
     }
 
@@ -495,29 +559,6 @@ class VehicleService
         $boundary = DB::query()->fromSub($events, 'vehicle_mileage_events')->selectRaw("{$function}(value) AS distance")->value('distance');
 
         return $boundary === null ? null : (string) $boundary;
-    }
-
-    /** @param iterable<Model> $records
-     * @return list<array<string, mixed>>
-     */
-    private function visibleChildren(User $actor, Vehicle $vehicle, iterable $records): array
-    {
-        $visible = [];
-
-        foreach ($records as $record) {
-            if (! $this->canAccess($actor, ModuleCapability::View, $record)) {
-                continue;
-            }
-
-            $visible[] = match (true) {
-                $record instanceof VehicleMaintenanceRecord => $this->presentMaintenance($record, $vehicle),
-                $record instanceof VehicleInsurancePolicy => $this->presentInsurance($record),
-                $record instanceof VehicleCost => $this->presentCost($record),
-                default => [],
-            };
-        }
-
-        return $visible;
     }
 
     private function canAccess(User $actor, ModuleCapability $capability, Model $resource): bool

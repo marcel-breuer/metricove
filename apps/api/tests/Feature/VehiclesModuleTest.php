@@ -81,22 +81,70 @@ class VehiclesModuleTest extends TestCase
 
         $initial = $this->actingAs($admin, 'web')->getJson("/api/vehicles/{$vehicleId}")
             ->assertOk()
-            ->assertJsonCount(30, 'odometer_readings')
+            ->assertJsonCount(5, 'odometer_readings')
             ->assertJsonPath('has_more_odometer_readings', true);
-        $this->assertSame('2026-01-06', $initial->json('odometer_readings.0.reading_date'));
-        $this->assertSame('2026-02-04', $initial->json('odometer_readings.29.reading_date'));
+        $this->assertSame('2026-01-31', $initial->json('odometer_readings.0.reading_date'));
+        $this->assertSame('2026-02-04', $initial->json('odometer_readings.4.reading_date'));
 
         $oldestVisible = $initial->json('odometer_readings.0');
         $olderPage = $this->actingAs($admin, 'web')->getJson(sprintf(
-            '/api/vehicles/%d/odometer-readings?limit=30&before_reading_date=%s&before_id=%d',
+            '/api/vehicles/%d/odometer-readings?limit=5&before_reading_date=%s&before_id=%d',
             $vehicleId,
             $oldestVisible['reading_date'],
             $oldestVisible['id'],
-        ))->assertOk()->assertJsonCount(5, 'odometer_readings')->assertJsonPath('has_more_odometer_readings', false);
+        ))->assertOk()->assertJsonCount(5, 'odometer_readings')->assertJsonPath('has_more_odometer_readings', true);
 
-        $this->assertSame('2026-01-01', $olderPage->json('odometer_readings.0.reading_date'));
-        $this->assertSame('2026-01-05', $olderPage->json('odometer_readings.4.reading_date'));
-        $this->assertSame('100.000', $initial->json('odometer_readings.0.distance_since_previous'));
+        $this->assertSame('2026-01-26', $olderPage->json('odometer_readings.0.reading_date'));
+        $this->assertSame('2026-01-30', $olderPage->json('odometer_readings.4.reading_date'));
+        $this->assertSame('100.000', $olderPage->json('odometer_readings.0.distance_since_previous'));
+    }
+
+    public function test_vehicle_record_histories_load_the_newest_five_then_older_records(): void
+    {
+        $admin = $this->admin();
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $this->grant($admin, ['view' => true, 'create' => true, 'manage' => true]);
+        $vehicleId = $this->createVehicle($admin, 'private');
+
+        for ($day = 1; $day <= 7; $day++) {
+            $date = CarbonImmutable::parse('2026-03-01')->addDays($day - 1)->format('Y-m-d');
+            $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/maintenance", [
+                'title' => "Service {$day}", 'service_type' => 'service', 'occurred_on' => $date,
+            ])->assertCreated();
+            $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/insurance", [
+                'provider' => "Provider {$day}", 'coverage_type' => 'liability', 'valid_from' => $date,
+                'valid_until' => CarbonImmutable::parse($date)->addYear()->format('Y-m-d'),
+            ])->assertCreated();
+            $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+                'category' => 'fuel', 'amount' => '10.00', 'currency' => 'EUR', 'period_start' => $date, 'period' => 'once',
+            ])->assertCreated();
+        }
+
+        $detail = $this->actingAs($admin, 'web')->getJson("/api/vehicles/{$vehicleId}")->assertOk();
+        foreach (['maintenance_records', 'insurance_policies', 'costs'] as $history) {
+            $this->assertCount(5, $detail->json($history));
+            $this->assertTrue($detail->json("has_more_{$history}"));
+        }
+        $this->assertSame('Service 7', $detail->json('maintenance_records.0.title'));
+
+        foreach ([
+            ['maintenance', 'maintenance_records', 'Service 2'],
+            ['insurance', 'insurance_policies', 'Provider 2'],
+            ['costs', 'costs', 'fuel'],
+        ] as [$type, $key, $expected]) {
+            $older = $this->actingAs($admin, 'web')->getJson(sprintf(
+                '/api/vehicles/%d/history/%s?limit=5&before_date=2026-03-03&before_id=%d',
+                $vehicleId,
+                $type,
+                $detail->json("{$key}.4.id"),
+            ))->assertOk()->assertJsonCount(2, $key)->assertJsonPath("has_more_{$key}", false);
+            $actual = match ($type) {
+                'maintenance' => $older->json("{$key}.0.title"),
+                'insurance' => $older->json("{$key}.0.provider"),
+                default => $older->json("{$key}.0.category"),
+            };
+            $this->assertSame($expected, $actual);
+        }
     }
 
     public function test_odometer_corrections_keep_audit_history_and_check_neighbor_values(): void
@@ -229,6 +277,10 @@ class VehiclesModuleTest extends TestCase
 
         $this->actingAs($viewer, 'web')->getJson("/api/vehicles/{$vehicleId}")
             ->assertOk()->assertJsonCount(1, 'odometer_readings')->assertJsonCount(1, 'maintenance_records')->assertJsonCount(0, 'costs');
+        $this->actingAs($viewer, 'web')->getJson("/api/vehicles/{$vehicleId}/history/maintenance")
+            ->assertOk()->assertJsonCount(1, 'maintenance_records');
+        $this->actingAs($viewer, 'web')->getJson("/api/vehicles/{$vehicleId}/history/costs")
+            ->assertOk()->assertJsonCount(0, 'costs');
         $this->actingAs($viewer, 'web')->getJson('/api/vehicles')->assertOk()->assertJsonCount(1, 'vehicles');
         $this->grant($viewer, ['view' => false, 'edit' => true]);
         $this->actingAs($viewer, 'web')->getJson("/api/vehicles/{$vehicleId}")->assertForbidden();
