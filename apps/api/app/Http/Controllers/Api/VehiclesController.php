@@ -52,6 +52,24 @@ class VehiclesController extends Controller
         ));
     }
 
+    public function recordHistory(Request $request, int $vehicle, string $type, VehicleService $vehicles): JsonResponse
+    {
+        $filters = $request->validate([
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'before_date' => ['required_with:before_id', 'date'],
+            'before_id' => ['required_with:before_date', 'integer', 'min:1'],
+        ]);
+
+        return response()->json($vehicles->recordHistory(
+            $this->actor($request),
+            $vehicle,
+            $type,
+            (int) ($filters['limit'] ?? 5),
+            isset($filters['before_date']) ? (string) $filters['before_date'] : null,
+            isset($filters['before_id']) ? (int) $filters['before_id'] : null,
+        ));
+    }
+
     public function update(UpdateVehicleRequest $request, int $vehicle, VehicleService $vehicles): JsonResponse
     {
         return response()->json([

@@ -78,10 +78,14 @@ export type VehicleCost = {
 export type VehicleResponse = {
 	message?: string;
 	vehicle?: Vehicle;
+	active_insurance_count?: number;
 	vehicles?: Vehicle[];
 	reading?: VehicleOdometerReading;
 	odometer_readings?: VehicleOdometerReading[];
 	has_more_odometer_readings?: boolean;
+	has_more_maintenance_records?: boolean;
+	has_more_insurance_policies?: boolean;
+	has_more_costs?: boolean;
 	maintenance_record?: VehicleMaintenanceRecord;
 	maintenance_records?: VehicleMaintenanceRecord[];
 	insurance_policy?: VehicleInsurancePolicy;
