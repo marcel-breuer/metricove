@@ -2,6 +2,15 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.14.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.13.0...metricove-v0.14.0) (2026-10-30)
+
+
+### Features
+
+* **ops:** add one-command Docker startup ([f8bcf73](https://github.com/marcel-breuer/metricove/commit/f8bcf739b4a953dfe772067b3283c0706b0c25ea))
+* **ops:** add one-command Docker startup ([#169](https://github.com/marcel-breuer/metricove/issues/169)) ([f8bcf73](https://github.com/marcel-breuer/metricove/commit/f8bcf739b4a953dfe772067b3283c0706b0c25ea))
+* **ops:** add one-command Docker startup ([#169](https://github.com/marcel-breuer/metricove/issues/169)) ([b538208](https://github.com/marcel-breuer/metricove/commit/b538208a54db6189167cc436f70c6b41148e9be8))
+
 ## [0.13.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.12.0...metricove-v0.13.0) (2026-10-30)
 
 
