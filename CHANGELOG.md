@@ -2,6 +2,14 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.13.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.12.0...metricove-v0.13.0) (2026-10-30)
+
+
+### Features
+
+* streamline vehicle actions and history ([ce7e820](https://github.com/marcel-breuer/metricove/commit/ce7e820813f981d553ee78656a5c195700dd07ac))
+* **vehicles:** keep quick actions visible and page histories ([9bd1308](https://github.com/marcel-breuer/metricove/commit/9bd1308da60db2d66d07d537da57d29ff7385e79))
+
 ## [0.12.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.11.0...metricove-v0.12.0) (2026-10-29)
 
 
