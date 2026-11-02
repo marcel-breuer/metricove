@@ -5,6 +5,7 @@
 	import type { LayoutProps } from './$types';
 	import { csrfToken, type ApiResponse, type AuthUser } from '#lib/auth';
 	import Button from '#lib/ui/Button.svelte';
+import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 	import { setUserPreferences, t } from '#lib/i18n';
 	import {
 		APP_SHELL_CONTEXT,
@@ -241,8 +242,14 @@
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
 					{$t('Overview')}
 				</a>
-				<a href="/reminders" aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">{$t('Reminders')}</a>
-				<a href="/mcp-docs" aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
+				<a href="/reminders" aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+					{$t('Reminders')}
+				</a>
+				<a href="/mcp-docs" aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+					{$t('MCP documentation')}
+				</a>
 			</div>
 			{#if modules.length > 0}
 				<div>
@@ -250,7 +257,7 @@
 					<div class="mt-2 space-y-1">
 						{#each modules as module (module.key)}
 							<a href={`/modules/${module.key}`} aria-current={isActive(`/modules/${module.key}`) ? 'page' : undefined} class="nav-item {isActive(`/modules/${module.key}`) ? 'nav-item-active' : ''}">
-								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" /><path d="M8 9h8M8 13h8M8 17h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+								<ModuleIcon name={module.key} />
 								{$t(module.label)}
 							</a>
 						{/each}
@@ -379,8 +386,14 @@
 						</svg>
 						{$t('Overview')}
 					</a>
-					<a href="/mcp-docs" onclick={() => (drawerOpen = false)} aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">{$t('MCP documentation')}</a>
-					<a href="/reminders" onclick={() => (drawerOpen = false)} aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">{$t('Reminders')}</a>
+					<a href="/mcp-docs" onclick={() => (drawerOpen = false)} aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+						{$t('MCP documentation')}
+					</a>
+					<a href="/reminders" onclick={() => (drawerOpen = false)} aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+						{$t('Reminders')}
+					</a>
 				</div>
 				{#if modules.length > 0}
 					<div>
@@ -393,10 +406,7 @@
 									aria-current={isActive(`/modules/${module.key}`) ? 'page' : undefined}
 									class="nav-item {isActive(`/modules/${module.key}`) ? 'nav-item-active' : ''}"
 								>
-									<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
-										<rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" />
-										<path d="M8 9h8M8 13h8M8 17h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-									</svg>
+									<ModuleIcon name={module.key} />
 								{$t(module.label)}
 								</a>
 							{/each}
