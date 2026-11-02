@@ -30,3 +30,7 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 7. Use Conventional Commits and Semantic Versioning. A separate GitHub Issue documents each release or testing change.
 
 **Security review always wins over convenience.** No shortcuts by hiding navigation instead of enforcing server-side checks. Never assert unexecuted tests passed. For work on dependencies, containers, permissions, AI or modules, load the corresponding [skill](.agent/skills/README.md).
+
+## UI analysis and design changes
+
+Metricove includes a SvelteKit UI. For new UI views, redesigns, and targeted UI reviews, use the repository skill `$unslop` at [.agents/skills/unslop/SKILL.md](.agents/skills/unslop/SKILL.md). Audit the rendered interface before proposing or making visual changes, then follow the skill's direction and review steps. Preserve Metricove's branding, design tokens, existing components, responsive behavior, accessibility, and localization rules in [Frontend components and i18n](.agent/skills/frontend-components-i18n/SKILL.md). Keep existing product behavior and agent rules; make only changes supported by the audit, and do not introduce a full redesign without the user's request.
