@@ -38,27 +38,33 @@
 		<div class="auth-body">
 			<aside class="auth-brand-panel" aria-label={$t('About Metricove')}>
 				<div class="auth-brand-copy">
-					<p class="auth-brand-kicker">{$t('YOUR HOUSEHOLD, IN FOCUS')}</p>
+					<p class="auth-brand-kicker">{$t('Your household, in focus')}</p>
 					<h2>{$t('One private place for your household.')}</h2>
 					<p class="auth-brand-description">{$t('A simpler way to keep the things that matter close at hand.')}</p>
 				</div>
 
 				<div class="auth-art" aria-hidden="true">
-					<div class="auth-art-glow"></div>
-					<div class="auth-art-orbit auth-art-orbit--outer"></div>
-					<div class="auth-art-orbit auth-art-orbit--inner"></div>
-					<div class="auth-art-tile auth-art-tile--back">
-						<span></span><span></span><span></span>
-					</div>
-					<div class="auth-art-tile auth-art-tile--front">
-						<span class="auth-art-tile-mark"></span>
-						<span class="auth-art-line auth-art-line--long"></span>
-						<span class="auth-art-line"></span>
-						<span class="auth-art-line auth-art-line--short"></span>
+					<div class="auth-art-index">
+						<div class="auth-art-heading">
+							<span class="auth-art-heading-mark" aria-hidden="true"></span>
+							<span>{$t('Your modules')}</span>
+						</div>
+						<div class="auth-art-row auth-art-row--active">
+							<span class="auth-art-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16M6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+							<span>{$t('Finance')}</span><span class="auth-art-row-end" aria-hidden="true"></span>
+						</div>
+						<div class="auth-art-row">
+							<span class="auth-art-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 7h14M7 7l-4 7h8L7 7Zm10 0-4 7h8l-4-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+							<span>{$t('Utilities')}</span><span class="auth-art-row-end" aria-hidden="true"></span>
+						</div>
+						<div class="auth-art-row">
+							<span class="auth-art-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 13.5 5.2 8a2 2 0 0 1 1.9-1.3h9.8A2 2 0 0 1 18.8 8l2.2 5.5v4h-2v-2H5v2H3v-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg></span>
+							<span>{$t('Vehicles')}</span><span class="auth-art-row-end" aria-hidden="true"></span>
+						</div>
 					</div>
 				</div>
 
-				<p class="auth-brand-footnote"><span></span>{$t('ONE HOUSEHOLD · YOUR SPACE')}</p>
+				<p class="auth-brand-footnote"><span></span>{$t('One household · your space')}</p>
 			</aside>
 
 			<section class="auth-content" class:auth-content--wide={wide} aria-labelledby="auth-title">
@@ -76,15 +82,11 @@
 
 <style>
 	.auth-shell {
-		--auth-teal: #0f766e;
 		min-height: 100svh;
 		display: grid;
 		place-items: center;
 		padding: clamp(1rem, 4vh, 2.5rem) clamp(0.75rem, 3vw, 2.5rem);
-		background:
-			radial-gradient(ellipse at 8% 8%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 34rem),
-			radial-gradient(ellipse at 92% 88%, color-mix(in srgb, var(--auth-teal) 8%, transparent), transparent 30rem),
-			var(--surface-page);
+		background: var(--surface-page);
 	}
 
 	.auth-frame {
@@ -92,9 +94,9 @@
 		min-height: min(46rem, calc(100svh - 3rem));
 		overflow: hidden;
 		border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
-		border-radius: 1.75rem;
+		border-radius: 1.5rem;
 		background: var(--surface-raised);
-		box-shadow: 0 2rem 6rem rgb(15 23 42 / 12%);
+		box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 9%);
 	}
 
 	.auth-header {
@@ -112,8 +114,7 @@
 		gap: 0.75rem;
 		color: var(--text-primary);
 		font-size: 1rem;
-		font-weight: 720;
-		letter-spacing: -0.025em;
+		font-weight: 600;
 		text-decoration: none;
 	}
 
@@ -128,10 +129,9 @@
 		width: 2.5rem;
 		height: 2.5rem;
 		place-items: center;
-		border-radius: 0.875rem;
-		background: linear-gradient(145deg, #0f766e, #14b8a6);
+		border-radius: 0.75rem;
+		background: #0f766e;
 		color: #f0fdfa;
-		box-shadow: inset 0 1px rgb(255 255 255 / 20%), 0 0.375rem 1rem rgb(15 118 110 / 20%);
 	}
 
 	.auth-brand-mark svg {
@@ -157,9 +157,7 @@
 		justify-content: space-between;
 		overflow: hidden;
 		padding: clamp(2.5rem, 5vw, 4.25rem);
-		background:
-			radial-gradient(circle at 82% 15%, rgb(45 212 191 / 15%), transparent 19rem),
-			linear-gradient(150deg, #0d2635 0%, #123d4b 54%, #0d463f 100%);
+		background: #123d4b;
 		color: #f0fdfa;
 	}
 
@@ -173,9 +171,7 @@
 	.auth-eyebrow {
 		margin: 0;
 		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.13em;
-		text-transform: uppercase;
+		font-weight: 500;
 	}
 
 	.auth-brand-kicker {
@@ -185,10 +181,10 @@
 	.auth-brand-panel h2 {
 		max-width: 23rem;
 		margin: 1.15rem 0 0;
-		font-size: clamp(2.25rem, 4.2vw, 3.65rem);
-		font-weight: 620;
-		letter-spacing: -0.052em;
-		line-height: 1.04;
+		font-size: clamp(2rem, 3.8vw, 3rem);
+		font-weight: 500;
+		letter-spacing: -0.035em;
+		line-height: 1.08;
 	}
 
 	.auth-brand-description {
@@ -204,116 +200,76 @@
 		z-index: 0;
 		min-height: 14rem;
 		margin: 1.25rem -1.25rem 0;
-		overflow: hidden;
-		border: 1px solid rgb(204 251 241 / 13%);
-		border-radius: 1.5rem;
-		background:
-			linear-gradient(90deg, rgb(204 251 241 / 5%) 1px, transparent 1px),
-			linear-gradient(rgb(204 251 241 / 5%) 1px, transparent 1px),
-			rgb(3 24 34 / 18%);
-		background-size: 1.75rem 1.75rem;
+		display: grid;
+		place-items: center;
 	}
 
-	.auth-art-glow {
-		position: absolute;
-		top: 7%;
-		left: 19%;
-		width: 15rem;
-		aspect-ratio: 1;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgb(45 212 191 / 21%), transparent 68%);
+	.auth-art-index {
+		width: min(100%, 25rem);
+		border: 1px solid rgb(204 251 241 / 17%);
+		border-radius: 1rem;
+		padding: 0.5rem;
+		background: rgb(3 24 34 / 20%);
 	}
 
-	.auth-art-orbit {
-		position: absolute;
-		aspect-ratio: 1;
-		border: 1px solid rgb(204 251 241 / 18%);
-		border-radius: 50%;
-	}
-
-	.auth-art-orbit--outer {
-		top: -55%;
-		left: 17%;
-		width: 19rem;
-	}
-
-	.auth-art-orbit--inner {
-		top: -18%;
-		left: 32%;
-		width: 12rem;
-		border-color: rgb(204 251 241 / 13%);
-	}
-
-	.auth-art-tile {
-		position: absolute;
+	.auth-art-heading,
+	.auth-art-row {
 		display: flex;
-		width: 11rem;
-		height: 8rem;
-		flex-direction: column;
-		justify-content: center;
+		min-height: 2.5rem;
+		align-items: center;
 		gap: 0.75rem;
-		border: 1px solid rgb(204 251 241 / 24%);
-		border-radius: 1.25rem;
-		padding: 1.25rem;
-		backdrop-filter: blur(12px);
+		padding-inline: 0.75rem;
 	}
 
-	.auth-art-tile--back {
-		right: 35%;
-		bottom: 24%;
-		transform: rotate(8deg);
-		background: rgb(226 255 251 / 8%);
+	.auth-art-heading {
+		min-height: 2.25rem;
+		margin-bottom: 0.25rem;
+		color: rgb(226 255 251 / 72%);
+		font-size: 0.75rem;
+		font-weight: 500;
 	}
 
-	.auth-art-tile--back span {
-		width: 78%;
-		height: 0.35rem;
-		border-radius: 999px;
-		background: rgb(204 251 241 / 35%);
+	.auth-art-heading-mark {
+		width: 0.25rem;
+		height: 1rem;
+		border-radius: 2px;
+		background: #5eead4;
 	}
 
-	.auth-art-tile--back span:nth-child(2) {
-		width: 58%;
-		background: rgb(204 251 241 / 23%);
+	.auth-art-row {
+		border-top: 1px solid rgb(204 251 241 / 10%);
+		color: rgb(240 253 250 / 78%);
+		font-size: 0.8125rem;
 	}
 
-	.auth-art-tile--back span:nth-child(3) {
-		width: 68%;
-		background: rgb(204 251 241 / 18%);
+	.auth-art-row--active {
+		border-radius: 0.5rem;
+		background: rgb(204 251 241 / 8%);
+		color: #f0fdfa;
 	}
 
-	.auth-art-tile--front {
-		right: 9%;
-		bottom: 7%;
-		border-color: rgb(204 251 241 / 32%);
-		transform: rotate(-7deg);
-		background: linear-gradient(145deg, rgb(226 255 251 / 15%), rgb(226 255 251 / 7%));
-		box-shadow: 0 1.25rem 3rem rgb(1 12 18 / 28%);
+	.auth-art-row-icon {
+		display: grid;
+		width: 1.25rem;
+		height: 1.25rem;
+		flex: 0 0 auto;
+		place-items: center;
+		color: inherit;
 	}
 
-	.auth-art-tile-mark {
-		width: 1.7rem;
-		height: 1.7rem;
-		border: 1px solid rgb(153 246 228 / 35%);
-		border-radius: 0.55rem;
-		background: linear-gradient(145deg, rgb(45 212 191 / 72%), rgb(20 184 166 / 28%));
+	.auth-art-row-icon svg {
+		width: 1.125rem;
+		height: 1.125rem;
 	}
 
-	.auth-art-line {
-		width: 56%;
-		height: 0.32rem;
-		border-radius: 999px;
-		background: rgb(204 251 241 / 35%);
-	}
-
-	.auth-art-line--long {
-		width: 83%;
-		background: rgb(204 251 241 / 55%);
-	}
-
-	.auth-art-line--short {
-		width: 39%;
-		background: rgb(204 251 241 / 22%);
+	.auth-art-row-end {
+		width: 0.375rem;
+		height: 0.375rem;
+		margin-left: auto;
+		border-top: 1px solid currentColor;
+		border-right: 1px solid currentColor;
+		opacity: 0.55;
+		transform: rotate(45deg);
 	}
 
 	.auth-brand-footnote {
@@ -323,8 +279,7 @@
 		margin: 1.5rem 0 0;
 		color: rgb(204 251 241 / 62%);
 		font-size: 0.6875rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
+		font-weight: 400;
 	}
 
 	.auth-brand-footnote span,
@@ -334,7 +289,7 @@
 		flex: 0 0 auto;
 		border-radius: 50%;
 		background: #5eead4;
-		box-shadow: 0 0 0 0.25rem rgb(94 234 212 / 13%);
+		box-shadow: none;
 	}
 
 	.auth-content {
@@ -366,8 +321,8 @@
 		margin: 0.75rem 0 0;
 		color: var(--text-primary);
 		font-size: clamp(2.5rem, 5vw, 3.5rem);
-		font-weight: 650;
-		letter-spacing: -0.055em;
+		font-weight: 500;
+		letter-spacing: -0.035em;
 		line-height: 1.05;
 	}
 
@@ -391,8 +346,8 @@
 	.auth-account-dot {
 		width: 0.4rem;
 		height: 0.4rem;
-		background: var(--positive-text);
-		box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--positive-text) 13%, transparent);
+		background: var(--accent-text);
+		box-shadow: none;
 	}
 
 	@media (max-width: 900px) {
