@@ -2,6 +2,14 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.16.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.16.0...metricove-v0.16.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **web:** improve mobile-first tracking and vehicle layouts ([0c3e5af](https://github.com/marcel-breuer/metricove/commit/0c3e5aff0357d5aca10323003701458cf08b1149))
+* **web:** improve mobile-first tracking and vehicle layouts ([87ff35c](https://github.com/marcel-breuer/metricove/commit/87ff35cfc1a8c40db4103f85ebff662d9cd8db47))
+
 ## [0.16.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.15.0...metricove-v0.16.0) (2026-11-02)
 
 
