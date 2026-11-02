@@ -2,6 +2,22 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.16.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.15.0...metricove-v0.16.0) (2026-11-02)
+
+
+### Features
+
+* **analytics:** add annual distance trend and projection ([f6a7549](https://github.com/marcel-breuer/metricove/commit/f6a754980a8dc9cf78ec5111f0e9bd0be6e5f399))
+* **analytics:** add annual distance trend and projection ([f6a7549](https://github.com/marcel-breuer/metricove/commit/f6a754980a8dc9cf78ec5111f0e9bd0be6e5f399))
+* **analytics:** add annual distance trend and projection ([eebf384](https://github.com/marcel-breuer/metricove/commit/eebf3840498e9eab80295adfe77a5d4e44a02042))
+
+
+### Bug Fixes
+
+* **forms:** localize decimal inputs and dates ([ec01bad](https://github.com/marcel-breuer/metricove/commit/ec01bad2111dc6c218e00ac98736ee846d83b1ea))
+* **forms:** localize decimal inputs and dates ([ec01bad](https://github.com/marcel-breuer/metricove/commit/ec01bad2111dc6c218e00ac98736ee846d83b1ea))
+* **forms:** localize decimal inputs and dates ([cd9c165](https://github.com/marcel-breuer/metricove/commit/cd9c165d24fbd0858b3c0db01336be2fb57587b2))
+
 ## [0.15.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.14.0...metricove-v0.15.0) (2026-11-02)
 
 
