@@ -270,6 +270,96 @@ class TrackingModuleTest extends TestCase
         $this->actingAs($owner, 'web')->getJson('/api/tracking/trackers')->assertNotFound();
     }
 
+    public function test_owner_can_delete_one_tracking_entry_and_its_values_only(): void
+    {
+        $admin = $this->admin();
+        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $tracker = $this->createTracker($owner);
+        $selectedEntryId = $this->createEntry($owner, $tracker['id'], $tracker['field_key'], '48.2');
+        $otherEntryId = $this->createEntry($owner, $tracker['id'], $tracker['field_key'], '52.7');
+
+        $this->actingAs($owner, 'web')->deleteJson('/api/tracking/entries/'.$selectedEntryId)
+            ->assertOk()
+            ->assertJsonPath('message', 'Tracker entry deleted.');
+
+        $this->assertDatabaseMissing('tracker_entries', ['id' => $selectedEntryId]);
+        $this->assertDatabaseMissing('tracker_entry_values', ['tracker_entry_id' => $selectedEntryId]);
+        $this->assertDatabaseHas('tracker_entries', [
+            'id' => $otherEntryId,
+            'tracker_definition_id' => $tracker['id'],
+        ]);
+        $this->assertDatabaseHas('tracker_entry_values', ['tracker_entry_id' => $otherEntryId]);
+        $this->assertDatabaseHas('tracker_definitions', ['id' => $tracker['id']]);
+        $this->assertDatabaseCount('tracker_entries', 1);
+    }
+
+    public function test_member_with_explicit_edit_access_can_delete_shared_tracker_entry(): void
+    {
+        $admin = $this->admin();
+        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $editor = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($editor, ['view' => true, 'edit' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $tracker = $this->createTracker($admin, 'household');
+        $entryId = $this->createEntry($owner, $tracker['id'], $tracker['field_key'], '48.2');
+        $entry = TrackerEntry::query()->findOrFail($entryId);
+        app(ModuleAccessService::class)->grantPrivateResourceAccess(
+            $owner,
+            $entry,
+            $editor,
+            ModuleCapability::Edit,
+        );
+
+        $this->actingAs($editor, 'web')->deleteJson('/api/tracking/entries/'.$entryId)
+            ->assertOk()
+            ->assertJsonPath('message', 'Tracker entry deleted.');
+
+        $this->assertDatabaseMissing('tracker_entries', ['id' => $entryId]);
+        $this->assertDatabaseMissing('tracker_entry_values', ['tracker_entry_id' => $entryId]);
+        $this->assertDatabaseHas('tracker_definitions', ['id' => $tracker['id']]);
+    }
+
+    public function test_view_only_and_unrelated_members_cannot_delete_tracking_entry(): void
+    {
+        $admin = $this->admin();
+        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $unrelated = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($viewer, ['view' => true]);
+        $this->grant($unrelated, ['view' => true, 'edit' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $tracker = $this->createTracker($owner);
+        $entryId = $this->createEntry($owner, $tracker['id'], $tracker['field_key'], '48.2');
+        $entry = TrackerEntry::query()->findOrFail($entryId);
+        $access = app(ModuleAccessService::class);
+        $access->grantPrivateResourceAccess($owner, $entry, $viewer, ModuleCapability::View);
+
+        $this->actingAs($viewer, 'web')->deleteJson('/api/tracking/entries/'.$entryId)->assertForbidden();
+        $this->actingAs($unrelated, 'web')->deleteJson('/api/tracking/entries/'.$entryId)->assertForbidden();
+
+        $this->assertDatabaseHas('tracker_entries', ['id' => $entryId]);
+        $this->assertDatabaseHas('tracker_entry_values', ['tracker_entry_id' => $entryId]);
+    }
+
+    public function test_deleting_a_missing_tracking_entry_returns_not_found(): void
+    {
+        $admin = $this->admin();
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'tracking', true);
+
+        $this->actingAs($admin, 'web')->deleteJson('/api/tracking/entries/999999999')->assertNotFound();
+    }
+
     public function test_numeric_field_validation_requires_explicit_units_and_exact_decimal_strings(): void
     {
         $admin = $this->admin();
@@ -350,5 +440,38 @@ class TrackingModuleTest extends TestCase
                 'can_manage' => $capabilities['manage'] ?? false,
             ],
         );
+    }
+
+    /** @return array{id: int, field_key: string} */
+    private function createTracker(User $actor, string $visibility = 'private'): array
+    {
+        $response = $this->actingAs($actor, 'web')->postJson('/api/tracking/trackers', [
+            'name' => 'Trip distance',
+            'visibility' => $visibility,
+            'fields' => [[
+                'label' => 'Distance',
+                'type' => 'number',
+                'unit' => 'km',
+                'is_required' => true,
+                'minimum' => null,
+                'maximum' => null,
+            ]],
+        ])->assertCreated();
+
+        return [
+            'id' => (int) $response->json('tracker.id'),
+            'field_key' => (string) $response->json('tracker.fields.0.key'),
+        ];
+    }
+
+    private function createEntry(User $actor, int $trackerId, string $fieldKey, string $distance): int
+    {
+        $response = $this->actingAs($actor, 'web')->postJson('/api/tracking/trackers/'.$trackerId.'/entries', [
+            'schema_version' => 1,
+            'recorded_at' => '2026-11-02T10:00:00Z',
+            'values' => [$fieldKey => $distance],
+        ])->assertCreated();
+
+        return (int) $response->json('entry.id');
     }
 }
