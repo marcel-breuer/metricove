@@ -1039,7 +1039,10 @@ export function setUserPreferences(user: {
 }
 
 export function formatDate(value: string | number | Date, options?: Intl.DateTimeFormatOptions): string {
-	return new Intl.DateTimeFormat(preferredDateLocale, options).format(value instanceof Date ? value : new Date(value));
+	const isDateOnly = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+	const date = value instanceof Date ? value : new Date(isDateOnly ? `${value}T00:00:00.000Z` : value);
+	const dateOptions = isDateOnly ? { ...options, timeZone: 'UTC' } : options;
+	return new Intl.DateTimeFormat(preferredDateLocale, dateOptions).format(date);
 }
 
 export function formatDateTime(value: string | number | Date): string {

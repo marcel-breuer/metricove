@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { get } from 'svelte/store';
-import { defaultCurrency, numberLocale, setUserPreferences, t, uiLanguage } from './i18n';
+import { defaultCurrency, formatDate, numberLocale, setUserPreferences, t, uiLanguage } from './i18n';
 
 afterEach(() => setUserPreferences({ language: 'en', number_locale: 'en-US', default_currency: 'EUR', currency_display: 'code' }));
 
@@ -23,5 +23,21 @@ describe('interface translations', () => {
 		expect(translate('Allowed IP addresses and networks')).toBe('Erlaubte IP-Adressen und Netzwerke');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');
 		expect(translate('{capability} permission for {module}', { capability: translate('View'), module: translate('Finance') })).toBe('Berechtigung „Ansehen“ für Finanzen');
+	});
+});
+
+describe('locale date formatting', () => {
+	it('formats date-only values in the selected locale without shifting the calendar day', () => {
+		setUserPreferences({ language: 'de', number_locale: 'de-DE' });
+		expect(formatDate('2024-01-02', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Los_Angeles' })).toBe('02.01.2024');
+
+		setUserPreferences({ language: 'en', number_locale: 'en-US' });
+		expect(formatDate('2024-01-02', { day: '2-digit', month: '2-digit', year: 'numeric' })).toBe('01/02/2024');
+	});
+
+	it('keeps timestamp formatting on the existing locale-aware path', () => {
+		setUserPreferences({ language: 'en', number_locale: 'en-US' });
+		expect(formatDate('2024-01-02T00:30:00.000Z', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }))
+			.toBe('1/1/2024');
 	});
 });

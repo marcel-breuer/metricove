@@ -23,6 +23,82 @@ const MEASUREMENT_FRACTION_DIGITS_BY_UNIT = new Map<string, number>([
 const DECIMAL_PATTERN = /^([+-]?)(\d+)(?:\.(\d+))?$/;
 const EXPONENTIAL_PATTERN = /^([+-]?)(\d+)(?:\.(\d*))?[eE]([+-]?\d+)$/;
 
+function localeSeparator(locale: string, type: 'decimal' | 'group'): string {
+	return new Intl.NumberFormat(locale)
+		.formatToParts(type === 'decimal' ? 1.1 : 1000)
+		.find((part) => part.type === type)?.value ?? (type === 'decimal' ? '.' : ',');
+}
+
+function removeValidGrouping(value: string, separator: string): string | null {
+	if (!value.includes(separator)) return value;
+	const escaped = separator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const grouped = new RegExp(`^\\d{1,3}(?:${escaped}\\d{3})+$`);
+	return grouped.test(value) ? value.split(separator).join('') : null;
+}
+
+/** Parse a localized decimal into the dot-decimal format accepted by the API. */
+export function parseLocalizedDecimal(value: string, locale: string = preferredLocale): string | null {
+	const trimmed = value.trim();
+	if (!trimmed) return null;
+
+	const sign = /^[+-]/.exec(trimmed)?.[0] ?? '';
+	const unsigned = sign ? trimmed.slice(1) : trimmed;
+	if (!unsigned) return null;
+
+	const decimal = localeSeparator(locale, 'decimal');
+	const grouping = localeSeparator(locale, 'group');
+	let decimalSeparator: string | null = null;
+	if (unsigned.includes(decimal)) {
+		decimalSeparator = decimal;
+	} else if (decimal !== '.' && unsigned.includes('.')) {
+		// Keep accepting canonical decimal strings when editing prior API values. Multiple
+		// valid dot groups can still be recognized as a pasted localized integer.
+		const grouped = removeValidGrouping(unsigned, grouping);
+		decimalSeparator = grouping === '.' && grouped !== null && unsigned.split('.').length > 2 ? null : '.';
+	} else if (decimal === '.' && unsigned.includes('.')) {
+		decimalSeparator = '.';
+	}
+
+	let wholePart = unsigned;
+	let fractionPart = '';
+	if (decimalSeparator !== null) {
+		const parts = unsigned.split(decimalSeparator);
+		if (parts.length > 2) return null;
+		[wholePart, fractionPart = ''] = parts;
+		if (fractionPart && !/^\d+$/.test(fractionPart)) return null;
+		if (!fractionPart && parts.length === 2) return null;
+	}
+
+	if (decimalSeparator !== grouping) {
+		const ungrouped = removeValidGrouping(wholePart, grouping);
+		if (ungrouped === null) return null;
+		wholePart = ungrouped;
+	}
+
+	if (!wholePart && !fractionPart) return null;
+	if (wholePart && !/^\d+$/.test(wholePart)) return null;
+	return `${sign}${wholePart || '0'}${fractionPart ? `.${fractionPart}` : ''}`;
+}
+
+/** Localize an API decimal for an editable field without adding ambiguous grouping marks. */
+export function formatDecimalInput(value: NumberInput, locale: string = preferredLocale): string {
+	if (value === null || value === undefined) return '';
+	const source = typeof value === 'number'
+		? (Number.isFinite(value) ? expandExponent(value) : String(value))
+		: value.trim();
+	const match = DECIMAL_PATTERN.exec(source);
+	if (!match) return typeof value === 'string' ? value : source;
+
+	const [, sign, whole, fraction] = match;
+	const decimal = localeSeparator(locale, 'decimal');
+	return `${sign}${whole}${fraction ? `${decimal}${fraction}` : ''}`;
+}
+
+/** Normalize valid localized decimals; leave other input intact for normal validation. */
+export function canonicalizeDecimalInput(value: string, locale: string = preferredLocale): string {
+	return parseLocalizedDecimal(value, locale) ?? value;
+}
+
 function hasNonZeroMagnitude(value: NumberInput): boolean {
 	if (value === null || value === undefined) return false;
 	const source = typeof value === 'number'

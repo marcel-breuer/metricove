@@ -5,7 +5,8 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatMeasurement } from '#lib/number-format';
+	import { numberLocale } from '#lib/i18n';
 	import { utilityMeterTypes, type UtilityMeter, type UtilitiesResponse, type UtilityVisibility } from '#lib/utilities';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -68,7 +69,7 @@
 			const response = await fetch('/api/utilities/meters', {
 				method: 'POST', credentials: 'same-origin',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify({ name, meter_type: meterType, visibility, description, alert_threshold: alertThreshold || null })
+				body: JSON.stringify({ name, meter_type: meterType, visibility, description, alert_threshold: alertThreshold ? canonicalizeDecimalInput(alertThreshold, $numberLocale) : null })
 			});
 			const result = (await response.json()) as UtilitiesResponse & ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }

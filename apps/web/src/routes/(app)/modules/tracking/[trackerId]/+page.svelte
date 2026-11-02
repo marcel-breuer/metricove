@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from '#lib/i18n';
-	import { formatDateTime } from '#lib/i18n';
+	import { formatDate as formatLocaleDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getContext, onMount } from 'svelte';
@@ -8,7 +8,7 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement } from '#lib/number-format';
 	import {
 		newTrackerField,
 		type Tracker,
@@ -163,7 +163,11 @@
 		for (const field of activeFields) {
 			const value = entry.values.find((item) => item.key === field.key)?.value;
 			if (field.type === 'boolean') booleanValues[field.key] = value === true;
-			else entryValues[field.key] = value === null || value === undefined ? '' : String(value);
+			else entryValues[field.key] = value === null || value === undefined
+				? ''
+				: field.type === 'number'
+					? formatDecimalInput(String(value), $numberLocale)
+					: String(value);
 		}
 		entryModalOpen = true;
 	}
@@ -183,7 +187,9 @@
 		for (const field of activeFields) {
 			values[field.key] = field.type === 'boolean'
 				? (booleanValues[field.key] ?? false)
-				: (entryValues[field.key] ?? '');
+				: field.type === 'number'
+					? canonicalizeDecimalInput(entryValues[field.key] ?? '', $numberLocale)
+					: (entryValues[field.key] ?? '');
 		}
 
 		savingEntry = true;
@@ -286,8 +292,8 @@
 			type: field.type,
 			unit: field.unit ?? '',
 			required: field.required,
-			minimum: field.minimum ?? '',
-			maximum: field.maximum ?? ''
+			minimum: field.minimum === null ? '' : formatDecimalInput(field.minimum, $numberLocale),
+			maximum: field.maximum === null ? '' : formatDecimalInput(field.maximum, $numberLocale)
 		}));
 		schemaOpen = true;
 	}
@@ -318,8 +324,8 @@
 			type: field.type,
 			unit: field.type === 'number' ? field.unit : null,
 			is_required: field.required,
-			minimum: field.type === 'number' && field.minimum !== '' ? field.minimum : null,
-			maximum: field.type === 'number' && field.maximum !== '' ? field.maximum : null
+			minimum: field.type === 'number' && field.minimum !== '' ? canonicalizeDecimalInput(field.minimum, $numberLocale) : null,
+			maximum: field.type === 'number' && field.maximum !== '' ? canonicalizeDecimalInput(field.maximum, $numberLocale) : null
 		}));
 
 		savingSchema = true;
@@ -368,6 +374,7 @@
 		const item = entry.values.find((value) => value.key === key);
 		if (!item || item.value === null) return '—';
 		if (typeof item.value === 'boolean') return item.value ? 'Yes' : 'No';
+		if (item.type === 'date') return formatLocaleDate(String(item.value));
 		const displayedValue = item.type === 'number' ? formatMeasurement(item.value, item.unit) : String(item.value);
 		return displayedValue + (item.unit ? ' ' + item.unit : '');
 	}

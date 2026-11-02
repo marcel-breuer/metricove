@@ -6,7 +6,8 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement } from '#lib/number-format';
+	import { numberLocale } from '#lib/i18n';
 	import type { PantryExpiryStatus, PantryItem, PantryMovement, PantryResponse } from '#lib/pantry';
 
 	type ExpiryFilter = 'all' | 'expired' | 'soon' | 'none';
@@ -136,7 +137,7 @@
 			}
 			: {
 				name,
-				quantity,
+				quantity: canonicalizeDecimalInput(quantity, $numberLocale),
 				unit,
 				location: location || null,
 				best_before_on: bestBefore || null,
@@ -174,7 +175,7 @@
 		try {
 			await api(`/api/pantry/${adjustmentItem.id}/adjustments`, 'POST', {
 				expected_version: adjustmentItem.version,
-				quantity_delta: adjustment,
+				quantity_delta: canonicalizeDecimalInput(adjustment, $numberLocale),
 				note: adjustmentNote || null
 			});
 			message = 'Stock adjustment recorded.';
@@ -300,7 +301,7 @@
 					{#if !editingItem}
 						<label class="space-y-2 text-sm text-slate-300">
 							<span>{$t("Starting quantity")}</span>
-							<input bind:value={quantity} required inputmode="decimal" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder="1.000" />
+							<input bind:value={quantity} required inputmode="decimal" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder={formatDecimalInput('1.000', $numberLocale)} />
 						</label>
 						<label class="space-y-2 text-sm text-slate-300">
 							<span>{$t("Unit")}</span>

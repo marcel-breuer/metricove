@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import { numberLocale, t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { getContext, onMount } from 'svelte';
@@ -7,6 +7,7 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
+	import { canonicalizeDecimalInput } from '#lib/number-format';
 	import { newTrackerField, type Tracker, type TrackerFieldDraft, type TrackerResponse } from '#lib/tracking';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -85,8 +86,8 @@
 			type: field.type,
 			unit: field.type === 'number' ? field.unit : null,
 			is_required: field.required,
-			minimum: field.type === 'number' && field.minimum !== '' ? field.minimum : null,
-			maximum: field.type === 'number' && field.maximum !== '' ? field.maximum : null
+			minimum: field.type === 'number' && field.minimum !== '' ? canonicalizeDecimalInput(field.minimum, $numberLocale) : null,
+			maximum: field.type === 'number' && field.maximum !== '' ? canonicalizeDecimalInput(field.maximum, $numberLocale) : null
 		}));
 	}
 
