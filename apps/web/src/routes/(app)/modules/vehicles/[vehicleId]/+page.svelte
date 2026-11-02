@@ -380,7 +380,9 @@
 					<span class="inline-flex items-center gap-2"><span class="size-3 rounded-sm bg-cyan-300" aria-hidden="true"></span>{$t("Recorded distance")}</span>
 					<span class="inline-flex items-center gap-2"><span class="w-6 border-t-2 border-dashed border-amber-300" aria-hidden="true"></span>{$t("Average monthly projection")}: {formatMeasurement(distanceTrend.average_monthly_distance, distanceTrend.unit, $numberLocale)} {distanceTrend.unit}</span>
 				</div>
-				<div class="mt-3 overflow-x-auto">
+				<p id="vehicle-distance-chart-scroll-hint" class="mt-2 text-xs leading-5 text-slate-400 sm:hidden">{$t("Swipe or scroll horizontally to view the full chart.")}</p>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+				<div class="mt-3 overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300" role="region" aria-label={$t("Monthly distance chart")} aria-describedby="vehicle-distance-chart-scroll-hint" tabindex="0">
 					<svg class="h-52 min-w-[38rem] w-full" viewBox="0 0 720 205" role="img" aria-labelledby="vehicle-distance-chart-title" aria-describedby="vehicle-distance-chart-description vehicle-distance-chart-data">
 						<title id="vehicle-distance-chart-title">{$t("Monthly distance chart")}</title>
 						<desc id="vehicle-distance-chart-description">{$t("Monthly distance chart description", { unit: distanceTrend.unit })}</desc>
