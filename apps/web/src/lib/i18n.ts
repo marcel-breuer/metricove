@@ -19,7 +19,7 @@ const german: Record<string, string> = {
 	'Current password': 'Aktuelles Passwort', 'New password': 'Neues Passwort', 'Confirm new password': 'Neues Passwort bestätigen',
 	'Language': 'Sprache', 'English': 'Englisch', 'German': 'Deutsch', 'Number and date format': 'Zahlen- und Datumsformat',
 	'Currency': 'Währung', 'Currency display': 'Währungsdarstellung', 'Currency code (EUR)': 'Währungscode (EUR)',
-	'Currency symbol (€)': 'Währungssymbol (€)', 'English (United States)': 'Englisch (USA)',
+	'Currency symbol (€)': 'Währungssymbol (€)', 'English (United States)': 'Englisch (USA)', 'Open dashboard': 'Dashboard öffnen',
 	'English (United Kingdom)': 'Englisch (Vereinigtes Königreich)', 'German (Germany)': 'Deutsch (Deutschland)',
 	'Your profile has been updated.': 'Dein Profil wurde aktualisiert.', 'Profile could not be saved.': 'Profil konnte nicht gespeichert werden.',
 	'Profile is unavailable.': 'Profil ist nicht verfügbar.', 'Reload this page and try again.': 'Lade die Seite neu und versuche es erneut.',

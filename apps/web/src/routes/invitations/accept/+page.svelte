@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -59,6 +60,7 @@
 				confirmation = '';
 				invitationToken = '';
 				message = result.message ?? 'Your account is ready. You are signed in.';
+				void goto('/');
 			}
 		} catch {
 			error = 'The invitation could not be claimed. Check your connection and try again.';
@@ -110,7 +112,7 @@
 			</form>
 
 			{#if message}
-				<a href="/profile" class="mt-5 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">{$t("Continue to your profile")}</a>
+				<a href="/" class="mt-5 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">{$t("Open dashboard")}</a>
 			{:else}
 				<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">{$t("Return to sign in")}</a>
 			{/if}

@@ -18,7 +18,7 @@
 			.then(async (response) => {
 				if (!response.ok) return;
 				const result = (await response.json()) as ApiResponse;
-				if (result.user) void goto('/profile');
+				if (result.user) void goto('/');
 			})
 			.catch(() => {});
 	});
@@ -56,7 +56,7 @@
 			}
 
 			password = '';
-			await goto('/profile');
+			void goto('/');
 		} catch {
 			error = 'Sign-in is unavailable. Check your connection and try again.';
 		} finally {
