@@ -18,6 +18,7 @@ describe('interface translations', () => {
 		expect(translate('Your stock')).toBe('Dein Vorrat');
 		expect(translate('The list everyone can trust')).toBe('Eine Liste, auf die sich alle verlassen können');
 		expect(translate('Manage modules.')).toBe('Module verwalten.');
+		expect(translate('Open dashboard')).toBe('Dashboard öffnen');
 		expect(translate('Network access')).toBe('Netzwerkzugriff');
 		expect(translate('Allowed IP addresses and networks')).toBe('Erlaubte IP-Adressen und Netzwerke');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');

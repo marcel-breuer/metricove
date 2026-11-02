@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import AuthShell from '#lib/ui/AuthShell.svelte';
@@ -91,6 +92,7 @@
 
 			createdName = result.user.name;
 			state = 'created';
+			void goto('/');
 		} catch {
 			formError = 'The server could not complete setup. Check your connection and try again.';
 		} finally {
@@ -136,8 +138,8 @@
 			<p class="setup-state-description">
 				{$t("Your administrator account is active. Choose the features your household wants to use; you can change them later.")}
 			</p>
-			<a href="/admin/modules" class="ui-button ui-button--primary ui-button--medium setup-action">
-				{$t("Choose household features")}
+			<a href="/" class="ui-button ui-button--primary ui-button--medium setup-action">
+				{$t("Open dashboard")}
 			</a>
 		</div>
 	{:else if state === 'complete'}
