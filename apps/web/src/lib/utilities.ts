@@ -25,6 +25,7 @@ export type UtilityReading = {
 	days_since_previous: number | null;
 	alert: boolean;
 	revision_count: number;
+	can_edit: boolean;
 	created_at: string;
 	updated_at: string;
 };

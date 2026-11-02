@@ -29,8 +29,11 @@
 	let recipes = $state<Recipe[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);
+	let copyingWeek = $state(false);
+	let copyPreviousWeekOpen = $state(false);
 	let error = $state('');
 	let message = $state('');
+	let messageParams = $state<Record<string, string | number>>({});
 	let editorOpen = $state(false);
 	let slotToRemove = $state<MealPlanSlot | null>(null);
 	let removeOpen = $state(false);
@@ -49,6 +52,7 @@
 
 	const days = $derived(Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)));
 	const recipeChoices = $derived(recipes);
+	const isCurrentWeek = $derived(weekStart === mondayOf(new Date()));
 
 	$effect(() => {
 		if (!shell.loading && canView) void loadWeek();
@@ -102,6 +106,31 @@
 			// Recipe details remain optional; the API will still hide inaccessible linked titles.
 			recipes = [];
 		}
+	}
+
+	async function copyPreviousWeek(): Promise<void> {
+		if (!canCreate || !isCurrentWeek || copyingWeek) return;
+		error = ''; message = ''; messageParams = {};
+		copyingWeek = true;
+		try {
+			const result = await api<{ copied_count: number; skipped_count: number }>('/api/meal-planning/copy-previous-week', 'POST', { week_start: weekStart });
+			copyPreviousWeekOpen = false;
+			if (result.copied_count === 0 && result.skipped_count === 0) {
+				message = 'There are no meals in the previous week to copy.';
+			} else if (result.copied_count === 0) {
+				message = 'All meals from the previous week already have a plan this week.';
+			} else if (result.skipped_count > 0) {
+				message = 'Copied {count} meals. Existing meals were left unchanged ({skipped}).';
+				messageParams = { count: result.copied_count, skipped: result.skipped_count };
+			} else {
+				message = 'Copied {count} meals from the previous week.';
+				messageParams = { count: result.copied_count };
+			}
+			await loadWeek();
+		} catch (cause) {
+			copyPreviousWeekOpen = false;
+			error = cause instanceof Error ? cause.message : 'The previous week could not be copied.';
+		} finally { copyingWeek = false; }
 	}
 
 	function openNewSlot(day: string, type: MealType): void {
@@ -252,10 +281,11 @@
 			<div class="min-w-44 text-center text-sm font-medium text-white" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
 			<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="min-h-11 rounded-xl border border-slate-700 px-3 text-sm text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-cyan-200"><span class="sm:hidden">{$t("Next")} </span>→</button>
 			<button type="button" onclick={() => (weekStart = mondayOf(new Date()))} class="min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("This week")}</button>
+			{#if canCreate && isCurrentWeek}<button type="button" onclick={() => (copyPreviousWeekOpen = true)} disabled={copyingWeek} class="min-h-11 rounded-xl border border-cyan-300/40 px-4 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/10 disabled:opacity-50">{$t("Copy previous week")}</button>{/if}
 		</div>
 	</header>
 
-	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
+	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message, messageParams)}</p>{/if}
 	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
 
 	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
@@ -364,7 +394,8 @@
 	{/if}
 
 	<footer class="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 text-xs leading-5 text-slate-500">
-		{$t("Meal plans do not change pantry stock or shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
+		{$t("Meal plans do not change shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
 	</footer>
 	{#if slotToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove planned meal?')} message={$t('Remove this meal from the plan?')} onConfirm={() => void removeSlot(slotToRemove!)} />{/if}
+	{#if copyPreviousWeekOpen}<ConfirmModal bind:open={copyPreviousWeekOpen} title={$t('Copy previous week?')} message={$t('Copy visible meals from last week into empty slots this week? Existing meals will stay unchanged. Copied meals will be saved to your private plan.')} confirmLabel={$t('Copy previous week')} busy={copyingWeek} onConfirm={() => void copyPreviousWeek()} />{/if}
 </div>

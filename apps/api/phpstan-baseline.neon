@@ -499,24 +499,6 @@ parameters:
 			path: app/Services/Mcp/UtilityReadingMcpService.php
 
 		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Services/MealPlanning/MealPlanningService.php
-
-		-
-			message: '#^Method App\\Services\\MealPlanning\\MealPlanningService\:\:findForMutation\(\) should return App\\Models\\MealPlanSlot but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/MealPlanning/MealPlanningService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\MealPlanSlot\)\: array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/MealPlanning/MealPlanningService.php
-
-		-
 			message: '#^Offset ''create''\|''edit''\|''manage''\|''view'' on array\{view\: bool, create\: bool, edit\: bool, manage\: bool\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -527,42 +509,6 @@ parameters:
 			identifier: instanceof.alwaysTrue
 			count: 1
 			path: app/Services/Modules/ModuleAccessService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:movements\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Pantry/PantryService.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Services/Pantry/PantryService.php
-
-		-
-			message: '#^Method App\\Services\\Pantry\\PantryService\:\:findForMutation\(\) should return App\\Models\\PantryItem but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/Pantry/PantryService.php
-
-		-
-			message: '#^Method App\\Services\\Pantry\\PantryService\:\:recordMovement\(\) should return App\\Models\\PantryStockMovement but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/Pantry/PantryService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\PantryItem\)\: array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Pantry/PantryService.php
-
-		-
-			message: '#^Property App\\Models\\PantryItem\:\:\$quantity \(float\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Services/Pantry/PantryService.php
 
 		-
 			message: '#^Method App\\Services\\Recipes\\RecipeService\:\:findForMutation\(\) should return App\\Models\\Recipe but returns Illuminate\\Database\\Eloquent\\Model\.$#'
@@ -865,12 +811,6 @@ parameters:
 			path: app/Services/Utilities/UtilityService.php
 
 		-
-			message: '#^Anonymous function should return App\\Models\\UtilityReading but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/Utilities/UtilityService.php
-
-		-
 			message: '#^Cannot call method format\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 7
@@ -896,18 +836,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\UtilityMeter\)\: array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Utilities/UtilityService.php
-
-		-
-			message: '#^Parameter \#1 \$reading of method App\\Services\\Utilities\\UtilityService\:\:presentReading\(\) expects App\\Models\\UtilityReading, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Utilities/UtilityService.php
-
-		-
-			message: '#^Parameter \#3 \$previous of method App\\Services\\Utilities\\UtilityService\:\:presentReading\(\) expects App\\Models\\UtilityReading\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Utilities/UtilityService.php
@@ -1034,12 +962,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\Vehicle\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Vehicles/VehicleService.php
-
-		-
-			message: '#^Parameter \#2 \$vehicle of method App\\Services\\Vehicles\\VehicleService\:\:presentOdometer\(\) expects App\\Models\\Vehicle, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Vehicles/VehicleService.php

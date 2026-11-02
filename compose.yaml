@@ -24,8 +24,8 @@ x-laravel-environment: &laravel-environment
   FILESYSTEM_DISK: local
   MAIL_MAILER: ${MAIL_MAILER:-smtp}
   MAIL_SCHEME: ${MAIL_SCHEME:-}
-  MAIL_HOST: ${MAIL_HOST:-127.0.0.1}
-  MAIL_PORT: ${MAIL_PORT:-2525}
+  MAIL_HOST: ${MAIL_HOST:-mailpit}
+  MAIL_PORT: ${MAIL_PORT:-1025}
   MAIL_USERNAME: ${MAIL_USERNAME:-}
   MAIL_PASSWORD: ${MAIL_PASSWORD:-}
   MAIL_TIMEOUT: ${MAIL_TIMEOUT:-10}
@@ -269,6 +269,24 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    profiles:
+      - mailpit
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8026}:8025"
+    networks:
+      - backend
+      - ingress
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
 
 volumes:
   app_storage:

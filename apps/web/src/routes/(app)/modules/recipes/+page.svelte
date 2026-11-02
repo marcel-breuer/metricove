@@ -318,7 +318,7 @@
 			{:else if visibleRecipes.length === 0}
 				<div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center sm:p-12">
 					<p class="text-lg font-medium text-white">{$t(recipes.length === 0 ? 'Your recipe book is ready.' : 'No recipes match these filters.')}</p>
-					<p class="mt-2 text-sm leading-6 text-slate-400">{$t(recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning, pantry and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.')}</p>
+					<p class="mt-2 text-sm leading-6 text-slate-400">{$t(recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.')}</p>
 					{#if recipes.length === 0 && canAddRecipe}<button type="button" onclick={() => { resetForm(); formOpen = true; }} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create the first recipe")}</button>{/if}
 				</div>
 			{:else}

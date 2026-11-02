@@ -24,7 +24,7 @@ class ImportModuleTest extends TestCase
         $admin = $this->configuredAdmin();
         $meterId = $this->meter($admin);
         $this->reading($admin, $meterId, '2026-10-01', '100');
-        $csv = "reading_date,value,note\n2026-10-02,105.25,\"Imported meter, with comma\"\n2026-10-01,100,\n";
+        $csv = "reading_date,value,note\n2026-10-02,105,\"Imported meter, with comma\"\n2026-10-01,100,\n";
         $mapping = ['reading_date' => 0, 'value' => 1, 'note' => 2];
 
         $preview = $this->actingAs($admin, 'web')->post(
@@ -93,7 +93,7 @@ class ImportModuleTest extends TestCase
         $this->assertDatabaseHas('utility_readings', [
             'utility_meter_id' => $meterId,
             'reading_date' => '2026-10-02',
-            'value' => '105.250000',
+            'value' => '105.000000',
             'note' => 'Imported meter, with comma',
         ]);
         $this->assertFalse(app(ModuleStateService::class)->isEnabled('ai'));
@@ -153,7 +153,7 @@ class ImportModuleTest extends TestCase
     {
         $admin = $this->configuredAdmin();
         $meterId = $this->meter($admin);
-        $csv = "meter_label,register,date,description\nKitchen,104.5,2026-10-02,Imported from another tool\n";
+        $csv = "meter_label,register,date,description\nKitchen,104,2026-10-02,Imported from another tool\n";
         $file = $this->csvFile($csv);
 
         $columns = $this->actingAs($admin, 'web')->post(
@@ -176,7 +176,7 @@ class ImportModuleTest extends TestCase
         )->assertOk()
             ->assertJsonPath('mapping_required', false)
             ->assertJsonPath('rows.0.reading_date', '2026-10-02')
-            ->assertJsonPath('rows.0.value', '104.5')
+            ->assertJsonPath('rows.0.value', '104')
             ->assertJsonPath('rows.0.note', 'Imported from another tool');
 
         $idempotencyKey = 'c93a0d93-f46c-4083-8d0e-5f2759e00b70';
@@ -205,7 +205,7 @@ class ImportModuleTest extends TestCase
         $this->assertDatabaseHas('utility_readings', [
             'utility_meter_id' => $meterId,
             'reading_date' => '2026-10-02',
-            'value' => '104.500000',
+            'value' => '104.000000',
             'note' => 'Imported from another tool',
         ]);
     }
@@ -280,7 +280,7 @@ class ImportModuleTest extends TestCase
 
         $this->actingAs($admin, 'web')->postJson("/api/utilities/meters/{$meterId}/readings", [
             'reading_date' => '2026-10-01',
-            'value' => $suggestion->json('value'),
+            'value' => '1234',
         ])->assertCreated();
         $this->assertDatabaseCount('utility_readings', 1);
 

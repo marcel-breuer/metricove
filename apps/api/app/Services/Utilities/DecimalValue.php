@@ -17,6 +17,17 @@ final class DecimalValue
         return preg_match(self::PATTERN, $value) === 1 ? $value : null;
     }
 
+    public static function normalizeWhole(mixed $value): ?string
+    {
+        if (! is_string($value) && ! is_int($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return preg_match('/\A(?:0|[1-9]\d{0,13})\z/', $value) === 1 ? $value : null;
+    }
+
     public static function compare(string $left, string $right): int
     {
         $leftParts = self::parts($left);

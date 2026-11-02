@@ -21,7 +21,6 @@ use App\Http\Controllers\Api\McpController;
 use App\Http\Controllers\Api\MealPlanningController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\NoteController;
-use App\Http\Controllers\Api\PantryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReceiptController;
@@ -155,6 +154,10 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:utilities,edit')
                 ->whereNumber('reading')
                 ->name('readings.update');
+            Route::delete('/readings/{reading}', [UtilitiesController::class, 'destroyReading'])
+                ->middleware('module.access:utilities,edit')
+                ->whereNumber('reading')
+                ->name('readings.destroy');
             Route::get('/readings/{reading}/revisions', [UtilitiesController::class, 'revisions'])
                 ->middleware('module.access:utilities,view')
                 ->whereNumber('reading')
@@ -209,10 +212,20 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,edit')
                 ->whereNumber('reading')
                 ->name('odometer.update');
+            Route::delete('/odometer-readings/{reading}', [VehiclesController::class, 'destroyOdometerReading'])
+                ->middleware('module.access:vehicles,edit')
+                ->whereNumber('reading')
+                ->name('odometer.destroy');
             Route::get('/odometer-readings/{reading}/revisions', [VehiclesController::class, 'odometerRevisions'])
                 ->middleware('module.access:vehicles,view')
                 ->whereNumber('reading')
                 ->name('odometer.revisions');
+            Route::delete('/maintenance/{record}', [VehiclesController::class, 'destroyMaintenance'])
+                ->middleware('module.access:vehicles,edit')->whereNumber('record')->name('maintenance.destroy');
+            Route::delete('/insurance/{policy}', [VehiclesController::class, 'destroyInsurance'])
+                ->middleware('module.access:vehicles,edit')->whereNumber('policy')->name('insurance.destroy');
+            Route::delete('/costs/{cost}', [VehiclesController::class, 'destroyCost'])
+                ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.destroy');
         });
 
         Route::prefix('finance')->name('finance.')->group(function (): void {
@@ -347,25 +360,14 @@ Route::middleware('web')->group(function (): void {
         Route::prefix('meal-planning')->name('meal-planning.')->group(function (): void {
             Route::get('/', [MealPlanningController::class, 'week'])
                 ->middleware('module.access:meal_planning,view')->name('week');
+            Route::post('/copy-previous-week', [MealPlanningController::class, 'copyPreviousWeek'])
+                ->middleware('module.access:meal_planning,create')->name('week.copy-previous');
             Route::post('/slots', [MealPlanningController::class, 'store'])
                 ->middleware('module.enabled:meal_planning')->name('slots.store');
             Route::patch('/slots/{slot}', [MealPlanningController::class, 'update'])
                 ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.update');
             Route::delete('/slots/{slot}', [MealPlanningController::class, 'destroy'])
                 ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.destroy');
-        });
-
-        Route::prefix('pantry')->name('pantry.')->group(function (): void {
-            Route::get('/', [PantryController::class, 'index'])
-                ->middleware('module.access:pantry,view')->name('index');
-            Route::post('/', [PantryController::class, 'store'])
-                ->middleware('module.enabled:pantry')->name('store');
-            Route::get('/{item}/movements', [PantryController::class, 'movements'])
-                ->middleware('module.access:pantry,view')->whereNumber('item')->name('movements.index');
-            Route::patch('/{item}', [PantryController::class, 'update'])
-                ->middleware('module.enabled:pantry')->whereNumber('item')->name('update');
-            Route::post('/{item}/adjustments', [PantryController::class, 'adjust'])
-                ->middleware('module.enabled:pantry')->whereNumber('item')->name('adjustments.store');
         });
 
         Route::prefix('shopping')->name('shopping.')->group(function (): void {

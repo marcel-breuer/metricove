@@ -2,7 +2,6 @@
 
 namespace App\Services\Import;
 
-use App\Services\Utilities\DecimalValue;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
@@ -127,7 +126,7 @@ class UtilityReadingsCsvParser
                 $dateIsValid = $dateValue instanceof \DateTimeImmutable
                     && $dateValue->format('Y-m-d') === $date
                     && \DateTimeImmutable::getLastErrors() === false;
-                $value = DecimalValue::normalize($rawValue);
+                $value = preg_match('/\A(?:0|[1-9]\d{0,13})\z/', $rawValue) === 1 ? $rawValue : null;
                 $noteIsValid = preg_match('//u', $rawNote) === 1 && mb_strlen($rawNote) <= 2000;
 
                 if (! $dateIsValid) {
@@ -137,7 +136,7 @@ class UtilityReadingsCsvParser
                 }
 
                 if ($value === null) {
-                    $errors[] = ['row' => $line, 'message' => 'Use a non-negative decimal with up to 14 whole and 6 fractional digits.'];
+                    $errors[] = ['row' => $line, 'message' => 'Use a non-negative whole number with up to 14 digits.'];
 
                     continue;
                 }

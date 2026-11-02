@@ -15,7 +15,6 @@ describe('interface translations', () => {
 		expect(translate('Invite a member.')).toBe('Lade ein Mitglied ein.');
 		expect(translate('Analytics dashboard')).toBe('Analyseübersicht');
 		expect(translate('A clearer view of your money.')).toBe('Mehr Überblick über deine Finanzen.');
-		expect(translate('Your stock')).toBe('Dein Vorrat');
 		expect(translate('The list everyone can trust')).toBe('Eine Liste, auf die sich alle verlassen können');
 		expect(translate('Manage modules.')).toBe('Module verwalten.');
 		expect(translate('Open dashboard')).toBe('Dashboard öffnen');

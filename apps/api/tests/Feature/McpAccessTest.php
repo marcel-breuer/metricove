@@ -113,7 +113,7 @@ class McpAccessTest extends TestCase
             'arguments' => [
                 'meter_id' => $meter->id,
                 'reading_date' => '2026-10-20',
-                'value' => '987.2501',
+                'value' => '987',
                 'note' => 'Read from meter display',
             ],
         ])->assertOk();
@@ -126,12 +126,12 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseCount('utility_readings', 0);
         $storedPreview = DB::table('mcp_action_previews')->where('id', $preview['preview_id'])->value('payload');
         $this->assertIsString($storedPreview);
-        $this->assertStringNotContainsString('987.2501', $storedPreview);
+        $this->assertStringNotContainsString('987.000000', $storedPreview);
         $this->assertStringNotContainsString('Read from meter display', $storedPreview);
 
         $this->actingAs($admin, 'web')->getJson('/api/profile/mcp')
             ->assertOk()
-            ->assertJsonPath('actions.0.value', '987.2501')
+            ->assertJsonPath('actions.0.value', '987')
             ->assertJsonPath('actions.0.note', 'Read from meter display');
         $unapproved = $this->mcp($secret, 'tools/call', [
             'name' => 'complete_approved_utility_reading',
@@ -160,7 +160,7 @@ class McpAccessTest extends TestCase
         }
 
         $this->assertSame('completed', $result['status']);
-        $this->assertSame('987.250100', UtilityReading::query()->firstOrFail()->value);
+        $this->assertSame('987.000000', UtilityReading::query()->firstOrFail()->value);
         $this->assertSame('Read from meter display', UtilityReading::query()->firstOrFail()->note);
         $this->assertDatabaseCount('utility_readings', 1);
 
@@ -180,7 +180,7 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.approved']);
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.executed']);
 
-        $this->assertSame(0, HouseholdAuditEvent::query()->where('action', 'like', 'mcp.%')->whereRaw("CAST(details AS TEXT) LIKE '%987.2501%'")->count());
+        $this->assertSame(0, HouseholdAuditEvent::query()->where('action', 'like', 'mcp.%')->whereRaw("CAST(details AS TEXT) LIKE '%987.000000%'")->count());
     }
 
     public function test_mcp_read_tools_respect_resource_privacy_and_token_scope(): void

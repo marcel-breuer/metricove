@@ -30,7 +30,6 @@ class ShoppingModuleTest extends TestCase
         $states = app(ModuleStateService::class);
         $this->assertFalse($states->isEnabled('recipes'));
         $this->assertFalse($states->isEnabled('meal_planning'));
-        $this->assertFalse($states->isEnabled('pantry'));
 
         $list = $this->actingAs($owner, 'web')->postJson('/api/shopping/lists', ['name' => 'Weekend shop'])
             ->assertCreated()->assertJsonPath('list.visibility', 'private')->assertJsonPath('list.can_add_items', true);

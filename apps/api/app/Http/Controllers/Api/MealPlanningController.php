@@ -19,6 +19,13 @@ class MealPlanningController extends Controller
         return response()->json($plans->week($this->actor($request), $validated['week_start']));
     }
 
+    public function copyPreviousWeek(Request $request, MealPlanningService $plans): JsonResponse
+    {
+        $validated = $request->validate(['week_start' => ['required', 'date_format:Y-m-d']]);
+
+        return response()->json($plans->copyPreviousWeek($this->actor($request), $validated['week_start']));
+    }
+
     public function store(StoreMealPlanSlotRequest $request, MealPlanningService $plans): JsonResponse
     {
         return response()->json([

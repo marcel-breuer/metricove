@@ -10,14 +10,14 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 5. **Admin-controlled modules.** Core cannot be disabled. Optional modules are enabled household-wide and individually granted to members. Backend, frontend, jobs, REST and AI/MCP must enforce the same policy. Disabled modules preserve existing data.
 6. **Private data stays private**, including against admins, unless explicit resource-level permission allows access. No sensitive values in logs, docs, tests or AI-provider prompts by default.
 7. **AI is strictly permission-bound.** Only typed, registered server-side actions; no model-provided raw SQL or arbitrary command execution. User approval and audit required for writes.
-8. **Food functionality is modular**: Recipes, MealPlanning, Pantry and Shopping are independently enabled. Shopping works alone; meal plans can use free-text dishes without Recipes.
+8. **Food functionality is modular**: Recipes, MealPlanning and Shopping are independently enabled. Shopping works alone; meal plans can use free-text dishes without Recipes.
 9. **No private deployments in git.** Never commit actual internal hostnames, credentials, server paths or unrelated repository references. Use placeholders and runtime environment variables.
 
 ## Architecture
 - Modular Laravel/PHP backend, REST API, Laravel Policies, PostgreSQL, Redis queues, versioned migrations.
 - SvelteKit + TypeScript + Tailwind responsive web frontend; accessible and mobile-first.
 - Self-hostable with Docker Compose; current topology: Laravel API, Bun web, Nginx gateway, worker/scheduler, PostgreSQL, Redis. Only the gateway publishes a host port.
-- Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, MealPlanning, Pantry, Shopping, Analytics and Import; Health considered later. The permission-aware AI assistant is a Core app feature, not a separately enabled module.
+- Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, MealPlanning, Shopping, Analytics and Import; Health considered later. The permission-aware AI assistant is a Core app feature, not a separately enabled module.
 - See [architecture](docs/architecture/overview.md) and [module contracts](docs/modules/README.md). The API, web scaffold and Compose runtime are implemented; household setup and product modules are still being delivered incrementally. Do not claim unimplemented product behavior exists.
 
 ## Contribution workflow

@@ -66,6 +66,13 @@ class UtilitiesController extends Controller
         ]);
     }
 
+    public function destroyReading(Request $request, int $reading, UtilityService $utilities): JsonResponse
+    {
+        $utilities->deleteReading($this->actor($request), $reading);
+
+        return response()->json(['message' => 'Reading deleted.']);
+    }
+
     public function revisions(Request $request, int $reading, UtilityService $utilities): JsonResponse
     {
         return response()->json(['revisions' => $utilities->revisions($this->actor($request), $reading)]);

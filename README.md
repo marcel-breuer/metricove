@@ -4,7 +4,7 @@
 
 > **Status:** Laravel API, SvelteKit web app, Docker Compose runtime and first-run household setup are implemented. Sign-in, invitations and product modules are still in progress.
 
-Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, pantry inventory, shopping lists and assigned household tasks. Household administrators enable modules and manage who may use them.
+Metricove is designed for a **single household per installation**. Members can track utility meters, vehicles, expenses, custom measurements, recipes, meals, shopping lists and assigned household tasks. Household administrators enable modules and manage who may use them.
 
 ## Product principles
 
@@ -27,7 +27,6 @@ Metricove is designed for a **single household per installation**. Members can t
 | Finance | Spending, income, budgets and recurring expenses; banking integrations later |
 | Recipes | Recipes, ingredients, servings, instructions, categories and favorites |
 | Meal Planning | Weekly breakfast/lunch/dinner plans using recipes or free-text meals |
-| Pantry | Grocery inventory, quantities, storage locations and best-before dates |
 | Shopping | Shared shopping lists, manual items and optional ingredient suggestions |
 | Tasks | Private and shared household tasks, assignments, due dates, recurring chores and completion history |
 | Analytics | Charts and comparisons for enabled and authorized modules |
@@ -42,7 +41,7 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Backend:** Laravel / PHP, API-first modular monolith
 - **Frontend:** SvelteKit, TypeScript and Tailwind CSS; accessible, responsive UI
 - **Storage:** PostgreSQL, persistent media files; Redis for queues/cache as needed
-- **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, queue worker and scheduler. Only the gateway publishes a host port.
+- **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, Mailpit, queue worker and scheduler. The gateway publishes the app port; Mailpit's UI is bound to localhost for local email inspection.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
 See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Release versions and image operations are documented in [the release guide](docs/releases.md).
@@ -57,7 +56,7 @@ Install Docker Engine and the Docker Compose v2 plugin for your operating system
 
 On first start, the script creates a private `.env` with fresh application and database secrets, validates the Compose configuration, builds the application images, starts all services, and waits for their health checks. It never replaces an existing `.env` or removes Docker volumes. Open the web app at the URL printed by the script; the first-run administrator form is available at `/setup`. The API health endpoint is `/api/health` and the web health endpoint is `/health`.
 
-Run `./start.sh` again after restarting the machine or pulling code updates. It rebuilds the local images and starts or updates the services. The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Only the gateway publishes a host port.
+Run `./start.sh` again after restarting the machine or pulling code updates. It rebuilds the local images and starts or updates the services. The generated `.env` is excluded from Git. Set `APP_URL` to the public URL and set `SESSION_SECURE_COOKIE=true` when TLS is terminated by a reverse proxy. Mailpit is an optional Compose profile; enable it with `COMPOSE_PROFILES=mailpit` in `.env`. With that profile enabled, application email is captured by Mailpit; open `http://localhost:8026` to inspect password reset and invitation emails. The UI is bound to `127.0.0.1` and is not exposed to the LAN. Set `MAIL_HOST`, `MAIL_PORT`, and related SMTP variables in `.env` for real delivery.
 
 Administrators can optionally restrict platform API access to specific IP addresses or CIDR networks under **General settings → Network access**. Leave the list empty to allow all addresses. If the installation is behind a reverse proxy, configure its exact IP address or CIDR in `TRUSTED_PROXIES`; see [network access restrictions](docs/operations/network-access.md).
 

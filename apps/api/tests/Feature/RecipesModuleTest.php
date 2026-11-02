@@ -188,7 +188,6 @@ class RecipesModuleTest extends TestCase
         $this->actingAs($admin, 'web')->putJson("/api/recipes/{$recipeId}/favorite")->assertOk();
 
         $this->assertFalse(app(ModuleStateService::class)->isEnabled('meal_planning'));
-        $this->assertFalse(app(ModuleStateService::class)->isEnabled('pantry'));
         $this->assertFalse(app(ModuleStateService::class)->isEnabled('shopping'));
         app(ModuleManagementService::class)->setEnabled($admin, 'recipes', false);
         $this->actingAs($admin, 'web')->getJson('/api/recipes')->assertNotFound();
