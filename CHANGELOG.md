@@ -2,6 +2,14 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.17.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.16.1...metricove-v0.17.0) (2026-11-02)
+
+
+### Features
+
+* improve household workflows and remove Pantry ([97ba39e](https://github.com/marcel-breuer/metricove/commit/97ba39e5b51ca2ee9528fdc895f891f1777fea32))
+* **workflows:** improve household workflows and remove pantry ([04423b4](https://github.com/marcel-breuer/metricove/commit/04423b4f8a097a3291450161e85a5656199c6e0b))
+
 ## [0.16.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.16.0...metricove-v0.16.1) (2026-11-02)
 
 
