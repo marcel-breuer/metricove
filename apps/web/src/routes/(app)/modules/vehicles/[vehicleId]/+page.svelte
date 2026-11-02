@@ -9,7 +9,7 @@
 	import Modal from '#lib/ui/Modal.svelte';
 	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement, formatCurrency } from '#lib/number-format';
 	import { defaultCurrency, formatDate, formatDateTime, numberLocale } from '#lib/i18n';
-	import { vehicleCostCategories, vehiclePeriods, type Vehicle, type VehicleCost, type VehicleInsurancePolicy, type VehicleMaintenanceRecord, type VehicleOdometerReading, type VehicleOdometerRevision, type VehicleResponse } from '#lib/vehicles';
+	import { vehicleCostCategories, vehicleDistanceChartPoints, vehiclePeriods, type Vehicle, type VehicleCost, type VehicleDistanceTrend, type VehicleInsurancePolicy, type VehicleMaintenanceRecord, type VehicleOdometerReading, type VehicleOdometerRevision, type VehicleResponse } from '#lib/vehicles';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const vehicleId = $derived(Number(page.params.vehicleId));
@@ -20,6 +20,7 @@
 	const canManage = $derived(access?.capabilities.manage ?? false);
 
 	let vehicle = $state<Vehicle | null>(null);
+	let distanceTrend = $state<VehicleDistanceTrend | null>(null);
 	let odometerReadings = $state<VehicleOdometerReading[]>([]);
 	let hasMoreOdometerReadings = $state(false);
 	let loadingMoreOdometerReadings = $state(false);
@@ -78,8 +79,12 @@
 	let costPeriod = $state<'once' | 'monthly' | 'quarterly' | 'yearly'>('once');
 	let costDescription = $state('');
 
-	const chartData = $derived(odometerReadings.filter((reading) => reading.distance_since_previous !== null).slice(-12));
-	const chartMaximum = $derived(Math.max(1, ...chartData.map((reading) => Number(reading.distance_since_previous ?? 0))));
+	const chartPoints = $derived(distanceTrend ? vehicleDistanceChartPoints(distanceTrend, $numberLocale) : []);
+	const chartMaximum = $derived(Math.max(1, ...chartPoints.map((point) => Number(point.distance))));
+	const projectionLinePoints = $derived(chartPoints.slice(Math.max(0, (distanceTrend?.months.length ?? 0) - 1)).map((point, offset) => {
+		const index = Math.max(0, (distanceTrend?.months.length ?? 0) - 1) + offset;
+		return `${chartX(index)},${chartY(point.distance)}`;
+	}).join(' '));
 	const latestReading = $derived(odometerReadings.at(-1) ?? null);
 	let activeInsuranceCount = $state(0);
 
@@ -92,10 +97,18 @@
 		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 	}
 
+	function chartX(index: number): number {
+		return 46 + index * (628 / 14);
+	}
+
+	function chartY(distance: string): number {
+		return 154 - Number(distance) / chartMaximum * 112;
+	}
+
 	async function loadVehicle(): Promise<void> {
 		loading = true; error = '';
 		if (!canView || !Number.isInteger(vehicleId) || vehicleId < 1) {
-			vehicle = null; odometerReadings = []; hasMoreOdometerReadings = false; maintenanceRecords = []; insurancePolicies = []; costs = []; moreHistory = { maintenance: false, insurance: false, costs: false }; activeInsuranceCount = 0; loading = false; return;
+			vehicle = null; distanceTrend = null; odometerReadings = []; hasMoreOdometerReadings = false; maintenanceRecords = []; insurancePolicies = []; costs = []; moreHistory = { maintenance: false, insurance: false, costs: false }; activeInsuranceCount = 0; loading = false; return;
 		}
 		try {
 			const response = await fetch(`/api/vehicles/${vehicleId}`, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -103,6 +116,7 @@
 			const result = (await response.json()) as VehicleResponse;
 			if (!response.ok || !result.vehicle) throw new Error(result.message ?? 'This vehicle is unavailable or you do not have access.');
 			vehicle = result.vehicle;
+			distanceTrend = result.distance_trend ?? null;
 			activeInsuranceCount = result.active_insurance_count ?? 0;
 			odometerReadings = result.odometer_readings ?? [];
 			hasMoreOdometerReadings = result.has_more_odometer_readings ?? false;
@@ -358,11 +372,35 @@
 		{/if}
 
 		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-7" aria-labelledby="odometer-trend-heading">
-			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">{$t("Mileage trend")}</p><h2 id="odometer-trend-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Distance between readings")}</h2></div><p class="text-xs text-slate-500">{$t("Latest")} {chartData.length} {$t("intervals ·")} {vehicle.odometer_unit}</p></div>
-			{#if chartData.length === 0}
-				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-5 text-sm text-slate-400">{$t("Add a second dated odometer reading to see the distance trend.")}</p>
-			{:else}
-				<div class="mt-5 overflow-x-auto"><svg class="h-48 min-w-[34rem] w-full" viewBox="0 0 720 190" role="img" aria-label={$t("Bar chart of odometer distance between readings")}><line x1="30" y1="155" x2="700" y2="155" stroke="#334155" stroke-width="1" />{#each chartData as reading, index (reading.id)}{@const barWidth = Math.min(36, 560 / chartData.length)}{@const x = 48 + index * (620 / chartData.length)}{@const height = Math.max(3, Number(reading.distance_since_previous ?? 0) / chartMaximum * 118)}<rect x={x} y={155 - height} width={barWidth} height={height} rx="5" fill="#67e8f9" opacity="0.9"><title>{formatDate(reading.reading_date)}: {formatMeasurement(reading.distance_since_previous, vehicle.odometer_unit)} {vehicle.odometer_unit}</title></rect><text x={x + barWidth / 2} y="174" text-anchor="middle" fill="#94a3b8" font-size="10">{formatDate(reading.reading_date, { month: '2-digit', day: '2-digit' })}</text>{/each}</svg></div>
+			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-cyan-200">{$t("Mileage trend")}</p><h2 id="odometer-trend-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t("Monthly distance")}</h2></div><p class="text-xs text-slate-500">{$t("Last 12 months · next 3 months projected")}</p></div>
+			{#if !distanceTrend?.has_data}
+				<p class="mt-5 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Add two visible odometer readings from the last 12 months to see monthly distance and an average projection for the next three months.")}</p>
+			{:else if distanceTrend}
+				<div role="group" class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-300" aria-label={$t("Distance chart legend")}>
+					<span class="inline-flex items-center gap-2"><span class="size-3 rounded-sm bg-cyan-300" aria-hidden="true"></span>{$t("Recorded distance")}</span>
+					<span class="inline-flex items-center gap-2"><span class="w-6 border-t-2 border-dashed border-amber-300" aria-hidden="true"></span>{$t("Average monthly projection")}: {formatMeasurement(distanceTrend.average_monthly_distance, distanceTrend.unit, $numberLocale)} {distanceTrend.unit}</span>
+				</div>
+				<div class="mt-3 overflow-x-auto">
+					<svg class="h-52 min-w-[38rem] w-full" viewBox="0 0 720 205" role="img" aria-labelledby="vehicle-distance-chart-title" aria-describedby="vehicle-distance-chart-description vehicle-distance-chart-data">
+						<title id="vehicle-distance-chart-title">{$t("Monthly distance chart")}</title>
+						<desc id="vehicle-distance-chart-description">{$t("Monthly distance chart description", { unit: distanceTrend.unit })}</desc>
+						<line x1="28" y1="154" x2="700" y2="154" stroke="#334155" stroke-width="1" />
+						<polyline points={projectionLinePoints} fill="none" stroke="#fcd34d" stroke-width="2.5" stroke-dasharray="7 5" />
+						{#each chartPoints as point, index (point.period)}
+							{@const x = chartX(index)}
+							{@const height = Number(point.distance) === 0 ? 0 : Math.max(2, Number(point.distance) / chartMaximum * 112)}
+							{#if point.kind === 'actual'}
+								<rect x={x - 11} y={154 - height} width="22" height={height} rx="4" fill="#67e8f9" opacity="0.9"><title>{point.accessibleLabel}: {formatMeasurement(point.distance, distanceTrend.unit, $numberLocale)} {distanceTrend.unit} — {$t("Recorded distance")}</title></rect>
+							{:else}
+								<circle cx={x} cy={chartY(point.distance)} r="4.5" fill="#0f172a" stroke="#fcd34d" stroke-width="2.5"><title>{point.accessibleLabel}: {formatMeasurement(point.distance, distanceTrend.unit, $numberLocale)} {distanceTrend.unit} — {$t("Projected distance")}</title></circle>
+							{/if}
+							<text x={x} y="176" text-anchor="middle" fill={point.kind === 'projection' ? '#fcd34d' : '#94a3b8'} font-size="10">{point.label}</text>
+						{/each}
+					</svg>
+					<ul id="vehicle-distance-chart-data" class="sr-only" aria-label={$t("Distance chart data")}>
+						{#each chartPoints as point (point.period)}<li>{point.accessibleLabel}: {$t(point.kind === 'actual' ? 'Recorded distance' : 'Projected distance')}, {formatMeasurement(point.distance, distanceTrend.unit, $numberLocale)} {distanceTrend.unit}</li>{/each}
+					</ul>
+				</div>
 			{/if}
 		</section>
 
