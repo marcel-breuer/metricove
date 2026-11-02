@@ -2,6 +2,21 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.15.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.14.0...metricove-v0.15.0) (2026-11-02)
+
+
+### Features
+
+* **settings:** add icons to preference selectors ([e1b0eb0](https://github.com/marcel-breuer/metricove/commit/e1b0eb05e07d74ffcfc495e13941bd4221c529b8))
+* **settings:** add icons to preference selectors ([e1b0eb0](https://github.com/marcel-breuer/metricove/commit/e1b0eb05e07d74ffcfc495e13941bd4221c529b8))
+* **settings:** add icons to preference selectors ([ccc74d3](https://github.com/marcel-breuer/metricove/commit/ccc74d354c8d905179709f4a8e1ab84fbd09af57))
+
+
+### Bug Fixes
+
+* **auth:** redirect sign-in and registration to dashboard ([45bcb35](https://github.com/marcel-breuer/metricove/commit/45bcb35ba281f6fec34e2ca7ecc2bac8d83e5397)), closes [#175](https://github.com/marcel-breuer/metricove/issues/175)
+* **auth:** redirect sign-in and registration to dashboard ([a02ff10](https://github.com/marcel-breuer/metricove/commit/a02ff10bba8168aeaa1a2050bf8ae430e40cf17d))
+
 ## [0.14.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.13.0...metricove-v0.14.0) (2026-10-30)
 
 
