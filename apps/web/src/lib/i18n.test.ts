@@ -21,6 +21,10 @@ describe('interface translations', () => {
 		expect(translate('Open dashboard')).toBe('Dashboard öffnen');
 		expect(translate('Network access')).toBe('Netzwerkzugriff');
 		expect(translate('Allowed IP addresses and networks')).toBe('Erlaubte IP-Adressen und Netzwerke');
+		expect(translate('Monthly distance')).toBe('Monatliche Fahrstrecke');
+		expect(translate('Average monthly projection')).toBe('Durchschnittliche Monatsprognose');
+		expect(translate('Monthly distance chart description', { unit: 'km' })).toBe('Monatliche Fahrstrecke in km für die letzten 12 Monate, gefolgt von einer Durchschnittsprognose für die nächsten 3 Monate.');
+		expect(translate('Add two visible odometer readings from the last 12 months to see monthly distance and an average projection for the next three months.')).toBe('Erfasse zwei sichtbare Kilometerstände aus den letzten 12 Monaten, um die monatliche Fahrstrecke und eine Durchschnittsprognose für die nächsten drei Monate zu sehen.');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');
 		expect(translate('{capability} permission for {module}', { capability: translate('View'), module: translate('Finance') })).toBe('Berechtigung „Ansehen“ für Finanzen');
 	});

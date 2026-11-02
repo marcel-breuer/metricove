@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Enums\ModuleCapability;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
+use App\Models\ResourceUserPermission;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleCost;
 use App\Models\VehicleMaintenanceRecord;
 use App\Models\VehicleOdometerReading;
 use App\Services\Modules\ModuleAccessService;
@@ -97,6 +99,68 @@ class VehiclesModuleTest extends TestCase
         $this->assertSame('2026-01-26', $olderPage->json('odometer_readings.0.reading_date'));
         $this->assertSame('2026-01-30', $olderPage->json('odometer_readings.4.reading_date'));
         $this->assertSame('100.000', $olderPage->json('odometer_readings.0.distance_since_previous'));
+    }
+
+    public function test_vehicle_detail_returns_a_visible_rolling_year_of_monthly_distance_and_average_projection(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-02 10:00:00'));
+        $admin = $this->admin();
+        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $this->grant($admin, ['view' => true, 'create' => true, 'manage' => true]);
+        $this->grant($viewer, ['view' => true]);
+        $vehicleId = $this->createVehicle($admin, 'household');
+        $vehicle = Vehicle::query()->findOrFail($vehicleId);
+
+        $this->trendReading($vehicle, null, false, '1000.000', '2025-11-15');
+        $this->trendReading($vehicle, null, false, '1100.000', '2025-12-10');
+        $hiddenReading = $this->trendReading($vehicle, $owner, true, '18888.888', '2026-01-10');
+        $this->trendReading($vehicle, null, false, '19000.000', '2026-02-10');
+        $grantedReading = $this->trendReading($vehicle, $owner, true, '19050.000', '2026-03-10');
+        ResourceUserPermission::query()->create([
+            'resource_type' => $grantedReading->getMorphClass(),
+            'resource_id' => $grantedReading->id,
+            'user_id' => $viewer->id,
+            'capability' => 'view',
+        ]);
+        $this->trendReading($vehicle, null, false, '19100.000', '2026-04-10');
+        $this->trendReading($vehicle, null, false, '19700.000', '2026-09-10');
+        VehicleCost::query()->create([
+            'vehicle_id' => $vehicleId,
+            'owner_user_id' => $owner->id,
+            'created_by_user_id' => $owner->id,
+            'is_private' => true,
+            'category' => 'fuel',
+            'amount' => '9876.54',
+            'currency' => 'EUR',
+            'period_start' => '2026-09-10',
+            'period' => 'once',
+        ]);
+
+        $response = $this->actingAs($viewer, 'web')->getJson("/api/vehicles/{$vehicleId}")->assertOk();
+        $trend = $response->json('distance_trend');
+        $this->assertSame('km', $trend['unit']);
+        $this->assertCount(12, $trend['months']);
+        $this->assertSame('2025-12', $trend['months'][0]['period']);
+        $this->assertSame('2026-11', $trend['months'][11]['period']);
+        $this->assertSame('100.000', $trend['months'][0]['distance']);
+        $this->assertSame('0.000', $trend['months'][1]['distance']);
+        $this->assertSame('0.000', $trend['months'][2]['distance']);
+        $this->assertSame('50.000', $trend['months'][3]['distance']);
+        $this->assertSame('50.000', $trend['months'][4]['distance']);
+        $this->assertSame('600.000', $trend['months'][9]['distance']);
+        $this->assertSame('66.667', $trend['average_monthly_distance']);
+        $this->assertSame([
+            ['period' => '2026-12', 'distance' => '66.667'],
+            ['period' => '2027-01', 'distance' => '66.667'],
+            ['period' => '2027-02', 'distance' => '66.667'],
+        ], $trend['projection']);
+        $this->assertTrue($trend['has_data']);
+        $this->assertStringNotContainsString('18888.888', json_encode($response->json(), JSON_THROW_ON_ERROR));
+        $this->assertStringNotContainsString('9876.54', json_encode($response->json(), JSON_THROW_ON_ERROR));
+        $this->assertContains($grantedReading->id, array_column($response->json('odometer_readings'), 'id'));
+        $this->assertNotContains($hiddenReading->id, array_column($response->json('odometer_readings'), 'id'));
     }
 
     public function test_vehicle_record_histories_load_the_newest_five_then_older_records(): void
@@ -310,6 +374,18 @@ class VehiclesModuleTest extends TestCase
         return $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/odometer-readings", [
             'reading_date' => $date, 'value' => $value,
         ])->assertCreated();
+    }
+
+    private function trendReading(Vehicle $vehicle, ?User $owner, bool $private, string $value, string $date): VehicleOdometerReading
+    {
+        return VehicleOdometerReading::query()->create([
+            'vehicle_id' => $vehicle->id,
+            'owner_user_id' => $private ? $owner?->id : null,
+            'created_by_user_id' => $owner?->id ?? $vehicle->created_by_user_id,
+            'is_private' => $private,
+            'reading_date' => $date,
+            'value' => $value,
+        ]);
     }
 
     private function admin(): User

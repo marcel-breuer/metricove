@@ -10,6 +10,8 @@ use App\Models\VehicleInsurancePolicy;
 use App\Models\VehicleMaintenanceRecord;
 use App\Models\VehicleOdometerReading;
 use App\Services\Modules\ModuleAccessService;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -81,7 +83,7 @@ class VehicleService
         return $this->presentVehicle($vehicle);
     }
 
-    /** @return array{vehicle: array<string, mixed>, odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool, maintenance_records: list<array<string, mixed>>, has_more_maintenance_records: bool, insurance_policies: list<array<string, mixed>>, has_more_insurance_policies: bool, costs: list<array<string, mixed>>, has_more_costs: bool} */
+    /** @return array{vehicle: array<string, mixed>, distance_trend: array{unit: string, months: list<array{period: string, distance: string}>, average_monthly_distance: string, projection: list<array{period: string, distance: string}>, has_data: bool}, odometer_readings: list<array<string, mixed>>, has_more_odometer_readings: bool, maintenance_records: list<array<string, mixed>>, has_more_maintenance_records: bool, insurance_policies: list<array<string, mixed>>, has_more_insurance_policies: bool, costs: list<array<string, mixed>>, has_more_costs: bool} */
     public function show(User $actor, int $vehicleId): array
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::View);
@@ -89,6 +91,7 @@ class VehicleService
 
         return [
             'vehicle' => $this->presentVehicle($vehicle),
+            'distance_trend' => $this->monthlyDistanceTrend($actor, $vehicle),
             ...$odometerHistory,
             'active_insurance_count' => $this->visibleResources(
                 $actor,
@@ -102,6 +105,81 @@ class VehicleService
             ...$this->recordHistoryPage($actor, $vehicle, 'maintenance'),
             ...$this->recordHistoryPage($actor, $vehicle, 'insurance'),
             ...$this->recordHistoryPage($actor, $vehicle, 'costs'),
+        ];
+    }
+
+    /** @return array{unit: string, months: list<array{period: string, distance: string}>, average_monthly_distance: string, projection: list<array{period: string, distance: string}>, has_data: bool} */
+    private function monthlyDistanceTrend(User $actor, Vehicle $vehicle): array
+    {
+        $today = CarbonImmutable::today();
+        $firstMonth = $today->startOfMonth()->subMonths(11);
+        $start = $firstMonth->format('Y-m-d');
+        $end = $today->format('Y-m-d');
+        $zero = BigDecimal::zero()->toScale(3)->__toString();
+        $monthlyTotals = [];
+
+        for ($month = $firstMonth; $month <= $today->startOfMonth(); $month = $month->addMonth()) {
+            $monthlyTotals[$month->format('Y-m')] = $zero;
+        }
+
+        $morphType = (new VehicleOdometerReading)->getMorphClass();
+        $rows = DB::table('vehicle_odometer_readings')
+            ->where('vehicle_id', $vehicle->id)
+            ->where(function (QueryBuilder $query) use ($start, $end): void {
+                $query->whereBetween('reading_date', [$start, $end])
+                    ->orWhereRaw('vehicle_odometer_readings.reading_date = (SELECT MAX(prior.reading_date) FROM vehicle_odometer_readings AS prior WHERE prior.vehicle_id = vehicle_odometer_readings.vehicle_id AND prior.reading_date < ?)', [$start]);
+            })
+            ->select(['id', 'reading_date'])
+            ->selectRaw('CASE WHEN vehicle_odometer_readings.is_private = ? OR vehicle_odometer_readings.owner_user_id = ? OR EXISTS (SELECT 1 FROM resource_user_permissions WHERE resource_user_permissions.resource_type = ? AND resource_user_permissions.resource_id = vehicle_odometer_readings.id AND resource_user_permissions.user_id = ? AND resource_user_permissions.capability = ?) THEN vehicle_odometer_readings.value ELSE NULL END AS visible_value', [false, $actor->id, $morphType, $actor->id, ModuleCapability::View->value])
+            ->orderBy('reading_date')
+            ->orderBy('id')
+            ->get();
+        $previous = null;
+        $hasData = false;
+
+        foreach ($rows as $row) {
+            if ($row->visible_value === null) {
+                $previous = null;
+
+                continue;
+            }
+
+            $value = (string) $row->visible_value;
+            $readingDate = CarbonImmutable::parse($row->reading_date)->format('Y-m-d');
+
+            if ($previous !== null && $readingDate >= $start && $readingDate <= $end) {
+                $monthKey = CarbonImmutable::parse($readingDate)->format('Y-m');
+                $distance = BigDecimal::of($value)->minus($previous)->toScale(3);
+                $monthlyTotals[$monthKey] = BigDecimal::of($monthlyTotals[$monthKey])->plus($distance)->toScale(3)->__toString();
+                $hasData = true;
+            }
+
+            $previous = $value;
+        }
+
+        $months = [];
+        $total = BigDecimal::zero()->toScale(3);
+        foreach ($monthlyTotals as $period => $distance) {
+            $months[] = ['period' => $period, 'distance' => $distance];
+            $total = $total->plus($distance);
+        }
+
+        $average = $total->dividedBy(12, 3, RoundingMode::HalfUp)->__toString();
+        $projection = [];
+        $nextMonth = $today->startOfMonth()->addMonth();
+        for ($offset = 0; $offset < 3; $offset++) {
+            $projection[] = [
+                'period' => $nextMonth->addMonths($offset)->format('Y-m'),
+                'distance' => $average,
+            ];
+        }
+
+        return [
+            'unit' => $vehicle->odometer_unit,
+            'months' => $months,
+            'average_monthly_distance' => $average,
+            'projection' => $projection,
+            'has_data' => $hasData,
         ];
     }
 

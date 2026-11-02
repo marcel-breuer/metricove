@@ -28,6 +28,47 @@ export type VehicleOdometerReading = {
 	updated_at: string;
 };
 
+export type VehicleDistanceMonth = {
+	period: string;
+	distance: string;
+};
+
+export type VehicleDistanceTrend = {
+	unit: 'km' | 'mi';
+	months: VehicleDistanceMonth[];
+	average_monthly_distance: string;
+	projection: VehicleDistanceMonth[];
+	has_data: boolean;
+};
+
+export type VehicleDistanceChartPoint = VehicleDistanceMonth & {
+	kind: 'actual' | 'projection';
+	label: string;
+	accessibleLabel: string;
+};
+
+export function vehicleDistanceChartPoints(trend: VehicleDistanceTrend, locale: string): VehicleDistanceChartPoint[] {
+	const formatMonth = (period: string, options: Intl.DateTimeFormatOptions): string => {
+		const [year, month] = period.split('-').map(Number);
+		return new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 1)));
+	};
+
+	return [
+		...trend.months.map((month) => ({
+			...month,
+			kind: 'actual' as const,
+			label: formatMonth(month.period, { month: 'short' }),
+			accessibleLabel: formatMonth(month.period, { month: 'long', year: 'numeric' })
+		})),
+		...trend.projection.map((month) => ({
+			...month,
+			kind: 'projection' as const,
+			label: formatMonth(month.period, { month: 'short' }),
+			accessibleLabel: formatMonth(month.period, { month: 'long', year: 'numeric' })
+		}))
+	];
+}
+
 export type VehicleOdometerRevision = {
 	id: number;
 	old_reading_date: string;
@@ -78,6 +119,7 @@ export type VehicleCost = {
 export type VehicleResponse = {
 	message?: string;
 	vehicle?: Vehicle;
+	distance_trend?: VehicleDistanceTrend;
 	active_insurance_count?: number;
 	vehicles?: Vehicle[];
 	reading?: VehicleOdometerReading;
