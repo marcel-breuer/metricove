@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import { t } from '#lib/i18n';
+	import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const analyticsAvailable = $derived(shell.modules.some((module) => module.key === 'analytics' && module.capabilities.view));
@@ -54,7 +55,7 @@
 				{#each shell.modules as module (module.key)}
 					<li>
 						<a href={`/modules/${module.key}`} class="group flex min-h-20 items-center gap-4 px-4 py-4 transition hover:bg-slate-900 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-cyan-300 sm:px-6">
-							<span class="grid size-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-lg text-cyan-200" aria-hidden="true">◇</span>
+							<span class="grid size-11 shrink-0 place-items-center rounded-xl border border-slate-700 bg-slate-950 text-cyan-200"><ModuleIcon name={module.key} class="size-5" /></span>
 							<span class="min-w-0 flex-1"><span class="block font-semibold text-slate-100">{$t(module.label)}</span><span class="mt-1 block text-sm leading-5 text-slate-400">{$t(module.description)}</span></span>
 							<span class="shrink-0 text-xs font-medium text-slate-500">{$t(module.capabilities.view ? 'View access' : module.capabilities.create ? 'Create access' : module.capabilities.edit ? 'Edit access' : 'Manage access')}</span>
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-cyan-200"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>

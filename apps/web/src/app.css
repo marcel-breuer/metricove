@@ -2,23 +2,24 @@
 
 :root {
 	color-scheme: light;
-	--surface-page: #f8fafc;
+	--surface-page: #f6f7f5;
 	--surface-raised: #ffffff;
-	--surface-subtle: #f1f5f9;
-	--border-default: #cbd5e1;
-	--border-strong: #94a3b8;
-	--text-primary: #0f172a;
-	--text-secondary: #334155;
-	--text-muted: #475569;
-	--text-subtle: #64748b;
-	--accent: #a5f3fc;
-	--accent-text: #0e7490;
-	--accent-ink: #082f49;
+	--surface-subtle: #f1f3f0;
+	--border-default: #dfe4df;
+	--border-strong: #b9c4bd;
+	--text-primary: #1c2925;
+	--text-secondary: #3f514a;
+	--text-muted: #63736c;
+	--text-subtle: #788780;
+	--accent: #147d6f;
+	--accent-text: #0f6b5f;
+	--accent-ink: #ffffff;
 	--positive-text: #047857;
 	--warning-text: #a16207;
 	--danger-text: #be123c;
 	--control-background: #ffffff;
-	--control-border: #94a3b8;
+	--control-border: #b9c4bd;
+	--overlay: rgb(28 41 37 / 68%);
 	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	background: var(--surface-page);
 	color: var(--text-primary);
@@ -34,23 +35,24 @@ html {
 
 html[data-theme="dark"] {
 	color-scheme: dark;
-	--surface-page: #020617;
-	--surface-raised: #0f172a;
-	--surface-subtle: #1e293b;
-	--border-default: #1e293b;
-	--border-strong: #334155;
-	--text-primary: #f1f5f9;
-	--text-secondary: #cbd5e1;
-	--text-muted: #94a3b8;
-	--text-subtle: #64748b;
-	--accent: #67e8f9;
-	--accent-text: #a5f3fc;
-	--accent-ink: #020617;
+	--surface-page: #17211e;
+	--surface-raised: #202d28;
+	--surface-subtle: #293832;
+	--border-default: #394b43;
+	--border-strong: #50645a;
+	--text-primary: #edf3ef;
+	--text-secondary: #c5d2ca;
+	--text-muted: #9cafa4;
+	--text-subtle: #83958c;
+	--accent: #62c7b4;
+	--accent-text: #7edbc9;
+	--accent-ink: #10231f;
 	--positive-text: #a7f3d0;
 	--warning-text: #fde68a;
 	--danger-text: #ffe4e6;
-	--control-background: #020617;
-	--control-border: #334155;
+	--control-background: #17211e;
+	--control-border: #50645a;
+	--overlay: rgb(0 0 0 / 68%);
 }
 
 body {
@@ -75,10 +77,9 @@ a {
 .nav-section-label {
 	padding-inline: 0.75rem;
 	color: var(--text-muted);
-	font-size: 0.6875rem;
-	font-weight: 700;
-	letter-spacing: 0.13em;
-	text-transform: uppercase;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
 }
 
 .nav-item {
@@ -87,7 +88,7 @@ a {
 	min-height: 2.75rem;
 	align-items: center;
 	gap: 0.75rem;
-	border-radius: 0.75rem;
+	border-radius: 0.625rem;
 	padding: 0.625rem 0.75rem;
 	color: var(--text-secondary);
 	font-size: 0.875rem;
@@ -101,8 +102,8 @@ a {
 }
 
 .nav-item-active {
-	background: linear-gradient(90deg, color-mix(in srgb, var(--accent-text) 14%, transparent), var(--surface-subtle));
-	color: var(--text-primary);
+	background: color-mix(in srgb, var(--accent-text) 10%, var(--surface-subtle));
+	color: var(--accent-text);
 }
 
 .nav-item-active::before {
@@ -111,7 +112,7 @@ a {
 	width: 3px;
 	height: 1.6rem;
 	border-radius: 0 999px 999px 0;
-	background: var(--accent-text);
+	background: var(--accent);
 	content: "";
 }
 
@@ -122,7 +123,7 @@ a {
 	justify-content: center;
 	gap: 0.5rem;
 	border: 1px solid transparent;
-	border-radius: 0.75rem;
+	border-radius: 0.625rem;
 	padding: 0.625rem 1rem;
 	font: inherit;
 	font-size: 0.875rem;
@@ -183,9 +184,9 @@ a {
 
 .ui-panel {
 	border: 1px solid var(--border-default);
-	border-radius: 1rem;
+	border-radius: 0.875rem;
 	background: var(--surface-raised);
-	box-shadow: 0 16px 36px rgb(15 23 42 / 7%);
+	box-shadow: 0 1px 2px rgb(28 41 37 / 4%);
 }
 
 .ui-panel--none { padding: 0; }
@@ -203,19 +204,18 @@ a {
 .ui-page-heading h1 {
 	margin: 0.5rem 0 0;
 	color: var(--text-primary);
-	font-size: clamp(1.875rem, 4vw, 3rem);
+	font-size: clamp(1.75rem, 3vw, 2.25rem);
 	font-weight: 650;
-	letter-spacing: -0.035em;
-	line-height: 1.1;
+	letter-spacing: -0.03em;
+	line-height: 1.16;
 }
 
 .ui-eyebrow {
 	margin: 0;
 	color: var(--accent-text);
 	font-size: 0.8125rem;
-	font-weight: 650;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-weight: 600;
+	letter-spacing: 0.01em;
 }
 
 .ui-page-heading-description {
@@ -257,37 +257,54 @@ a {
 .ui-notice--warning { border-color: color-mix(in srgb, var(--warning-text) 30%, transparent); background: color-mix(in srgb, var(--warning-text) 10%, transparent); color: var(--warning-text); }
 .ui-notice--error { border-color: color-mix(in srgb, var(--danger-text) 30%, transparent); background: color-mix(in srgb, var(--danger-text) 9%, transparent); color: var(--danger-text); }
 
-/* Legacy utility-color bridge keeps the existing pages readable in Light mode while they migrate to shared UI components. */
-html[data-theme="light"] [class*="bg-slate-950"] { background-color: var(--surface-page) !important; }
-html[data-theme="light"] [class*="bg-slate-900"] { background-color: var(--surface-raised) !important; }
-html[data-theme="light"] [class*="bg-slate-800"] { background-color: var(--surface-subtle) !important; }
-html[data-theme="light"] [class*="bg-slate-700"] { background-color: #e2e8f0 !important; }
-html[data-theme="light"] [class*="text-white"],
-html[data-theme="light"] [class*="text-slate-50"],
-html[data-theme="light"] [class*="text-slate-100"] { color: var(--text-primary) !important; }
-html[data-theme="light"] [class*="text-slate-200"],
-html[data-theme="light"] [class*="text-slate-300"] { color: var(--text-secondary) !important; }
-html[data-theme="light"] [class*="text-slate-400"] { color: var(--text-muted) !important; }
-html[data-theme="light"] [class*="text-slate-500"] { color: var(--text-subtle) !important; }
-html[data-theme="light"] [class*="border-slate-950"],
-html[data-theme="light"] [class*="border-slate-900"],
-html[data-theme="light"] [class*="border-slate-800"] { border-color: var(--border-default) !important; }
-html[data-theme="light"] [class*="border-slate-700"] { border-color: var(--border-strong) !important; }
-html[data-theme="light"] [class*="divide-slate-800"] { border-color: var(--border-default) !important; }
-html[data-theme="light"] [class*="text-cyan-100"],
-html[data-theme="light"] [class*="text-cyan-200"],
-html[data-theme="light"] [class*="text-cyan-300"] { color: var(--accent-text) !important; }
-html[data-theme="light"] [class*="accent-cyan-300"] { accent-color: var(--accent-text); }
-html[data-theme="light"] [class*="text-emerald-100"],
-html[data-theme="light"] [class*="text-emerald-200"],
-html[data-theme="light"] [class*="text-emerald-300"] { color: var(--positive-text) !important; }
-html[data-theme="light"] [class*="text-amber-100"],
-html[data-theme="light"] [class*="text-amber-200"],
-html[data-theme="light"] [class*="text-amber-300"] { color: var(--warning-text) !important; }
-html[data-theme="light"] [class*="text-rose-100"],
-html[data-theme="light"] [class*="text-rose-200"],
-html[data-theme="light"] [class*="text-rose-300"] { color: var(--danger-text) !important; }
-html[data-theme="light"] [class*="placeholder:text-slate-500"]::placeholder { color: var(--text-subtle) !important; }
+/* Shared tokens keep older route utilities aligned with the app palette. */
+html [class~="bg-slate-950"] { background-color: var(--surface-page) !important; }
+html [class~="bg-slate-900"] { background-color: var(--surface-raised) !important; }
+html [class~="bg-slate-800"] { background-color: var(--surface-subtle) !important; }
+html [class~="bg-slate-700"] { background-color: var(--border-default) !important; }
+html [class~="bg-slate-950/95"] { background-color: color-mix(in srgb, var(--surface-page) 95%, transparent) !important; }
+html [class~="bg-slate-950/75"] { background-color: var(--overlay) !important; }
+html [class*="text-white"], html [class*="text-slate-50"], html [class*="text-slate-100"] { color: var(--text-primary) !important; }
+html [class*="text-slate-200"], html [class*="text-slate-300"] { color: var(--text-secondary) !important; }
+html [class*="text-slate-400"] { color: var(--text-muted) !important; }
+html [class*="text-slate-500"] { color: var(--text-subtle) !important; }
+html [class*="border-slate-950"], html [class*="border-slate-900"], html [class*="border-slate-800"] { border-color: var(--border-default) !important; }
+html [class*="border-slate-700"] { border-color: var(--border-strong) !important; }
+html [class*="divide-slate-800"] { border-color: var(--border-default) !important; }
+html [class*="divide-slate-800"] > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-default) !important; }
+html [class*="text-cyan-100"], html [class*="text-cyan-200"], html [class*="text-cyan-300"] { color: var(--accent-text) !important; }
+html [class*="accent-cyan-300"] { accent-color: var(--accent); }
+html [class~="bg-cyan-300"] { background-color: var(--accent) !important; }
+html [class~="bg-cyan-200"] { background-color: color-mix(in srgb, var(--accent) 88%, white) !important; }
+html [class~="bg-slate-900/30"], html [class~="bg-slate-900/40"], html [class~="bg-slate-900/50"],
+html [class~="bg-slate-900/55"], html [class~="bg-slate-900/60"], html [class~="bg-slate-900/65"],
+html [class~="bg-slate-900/70"], html [class~="bg-slate-900/75"], html [class~="bg-slate-900/80"] {
+	background-color: color-mix(in srgb, var(--surface-raised) 88%, var(--surface-page)) !important;
+}
+html [class~="bg-slate-950/40"], html [class~="bg-slate-950/45"], html [class~="bg-slate-950/50"],
+html [class~="bg-slate-950/60"], html [class~="bg-slate-950/70"], html [class~="bg-slate-950/80"] {
+	background-color: var(--surface-page) !important;
+}
+html [class*="text-slate-950"] { color: var(--accent-ink) !important; }
+html [class*="border-cyan-300"] { border-color: var(--accent-text) !important; }
+html [class*="outline-cyan-300"] { outline-color: var(--accent-text) !important; }
+html [class*="text-emerald-100"], html [class*="text-emerald-200"], html [class*="text-emerald-300"] { color: var(--positive-text) !important; }
+html [class*="text-amber-100"], html [class*="text-amber-200"], html [class*="text-amber-300"] { color: var(--warning-text) !important; }
+html [class*="text-rose-100"], html [class*="text-rose-200"], html [class*="text-rose-300"] { color: var(--danger-text) !important; }
+html [class*="placeholder:text-slate-500"]::placeholder { color: var(--text-subtle) !important; }
+
+main h1:not(.ui-page-heading h1) { color: var(--text-primary); font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 650; letter-spacing: -0.03em; line-height: 1.16; }
+main h2 { color: var(--text-primary); font-weight: 600; letter-spacing: -0.015em; }
+main :is(input, select, textarea):not(.ui-control) { border-radius: 0.625rem; }
+main :is(button, a):focus-visible { outline-color: var(--accent-text); }
+main [class~="shadow-lg"], main [class~="shadow-xl"], main [class~="shadow-2xl"] { box-shadow: 0 1px 2px rgb(28 41 37 / 6%) !important; }
+
+@media (max-width: 640px) {
+	.ui-panel--medium { padding: 1rem; }
+	.ui-panel--large { padding: 1.25rem; }
+	.ui-page-heading { align-items: flex-start; }
+	.ui-page-heading-actions { width: 100%; flex-wrap: wrap; }
+}
 
 .mobile-drawer {
 	animation: drawer-in 160ms ease-out;
