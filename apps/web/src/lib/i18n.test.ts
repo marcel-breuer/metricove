@@ -23,6 +23,8 @@ describe('interface translations', () => {
 		expect(translate('Allowed IP addresses and networks')).toBe('Erlaubte IP-Adressen und Netzwerke');
 		expect(translate('Monthly distance')).toBe('Monatliche Fahrstrecke');
 		expect(translate('Average monthly projection')).toBe('Durchschnittliche Monatsprognose');
+		expect(translate('Swipe or scroll horizontally to view the full chart.')).toBe('Wische oder scrolle horizontal, um das vollständige Diagramm zu sehen.');
+		expect(translate('Swipe or scroll horizontally to view all columns.')).toBe('Wische oder scrolle horizontal, um alle Spalten zu sehen.');
 		expect(translate('Monthly distance chart description', { unit: 'km' })).toBe('Monatliche Fahrstrecke in km für die letzten 12 Monate, gefolgt von einer Durchschnittsprognose für die nächsten 3 Monate.');
 		expect(translate('Add two visible odometer readings from the last 12 months to see monthly distance and an average projection for the next three months.')).toBe('Erfasse zwei sichtbare Kilometerstände aus den letzten 12 Monaten, um die monatliche Fahrstrecke und eine Durchschnittsprognose für die nächsten drei Monate zu sehen.');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');

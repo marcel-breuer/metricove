@@ -545,9 +545,11 @@
 				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-slate-400">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
 			{:else}
 				<div class="mt-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
-					<div class="overflow-x-auto">
+					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-slate-400 sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
+					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
 						<table class="min-w-full border-collapse text-left text-sm">
-							<thead class="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-400"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col"><span class="sr-only">{$t("Actions")}</span></th></tr></thead>
+							<thead class="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-400"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
 							<tbody class="divide-y divide-slate-800">
 								{#each entries as entry (entry.id)}
 									<tr class="align-top">
