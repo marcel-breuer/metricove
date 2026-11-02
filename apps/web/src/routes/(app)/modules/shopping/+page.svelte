@@ -6,7 +6,8 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement } from '#lib/number-format';
+	import { numberLocale } from '#lib/i18n';
 	import type {
 		MealSuggestionPreview,
 		MealSuggestionsResponse,
@@ -177,7 +178,7 @@
 		try {
 			await api<ShoppingListsResponse>('/api/shopping/lists/' + activeListId + '/items', 'POST', {
 				name: quickName,
-				quantity: quickQuantity.trim() || null,
+				quantity: quickQuantity.trim() ? canonicalizeDecimalInput(quickQuantity, $numberLocale) : null,
 				unit: quickUnit.trim() || null
 			});
 			quickName = '';
@@ -270,7 +271,7 @@
 		editItemModalOpen = true;
 		editingItemId = item.id;
 		editName = item.name;
-		editQuantity = item.quantity ?? '';
+		editQuantity = formatDecimalInput(item.quantity, $numberLocale);
 		editUnit = item.unit ?? '';
 		error = '';
 	}
@@ -284,7 +285,7 @@
 			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id, 'PATCH', {
 				expected_version: item.version,
 				name: editName,
-				quantity: editQuantity.trim() || null,
+				quantity: editQuantity.trim() ? canonicalizeDecimalInput(editQuantity, $numberLocale) : null,
 				unit: editUnit.trim() || null
 			});
 			editingItemId = null;

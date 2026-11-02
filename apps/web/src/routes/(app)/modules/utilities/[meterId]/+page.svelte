@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { t } from '#lib/i18n';
-	import { formatDate, formatDateTime } from '#lib/i18n';
+	import { formatDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement } from '#lib/number-format';
 	import type { UtilityMeter, UtilityReading, UtilityReadingRevision, UtilitiesResponse } from '#lib/utilities';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -77,7 +77,7 @@
 			meterModalOpen = false;
 			readings = result.readings ?? [];
 			meterName = meter.name;
-			alertThreshold = meter.alert_threshold ?? '';
+			alertThreshold = meter.alert_threshold === null ? '' : formatDecimalInput(meter.alert_threshold, $numberLocale);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The meter could not be loaded. Check your connection and try again.';
 		} finally {
@@ -93,7 +93,7 @@
 		if (!token) { error = 'Reload this page and try again.'; return; }
 		const form = new FormData();
 		form.set('reading_date', readingDate);
-		form.set('value', readingValue);
+		form.set('value', canonicalizeDecimalInput(readingValue, $numberLocale));
 		form.set('note', readingNote);
 		if (readingPhoto) form.set('photo', readingPhoto);
 		saving = true;
@@ -133,7 +133,7 @@
 			const result = (await response.json()) as { value?: string | null; message?: string };
 			if (!response.ok) throw new Error(result.message || 'A local reading suggestion is unavailable.');
 			if (result.value) {
-				readingValue = result.value;
+				readingValue = formatDecimalInput(result.value, $numberLocale);
 				ocrSuggestedValue = result.value;
 				ocrMessage = 'Suggested {value} {unit}. Check the meter photo and save the reading yourself.';
 			} else {
@@ -157,7 +157,7 @@
 			const response = await fetch(`/api/utilities/meters/${meter.id}`, {
 				method: 'PATCH', credentials: 'same-origin',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify({ name: meterName, alert_threshold: alertThreshold || null })
+				body: JSON.stringify({ name: meterName, alert_threshold: alertThreshold ? canonicalizeDecimalInput(alertThreshold, $numberLocale) : null })
 			});
 			const result = (await response.json()) as UtilitiesResponse & ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }
@@ -173,7 +173,7 @@
 		correctionModalOpen = true;
 		editingReadingId = reading.id;
 		correctionDate = reading.reading_date;
-		correctionValue = reading.value;
+		correctionValue = formatDecimalInput(reading.value, $numberLocale);
 		correctionNote = reading.note ?? '';
 		correctionReason = '';
 		message = '';
@@ -190,7 +190,7 @@
 			const response = await fetch(`/api/utilities/readings/${editingReadingId}`, {
 				method: 'PATCH', credentials: 'same-origin',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify({ reading_date: correctionDate, value: correctionValue, note: correctionNote, reason: correctionReason || null })
+				body: JSON.stringify({ reading_date: correctionDate, value: canonicalizeDecimalInput(correctionValue, $numberLocale), note: correctionNote, reason: correctionReason || null })
 			});
 			const result = (await response.json()) as UtilitiesResponse & ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }
@@ -273,7 +273,7 @@
 					<Modal bind:open={readingModalOpen} title={$t('Record the register.')}>
 					<form class="mt-5 space-y-4" onsubmit={saveReading}>
 						<label class="block text-sm font-medium text-slate-200">{$t("Reading date")}<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-						<label class="block text-sm font-medium text-slate-200">{$t("Cumulative value")} <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={readingValue} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="1234.567" /></label>
+						<label class="block text-sm font-medium text-slate-200">{$t("Cumulative value")} <span class="font-normal text-slate-500">({meter.unit})</span><input bind:value={readingValue} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={formatDecimalInput('1234.567', $numberLocale)} /></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><textarea bind:value={readingNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Meter display or context")}></textarea></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Meter photo")} <span class="font-normal text-slate-500">{$t("(optional, max 5 MB)")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; ocrMessage = ''; }} class="mt-2 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if canSuggest}
@@ -315,7 +315,7 @@
 								</Modal>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
-							<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{revision.old_reading_date}: {formatMeasurement(revision.old_value, reading.unit)} → {revision.new_reading_date}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-slate-400">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
+							<ol class="mt-3 space-y-2 rounded-xl bg-slate-950/60 p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-slate-700 pl-3 text-sm"><p class="font-medium text-slate-200">{formatDate(revision.old_reading_date)}: {formatMeasurement(revision.old_value, reading.unit)} → {formatDate(revision.new_reading_date)}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-slate-400">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-slate-500">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
 							{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-slate-500">{$t("Loading correction history…")}</p>{/if}
 						</li>
 					{/each}

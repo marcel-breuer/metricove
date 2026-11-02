@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { formatCurrency, formatMeasurement, formatNumber } from './number-format';
+import { canonicalizeDecimalInput, formatCurrency, formatDecimalInput, formatMeasurement, formatNumber, parseLocalizedDecimal } from './number-format';
 
 describe('formatNumber', () => {
 	it('groups large integers and removes insignificant fractional zeroes', () => {
@@ -53,5 +53,42 @@ describe('formatMeasurement', () => {
 
 	it('preserves non-numeric recipe quantities', () => {
 		expect(formatMeasurement('1 1/2', 'cups', 'en-US')).toBe('1 1/2');
+	});
+});
+
+describe('parseLocalizedDecimal', () => {
+	it('converts German decimal commas without rounding or losing precision', () => {
+		expect(parseLocalizedDecimal('1.234,567800', 'de-DE')).toBe('1234.567800');
+		expect(parseLocalizedDecimal('-0,000001', 'de-DE')).toBe('-0.000001');
+		expect(canonicalizeDecimalInput('1.234,567800', 'de-DE')).toBe('1234.567800');
+	});
+
+	it('keeps English decimal points and valid grouping canonical', () => {
+		expect(parseLocalizedDecimal('1,234.567800', 'en-US')).toBe('1234.567800');
+		expect(parseLocalizedDecimal('0.000001', 'en-GB')).toBe('0.000001');
+	});
+
+	it('accepts a canonical decimal point in comma locales and rejects malformed values', () => {
+		expect(parseLocalizedDecimal('1234.56', 'de-DE')).toBe('1234.56');
+		expect(parseLocalizedDecimal('1234.567', 'de-DE')).toBe('1234.567');
+		expect(parseLocalizedDecimal('1.234.567', 'de-DE')).toBe('1234567');
+		expect(parseLocalizedDecimal('1,2.3', 'de-DE')).toBeNull();
+		expect(parseLocalizedDecimal('', 'de-DE')).toBeNull();
+	});
+
+	it('leaves invalid text unchanged when normalizing for submission', () => {
+		expect(canonicalizeDecimalInput('12,5', 'de-DE')).toBe('12.5');
+		expect(canonicalizeDecimalInput('12,5', 'en-US')).toBe('12,5');
+	});
+});
+
+describe('formatDecimalInput', () => {
+	it('localizes canonical values without grouping and round-trips their precision', () => {
+		const localized = formatDecimalInput('1.234', 'de-DE');
+		expect(localized).toBe('1,234');
+		expect(parseLocalizedDecimal(localized, 'de-DE')).toBe('1.234');
+		expect(canonicalizeDecimalInput(localized, 'de-DE')).toBe('1.234');
+		expect(formatDecimalInput('1234.567800', 'de-DE')).toBe('1234,567800');
+		expect(formatDecimalInput('1234.567800', 'en-US')).toBe('1234.567800');
 	});
 });

@@ -6,8 +6,8 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
-	import { formatNumber, formatCurrency } from '#lib/number-format';
-	import { defaultCurrency, formatDate } from '#lib/i18n';
+	import { canonicalizeDecimalInput, formatDecimalInput, formatNumber, formatCurrency } from '#lib/number-format';
+	import { defaultCurrency, formatDate, numberLocale } from '#lib/i18n';
 	import {
 		financeFrequencies,
 		type FinanceBudget,
@@ -235,7 +235,7 @@
 		event.preventDefault();
 		clearFormMessages();
 		saving = true;
-		const payload: Record<string, unknown> = { description: transactionDescription, payee: transactionPayee || null, amount: transactionAmount, currency: transactionCurrency, occurred_on: transactionDate };
+		const payload: Record<string, unknown> = { description: transactionDescription, payee: transactionPayee || null, amount: canonicalizeDecimalInput(transactionAmount, $numberLocale), currency: transactionCurrency, occurred_on: transactionDate };
 		if (transactionCategory !== '') payload.finance_category_id = Number(transactionCategory);
 		if (transactionId === null || transactionCategory !== '') payload.type = transactionType;
 		try {
@@ -257,7 +257,7 @@
 		transactionCategory = transaction.finance_category_id === null ? '' : String(transaction.finance_category_id);
 		transactionDescription = transaction.description;
 		transactionPayee = transaction.payee ?? '';
-		transactionAmount = transaction.amount;
+		transactionAmount = formatDecimalInput(transaction.amount, $numberLocale);
 		transactionCurrency = transaction.currency;
 		transactionDate = transaction.occurred_on;
 		transactionVisibility = transaction.visibility;
@@ -267,7 +267,7 @@
 		event.preventDefault();
 		clearFormMessages();
 		saving = true;
-		const payload: Record<string, unknown> = { amount: budgetAmount, currency: budgetCurrency, period_start: `${month}-01` };
+		const payload: Record<string, unknown> = { amount: canonicalizeDecimalInput(budgetAmount, $numberLocale), currency: budgetCurrency, period_start: `${month}-01` };
 		if (budgetCategory !== '') payload.finance_category_id = Number(budgetCategory);
 		try {
 			if (budgetId === null) payload.visibility = budgetVisibility;
@@ -285,7 +285,7 @@
 		clearFormMessages();
 		budgetId = budget.id;
 		budgetCategory = budget.finance_category_id === null ? '' : String(budget.finance_category_id);
-		budgetAmount = budget.amount;
+		budgetAmount = formatDecimalInput(budget.amount, $numberLocale);
 		budgetCurrency = budget.currency;
 		budgetVisibility = budget.visibility;
 	}
@@ -294,7 +294,7 @@
 		event.preventDefault();
 		clearFormMessages();
 		saving = true;
-		const payload: Record<string, unknown> = { description: recurringDescription, amount: recurringAmount, currency: recurringCurrency, frequency: recurringFrequency, starts_on: recurringStartsOn, next_due_on: recurringNextDueOn || null, ends_on: recurringEndsOn || null, is_active: recurringActive };
+		const payload: Record<string, unknown> = { description: recurringDescription, amount: canonicalizeDecimalInput(recurringAmount, $numberLocale), currency: recurringCurrency, frequency: recurringFrequency, starts_on: recurringStartsOn, next_due_on: recurringNextDueOn || null, ends_on: recurringEndsOn || null, is_active: recurringActive };
 		if (recurringCategory !== '') payload.finance_category_id = Number(recurringCategory);
 		if (recurringId === null || recurringCategory !== '') payload.type = recurringType;
 		try {
@@ -315,7 +315,7 @@
 		recurringType = entry.type;
 		recurringCategory = entry.finance_category_id === null ? '' : String(entry.finance_category_id);
 		recurringDescription = entry.description;
-		recurringAmount = entry.amount;
+		recurringAmount = formatDecimalInput(entry.amount, $numberLocale);
 		recurringCurrency = entry.currency;
 		recurringFrequency = entry.frequency;
 		recurringStartsOn = entry.starts_on;
@@ -405,7 +405,7 @@
 				<form class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" onsubmit={saveTransaction}>
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={transactionType} disabled={transactionId !== null && transactionCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={transactionCategory} required={transactionId === null || transactionCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each typeCategories as category (category.id)}<option value={String(category.id)}>{category.name}{$t(category.visibility === 'household' ? ' · household' : '')}</option>{/each}</select></label>
-					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={transactionAmount} type="text" inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" required maxlength="19" placeholder="42.50" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={transactionAmount} type="text" inputmode="decimal" required maxlength="19" placeholder={formatDecimalInput('42.50', $numberLocale)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={transactionCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={transactionDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Groceries")} /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Payee")}<input bind:value={transactionPayee} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
@@ -436,7 +436,7 @@
 					<Modal bind:open={budgetOpen} title={$t(budgetId ? 'Edit budget' : 'Set monthly budget')}>
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveBudget}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Expense category")}<select bind:value={budgetCategory} required={budgetId === null} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each expenseCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
-						<label class="block text-sm font-medium text-slate-200">{$t("Monthly limit")}<input bind:value={budgetAmount} required inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="500.00" /></label>
+						<label class="block text-sm font-medium text-slate-200">{$t("Monthly limit")}<input bind:value={budgetAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={formatDecimalInput('500.00', $numberLocale)} /></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={budgetCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if !budgetId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={budgetVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{budgetId ? $t('Save budget') : $t('Set {month} budget', { month })}</button>{#if budgetId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetBudget}>{$t("Cancel")}</button>{/if}</div>
@@ -472,7 +472,7 @@
 				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" onsubmit={saveRecurring}>
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={recurringType} disabled={recurringId !== null && recurringCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={recurringCategory} required={recurringId === null || recurringCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="">{$t("Choose a category")}</option>{#each recurringCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
-					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={recurringAmount} required inputmode="decimal" pattern="[0-9]+(\.[0-9][0-9]?)?" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="49.99" /></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={recurringAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('49.99', $numberLocale)} /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={recurringCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={recurringDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={$t("Internet plan")} /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Frequency")}<select bind:value={recurringFrequency} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each financeFrequencies as frequency}<option value={frequency.value}>{$t(frequency.label)}</option>{/each}</select></label>

@@ -5,8 +5,8 @@
 	import { get } from 'svelte/store';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
-	import { defaultCurrency, formatDate, t } from '#lib/i18n';
-	import { formatCurrency } from '#lib/number-format';
+	import { defaultCurrency, formatDate, numberLocale, t } from '#lib/i18n';
+	import { canonicalizeDecimalInput, formatCurrency, formatDecimalInput } from '#lib/number-format';
 	import { createReceiptPdf, receiptFileSizeLimit, receiptPageLimit } from '#lib/receipt-files';
 	import { vehicleCostCategories } from '#lib/vehicles';
 	import type { ReceiptDocument, ReceiptDuplicateMatch, ReceiptFieldStatus, ReceiptOptions, ReceiptPagination, ReceiptPreview, ReceiptResponse, ReceiptSuggestions } from '#lib/receipts';
@@ -169,8 +169,8 @@
 				if (receiptSearch.trim()) query.set('search', receiptSearch.trim());
 				if (dateFrom) query.set('date_from', dateFrom);
 				if (dateTo) query.set('date_to', dateTo);
-				if (minAmount) query.set('min_amount', minAmount);
-				if (maxAmount) query.set('max_amount', maxAmount);
+				if (minAmount) query.set('min_amount', canonicalizeDecimalInput(minAmount, $numberLocale));
+				if (maxAmount) query.set('max_amount', canonicalizeDecimalInput(maxAmount, $numberLocale));
 				if (currencyFilter) query.set('currency', currencyFilter);
 				if (targetFilter) query.set('target_type', targetFilter);
 				if (categoryFilter) query.set('category', categoryFilter);
@@ -447,12 +447,12 @@
 			merchant = result.suggestions?.merchant ?? '';
 			invoiceNumber = result.suggestions?.invoice_number ?? '';
 			invoiceDate = result.suggestions?.invoice_date ?? '';
-			amount = result.suggestions?.amount ?? '';
+			amount = formatDecimalInput(result.suggestions?.amount, $numberLocale);
 			currency = result.suggestions?.currency ?? result.default_currency ?? $defaultCurrency;
-			taxAmount = result.suggestions?.tax_amount ?? '';
-			fuelLiters = result.suggestions?.fuel_liters ?? '';
-			fuelUnitPrice = result.suggestions?.fuel_unit_price ?? '';
-			fuelOdometerValue = result.suggestions?.fuel_odometer_value ?? '';
+			taxAmount = formatDecimalInput(result.suggestions?.tax_amount, $numberLocale);
+			fuelLiters = formatDecimalInput(result.suggestions?.fuel_liters, $numberLocale);
+			fuelUnitPrice = formatDecimalInput(result.suggestions?.fuel_unit_price, $numberLocale);
+			fuelOdometerValue = formatDecimalInput(result.suggestions?.fuel_odometer_value, $numberLocale);
 			description = merchant ? get(t)('Invoice from') + ' ' + merchant : get(t)('Invoice expense');
 			idempotencyKey = makeIdempotencyKey();
 			if (expenseCategories.length > 0) financeCategoryId = String(expenseCategories[0].id);
@@ -489,13 +489,13 @@
 		form.set('merchant', merchant);
 		form.set('invoice_number', invoiceNumber);
 		form.set('invoice_date', invoiceDate);
-		form.set('amount', amount);
+		form.set('amount', canonicalizeDecimalInput(amount, $numberLocale));
 		form.set('currency', currency);
-		form.set('tax_amount', taxAmount);
+		form.set('tax_amount', taxAmount ? canonicalizeDecimalInput(taxAmount, $numberLocale) : '');
 		if (showFuelFields) {
-			form.set('fuel_liters', fuelLiters);
-			form.set('fuel_unit_price', fuelUnitPrice);
-			form.set('fuel_odometer_value', fuelOdometerValue);
+			form.set('fuel_liters', fuelLiters ? canonicalizeDecimalInput(fuelLiters, $numberLocale) : '');
+			form.set('fuel_unit_price', fuelUnitPrice ? canonicalizeDecimalInput(fuelUnitPrice, $numberLocale) : '');
+			form.set('fuel_odometer_value', fuelOdometerValue ? canonicalizeDecimalInput(fuelOdometerValue, $numberLocale) : '');
 		}
 		for (const field of reviewedFields) form.append('reviewed_fields[]', field);
 		if (duplicateMatches.length > 0) form.set('duplicate_acknowledged', duplicateAcknowledged ? '1' : '0');
@@ -680,7 +680,7 @@
 							{#if needsReview('invoice_date')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('invoice_date'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_date')} onchange={(event) => setFieldReview('invoice_date', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(invoiceDate))}</span></label></div>{/if}
 						</label>
 						<label class="block text-sm font-medium text-slate-200">{$t('Total amount')}
-							<input bind:value={amount} oninput={() => clearFieldReview('amount')} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="125.00" />
+							<input bind:value={amount} oninput={() => clearFieldReview('amount')} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('125.00', $numberLocale)} />
 							{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
 						</label>
 						<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
@@ -688,7 +688,7 @@
 							{#if needsReview('currency')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('currency'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('currency')} onchange={(event) => setFieldReview('currency', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(currency))}</span></label></div>{/if}
 						</label>
 						<label class="block text-sm font-medium text-slate-200">{$t('Tax amount')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-							<input bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="19.00" />
+							<input bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('19.00', $numberLocale)} />
 							{#if needsReview('tax_amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('tax_amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('tax_amount')} onchange={(event) => setFieldReview('tax_amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(taxAmount))}</span></label></div>{/if}
 						</label>
 					</div>
@@ -698,15 +698,15 @@
 							<p class="mb-3 text-xs leading-5 text-slate-400">{$t('Review liters and unit price before saving. Odometer is optional.')}</p>
 							<div class="grid gap-4 sm:grid-cols-3">
 								<label class="block text-sm font-medium text-slate-200">{$t('Fuel quantity (liters)')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelLiters} oninput={() => clearFieldReview('fuel_liters')} type="number" min="0.001" step="0.001" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+								<input bind:value={fuelLiters} oninput={() => clearFieldReview('fuel_liters')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 								{#if needsReview('fuel_liters')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_liters'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_liters')} onchange={(event) => setFieldReview('fuel_liters', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelLiters))}</span></label></div>{/if}
 								</label>
 								<label class="block text-sm font-medium text-slate-200">{$t('Price per liter')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelUnitPrice} oninput={() => clearFieldReview('fuel_unit_price')} type="number" min="0.0001" step="0.0001" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+								<input bind:value={fuelUnitPrice} oninput={() => clearFieldReview('fuel_unit_price')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 								{#if needsReview('fuel_unit_price')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_unit_price'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_unit_price')} onchange={(event) => setFieldReview('fuel_unit_price', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelUnitPrice))}</span></label></div>{/if}
 								</label>
 								<label class="block text-sm font-medium text-slate-200">{$t('Odometer reading')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="number" min="0" step="0.001" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+								<input bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 								{#if needsReview('fuel_odometer_value')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_odometer_value'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_odometer_value')} onchange={(event) => setFieldReview('fuel_odometer_value', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelOdometerValue))}</span></label></div>{/if}
 								</label>
 							</div>
@@ -760,10 +760,10 @@
 					<input bind:value={dateTo} type="date" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
 				</label>
 				<label class="block text-sm font-medium text-slate-200">{$t('Minimum amount')}
-					<input bind:value={minAmount} type="number" min="0" step="0.01" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+					<input bind:value={minAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
 				</label>
 				<label class="block text-sm font-medium text-slate-200">{$t('Maximum amount')}
-					<input bind:value={maxAmount} type="number" min="0" step="0.01" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
+					<input bind:value={maxAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
 				</label>
 				<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
 					<select bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white">

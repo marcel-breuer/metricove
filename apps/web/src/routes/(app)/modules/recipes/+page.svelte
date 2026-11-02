@@ -7,7 +7,8 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
-	import { formatMeasurement } from '#lib/number-format';
+	import { canonicalizeDecimalInput, formatMeasurement } from '#lib/number-format';
+	import { numberLocale } from '#lib/i18n';
 	import type { Recipe, RecipeIngredientInput, RecipeResponse, RecipeVisibility } from '#lib/recipes';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -222,7 +223,7 @@
 		form.set('preparation_minutes', preparationMinutes);
 		form.set('instructions', instructions);
 		form.set('ingredients', JSON.stringify(ingredients.map((item) => ({
-			name: item.name, quantity: item.quantity, unit: item.unit, note: item.note
+			name: item.name, quantity: canonicalizeDecimalInput(item.quantity, $numberLocale), unit: item.unit, note: item.note
 		}))));
 		if (recipeId === null) form.set('visibility', visibility);
 		if (photoFile) form.set('photo', photoFile);
@@ -370,7 +371,7 @@
 					<fieldset class="space-y-3"><legend class="text-sm font-semibold text-slate-200">{$t("Ingredients")}</legend>
 						{#each ingredients as ingredient, index (index)}
 							<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-								<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]"><label class="min-w-0 text-xs text-slate-400">{$t("Ingredient")}<input bind:value={ingredient.name} required maxlength="120" placeholder={$t("Pasta")} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-3 text-xs text-slate-400 sm:order-none">{$t("Quantity")}<input bind:value={ingredient.quantity} required type="number" min="0.0001" step="0.0001" inputmode="decimal" placeholder="250" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-4 text-xs text-slate-400 sm:order-none">{$t("Unit")}<input bind:value={ingredient.unit} required maxlength="40" placeholder="g" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><button type="button" aria-label={$t("Remove ingredient")} disabled={ingredients.length === 1} onclick={() => removeIngredient(index)} class="order-2 mt-5 min-h-10 min-w-9 rounded-lg text-slate-500 hover:bg-rose-400/10 hover:text-rose-200 disabled:opacity-30 sm:order-none">×</button></div>
+								<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]"><label class="min-w-0 text-xs text-slate-400">{$t("Ingredient")}<input bind:value={ingredient.name} required maxlength="120" placeholder={$t("Pasta")} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-3 text-xs text-slate-400 sm:order-none">{$t("Quantity")}<input bind:value={ingredient.quantity} required type="text" inputmode="decimal" placeholder="250" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-4 text-xs text-slate-400 sm:order-none">{$t("Unit")}<input bind:value={ingredient.unit} required maxlength="40" placeholder="g" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><button type="button" aria-label={$t("Remove ingredient")} disabled={ingredients.length === 1} onclick={() => removeIngredient(index)} class="order-2 mt-5 min-h-10 min-w-9 rounded-lg text-slate-500 hover:bg-rose-400/10 hover:text-rose-200 disabled:opacity-30 sm:order-none">×</button></div>
 								<label class="mt-2 block text-xs text-slate-400">{$t("Note")} <span class="text-slate-600">{$t('optional')}</span><input bind:value={ingredient.note} maxlength="160" placeholder={$t("finely grated")} class="mt-1 min-h-9 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label>
 							</div>
 						{/each}
