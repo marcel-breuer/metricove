@@ -4,6 +4,7 @@
 	import { csrfToken, firstError, type ApiResponse, type AuthUser } from '#lib/auth';
 	import { formatMeasurement } from '#lib/number-format';
 	import Button from '#lib/ui/Button.svelte';
+	import IconChoiceGroup from '#lib/ui/IconChoiceGroup.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import Panel from '#lib/ui/Panel.svelte';
@@ -56,6 +57,11 @@
 		'utilities:create': 'Prepare utility readings for your approval',
 		'vehicles:view': 'View permitted vehicle odometer summaries'
 	};
+
+	const languageOptions = [
+		{ value: 'en', label: 'English', icon: 'language', marker: 'EN' },
+		{ value: 'de', label: 'German', icon: 'language', marker: 'DE' }
+	] as const;
 
 	async function loadProfile(): Promise<void> {
 		try {
@@ -302,11 +308,7 @@
 						<TextField id="name" name="name" label={$t('Your name')} autocomplete="name" bind:value={name} required maxlength={255} />
 						<TextField id="email" name="email" label={$t('Email address')} type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 						<div class="grid gap-4 sm:grid-cols-2">
-							<label class="block text-sm font-medium text-slate-200" for="language">{$t('Language')}
-								<select id="language" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" value={$uiLanguage} onchange={(event) => changeLanguage(event.currentTarget.value as 'en' | 'de')}>
-									<option value="en">{$t('English')}</option><option value="de">{$t('German')}</option>
-								</select>
-							</label>
+						<IconChoiceGroup id="language" label="Language" value={$uiLanguage} options={languageOptions} onchange={(value) => changeLanguage(value as 'en' | 'de')} />
 							<label class="block text-sm font-medium text-slate-200" for="number-locale">{$t('Number and date format')}
 								<select id="number-locale" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" bind:value={$numberLocale}>
 									<option value="de-DE">{$t('German (Germany)')} · 1.234,56</option><option value="en-US">{$t('English (United States)')} · 1,234.56</option><option value="en-GB">{$t('English (United Kingdom)')} · 1,234.56</option>
