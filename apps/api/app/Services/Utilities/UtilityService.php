@@ -120,7 +120,7 @@ class UtilityService
                 continue;
             }
 
-            $readings[] = $this->presentReading($reading, $meter, $previous);
+            $readings[] = $this->presentReading($actor, $reading, $meter, $previous);
             $previous = $reading;
         }
 
@@ -160,10 +160,10 @@ class UtilityService
     public function createReading(User $actor, int $meterId, array $data): array
     {
         $meter = $this->findVisibleMeter($actor, $meterId, ModuleCapability::Create);
-        $value = DecimalValue::normalize($data['value']);
+        $value = DecimalValue::normalizeWhole($data['value']);
 
         if ($value === null) {
-            throw ValidationException::withMessages(['value' => 'Enter a valid non-negative decimal reading.']);
+            throw ValidationException::withMessages(['value' => 'Enter a valid non-negative whole-number reading.']);
         }
 
         $photoPath = $this->storePhoto($data['photo'] ?? null, $meterId);
@@ -202,7 +202,7 @@ class UtilityService
             ->orderByDesc('reading_date')
             ->first();
 
-        return $this->presentReading($reading, $meter, $previous);
+        return $this->presentReading($actor, $reading, $meter, $previous);
     }
 
     /** @param array<string, mixed> $data
@@ -212,10 +212,10 @@ class UtilityService
     {
         $reading = $this->findVisibleReading($actor, $readingId, ModuleCapability::Edit);
         $meter = $this->findVisibleMeter($actor, $reading->utility_meter_id, ModuleCapability::Edit);
-        $value = DecimalValue::normalize($data['value']);
+        $value = DecimalValue::normalizeWhole($data['value']);
 
         if ($value === null) {
-            throw ValidationException::withMessages(['value' => 'Enter a valid non-negative decimal reading.']);
+            throw ValidationException::withMessages(['value' => 'Enter a valid non-negative whole-number reading.']);
         }
 
         $corrected = DB::transaction(function () use ($actor, $readingId, $data, $value): UtilityReading {
@@ -258,7 +258,28 @@ class UtilityService
             ->orderByDesc('reading_date')
             ->first();
 
-        return $this->presentReading($corrected, $meter, $previous);
+        return $this->presentReading($actor, $corrected, $meter, $previous);
+    }
+
+    public function deleteReading(User $actor, int $readingId): void
+    {
+        $candidate = $this->findVisibleReading($actor, $readingId, ModuleCapability::Edit);
+        $this->findVisibleMeter($actor, $candidate->utility_meter_id, ModuleCapability::Edit);
+
+        $photoPath = DB::transaction(function () use ($actor, $readingId, $candidate): ?string {
+            $meter = UtilityMeter::query()->whereKey($candidate->utility_meter_id)->lockForUpdate()->firstOrFail();
+            $reading = UtilityReading::query()->whereKey($readingId)->lockForUpdate()->firstOrFail();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $meter);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $reading);
+            $photoPath = $reading->photo_path;
+            $reading->delete();
+
+            return $photoPath;
+        }, 3);
+
+        if ($photoPath !== null) {
+            Storage::disk('local')->delete($photoPath);
+        }
     }
 
     /** @return list<array<string, mixed>> */
@@ -472,7 +493,7 @@ class UtilityService
     }
 
     /** @return array<string, mixed> */
-    private function presentReading(UtilityReading $reading, UtilityMeter $meter, ?UtilityReading $previous): array
+    private function presentReading(User $actor, UtilityReading $reading, UtilityMeter $meter, ?UtilityReading $previous): array
     {
         $usage = $previous === null ? null : DecimalValue::subtract((string) $reading->value, (string) $previous->value);
         $days = $previous === null
@@ -492,9 +513,22 @@ class UtilityService
                 && $meter->alert_threshold !== null
                 && DecimalValue::compare($usage, (string) $meter->alert_threshold) > 0,
             'revision_count' => (int) ($reading->revisions_count ?? 0),
+            'can_edit' => $this->canEditReading($actor, $reading, $meter),
             'created_at' => $reading->created_at?->toISOString(),
             'updated_at' => $reading->updated_at?->toISOString(),
         ];
+    }
+
+    private function canEditReading(User $actor, UtilityReading $reading, UtilityMeter $meter): bool
+    {
+        try {
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $meter);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $reading);
+
+            return true;
+        } catch (AuthorizationException) {
+            return false;
+        }
     }
 
     private function storePhoto(mixed $photo, int $meterId): ?string

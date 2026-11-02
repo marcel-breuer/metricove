@@ -26,8 +26,8 @@ class StoreUtilityReadingRequest extends FormRequest
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            if (DecimalValue::normalize($this->input('value')) === null) {
-                $validator->errors()->add('value', 'Enter a non-negative decimal with up to 14 whole and 6 fractional digits.');
+            if (DecimalValue::normalizeWhole($this->input('value')) === null) {
+                $validator->errors()->add('value', 'Enter a non-negative whole number with up to 14 digits.');
             }
         });
     }

@@ -24,6 +24,7 @@ export type VehicleOdometerReading = {
 	days_since_previous: number | null;
 	note: string | null;
 	revision_count: number;
+	can_edit: boolean;
 	created_at: string;
 	updated_at: string;
 };
@@ -90,6 +91,7 @@ export type VehicleMaintenanceRecord = {
 	odometer_value: string | null;
 	odometer_unit: string | null;
 	note: string | null;
+	can_edit: boolean;
 };
 
 export type VehicleInsurancePolicy = {
@@ -100,6 +102,7 @@ export type VehicleInsurancePolicy = {
 	valid_until: string;
 	note: string | null;
 	status: 'active' | 'upcoming' | 'expired';
+	can_edit: boolean;
 };
 
 export type VehicleCost = {
@@ -114,6 +117,7 @@ export type VehicleCost = {
 	fuel_liters: string | null;
 	fuel_unit_price: string | null;
 	fuel_odometer_value: string | null;
+	can_edit: boolean;
 };
 
 export type VehicleResponse = {

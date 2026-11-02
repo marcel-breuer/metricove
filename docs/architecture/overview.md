@@ -5,7 +5,7 @@
 ## Deployment and tenancy
 A self-hosted installation represents **exactly one household**, with one independent PostgreSQL database and persistent file store. Multiple installations are supported but there is no multi-household tenancy in one deployment. The first sign-up is a one-time, atomic setup and creates an active administrator. Public registration stops after setup.
 
-The backend is a Laravel modular monolith; the frontend is SvelteKit with Tailwind CSS. Docker Compose runs a gateway, API, web, queue worker, scheduler, PostgreSQL and Redis. Only the Nginx gateway publishes a host port; database, Redis, PHP-FPM and Bun stay on private Compose networks. Operators choose domains and credentials in private configuration.
+The backend is a Laravel modular monolith; the frontend is SvelteKit with Tailwind CSS. Docker Compose runs a gateway, API, web, queue worker, scheduler, PostgreSQL and Redis, with Mailpit available as an optional profile. The Nginx gateway publishes the application port; Mailpit's UI is bound to localhost for local email inspection. Database, Redis, SMTP, PHP-FPM and Bun stay on private Compose networks. Operators choose domains and credentials in private configuration. When the Mailpit profile is enabled, email is captured locally; installations that deliver real email must set their SMTP configuration.
 
 ## Administration and invitations
 The household may have multiple active admins but **never fewer than one**. All role changes and user deactivations/removals must share a database transaction/lock so simultaneous requests cannot remove the last admin. Admin invitations require **only the email address**, normalized and unique, with a single-use expiring token bound to a verified recipient email. SMTP settings are per installation. The invited user selects their password and display name.
@@ -15,14 +15,13 @@ The household may have multiple active admins but **never fewer than one**. All 
 
 The web application supports Light, Dark and System appearance preferences. System is the default and tracks the browser preference; explicit choices are stored in the browser. Shared Svelte UI components provide consistent page headings, panels, buttons, fields, notices and switches.
 
-Module list: Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, Meal Planning, Pantry, Shopping, Tasks, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
+Module list: Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, Meal Planning, Shopping, Tasks, Analytics, Import, AI; future Health. Health and other private records cannot be disclosed merely because a requester is an administrator.
 
 ## Food modules
 - **Recipes:** ingredient quantities, servings, steps, tags/categories and optional pictures.
 - **MealPlanning:** week/day/meal slots; optional recipe reference OR free-text dish.
-- **Pantry:** private-by-default or admin-shared stock levels, explicit units, storage locations, best-before status and versioned manual movement history. Expiry notices are shown in-app; stock never changes automatically.
 - **Shopping:** shared lists, items, check-off and optional imported ingredient suggestions.
-Each module must operate independently where sensible. Cross-module interactions must check both modules' enabled states and caller permissions. Pantry stock cannot be silently changed by meal planning.
+Each module must operate independently where sensible. Cross-module interactions must check both modules' enabled states and caller permissions. Shopping and Meal Planning do not change recipe data or create side effects in other modules.
 
 ## AI architecture
 An optional local or remote AI provider adapter supports narrow, typed domain tools. Supported remote choices include Claude, Gemini and OpenRouter alongside OpenAI-compatible endpoints. Laravel applies the same authorization logic regardless of UI, REST or MCP caller. No direct LLM-supplied SQL. Writes require preview, explicit human approval, idempotency and audit. Core operations do not require an AI provider.

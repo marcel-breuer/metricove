@@ -140,7 +140,7 @@
 	}
 
 	:global(.auth-theme-picker) {
-		width: 12rem;
+		width: 15rem;
 	}
 
 	.auth-body {
@@ -432,7 +432,8 @@
 		}
 
 		:global(.auth-theme-picker) {
-			width: 11rem;
+			width: 100%;
+			max-width: 16rem;
 		}
 
 		.auth-body {

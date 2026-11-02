@@ -60,6 +60,7 @@
 		message?: string;
 	};
 	type FinanceImportColumnMapping = { occurred_on: string; description: string; amount: string; currency: string; payee: string; category: string };
+	type ImportTarget = 'utilities' | 'finance';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const importAccess = $derived(shell.modules.find((module) => module.key === 'import'));
@@ -70,7 +71,12 @@
 	const canImport = $derived(importAccess?.capabilities.create === true && utilityAccess?.capabilities.create === true);
 	const canViewFinance = $derived(importAccess?.capabilities.view === true && financeAccess?.capabilities.view === true);
 	const canImportFinance = $derived(importAccess?.capabilities.create === true && financeAccess?.capabilities.view === true && financeAccess?.capabilities.create === true);
+	const importTargets = $derived([
+		...(canView ? [{ value: 'utilities' as const, label: 'Utility readings' }] : []),
+		...(canViewFinance ? [{ value: 'finance' as const, label: 'Finance transactions' }] : [])
+	]);
 
+	let importTarget = $state<ImportTarget>('utilities');
 	let meters = $state<UtilityMeter[]>([]);
 	let meterId = $state('');
 	let file = $state<File | null>(null);
@@ -118,6 +124,11 @@
 		if (shell.loading || !canViewFinance) financeCategories = [];
 	});
 
+	$effect(() => {
+		if (shell.loading || importTargets.length === 0) return;
+		if (!importTargets.some((target) => target.value === importTarget)) importTarget = importTargets[0].value;
+	});
+
 	async function loadMeters(): Promise<void> {
 		loading = true;
 		error = '';
@@ -147,6 +158,20 @@
 		financeMessage = '';
 		financeSelectedRows = [];
 		financeSelectionInitialized = false;
+	}
+
+	function changeImportTarget(target: ImportTarget): void {
+		importTarget = target;
+		file = null;
+		financeFile = null;
+		columns = [];
+		financeColumns = [];
+		resetPreview();
+		resetFinancePreview();
+		error = '';
+		financeError = '';
+		message = '';
+		financeMessage = '';
 	}
 
 	function toggleFinanceRow(row: FinanceImportRow, checked: boolean): void {
@@ -379,14 +404,14 @@
 
 <svelte:head>
 	<title>{$t("Import")} {$t("· Metricove")}</title>
-	<meta name="description" content={$t("Preview and confirm utility reading CSV imports.")} />
+	<meta name="description" content={$t("Import supported records from CSV with a destination and field mapping.")} />
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
 	<div class="border-b border-slate-800 pb-6">
 		<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Import module")}</p>
-		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Bring your meter history with you.")}</h1>
-		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t("Import utility readings from a CSV file or export the records you can access. Imports are validated in full before you confirm; repeating a confirmed upload never creates duplicate readings.")}</p>
+		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Import data from a CSV")}</h1>
+		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t("Choose where the data belongs, map the CSV columns to its fields, review the preview and confirm only when it looks right.")}</p>
 	</div>
 
 	{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
@@ -397,7 +422,18 @@
 	{:else if !hasImportView}
 		<div class="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-5 text-sm leading-6 text-amber-100"><p class="font-semibold">{$t("Import View access is required.")}</p><p class="mt-1 text-amber-100/75">{$t("Grant access to an enabled source module before importing or exporting its records.")}</p></div>
 	{:else}
-		{#if canView}
+		{#if importTargets.length > 0}
+			<section class="mt-6 max-w-2xl rounded-2xl border border-cyan-300/20 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="import-destination-heading">
+				<h2 id="import-destination-heading" class="text-base font-semibold text-white">{$t("Choose an import destination")}</h2>
+				<label class="mt-3 block text-sm font-medium text-slate-200" for="import-destination">{$t("What kind of records are in this file?")}
+					<select id="import-destination" value={importTarget} onchange={(event) => changeImportTarget(event.currentTarget.value as ImportTarget)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+						{#each importTargets as target (target.value)}<option value={target.value}>{$t(target.label)}</option>{/each}
+					</select>
+				</label>
+				<p class="mt-2 text-xs leading-5 text-slate-500">{$t("Only destinations you can access are listed. The preview validates the selected mapping before anything is saved.")}</p>
+			</section>
+		{/if}
+		{#if importTarget === 'utilities' && canView}
 		<div class="mt-6 grid gap-5 xl:grid-cols-[minmax(18rem,0.75fr)_minmax(0,1.25fr)]">
 			<section class="h-fit rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="csv-import-heading">
 				<h2 id="csv-import-heading" class="text-lg font-semibold text-white">{$t("Utility reading CSV")}</h2>
@@ -461,7 +497,7 @@
 		</div>
 		{/if}
 
-		{#if canViewFinance}
+		{#if importTarget === 'finance' && canViewFinance}
 			<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="finance-import-heading">
 				<div class="max-w-3xl">
 					<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Finance import")}</p>

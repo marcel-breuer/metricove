@@ -47,6 +47,65 @@ class MealPlanningService
         ];
     }
 
+    /** @return array{copied_count: int, skipped_count: int} */
+    public function copyPreviousWeek(User $actor, string $weekStart): array
+    {
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::Create);
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
+        $start = $this->monday($weekStart);
+        $previousStart = $start->subDays(7);
+        $previousEnd = $start->subDay();
+
+        return DB::transaction(function () use ($actor, $start, $previousStart, $previousEnd): array {
+            $this->lockHousehold();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::View);
+
+            $sourceSlots = $this->visibleSlots($actor, [ModuleCapability::View], MealPlanSlot::query())
+                ->whereBetween('planned_for', [$previousStart->toDateString(), $previousEnd->toDateString()])
+                ->orderBy('planned_for')->orderByRaw("CASE meal_type WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 ELSE 3 END")
+                ->orderBy('id')->get();
+            $scopeKey = 'member:'.$actor->id;
+            $targetSlots = MealPlanSlot::query()->where('scope_key', $scopeKey)
+                ->whereBetween('planned_for', [$start->toDateString(), $start->addDays(6)->toDateString()])
+                ->lockForUpdate()->get();
+            $occupied = [];
+            foreach ($targetSlots as $slot) {
+                $occupied[CarbonImmutable::parse((string) $slot->planned_for)->format('Y-m-d').'|'.$slot->meal_type] = true;
+            }
+
+            $copied = 0;
+            $skipped = 0;
+            foreach ($sourceSlots as $source) {
+                $targetDate = CarbonImmutable::parse((string) $source->planned_for)->addDays(7)->format('Y-m-d');
+                $key = $targetDate.'|'.$source->meal_type;
+                if (isset($occupied[$key])) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                MealPlanSlot::query()->create([
+                    'owner_user_id' => $actor->id,
+                    'created_by_user_id' => $actor->id,
+                    'recipe_id' => $source->recipe_id,
+                    'is_private' => true,
+                    'scope_key' => $scopeKey,
+                    'planned_for' => $targetDate,
+                    'meal_type' => $source->meal_type,
+                    'dish_type' => $source->dish_type,
+                    'dish_name' => $source->dish_name,
+                    'servings' => $source->servings,
+                    'notes' => $source->notes,
+                ]);
+                $occupied[$key] = true;
+                $copied++;
+            }
+
+            return ['copied_count' => $copied, 'skipped_count' => $skipped];
+        }, 3);
+    }
+
     /** @param array<string, mixed> $data
      * @return array<string, mixed>
      */
@@ -194,7 +253,11 @@ class MealPlanningService
             ->whereKey($slotId)->lockForUpdate()->firstOrFail();
     }
 
-    /** @param list<ModuleCapability> $capabilities */
+    /**
+     * @param  list<ModuleCapability>  $capabilities
+     * @param  Builder<MealPlanSlot>  $query
+     * @return Builder<MealPlanSlot>
+     */
     private function visibleSlots(User $actor, array $capabilities, Builder $query): Builder
     {
         $morphType = (new MealPlanSlot)->getMorphClass();
@@ -236,7 +299,7 @@ class MealPlanningService
 
         return [
             'id' => $slot->id,
-            'planned_for' => $slot->planned_for->format('Y-m-d'),
+            'planned_for' => CarbonImmutable::parse((string) $slot->planned_for)->format('Y-m-d'),
             'meal_type' => $slot->meal_type,
             'dish_type' => $slot->dish_type,
             'dish_name' => $slot->dish_name,

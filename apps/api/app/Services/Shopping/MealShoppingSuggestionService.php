@@ -9,7 +9,6 @@ use App\Models\Recipe;
 use App\Models\User;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
-use App\Services\Pantry\PantryService;
 use App\Services\Recipes\RecipeService;
 use Brick\Math\BigDecimal;
 use Brick\Math\Exception\RoundingNecessaryException;
@@ -25,16 +24,15 @@ class MealShoppingSuggestionService
         private readonly ModuleAccessService $access,
         private readonly MealPlanningService $plans,
         private readonly RecipeService $recipes,
-        private readonly PantryService $pantry,
         private readonly ShoppingService $shopping,
     ) {}
 
-    /** @param array{week_start: string, subtract_pantry: bool} $data
+    /** @param array{week_start: string} $data
      * @return array<string, mixed>
      */
     public function preview(User $actor, int $listId, array $data): array
     {
-        return $this->buildPreview($actor, $listId, $data['week_start'], (bool) $data['subtract_pantry']);
+        return $this->buildPreview($actor, $listId, $data['week_start']);
     }
 
     /** @param array<string, mixed> $data
@@ -52,13 +50,12 @@ class MealShoppingSuggestionService
             $actor,
             $listId,
             (string) $data['week_start'],
-            (bool) $data['subtract_pantry'],
             $expiresAt,
         );
 
         if ((int) $data['expected_list_version'] !== $preview['list_version']
             || ! hash_equals($preview['preview_token'], (string) $data['preview_token'])) {
-            throw new ConflictHttpException('The meal plan, pantry or shopping list changed. Review the suggestions again.');
+            throw new ConflictHttpException('The meal plan or shopping list changed. Review the suggestions again.');
         }
 
         $byId = [];
@@ -93,7 +90,6 @@ class MealShoppingSuggestionService
         User $actor,
         int $listId,
         string $weekStart,
-        bool $subtractPantry,
         ?int $expiresAt = null,
     ): array {
         $listVersion = $this->shopping->mealSuggestionListVersion($actor, $listId);
@@ -102,8 +98,6 @@ class MealShoppingSuggestionService
         $availability = [
             'meal_planning' => false,
             'recipes' => $this->canViewModule($actor, 'recipes'),
-            'pantry' => $this->canViewModule($actor, 'pantry'),
-            'pantry_subtracted' => false,
         ];
         $week = null;
 
@@ -114,21 +108,10 @@ class MealShoppingSuggestionService
             // A missing or inaccessible optional source produces an empty preview.
         }
 
-        $pantryItems = [];
-        if ($subtractPantry && $availability['pantry']) {
-            try {
-                $pantryItems = $this->pantry->index($actor);
-                $availability['pantry_subtracted'] = true;
-            } catch (AuthorizationException|ModuleDisabled|ModuleNotFound) {
-                $availability['pantry'] = false;
-            }
-        }
-
         $skipped = [
             'free_text_meals' => 0,
             'unavailable_recipes' => 0,
             'unsupported_quantities' => 0,
-            'covered_by_pantry' => 0,
         ];
         $groups = [];
 
@@ -197,47 +180,6 @@ class MealShoppingSuggestionService
         $suggestions = [];
         foreach ($groups as $group) {
             $quantity = $group['quantity'];
-            $pantryUsed = BigDecimal::of('0.000');
-            $pantryStatus = 'not_requested';
-
-            if ($subtractPantry) {
-                $pantryStatus = $availability['pantry_subtracted'] ? 'none' : 'unavailable';
-                $hasIncompatibleUnit = false;
-
-                foreach ($pantryItems as $stock) {
-                    if ($this->normalize((string) $stock['name']) !== $group['name_key']) {
-                        continue;
-                    }
-
-                    if ($this->normalize((string) $stock['unit']) !== $group['unit_key']) {
-                        $hasIncompatibleUnit = true;
-
-                        continue;
-                    }
-
-                    $available = BigDecimal::of((string) $stock['quantity']);
-                    $usedHere = BigDecimal::min($available, $quantity);
-                    $quantity = $quantity->minus($usedHere);
-                    $pantryUsed = $pantryUsed->plus($usedHere);
-                    if (! $usedHere->isZero()) {
-                        $pantryStatus = 'partially_covered';
-                    }
-
-                    if ($quantity->isZero()) {
-                        break;
-                    }
-                }
-
-                if ($quantity->isZero()) {
-                    $skipped['covered_by_pantry']++;
-
-                    continue;
-                }
-
-                if ($pantryUsed->isZero() && $hasIncompatibleUnit) {
-                    $pantryStatus = 'unit_mismatch';
-                }
-            }
 
             $quantityText = $quantity->toScale(3)->__toString();
             try {
@@ -254,8 +196,6 @@ class MealShoppingSuggestionService
                 'quantity' => $normalized['quantity'],
                 'unit' => $normalized['unit'],
                 'source_count' => $group['source_count'],
-                'pantry_quantity_used' => $pantryUsed->toScale(3)->__toString(),
-                'pantry_status' => $pantryStatus,
             ];
         }
 
@@ -266,7 +206,6 @@ class MealShoppingSuggestionService
             'list_id' => $listId,
             'list_version' => $listVersion,
             'week_start' => $weekStart,
-            'subtract_pantry' => $subtractPantry,
             'availability' => $availability,
             'skipped' => $skipped,
             'suggestions' => $suggestions,
@@ -275,7 +214,6 @@ class MealShoppingSuggestionService
 
         return [
             'week_start' => $weekStart,
-            'subtract_pantry' => $subtractPantry,
             'list_version' => $listVersion,
             'preview_expires_at' => $expiresAt,
             'preview_token' => $signature,

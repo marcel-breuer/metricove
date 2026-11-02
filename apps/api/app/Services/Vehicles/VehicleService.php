@@ -229,9 +229,9 @@ class VehicleService
 
         return [
             $key => $records->map(fn (Model $record): array => match (true) {
-                $record instanceof VehicleMaintenanceRecord => $this->presentMaintenance($record, $vehicle),
-                $record instanceof VehicleInsurancePolicy => $this->presentInsurance($record),
-                $record instanceof VehicleCost => $this->presentCost($record),
+                $record instanceof VehicleMaintenanceRecord => $this->presentMaintenance($actor, $record, $vehicle),
+                $record instanceof VehicleInsurancePolicy => $this->presentInsurance($actor, $record, $vehicle),
+                $record instanceof VehicleCost => $this->presentCost($actor, $record, $vehicle),
                 default => [],
             })->values()->all(),
             'has_more_'.$key => $hasMore,
@@ -292,7 +292,7 @@ class VehicleService
             }
 
             if ($this->canAccess($actor, ModuleCapability::View, $reading)) {
-                $presented[] = $this->presentOdometer($reading, $vehicle, $previous);
+                $presented[] = $this->presentOdometer($actor, $reading, $vehicle, $previous);
             }
         }
 
@@ -365,7 +365,7 @@ class VehicleService
 
         $vehicle->refresh();
 
-        return $this->presentOdometer($reading, $vehicle, null);
+        return $this->presentOdometer($actor, $reading, $vehicle, null);
     }
 
     /** @param array<string, mixed> $data
@@ -411,7 +411,9 @@ class VehicleService
             return $reading->fresh()->loadCount('revisions');
         }, 3);
 
-        return $this->presentOdometer($corrected, $candidate->vehicle, null);
+        $vehicle = Vehicle::query()->findOrFail($candidate->vehicle_id);
+
+        return $this->presentOdometer($actor, $corrected, $vehicle, null);
     }
 
     /** @return list<array<string, mixed>> */
@@ -464,7 +466,7 @@ class VehicleService
 
         $vehicle->refresh();
 
-        return $this->presentMaintenance($record, $vehicle);
+        return $this->presentMaintenance($actor, $record, $vehicle);
     }
 
     /** @param array<string, mixed> $data
@@ -491,7 +493,7 @@ class VehicleService
             return $policy;
         }, 3);
 
-        return $this->presentInsurance($policy);
+        return $this->presentInsurance($actor, $policy, $vehicle);
     }
 
     /** @param array<string, mixed> $data
@@ -550,7 +552,30 @@ class VehicleService
             return $cost;
         }, 3);
 
-        return $this->presentCost($cost);
+        return $this->presentCost($actor, $cost, $vehicle);
+    }
+
+    public function deleteRecord(User $actor, string $type, int $recordId): void
+    {
+        [$modelClass, $table] = match ($type) {
+            'odometer' => [VehicleOdometerReading::class, 'vehicle_odometer_readings'],
+            'maintenance' => [VehicleMaintenanceRecord::class, 'vehicle_maintenance_records'],
+            'insurance' => [VehicleInsurancePolicy::class, 'vehicle_insurance_policies'],
+            'costs' => [VehicleCost::class, 'vehicle_costs'],
+            default => throw new \InvalidArgumentException('Unsupported vehicle history type.'),
+        };
+        /** @var VehicleOdometerReading|VehicleMaintenanceRecord|VehicleInsurancePolicy|VehicleCost $candidate */
+        $candidate = $this->visibleResources($actor, $modelClass, $table, ModuleCapability::Edit, $modelClass::query())
+            ->whereKey($recordId)
+            ->firstOrFail();
+
+        DB::transaction(function () use ($actor, $candidate, $modelClass, $recordId): void {
+            $vehicle = Vehicle::query()->whereKey($candidate->vehicle_id)->lockForUpdate()->firstOrFail();
+            $record = $modelClass::query()->whereKey($recordId)->lockForUpdate()->firstOrFail();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $record);
+            $record->delete();
+        }, 3);
     }
 
     private function visibleVehicles(User $actor, ModuleCapability $capability): Builder
@@ -669,7 +694,7 @@ class VehicleService
     }
 
     /** @return array<string, mixed> */
-    private function presentOdometer(VehicleOdometerReading $reading, Vehicle $vehicle, ?VehicleOdometerReading $previous): array
+    private function presentOdometer(User $actor, VehicleOdometerReading $reading, Vehicle $vehicle, ?VehicleOdometerReading $previous): array
     {
         $distance = $previous === null ? null : $this->subtractDistance((string) $reading->value, (string) $previous->value);
         $days = $previous === null ? null : CarbonImmutable::parse($previous->reading_date->format('Y-m-d'))->diffInDays(CarbonImmutable::parse($reading->reading_date->format('Y-m-d')));
@@ -683,13 +708,14 @@ class VehicleService
             'days_since_previous' => $days,
             'note' => $reading->note,
             'revision_count' => (int) ($reading->revisions_count ?? 0),
+            'can_edit' => $this->canEditRecord($actor, $reading, $vehicle),
             'created_at' => $reading->created_at?->toISOString(),
             'updated_at' => $reading->updated_at?->toISOString(),
         ];
     }
 
     /** @return array<string, mixed> */
-    private function presentMaintenance(VehicleMaintenanceRecord $record, ?Vehicle $vehicle): array
+    private function presentMaintenance(User $actor, VehicleMaintenanceRecord $record, ?Vehicle $vehicle): array
     {
         return [
             'id' => $record->id,
@@ -702,11 +728,12 @@ class VehicleService
             'odometer_value' => $record->odometer_value,
             'odometer_unit' => $vehicle?->odometer_unit,
             'note' => $record->note,
+            'can_edit' => $vehicle instanceof Vehicle && $this->canEditRecord($actor, $record, $vehicle),
         ];
     }
 
     /** @return array<string, mixed> */
-    private function presentInsurance(VehicleInsurancePolicy $policy): array
+    private function presentInsurance(User $actor, VehicleInsurancePolicy $policy, Vehicle $vehicle): array
     {
         return [
             'id' => $policy->id,
@@ -718,11 +745,12 @@ class VehicleService
             'status' => CarbonImmutable::today()->gte($policy->valid_from) && CarbonImmutable::today()->lte($policy->valid_until)
                 ? 'active'
                 : ($policy->valid_until->lt(CarbonImmutable::today()) ? 'expired' : 'upcoming'),
+            'can_edit' => $this->canEditRecord($actor, $policy, $vehicle),
         ];
     }
 
     /** @return array<string, mixed> */
-    private function presentCost(VehicleCost $cost): array
+    private function presentCost(User $actor, VehicleCost $cost, Vehicle $vehicle): array
     {
         return [
             'id' => $cost->id,
@@ -736,7 +764,20 @@ class VehicleService
             'fuel_liters' => $cost->fuel_liters === null ? null : (string) $cost->fuel_liters,
             'fuel_unit_price' => $cost->fuel_unit_price === null ? null : (string) $cost->fuel_unit_price,
             'fuel_odometer_value' => $cost->fuel_odometer_value === null ? null : (string) $cost->fuel_odometer_value,
+            'can_edit' => $this->canEditRecord($actor, $cost, $vehicle),
         ];
+    }
+
+    private function canEditRecord(User $actor, Model $record, Vehicle $vehicle): bool
+    {
+        try {
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $record);
+
+            return true;
+        } catch (AuthorizationException) {
+            return false;
+        }
     }
 
     private function subtractDistance(string $larger, string $smaller): string

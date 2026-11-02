@@ -20,7 +20,7 @@ class UtilitiesModuleTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_meter_units_chronological_usage_and_alerts_use_exact_decimals(): void
+    public function test_meter_readings_use_whole_numbers_and_usage_alerts_use_exact_differences(): void
     {
         $admin = $this->admin();
         app(ModuleManagementService::class)->setEnabled($admin, 'utilities', true);
@@ -48,9 +48,9 @@ class UtilitiesModuleTest extends TestCase
             ->assertJsonPath('reading.consumption_since_previous', null);
 
         $later = $this->actingAs($admin, 'web')->postJson("/api/utilities/meters/{$meterId}/readings", [
-            'reading_date' => '2026-10-10', 'value' => '150.000001',
+            'reading_date' => '2026-10-10', 'value' => '150',
         ])->assertCreated();
-        $this->assertSame('50.000001', $later->json('reading.consumption_since_previous'));
+        $this->assertSame('50.000000', $later->json('reading.consumption_since_previous'));
         $this->assertTrue($later->json('reading.alert'));
 
         $middle = $this->actingAs($admin, 'web')->postJson("/api/utilities/meters/{$meterId}/readings", [
@@ -63,11 +63,11 @@ class UtilitiesModuleTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meter.unit', 'kWh');
         $this->assertSame(['2026-10-01', '2026-10-05', '2026-10-10'], array_column($history->json('readings'), 'reading_date'));
-        $this->assertSame('25.000001', $history->json('readings.2.consumption_since_previous'));
+        $this->assertSame('25.000000', $history->json('readings.2.consumption_since_previous'));
         $this->assertFalse($history->json('readings.2.alert'));
 
         $this->actingAs($admin, 'web')->postJson("/api/utilities/meters/{$meterId}/readings", [
-            'reading_date' => '2026-10-05', 'value' => '124.9',
+            'reading_date' => '2026-10-05', 'value' => '124',
         ])->assertUnprocessable()->assertJsonValidationErrors('reading_date');
         $this->actingAs($admin, 'web')->postJson("/api/utilities/meters/{$meterId}/readings", [
             'reading_date' => '2026-10-11', 'value' => '-1',
@@ -95,7 +95,7 @@ class UtilitiesModuleTest extends TestCase
         $this->read($admin, $meterId, '2026-10-20', '200');
 
         $this->actingAs($admin, 'web')->patchJson("/api/utilities/readings/{$middleId}", [
-            'reading_date' => '2026-10-10', 'value' => '99.999999', 'note' => null, 'reason' => 'Correct transcription error',
+            'reading_date' => '2026-10-10', 'value' => '99', 'note' => null, 'reason' => 'Correct transcription error',
         ])->assertUnprocessable()->assertJsonValidationErrors('value');
         $this->actingAs($admin, 'web')->patchJson("/api/utilities/readings/{$middleId}", [
             'reading_date' => '2026-10-20', 'value' => '175', 'note' => null, 'reason' => 'Move to the duplicate date',
@@ -105,22 +105,22 @@ class UtilitiesModuleTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('value');
 
         $corrected = $this->actingAs($admin, 'web')->patchJson("/api/utilities/readings/{$middleId}", [
-            'reading_date' => '2026-10-15', 'value' => '175.25', 'note' => 'Photo confirmed', 'reason' => 'Corrected from the meter photo',
+            'reading_date' => '2026-10-15', 'value' => '175', 'note' => 'Photo confirmed', 'reason' => 'Corrected from the meter photo',
         ])->assertOk()
             ->assertJsonPath('reading.reading_date', '2026-10-15')
-            ->assertJsonPath('reading.value', '175.250000');
+            ->assertJsonPath('reading.value', '175.000000');
         $this->assertSame(1, $corrected->json('reading.revision_count'));
 
         $revisions = $this->actingAs($admin, 'web')->getJson("/api/utilities/readings/{$middleId}/revisions")
             ->assertOk()
             ->assertJsonPath('revisions.0.old_value', '150.000000')
-            ->assertJsonPath('revisions.0.new_value', '175.250000')
+            ->assertJsonPath('revisions.0.new_value', '175.000000')
             ->assertJsonPath('revisions.0.reason', 'Corrected from the meter photo');
 
         $this->assertCount(1, $revisions->json('revisions'));
         $history = $this->actingAs($admin, 'web')->getJson("/api/utilities/meters/{$meterId}")->assertOk();
-        $this->assertSame('75.250000', $history->json('readings.1.consumption_since_previous'));
-        $this->assertSame('24.750000', $history->json('readings.2.consumption_since_previous'));
+        $this->assertSame('75.000000', $history->json('readings.1.consumption_since_previous'));
+        $this->assertSame('25.000000', $history->json('readings.2.consumption_since_previous'));
         $this->assertDatabaseCount('utility_reading_revisions', 1);
     }
 
@@ -138,7 +138,7 @@ class UtilitiesModuleTest extends TestCase
             'name' => 'Private water', 'meter_type' => 'water', 'visibility' => 'private',
         ])->assertCreated();
         $meterId = (int) $meter->json('meter.id');
-        $readingId = (int) $this->read($owner, $meterId, '2026-10-01', '8.125')->json('reading.id');
+        $readingId = (int) $this->read($owner, $meterId, '2026-10-01', '8')->json('reading.id');
 
         $this->actingAs($admin, 'web')->getJson("/api/utilities/meters/{$meterId}")->assertNotFound();
         $this->actingAs($viewer, 'web')->getJson("/api/utilities/meters/{$meterId}")->assertNotFound();
@@ -153,7 +153,7 @@ class UtilitiesModuleTest extends TestCase
         $access->grantPrivateResourceAccess($owner, UtilityReading::query()->findOrFail($readingId), $viewer, ModuleCapability::Edit);
 
         $this->actingAs($viewer, 'web')->getJson("/api/utilities/meters/{$meterId}")
-            ->assertOk()->assertJsonPath('readings.0.value', '8.125000');
+            ->assertOk()->assertJsonPath('readings.0.value', '8.000000');
         $this->actingAs($viewer, 'web')->patchJson("/api/utilities/readings/{$readingId}", [
             'reading_date' => '2026-10-01', 'value' => '9', 'note' => null, 'reason' => 'Corrected meter entry',
         ])->assertOk();
@@ -189,7 +189,7 @@ class UtilitiesModuleTest extends TestCase
         $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/vN8AAAAASUVORK5CYII=', true);
         $response = $this->actingAs($owner, 'web')->post("/api/utilities/meters/{$meterId}/readings", [
             'reading_date' => '2026-10-01',
-            'value' => '15.5',
+            'value' => '15',
             'photo' => UploadedFile::fake()->createWithContent('meter.png', $png),
         ], ['Accept' => 'application/json']);
         $response->assertCreated();

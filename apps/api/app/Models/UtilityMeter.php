@@ -27,6 +27,7 @@ class UtilityMeter extends Model implements ModuleResource
         return ['is_private' => 'boolean', 'alert_threshold' => 'decimal:6'];
     }
 
+    /** @return HasMany<UtilityReading, $this> */
     public function readings(): HasMany
     {
         return $this->hasMany(UtilityReading::class, 'utility_meter_id');

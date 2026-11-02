@@ -54,7 +54,6 @@
 	let editQuantity = $state('');
 	let editUnit = $state('');
 	let suggestionWeekStart = $state(mondayDate());
-	let subtractPantry = $state(false);
 	let suggestionPreview = $state<MealSuggestionPreview | null>(null);
 	let selectedSuggestionIds = $state<string[]>([]);
 	let suggestionLoading = $state(false);
@@ -206,10 +205,10 @@
 			const result = await api<MealSuggestionsResponse>(
 				'/api/shopping/lists/' + activeListId + '/meal-suggestions',
 				'POST',
-				{ week_start: suggestionWeekStart, subtract_pantry: subtractPantry }
+				{ week_start: suggestionWeekStart }
 			);
 			suggestionPreview = result.preview ?? null;
-			selectedSuggestionIds = suggestionPreview?.suggestions.map((suggestion) => suggestion.id) ?? [];
+			selectedSuggestionIds = [];
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'Meal suggestions could not be prepared.';
 		} finally {
@@ -228,7 +227,6 @@
 				'POST',
 				{
 					week_start: suggestionPreview.week_start,
-					subtract_pantry: suggestionPreview.subtract_pantry,
 					expected_list_version: suggestionPreview.list_version,
 					preview_expires_at: suggestionPreview.preview_expires_at,
 					preview_token: suggestionPreview.preview_token,
@@ -239,7 +237,7 @@
 			const added = result.items?.length ?? 0;
 			suggestionPreview = null;
 			selectedSuggestionIds = [];
-			message = `${added} meal suggestion${added === 1 ? '' : 's'} added to the list. Pantry stock was not changed.`;
+			message = `${added} meal suggestion${added === 1 ? '' : 's'} added to the list.`;
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'Meal suggestions could not be added.';
@@ -368,7 +366,15 @@
 		historyOpen = false;
 		activity = [];
 		message = '';
+		invalidateMealPreview();
 		void loadList(id);
+	}
+
+	function toggleSuggestionSelection(): void {
+		if (!suggestionPreview) return;
+		const ids = suggestionPreview.suggestions.map((suggestion) => suggestion.id);
+		const allSelected = ids.every((id) => selectedSuggestionIds.includes(id));
+		selectedSuggestionIds = allSelected ? [] : ids;
 	}
 
 	function isFirstInGroup(item: ShoppingItem): boolean {
@@ -535,16 +541,12 @@
 						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
 								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">{$t("Optional connection")}</p>
-								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Suggestions from meal plans")}</h2>
-								<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Review recipe ingredients before adding them. Free-text meals stay untouched, pantry stock is read-only, and units are never converted.")}</p>
+								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Add ingredients from the weekly plan")}</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Preview recipe ingredients and combined quantities for a week, then choose only what you want to add to this list.")}</p>
 							</div>
-							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 								<label class="block text-xs font-medium text-slate-400">{$t("Week starting Monday")}
 									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
-								</label>
-								<label class="flex min-h-11 items-center gap-2 rounded-xl border border-slate-800 px-3 py-2 text-xs leading-5 text-slate-300">
-									<input bind:checked={subtractPantry} onchange={invalidateMealPreview} type="checkbox" class="size-4 shrink-0 accent-violet-300" />
-									<span>{$t("Subtract visible Pantry stock in the preview")}</span>
 								</label>
 								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-violet-300/40 px-4 text-sm font-semibold text-violet-100 hover:bg-violet-300/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</button>
 							</form>
@@ -554,15 +556,13 @@
 									{#if !suggestionPreview.availability.meal_planning}
 										<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</p>
 									{:else}
-										{#if subtractPantry && !suggestionPreview.availability.pantry}
-											<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">{$t("Pantry is disabled or unavailable to your account. Suggestions show the full recipe quantities.")}</p>
-										{:else if suggestionPreview.availability.pantry && !subtractPantry}
-											<p class="text-xs text-slate-500">{$t("Pantry was not read. Select the option above and review again to account for stock you can view.")}</p>
-										{/if}
 										{#if suggestionPreview.suggestions.length === 0}
 											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">{$t("No importable recipe ingredients were found for this week.")}</p>
 										{:else}
-											<p class="text-xs text-slate-400">{$t("All suggestions are selected. Review the quantities and uncheck anything you do not want to add.")}</p>
+											<div class="flex flex-wrap items-center justify-between gap-2">
+												<p class="text-xs text-slate-400">{$t("Select each ingredient you want to import. Quantities are combined across linked recipes.")}</p>
+												<button type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs font-medium text-slate-200 hover:border-violet-300/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</button>
+											</div>
 											<div class="max-h-80 space-y-2 overflow-y-auto">
 												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
 													<label class="flex min-h-12 items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-3">
@@ -572,9 +572,6 @@
 																<span class="break-words text-sm font-medium text-white">{suggestion.name}</span>
 																<span class="text-sm tabular-nums text-violet-100">{formatMeasurement(suggestion.quantity, suggestion.unit)} {suggestion.unit}</span>
 															</span>
-															{#if suggestion.pantry_status === 'unit_mismatch'}<span class="mt-1 block text-xs text-amber-200">{$t("Visible Pantry stock uses a different unit; nothing was subtracted.")}</span>{/if}
-														{#if suggestion.pantry_status === 'unavailable'}<span class="mt-1 block text-xs text-amber-200">{$t("Pantry was unavailable; the full amount is shown.")}</span>{/if}
-														{#if formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit) !== '0'}<span class="mt-1 block text-xs text-emerald-200">{$t("After previewing")} {formatMeasurement(suggestion.pantry_quantity_used, suggestion.unit)} {suggestion.unit} {$t("of visible stock.")}</span>{/if}
 														</span>
 													</label>
 												{/each}
@@ -582,9 +579,8 @@
 											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
 											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-slate-500">{$t("Some linked recipes are unavailable to your account and were skipped.")}</p>{/if}
 											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-amber-200">{$t("Some quantities cannot be represented exactly in Shopping and were skipped.")}</p>{/if}
-											{#if suggestionPreview.skipped.covered_by_pantry > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.covered_by_pantry} {$t("ingredient group(s) are covered by visible Pantry stock. Stock remains unchanged.")}</p>{/if}
-											<p class="text-xs leading-5 text-slate-500">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans, recipes or Pantry stock.")}</p>
-											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-violet-300 px-4 text-sm font-semibold text-slate-950 hover:bg-violet-200 disabled:opacity-50">{suggestionImporting ? 'Adding…' : `Add ${selectedSuggestionIds.length} selected item${selectedSuggestionIds.length === 1 ? '' : 's'} to this list`}</button>
+											<p class="text-xs leading-5 text-slate-500">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans or recipes.")}</p>
+											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-violet-300 px-4 text-sm font-semibold text-slate-950 hover:bg-violet-200 disabled:opacity-50">{$t(suggestionImporting ? 'Adding…' : 'Add selected ingredients')} · {selectedSuggestionIds.length}</button>
 										{/if}
 									{/if}
 								</div>

@@ -100,6 +100,13 @@ class VehiclesController extends Controller
         ]);
     }
 
+    public function destroyOdometerReading(Request $request, int $reading, VehicleService $vehicles): JsonResponse
+    {
+        $vehicles->deleteRecord($this->actor($request), 'odometer', $reading);
+
+        return response()->json(['message' => 'Odometer reading deleted.']);
+    }
+
     public function odometerRevisions(Request $request, int $reading, VehicleService $vehicles): JsonResponse
     {
         return response()->json(['revisions' => $vehicles->odometerRevisions($this->actor($request), $reading)]);
@@ -136,6 +143,27 @@ class VehiclesController extends Controller
             'message' => 'Vehicle cost saved.',
             'cost' => $vehicles->addCost($this->actor($request), $vehicle, $request->validated()),
         ], 201);
+    }
+
+    public function destroyMaintenance(Request $request, int $record, VehicleService $vehicles): JsonResponse
+    {
+        $vehicles->deleteRecord($this->actor($request), 'maintenance', $record);
+
+        return response()->json(['message' => 'Maintenance record deleted.']);
+    }
+
+    public function destroyInsurance(Request $request, int $policy, VehicleService $vehicles): JsonResponse
+    {
+        $vehicles->deleteRecord($this->actor($request), 'insurance', $policy);
+
+        return response()->json(['message' => 'Insurance policy deleted.']);
+    }
+
+    public function destroyCost(Request $request, int $cost, VehicleService $vehicles): JsonResponse
+    {
+        $vehicles->deleteRecord($this->actor($request), 'costs', $cost);
+
+        return response()->json(['message' => 'Vehicle cost deleted.']);
     }
 
     private function actor(Request $request): User

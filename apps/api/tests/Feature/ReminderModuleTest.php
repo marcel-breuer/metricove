@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ModuleCapability;
 use App\Mail\UpcomingReminderMail;
 use App\Models\FinanceCategory;
 use App\Models\FinanceRecurringEntry;
@@ -10,14 +9,11 @@ use App\Models\HouseholdReminder;
 use App\Models\HouseholdSettings;
 use App\Models\HouseholdTaskChecklistItem;
 use App\Models\HouseholdTaskChecklistOccurrence;
-use App\Models\PantryItem;
-use App\Models\ResourceUserPermission;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\Vehicle;
 use App\Models\VehicleInsurancePolicy;
 use App\Models\VehicleMaintenanceRecord;
-use App\Services\Modules\ModuleAccessService;
 use App\Services\Modules\ModuleManagementService;
 use App\Services\Reminders\ReminderService;
 use Carbon\CarbonImmutable;
@@ -35,42 +31,30 @@ class ReminderModuleTest extends TestCase
         [$admin, $owner, $viewer] = $this->members();
         $this->enableSources($admin);
         $this->travelTo(CarbonImmutable::parse('2026-10-24 08:00:00'));
-        $sources = $this->createUpcomingSources($owner);
-        app(ModuleAccessService::class)->grantPrivateResourceAccess($owner, $sources['pantry'], $viewer, ModuleCapability::View);
+        $this->createUpcomingSources($owner);
         Mail::fake();
 
         $reminders = app(ReminderService::class);
         $reminders->updatePreferences($owner, ['email_enabled' => true, 'lead_days' => 7]);
         $reminders->updatePreferences($viewer, ['lead_days' => 7]);
 
-        $this->assertSame(['created' => 6, 'sent' => 5], $reminders->generate());
+        $this->assertSame(['created' => 4, 'sent' => 4], $reminders->generate());
         $this->assertSame(['created' => 0, 'sent' => 0], $reminders->generate());
-        Mail::assertSent(UpcomingReminderMail::class, 5);
+        Mail::assertSent(UpcomingReminderMail::class, 4);
         Mail::assertSent(UpcomingReminderMail::class, fn (UpcomingReminderMail $mail): bool => $mail->hasTo($owner->email));
         Mail::assertNotSent(UpcomingReminderMail::class, fn (UpcomingReminderMail $mail): bool => $mail->hasTo($viewer->email));
 
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(5, 'reminders')->assertJsonPath('unread_count', 5);
+            ->assertJsonCount(4, 'reminders')->assertJsonPath('unread_count', 4);
         $this->actingAs($viewer, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(1, 'reminders')->assertJsonPath('reminders.0.source_module', 'pantry')
-            ->assertJsonPath('reminders.0.title', 'Best before · Oat milk');
+            ->assertJsonCount(0, 'reminders');
         $this->actingAs($admin, 'web')->getJson('/api/reminders')->assertOk()->assertJsonCount(0, 'reminders');
 
-        $viewerReminder = HouseholdReminder::query()->where('recipient_user_id', $viewer->id)->firstOrFail();
-        $this->actingAs($viewer, 'web')->patchJson('/api/reminders/'.$viewerReminder->id, ['action' => 'read'])
+        $ownerReminder = HouseholdReminder::query()->where('recipient_user_id', $owner->id)->firstOrFail();
+        $this->actingAs($owner, 'web')->patchJson('/api/reminders/'.$ownerReminder->id, ['action' => 'read'])
             ->assertOk();
-        $this->actingAs($viewer, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonPath('reminders.0.is_read', true)->assertJsonPath('unread_count', 0);
-
-        $accessRow = ResourceUserPermission::query()
-            ->where('resource_type', $sources['pantry']->getMorphClass())
-            ->where('resource_id', $sources['pantry']->id)
-            ->where('user_id', $viewer->id)
-            ->where('capability', 'view')
-            ->firstOrFail();
-        $accessRow->delete();
-        $this->actingAs($viewer, 'web')->getJson('/api/reminders')->assertOk()->assertJsonCount(0, 'reminders');
-        $this->assertDatabaseMissing('household_reminders', ['id' => $viewerReminder->id]);
+        $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
+            ->assertJsonPath('reminders.0.is_read', true)->assertJsonPath('unread_count', 3);
     }
 
     public function test_member_can_disable_a_source_and_source_module_disable_removes_its_reminders(): void
@@ -80,15 +64,15 @@ class ReminderModuleTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-10-24 08:00:00'));
         $this->createUpcomingSources($owner);
         $service = app(ReminderService::class);
-        $service->updatePreferences($owner, ['sources' => ['pantry' => false], 'lead_days' => 7]);
+        $service->updatePreferences($owner, ['sources' => ['vehicles' => false, 'utilities' => false], 'lead_days' => 7]);
 
         $service->generate();
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(4, 'reminders')->assertJsonMissing(['source_module' => 'pantry']);
+            ->assertJsonCount(1, 'reminders');
 
         app(ModuleManagementService::class)->setEnabled($admin, 'finance', false);
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(3, 'reminders')->assertJsonMissing(['source_module' => 'finance']);
+            ->assertJsonCount(0, 'reminders')->assertJsonMissing(['source_module' => 'finance']);
         $this->assertDatabaseMissing('household_reminders', ['recipient_user_id' => $owner->id, 'source_module' => 'finance']);
     }
 
@@ -102,7 +86,7 @@ class ReminderModuleTest extends TestCase
         $service->updatePreferences($owner, [
             'email_enabled' => true,
             'lead_days' => 7,
-            'sources' => ['vehicles' => false, 'utilities' => false, 'pantry' => false],
+            'sources' => ['vehicles' => false, 'utilities' => false],
         ]);
         Mail::fake();
 
@@ -139,7 +123,7 @@ class ReminderModuleTest extends TestCase
         $service = app(ReminderService::class);
         $service->updatePreferences($owner, [
             'lead_days' => 7,
-            'sources' => ['vehicles' => false, 'utilities' => false, 'pantry' => false],
+            'sources' => ['vehicles' => false, 'utilities' => false],
         ]);
         Mail::fake();
 
@@ -172,7 +156,12 @@ class ReminderModuleTest extends TestCase
         ])->assertOk()->assertJsonPath('preferences.email_enabled', true)
             ->assertJsonPath('preferences.lead_days', 10)
             ->assertJsonPath('preferences.sources.finance', false)
-            ->assertJsonPath('preferences.sources.pantry', true);
+            ->assertJsonPath('preferences.sources', [
+                'finance' => false,
+                'vehicles' => true,
+                'utilities' => true,
+                'tasks' => true,
+            ]);
         $this->actingAs($owner, 'web')->patchJson('/api/reminders/preferences', ['lead_days' => 31])
             ->assertUnprocessable()->assertJsonValidationErrors('lead_days');
         $this->actingAs($other, 'web')->getJson('/api/reminders/preferences')->assertOk()
@@ -241,13 +230,12 @@ class ReminderModuleTest extends TestCase
 
     private function enableSources(User $admin): void
     {
-        foreach (['finance', 'vehicles', 'utilities', 'pantry', 'tasks'] as $module) {
+        foreach (['finance', 'vehicles', 'utilities', 'tasks'] as $module) {
             app(ModuleManagementService::class)->setEnabled($admin, $module, true);
         }
     }
 
-    /** @return array{pantry: PantryItem} */
-    private function createUpcomingSources(User $owner): array
+    private function createUpcomingSources(User $owner): void
     {
         $category = FinanceCategory::query()->create([
             'owner_user_id' => $owner->id,
@@ -323,18 +311,5 @@ class ReminderModuleTest extends TestCase
             ['owner_user_id' => $owner->id, 'created_by_user_id' => $owner->id, 'is_private' => true, 'reading_date' => '2026-10-20', 'value' => '120.000000'],
         ]);
 
-        $pantry = PantryItem::query()->create([
-            'owner_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
-            'is_private' => true,
-            'name' => 'Oat milk',
-            'quantity' => '1.000',
-            'unit' => 'carton',
-            'location' => 'Fridge',
-            'best_before_on' => '2026-10-29',
-            'version' => 1,
-        ]);
-
-        return ['pantry' => $pantry];
     }
 }

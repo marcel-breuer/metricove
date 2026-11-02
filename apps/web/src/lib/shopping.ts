@@ -45,27 +45,21 @@ export type MealShoppingSuggestion = {
 	quantity: string;
 	unit: string;
 	source_count: number;
-	pantry_quantity_used: string;
-	pantry_status: 'not_requested' | 'unavailable' | 'none' | 'unit_mismatch' | 'partially_covered';
 };
 
 export type MealSuggestionPreview = {
 	week_start: string;
-	subtract_pantry: boolean;
 	list_version: number;
 	preview_expires_at: number;
 	preview_token: string;
 	availability: {
 		meal_planning: boolean;
 		recipes: boolean;
-		pantry: boolean;
-		pantry_subtracted: boolean;
 	};
 	skipped: {
 		free_text_meals: number;
 		unavailable_recipes: number;
 		unsupported_quantities: number;
-		covered_by_pantry: number;
 	};
 	suggestions: MealShoppingSuggestion[];
 };
