@@ -2,6 +2,20 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.18.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.17.0...metricove-v0.18.0) (2026-11-06)
+
+
+### Features
+
+* **shopping:** allow quantity adjustments for meal suggestions ([45f3d13](https://github.com/marcel-breuer/metricove/commit/45f3d13c0a3adf3497a331abd6a86128d3f9a3dd))
+* **shopping:** allow quantity adjustments for meal suggestions ([45f3d13](https://github.com/marcel-breuer/metricove/commit/45f3d13c0a3adf3497a331abd6a86128d3f9a3dd))
+* **shopping:** allow quantity adjustments for meal suggestions ([01e02ec](https://github.com/marcel-breuer/metricove/commit/01e02eccee7813d97ffc0c65237da0e14e76a47f))
+
+
+### Bug Fixes
+
+* **deps:** update Symfony security patches ([7035677](https://github.com/marcel-breuer/metricove/commit/7035677a6f87b572d017868d9e1abb727548ea99))
+
 ## [0.17.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.16.1...metricove-v0.17.0) (2026-11-02)
 
 
