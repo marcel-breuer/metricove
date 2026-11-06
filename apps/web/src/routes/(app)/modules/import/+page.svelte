@@ -30,6 +30,9 @@
 	};
 	type ImportResult = { message?: string; created_count?: number; skipped_count?: number };
 	type ImportColumnMapping = { reading_date: string; value: string; note: string };
+	type NotionFoodPayload = { recipes?: Array<Record<string, unknown>>; meal_plans?: Array<Record<string, unknown>> };
+	type NotionFoodItem = { type: 'recipe' | 'meal_plan'; source_id: string; label: string; planned_for?: string | null; meal_type?: string | null; servings?: number | null; notes?: string | null; ingredients?: Array<{ name: string; quantity: string; unit: string; note: string | null }>; ready: boolean; duplicate: boolean; warnings: string[]; unsupported_fields?: string[] };
+	type NotionFoodPreview = { items: NotionFoodItem[]; ready_count: number; duplicate_count: number; review_count: number };
 	type FinanceCategory = { id: number; type: 'expense' | 'income'; name: string; visibility: string };
 	type FinanceImportRow = {
 		row: number;
@@ -66,6 +69,8 @@
 	const importAccess = $derived(shell.modules.find((module) => module.key === 'import'));
 	const utilityAccess = $derived(shell.modules.find((module) => module.key === 'utilities'));
 	const financeAccess = $derived(shell.modules.find((module) => module.key === 'finance'));
+	const recipeAccess = $derived(shell.modules.find((module) => module.key === 'recipes'));
+	const mealPlanningAccess = $derived(shell.modules.find((module) => module.key === 'meal_planning'));
 	const hasImportView = $derived(importAccess?.capabilities.view === true);
 	const canView = $derived(importAccess?.capabilities.view === true && utilityAccess?.capabilities.view === true);
 	const canImport = $derived(importAccess?.capabilities.create === true && utilityAccess?.capabilities.create === true);
@@ -75,6 +80,7 @@
 		...(canView ? [{ value: 'utilities' as const, label: 'Utility readings' }] : []),
 		...(canViewFinance ? [{ value: 'finance' as const, label: 'Finance transactions' }] : [])
 	]);
+	const canImportNotion = $derived(importAccess?.capabilities.create === true && (recipeAccess?.capabilities.create === true || mealPlanningAccess?.capabilities.create === true));
 
 	let importTarget = $state<ImportTarget>('utilities');
 	let meters = $state<UtilityMeter[]>([]);
@@ -102,6 +108,14 @@
 	let financeIdempotencyKey = $state('');
 	let financeSelectedRows = $state<number[]>([]);
 	let financeSelectionInitialized = $state(false);
+	let notionFile = $state<File | null>(null);
+	let notionPayload = $state<NotionFoodPayload | null>(null);
+	let notionPreview = $state<NotionFoodPreview | null>(null);
+	let notionSelected = $state<string[]>([]);
+	let notionLoading = $state(false);
+	let notionConfirming = $state(false);
+	let notionError = $state('');
+	let notionImported = $state<{ imported: number; duplicates: number } | null>(null);
 	const mappingReady = $derived(
 		columnMapping.reading_date !== ''
 			&& columnMapping.value !== ''
@@ -400,6 +414,72 @@
 			confirming = false;
 		}
 	}
+
+	function resetNotionPreview(): void {
+		notionPayload = null;
+		notionPreview = null;
+		notionSelected = [];
+		notionError = '';
+		notionImported = null;
+	}
+
+	async function previewNotionFile(event: SubmitEvent): Promise<void> {
+		event.preventDefault();
+		notionError = '';
+		if (!canImportNotion || !notionFile) { notionError = 'Import Create and Recipes or Meal Planning Create access are required.'; return; }
+		if (notionFile.size > 5 * 1024 * 1024) { notionError = 'The Notion export exceeds the 5 MB limit.'; return; }
+		const token = csrfToken();
+		if (!token) { notionError = 'Reload this page and try again.'; return; }
+		notionLoading = true;
+		try {
+			const parsed = JSON.parse(await notionFile.text()) as NotionFoodPayload;
+			if (!parsed || typeof parsed !== 'object' || (!Array.isArray(parsed.recipes) && !Array.isArray(parsed.meal_plans))) throw new Error('Choose a Notion food export in the documented JSON format.');
+			const response = await fetch('/api/import/notion/food/preview', {
+				method: 'POST', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+				body: JSON.stringify(parsed),
+			});
+			if (response.status === 401) { await goto('/login'); return; }
+			const result = (await response.json()) as NotionFoodPreview & ApiResponse;
+			if (!response.ok) throw new Error(firstError(result) || result.message || 'The Notion export could not be previewed.');
+			notionPayload = parsed;
+			notionPreview = result;
+			notionSelected = result.items.filter((item) => item.ready && !item.duplicate).map((item) => item.source_id);
+		} catch (cause) {
+			notionError = cause instanceof Error ? cause.message : 'The Notion export could not be previewed.';
+		} finally {
+			notionLoading = false;
+		}
+	}
+
+	function toggleNotionItem(sourceId: string, checked: boolean): void {
+		notionSelected = checked ? [...notionSelected, sourceId] : notionSelected.filter((id) => id !== sourceId);
+	}
+
+	async function importNotionSelection(): Promise<void> {
+		if (!canImportNotion || !notionPayload || !notionPreview || notionSelected.length === 0 || notionConfirming) return;
+		const token = csrfToken();
+		if (!token) { notionError = 'Reload this page and try again.'; return; }
+		notionConfirming = true;
+		notionError = '';
+		notionImported = null;
+		try {
+			const response = await fetch('/api/import/notion/food/import', {
+				method: 'POST', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+				body: JSON.stringify({ ...notionPayload, selected_source_ids: notionSelected }),
+			});
+			if (response.status === 401) { await goto('/login'); return; }
+			const result = (await response.json()) as { imported_count?: number; duplicate_count?: number } & ApiResponse;
+			if (!response.ok) throw new Error(firstError(result) || result.message || 'The Notion import could not be completed.');
+			notionImported = { imported: result.imported_count ?? 0, duplicates: result.duplicate_count ?? 0 };
+			await previewNotionFile(new SubmitEvent('submit', { cancelable: true }));
+		} catch (cause) {
+			notionError = cause instanceof Error ? cause.message : 'The Notion import could not be completed.';
+		} finally {
+			notionConfirming = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -431,6 +511,46 @@
 					</select>
 				</label>
 				<p class="mt-2 text-xs leading-5 text-slate-500">{$t("Only destinations you can access are listed. The preview validates the selected mapping before anything is saved.")}</p>
+			</section>
+		{/if}
+		{#if canImportNotion}
+			<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="notion-food-import-heading">
+				<div class="max-w-3xl">
+					<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Notion import")}</p>
+					<h2 id="notion-food-import-heading" class="mt-1 text-xl font-semibold text-white">{$t("Bring recipes and old meal plans into Metricove")}</h2>
+					<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Upload a JSON export prepared from Notion MCP. Review every recipe and meal before importing; new entries stay private to your account.")}</p>
+				</div>
+				{#if notionError}<p role="alert" class="mt-4 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(notionError)}</p>{/if}
+				{#if notionImported}<p role="status" class="mt-4 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t('Notion import result: {imported} imported; {duplicates} duplicates skipped.', { imported: notionImported.imported, duplicates: notionImported.duplicates })}</p>{/if}
+				<div class="mt-5 grid gap-5 lg:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.3fr)]">
+					<form class="space-y-3" onsubmit={previewNotionFile}>
+						<label class="block text-sm font-medium text-slate-200">{$t("Notion export JSON")} <span class="font-normal text-slate-500">{$t("(max 5 MB)")}</span>
+							<input type="file" accept=".json,application/json" onchange={(event) => { notionFile = event.currentTarget.files?.[0] ?? null; resetNotionPreview(); }} class="mt-2 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+						</label>
+						<button type="submit" disabled={notionLoading || !notionFile} class="min-h-11 w-full rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-100 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{$t(notionLoading ? 'Checking export…' : 'Preview Notion import')}</button>
+						<p class="text-xs leading-5 text-slate-500">{$t("Recipes need a title, instructions and ingredients with exact quantities and units. Plans need a date, meal and dish name. Unsupported or incomplete entries are flagged for review.")}</p>
+					</form>
+					<div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4" aria-live="polite">
+						{#if !notionPreview}
+							<p class="text-sm leading-6 text-slate-400">{$t("Choose an export file to see which entries can be added and which need review.")}</p>
+						{:else}
+							<div class="flex flex-wrap items-center gap-2 text-xs text-slate-300"><span class="rounded-full border border-cyan-300/30 px-3 py-1">{notionPreview.ready_count} {$t("ready")}</span><span class="rounded-full border border-slate-700 px-3 py-1">{notionPreview.duplicate_count} {$t("duplicates")}</span><span class="rounded-full border border-amber-300/30 px-3 py-1">{notionPreview.review_count} {$t("need review")}</span></div>
+							<ul class="mt-4 max-h-[28rem] divide-y divide-slate-800 overflow-auto rounded-lg border border-slate-800">
+								{#each notionPreview.items as item (item.type + ':' + item.source_id)}
+									<li class="flex gap-3 px-3 py-3 text-sm">
+										<input type="checkbox" checked={notionSelected.includes(item.source_id)} disabled={!item.ready || item.duplicate || notionConfirming} onchange={(event) => toggleNotionItem(item.source_id, event.currentTarget.checked)} aria-label={$t('Select {item}', { item: item.label })} class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-300 focus:ring-cyan-300 disabled:opacity-40" />
+										<div class="min-w-0 flex-1"><div class="flex flex-wrap items-baseline gap-x-2"><span class="font-medium text-slate-100">{item.label}</span><span class="text-xs text-slate-500">{$t(item.type === 'recipe' ? 'Recipe' : 'Meal plan')}{item.planned_for ? ` · ${item.planned_for}` : ''}{item.meal_type ? ` · ${$t(item.meal_type)}` : ''}{item.servings ? ` · ${item.servings} ${$t(item.servings === 1 ? 'serving' : 'servings')}` : ''}</span><span class="text-xs {item.duplicate ? 'text-slate-500' : item.ready ? 'text-cyan-200' : 'text-amber-200'}">{$t(item.duplicate ? 'Already imported' : item.ready ? 'Ready to import' : 'Review needed')}</span></div>
+											{#if item.ingredients?.length}<ul class="mt-1 space-y-0.5 text-xs text-slate-300">{#each item.ingredients as ingredient, index (`${index}-${ingredient.name}`)}<li>{ingredient.quantity || '—'} {ingredient.unit} {ingredient.name}{ingredient.note ? ` · ${ingredient.note}` : ''}</li>{/each}</ul>{/if}
+											{#if item.notes}<p class="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-300">{$t('Notes')}: {item.notes}</p>{/if}
+											{#if item.unsupported_fields?.length}<p class="mt-1 text-xs text-amber-100/80">{$t('Unsupported fields')}: {item.unsupported_fields.join(', ')}</p>{/if}
+											{#if item.warnings.length}<ul class="mt-1 list-inside list-disc text-xs leading-5 text-amber-100/80">{#each item.warnings as warning}<li>{$t(warning)}</li>{/each}</ul>{/if}</div>
+										</li>
+								{/each}
+							</ul>
+							<button type="button" onclick={importNotionSelection} disabled={notionConfirming || notionSelected.length === 0} class="mt-4 min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{$t(notionConfirming ? 'Importing…' : 'Import selected entries · {count}', { count: notionSelected.length })}</button>
+						{/if}
+					</div>
+				</div>
 			</section>
 		{/if}
 		{#if importTarget === 'utilities' && canView}
