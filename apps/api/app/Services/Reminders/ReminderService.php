@@ -11,6 +11,7 @@ use App\Models\HouseholdReminder;
 use App\Models\HouseholdTask;
 use App\Models\HouseholdTaskChecklistItem;
 use App\Models\HouseholdTaskChecklistOccurrence;
+use App\Models\PantryItem;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
@@ -32,7 +33,7 @@ use Throwable;
 
 class ReminderService
 {
-    private const SOURCES = ['finance', 'vehicles', 'utilities', 'tasks'];
+    private const SOURCES = ['finance', 'vehicles', 'utilities', 'pantry', 'tasks'];
 
     public function __construct(
         private readonly ModuleAccessService $access,
@@ -326,6 +327,17 @@ class ReminderService
             }
         }
 
+        if ($this->states->isEnabled('pantry')) {
+            foreach (PantryItem::query()
+                ->whereNotNull('best_before_on')
+                ->whereDate('best_before_on', '>=', $today->toDateString())
+                ->whereDate('best_before_on', '<=', $limit->toDateString())
+                ->orderBy('best_before_on')->limit(500)->get() as $item) {
+                $due = CarbonImmutable::parse($item->best_before_on)->format('Y-m-d');
+                $items[] = $this->candidate('pantry', 'pantry_item', $item->id, $due, $due);
+            }
+        }
+
         if ($this->states->isEnabled('utilities')) {
             foreach (UtilityMeter::query()->whereNotNull('alert_threshold')->orderBy('id')->limit(500)->get() as $meter) {
                 /** @var Collection<int, UtilityReading> $readings */
@@ -436,6 +448,14 @@ class ReminderService
             return ['title' => 'Vehicle service · '.$vehicle->name.' · '.$source->title, 'href' => '/modules/vehicles/'.$vehicle->id, 'due_on' => $occurrence];
         }
 
+        if ($source instanceof PantryItem) {
+            if ($source->best_before_on === null || CarbonImmutable::parse($source->best_before_on)->format('Y-m-d') !== $occurrence) {
+                return null;
+            }
+
+            return ['title' => 'Best before · '.$source->name, 'href' => '/modules/pantry', 'due_on' => $occurrence];
+        }
+
         if ($source instanceof UtilityMeter) {
             if ($source->alert_threshold === null) {
                 return null;
@@ -470,6 +490,7 @@ class ReminderService
             'finance_recurring_entry' => FinanceRecurringEntry::query()->find($id),
             'vehicle_insurance' => VehicleInsurancePolicy::query()->find($id),
             'vehicle_maintenance' => VehicleMaintenanceRecord::query()->find($id),
+            'pantry_item' => PantryItem::query()->find($id),
             'utility_meter' => UtilityMeter::query()->find($id),
             'task_checklist_occurrence' => HouseholdTaskChecklistOccurrence::query()->with(['task.assignee', 'task.createdBy', 'item'])->find($id),
             default => null,

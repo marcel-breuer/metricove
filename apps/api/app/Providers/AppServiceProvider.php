@@ -19,10 +19,13 @@ use App\Services\Analytics\AnalyticsService;
 use App\Services\Auth\ConfiguredFrontendUrl;
 use App\Services\Finance\FinanceService;
 use App\Services\Import\TesseractMeterPhotoOcr;
+use App\Services\Mcp\McpWriteWorkflowRegistry;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
+use App\Services\Pantry\PantryService;
 use App\Services\Recipes\RecipeService;
 use App\Services\Shopping\ShoppingService;
+use App\Services\Tasks\HouseholdTaskService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -55,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(VehiclesSnapshotTool::class),
                 new VisibleSnapshotTool('recipes', 'list_visible_recipes', 'List recipes the signed-in member is allowed to view, including only their authorized ingredients.', fn (User $actor): array => ['recipes' => $app->make(RecipeService::class)->index($actor)]),
                 new VisibleSnapshotTool('meal_planning', 'show_visible_meal_plans', 'Show the current Monday-to-Sunday meal plan slots visible to the signed-in member.', fn (User $actor): array => $app->make(MealPlanningService::class)->week($actor, now()->startOfWeek()->toDateString())),
+                new VisibleSnapshotTool('pantry', 'list_visible_pantry_items', 'List pantry stock lines and quantities visible to the signed-in member.', fn (User $actor): array => ['items' => $app->make(PantryService::class)->index($actor)]),
                 new VisibleSnapshotTool('shopping', 'list_visible_shopping_lists', 'List visible shopping lists and their currently visible items.', function (User $actor) use ($app): array {
                     $shopping = $app->make(ShoppingService::class);
                     $lists = array_slice($shopping->index($actor), 0, 12);
@@ -73,8 +77,13 @@ class AppServiceProvider extends ServiceProvider
                     ];
                 }),
                 new VisibleSnapshotTool('analytics', 'show_visible_analytics', 'Show the signed-in member’s own analytics dashboard, with source data recalculated under current module and record permissions.', fn (User $actor): array => $app->make(AnalyticsService::class)->dashboard($actor)),
+                new VisibleSnapshotTool('tasks', 'list_visible_tasks', 'List open household tasks visible to the signed-in member. Private tasks are limited to their owner or explicitly authorized members.', fn (User $actor): array => ['tasks' => $app->make(HouseholdTaskService::class)->index($actor, ['status' => 'open'])]),
             ]);
         });
+        $this->app->singleton(McpWriteWorkflowRegistry::class, fn ($app): McpWriteWorkflowRegistry => new McpWriteWorkflowRegistry(
+            $app,
+            $app->make(ModuleAccessService::class),
+        ));
     }
 
     /**

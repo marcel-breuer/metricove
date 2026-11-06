@@ -16,13 +16,62 @@ use Mcp\Server\Authorization\AccessToken;
 
 class McpAccessService
 {
+    /** @var list<string> */
+    private const MCP_VIEW_MODULES = [
+        'tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning',
+        'pantry', 'shopping', 'analytics', 'tasks', 'import', 'notes', 'receipts',
+    ];
+
+    private const CORE_PROFILE_SCOPE = 'core:profile:view';
+
     /** @var array<string, array{module: string, capability: ModuleCapability}> */
     private const SCOPES = [
         'tracking:view' => ['module' => 'tracking', 'capability' => ModuleCapability::View],
-        'finance:view' => ['module' => 'finance', 'capability' => ModuleCapability::View],
         'utilities:view' => ['module' => 'utilities', 'capability' => ModuleCapability::View],
         'utilities:create' => ['module' => 'utilities', 'capability' => ModuleCapability::Create],
+        'utilities:edit' => ['module' => 'utilities', 'capability' => ModuleCapability::Edit],
         'vehicles:view' => ['module' => 'vehicles', 'capability' => ModuleCapability::View],
+        'vehicles:create' => ['module' => 'vehicles', 'capability' => ModuleCapability::Create],
+        'vehicles:edit' => ['module' => 'vehicles', 'capability' => ModuleCapability::Edit],
+        'finance:view' => ['module' => 'finance', 'capability' => ModuleCapability::View],
+        'finance:create' => ['module' => 'finance', 'capability' => ModuleCapability::Create],
+        'finance:edit' => ['module' => 'finance', 'capability' => ModuleCapability::Edit],
+        'recipes:view' => ['module' => 'recipes', 'capability' => ModuleCapability::View],
+        'recipes:create' => ['module' => 'recipes', 'capability' => ModuleCapability::Create],
+        'recipes:edit' => ['module' => 'recipes', 'capability' => ModuleCapability::Edit],
+        'meal_planning:view' => ['module' => 'meal_planning', 'capability' => ModuleCapability::View],
+        'meal_planning:create' => ['module' => 'meal_planning', 'capability' => ModuleCapability::Create],
+        'meal_planning:edit' => ['module' => 'meal_planning', 'capability' => ModuleCapability::Edit],
+        'pantry:view' => ['module' => 'pantry', 'capability' => ModuleCapability::View],
+        'pantry:create' => ['module' => 'pantry', 'capability' => ModuleCapability::Create],
+        'pantry:edit' => ['module' => 'pantry', 'capability' => ModuleCapability::Edit],
+        'shopping:view' => ['module' => 'shopping', 'capability' => ModuleCapability::View],
+        'shopping:create' => ['module' => 'shopping', 'capability' => ModuleCapability::Create],
+        'shopping:edit' => ['module' => 'shopping', 'capability' => ModuleCapability::Edit],
+        'analytics:view' => ['module' => 'analytics', 'capability' => ModuleCapability::View],
+        'analytics:create' => ['module' => 'analytics', 'capability' => ModuleCapability::Create],
+        'analytics:edit' => ['module' => 'analytics', 'capability' => ModuleCapability::Edit],
+        'tasks:view' => ['module' => 'tasks', 'capability' => ModuleCapability::View],
+        'import:view' => ['module' => 'import', 'capability' => ModuleCapability::View],
+        'receipts:view' => ['module' => 'receipts', 'capability' => ModuleCapability::View],
+        'notes:view' => ['module' => 'notes', 'capability' => ModuleCapability::View],
+        'notes:create' => ['module' => 'notes', 'capability' => ModuleCapability::Create],
+        'notes:edit' => ['module' => 'notes', 'capability' => ModuleCapability::Edit],
+        'notes:manage' => ['module' => 'notes', 'capability' => ModuleCapability::Manage],
+        'tasks:create' => ['module' => 'tasks', 'capability' => ModuleCapability::Create],
+        'tasks:edit' => ['module' => 'tasks', 'capability' => ModuleCapability::Edit],
+        'tracking:create' => ['module' => 'tracking', 'capability' => ModuleCapability::Create],
+        'tracking:edit' => ['module' => 'tracking', 'capability' => ModuleCapability::Edit],
+        'tracking:manage' => ['module' => 'tracking', 'capability' => ModuleCapability::Manage],
+        'utilities:manage' => ['module' => 'utilities', 'capability' => ModuleCapability::Manage],
+        'vehicles:manage' => ['module' => 'vehicles', 'capability' => ModuleCapability::Manage],
+        'finance:manage' => ['module' => 'finance', 'capability' => ModuleCapability::Manage],
+        'recipes:manage' => ['module' => 'recipes', 'capability' => ModuleCapability::Manage],
+        'meal_planning:manage' => ['module' => 'meal_planning', 'capability' => ModuleCapability::Manage],
+        'pantry:manage' => ['module' => 'pantry', 'capability' => ModuleCapability::Manage],
+        'shopping:manage' => ['module' => 'shopping', 'capability' => ModuleCapability::Manage],
+        'analytics:manage' => ['module' => 'analytics', 'capability' => ModuleCapability::Manage],
+        'tasks:manage' => ['module' => 'tasks', 'capability' => ModuleCapability::Manage],
     ];
 
     public function __construct(private readonly ModuleAccessService $access) {}
@@ -34,17 +83,34 @@ class McpAccessService
             return [];
         }
 
-        $allowed = [];
-        foreach (self::SCOPES as $scope => $definition) {
+        $allowed = [self::CORE_PROFILE_SCOPE];
+        foreach (self::MCP_VIEW_MODULES as $module) {
             try {
-                $this->access->authorize($user, $definition['module'], $definition['capability']);
-                if ($scope === 'utilities:create') {
-                    $this->access->authorize($user, 'utilities', ModuleCapability::View);
-                }
-                $allowed[] = $scope;
+                $this->access->authorize($user, $module, ModuleCapability::View);
+                $allowed[] = $module.':view';
             } catch (AuthorizationException|ModuleDisabled) {
                 // Module state and member grants are checked again for every request.
             }
+        }
+
+        foreach (self::SCOPES as $scope => $definition) {
+            if ($definition['capability'] === ModuleCapability::View || $scope === 'utilities:create') {
+                continue;
+            }
+            try {
+                $this->access->authorize($user, $definition['module'], $definition['capability']);
+                $allowed[] = $scope;
+            } catch (AuthorizationException|ModuleDisabled) {
+                // Only currently granted write capabilities are offered for token creation.
+            }
+        }
+
+        try {
+            $this->access->authorize($user, 'utilities', ModuleCapability::Create);
+            $this->access->authorize($user, 'utilities', ModuleCapability::View);
+            $allowed[] = 'utilities:create';
+        } catch (AuthorizationException|ModuleDisabled) {
+            // Write scopes are exposed only when an approved MCP operation exists.
         }
 
         return $allowed;
@@ -137,13 +203,17 @@ class McpAccessService
         }
 
         $definition = self::SCOPES[$scope] ?? null;
+        if ($scope === self::CORE_PROFILE_SCOPE) {
+            return $actor;
+        }
+
         if ($definition === null) {
             throw new AuthorizationException('The MCP action is unavailable.');
         }
 
         $this->access->authorize($actor, $definition['module'], $definition['capability']);
         if ($scope === 'utilities:create') {
-            $this->access->authorize($actor, 'utilities', ModuleCapability::View);
+            $this->access->authorize($actor, $definition['module'], ModuleCapability::View);
         }
 
         return $actor;

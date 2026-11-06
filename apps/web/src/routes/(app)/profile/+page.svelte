@@ -28,12 +28,12 @@
 	let passwordMessage = $state('');
 	let passwordError = $state('');
 	type McpToken = { id: number; name: string; scopes: string[]; expires_at: string | null; revoked_at: string | null; last_used_at: string | null; created_at: string | null };
-	type McpAction = { id: string; action: string; state: string; meter: string; reading_date: string; value: string; unit: string; note: string | null; token_name: string; expires_at: string };
+	type McpAction = { id: string; action: string; state: string; details?: Record<string, unknown>; meter?: string; reading_date?: string; value?: string; unit?: string; note?: string | null; token_name: string; expires_at: string };
 	let mcpEndpoint = $state('');
-	let allowedScopes: string[] = $state([]);
-	let selectedScopes: string[] = $state([]);
-	let mcpTokens: McpToken[] = $state([]);
-	let mcpActions: McpAction[] = $state([]);
+	let allowedScopes = $state<string[]>([]);
+	let selectedScopes = $state<string[]>([]);
+	let mcpTokens = $state<McpToken[]>([]);
+	let mcpActions = $state<McpAction[]>([]);
 	let tokenName = $state('');
 	let tokenExpiry = $state(90);
 	let tokenNeverExpires = $state(false);
@@ -51,6 +51,7 @@
 	});
 
 	const scopeLabels: Record<string, string> = {
+		'core:profile:view': 'View your basic profile preferences',
 		'tracking:view': 'View permitted tracking summaries',
 		'finance:view': 'View permitted monthly finance totals',
 		'utilities:view': 'View permitted utility readings',
@@ -62,6 +63,37 @@
 		{ value: 'en', label: 'English', icon: 'language', marker: 'EN' },
 		{ value: 'de', label: 'German', icon: 'language', marker: 'DE' }
 	] as const;
+	const moduleScopeLabels: Record<string, string> = {
+		tracking: 'Tracking', utilities: 'Utilities', vehicles: 'Vehicles', finance: 'Finance', recipes: 'Recipes',
+		core: 'Core', meal_planning: 'Meal Planning', pantry: 'Pantry', shopping: 'Shopping', analytics: 'Analytics', tasks: 'Tasks', import: 'Import', notes: 'Notes', receipts: 'Receipts'
+	};
+
+	function scopeLabel(scope: string): string {
+		if (scopeLabels[scope]) return $t(scopeLabels[scope]);
+		const [module, capability] = scope.split(':');
+		const labels: Record<string, string> = { view: 'View access', create: 'Create access', edit: 'Edit access', manage: 'Manage access' };
+		return `${$t(labels[capability] || capability)} · ${$t(moduleScopeLabels[module] || module)}`;
+	}
+
+	const approvalFieldLabels: Record<string, string> = {
+		recipe_id: 'Recipe', tracker_id: 'Tracker', schema_version: 'Tracker schema version', recorded_at: 'Recorded at',
+		vehicle_id: 'Vehicle', reading_id: 'Reading', reading_date: 'Date', meter_id: 'Meter', list_id: 'Shopping list',
+		item_id: 'Item', slot_id: 'Meal plan slot', task_id: 'Task', widget_id: 'Analytics widget', transaction_id: 'Transaction',
+		finance_category_id: 'Finance category', expected_version: 'Record version', quantity_delta: 'Quantity change',
+		category_id: 'Finance category', budget_id: 'Finance budget', entry_id: 'Recurring entry', amount: 'Amount', currency: 'Currency',
+		period_start: 'Period start', period_end: 'Period end', frequency: 'Frequency', starts_on: 'Starts on', next_due_on: 'Next due date', ends_on: 'Ends on',
+		is_active: 'Active', meter_type: 'Meter type', alert_threshold: 'Alert threshold', make: 'Make', model: 'Model', model_year: 'Model year',
+		fuel_type: 'Fuel type', odometer_unit: 'Odometer unit', title: 'Title', service_type: 'Service type', occurred_on: 'Occurred on',
+		odometer_value: 'Odometer value', provider: 'Provider', coverage_type: 'Coverage type', valid_from: 'Valid from', valid_until: 'Valid until',
+		fields: 'Fields', label: 'Field name', type: 'Data type', unit: 'Unit', is_required: 'Required field', minimum: 'Minimum', maximum: 'Maximum', visibility: 'Visibility',
+		best_before_on: 'Best-before date', planned_for: 'Planned for', dish_type: 'Dish type', dish_name: 'Dish',
+		meal_type: 'Meal', metric_key: 'Metric', range_key: 'Time range', chart_type: 'Chart type', preparation_minutes: 'Preparation minutes',
+		recurrence_frequency: 'Recurrence', recurrence_interval: 'Recurrence interval', assignee_id: 'Assignee'
+	};
+
+	function approvalFieldLabel(key: string): string {
+		return $t(approvalFieldLabels[key] ?? key.replaceAll('_', ' '));
+	}
 
 	async function loadProfile(): Promise<void> {
 		try {
@@ -383,8 +415,8 @@
 							<legend class="mb-2 text-sm font-medium text-slate-200">{$t("Available scopes")}</legend>
 							{#each allowedScopes as scope}
 								<label class="flex items-start gap-3 rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-300">
-									<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-cyan-300" />
-									<span>{$t(scopeLabels[scope] || scope)}<span class="mt-0.5 block font-mono text-xs text-slate-500">{scope}</span></span>
+					<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-cyan-300" />
+									<span>{scopeLabel(scope)}<span class="mt-0.5 block font-mono text-xs text-slate-500">{scope}</span></span>
 								</label>
 							{/each}
 						</fieldset>
@@ -431,13 +463,14 @@
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
 				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t('Human approval')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
-				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('A connected MCP client cannot approve its own writes. Review each utility reading here before the client can save it.')}</p>
+				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
 				<div class="mt-6 space-y-4">
 					{#if mcpActions.length === 0}<p class="rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">{$t('No pending actions.')}</p>{/if}
 					{#each mcpActions as action}
 						<article class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-slate-100">{action.meter}</h3><span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-200">{action.state}</span></div>
-							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">{$t('Date')}</dt><dd class="mt-1 text-slate-200">{formatDate(action.reading_date)}</dd></div><div><dt class="text-slate-500">{$t('Reading')}</dt><dd class="mt-1 text-slate-200">{formatMeasurement(action.value, action.unit)} {action.unit}</dd></div><div class="col-span-2"><dt class="text-slate-500">{$t('Requested by')}</dt><dd class="mt-1 text-slate-200">{action.token_name}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-slate-500">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-200">{action.note}</dd></div>{/if}<div class="col-span-2"><dt class="text-slate-500">{$t('Expires')}</dt><dd class="mt-1 text-slate-200">{formatDateTime(action.expires_at)}</dd></div></dl>
+							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-slate-100">{action.meter ?? $t(action.action)}</h3><span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-200">{action.state}</span></div>
+							{#if action.meter}<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">{$t('Date')}</dt><dd class="mt-1 text-slate-200">{formatDate(action.reading_date ?? '')}</dd></div><div><dt class="text-slate-500">{$t('Reading')}</dt><dd class="mt-1 text-slate-200">{formatMeasurement(action.value ?? '', action.unit ?? '')} {action.unit}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-slate-500">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-200">{action.note}</dd></div>{/if}</dl>{:else}<dl class="mt-4 space-y-2 text-sm">{#each Object.entries(action.details ?? {}) as [key, value]}<div class="grid grid-cols-[minmax(0,8rem)_1fr] gap-3"><dt class="break-words text-slate-500">{approvalFieldLabel(key)}</dt><dd class="break-words text-slate-200">{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>{/each}</dl>{/if}
+							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div class="col-span-2"><dt class="text-slate-500">{$t('Requested by')}</dt><dd class="mt-1 text-slate-200">{action.token_name}</dd></div><div class="col-span-2"><dt class="text-slate-500">{$t('Expires')}</dt><dd class="mt-1 text-slate-200">{formatDateTime(action.expires_at)}</dd></div></dl>
 							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-emerald-200">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Cancel approval')}</button>{/if}
 						</article>
 					{/each}
