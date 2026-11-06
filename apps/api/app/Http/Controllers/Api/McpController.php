@@ -195,7 +195,7 @@ class McpController extends Controller
         foreach ($writeRegistry->all() as $workflow) {
             $candidateScopes = array_map(fn (string $capability): string => $workflow['module'].':'.$capability, $workflow['capabilities']);
             $hasScope = array_intersect($candidateScopes, $scopes) !== [];
-            if (! $hasScope) {
+            if (! $hasScope || array_diff($workflow['required_scopes'], $scopes) !== []) {
                 continue;
             }
             $hasWriteTool = true;

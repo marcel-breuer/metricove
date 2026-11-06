@@ -28,8 +28,9 @@ class McpWriteWorkflowService
     {
         $validated = $this->registry->validate($workflowName, $arguments);
         $definition = $this->registry->get($workflowName);
+        $summary = isset($definition['preview']) ? ($definition['preview'])($this->access->assertTokenAllows($token, $definition['module'].':'.$definition['capability']), $validated) : null;
 
-        return DB::transaction(function () use ($token, $workflowName, $validated, $definition): array {
+        return DB::transaction(function () use ($token, $workflowName, $validated, $definition, $summary): array {
             HouseholdSettings::query()->whereKey(1)->lockForUpdate()->firstOrFail();
             $freshToken = McpAccessToken::query()->whereKey($token->id)->lockForUpdate()->firstOrFail();
             $actor = $this->authorizeWorkflowToken($freshToken, $workflowName, $definition, $validated);
@@ -40,7 +41,7 @@ class McpWriteWorkflowService
                 'user_id' => $actor->id,
                 'mcp_access_token_id' => $freshToken->id,
                 'action' => 'workflow:'.$workflowName,
-                'payload' => ['arguments' => $validated],
+                'payload' => ['arguments' => $validated, ...($summary === null ? [] : ['preview' => $summary])],
                 'state' => 'pending',
                 'expires_at' => now()->addMinutes(10),
             ]);
@@ -51,6 +52,7 @@ class McpWriteWorkflowService
                 'state' => 'pending_human_approval',
                 'action' => $definition['title'],
                 'details' => $validated,
+                ...($summary === null ? [] : ['summary' => $summary]),
                 'expires_at' => $preview->expires_at->toISOString(),
             ];
         }, 3);
@@ -76,6 +78,7 @@ class McpWriteWorkflowService
                     'action' => $workflow['title'],
                     'state' => $preview->state,
                     'details' => $payload['arguments'] ?? [],
+                    'summary' => $payload['preview'] ?? null,
                     'token_name' => $preview->token()->value('name') ?? 'Revoked token',
                     'expires_at' => $preview->expires_at->toISOString(),
                 ];
@@ -180,8 +183,13 @@ class McpWriteWorkflowService
                     return null;
                 }
 
-                $this->registry->execute($workflowName, $actor, $arguments);
+                $execution = $this->registry->execute($workflowName, $actor, $arguments);
                 $result = ['status' => 'completed'];
+                if ($workflowName === 'import_notion_recipes') {
+                    $result['imported_count'] = (int) ($execution['imported_count'] ?? 0);
+                    $result['duplicate_count'] = (int) ($execution['duplicate_count'] ?? 0);
+                    $result['review_count'] = (int) ($execution['review_count'] ?? 0);
+                }
                 $preview->forceFill([
                     'state' => 'completed',
                     'idempotency_key' => $idempotencyKey,
@@ -212,7 +220,7 @@ class McpWriteWorkflowService
         return substr($preview->action, strlen('workflow:'));
     }
 
-    /** @param array{module: string, title: string, capabilities: list<string>} $definition */
+    /** @param array{module: string, title: string, capabilities: list<string>, required_scopes?: list<string>} $definition */
     private function authorizeWorkflowToken(McpAccessToken $token, string $workflowName, array $definition, array $arguments): User
     {
         $actor = null;
@@ -222,6 +230,12 @@ class McpWriteWorkflowService
                 break;
             } catch (AuthorizationException|ModuleDisabled) {
                 // The domain service still checks the exact operation and resource capability.
+            }
+        }
+
+        if (isset($definition['required_scopes'])) {
+            foreach ($definition['required_scopes'] as $scope) {
+                $this->access->assertTokenAllows($token, $scope);
             }
         }
 
