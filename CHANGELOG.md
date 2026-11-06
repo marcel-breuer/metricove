@@ -2,6 +2,20 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.20.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.19.0...metricove-v0.20.0) (2026-11-06)
+
+
+### Features
+
+* **mcp:** add notes and receipts workflows ([69ba3f5](https://github.com/marcel-breuer/metricove/commit/69ba3f5a12bff1f661869723a1222e374215fb0f))
+* **mcp:** expose all enabled module workflows ([e5f8b7b](https://github.com/marcel-breuer/metricove/commit/e5f8b7b97c3f6545ffc9c7241ba7bb312f76066e))
+* **mcp:** expose permission-scoped module workflows ([bdebdd1](https://github.com/marcel-breuer/metricove/commit/bdebdd1f84b2fe4cd56ad0d17170f48317a81b6c))
+
+
+### Bug Fixes
+
+* **i18n:** translate restored pantry page ([f0a64d3](https://github.com/marcel-breuer/metricove/commit/f0a64d33e8c7e2f175b10ae5ae05d3ead283482a))
+
 ## [0.19.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.18.0...metricove-v0.19.0) (2026-11-06)
 
 
