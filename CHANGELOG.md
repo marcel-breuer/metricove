@@ -2,6 +2,15 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.19.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.18.0...metricove-v0.19.0) (2026-11-06)
+
+
+### Features
+
+* add review-first Notion food import ([b77af59](https://github.com/marcel-breuer/metricove/commit/b77af593395a4c64a7584865a41089731e29a3b1))
+* **import:** add review-first Notion food import ([b77af59](https://github.com/marcel-breuer/metricove/commit/b77af593395a4c64a7584865a41089731e29a3b1))
+* **import:** add review-first Notion food import ([f3db8f8](https://github.com/marcel-breuer/metricove/commit/f3db8f82ef84c66049f747e8c4a952d2aaa80c82))
+
 ## [0.18.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.17.0...metricove-v0.18.0) (2026-11-06)
 
 
