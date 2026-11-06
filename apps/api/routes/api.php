@@ -284,6 +284,12 @@ Route::middleware('web')->group(function (): void {
         });
 
         Route::prefix('import')->name('import.')->group(function (): void {
+            Route::post('/notion/food/preview', [ImportController::class, 'previewNotionFood'])
+                ->middleware(['module.access:import,create', 'throttle:10,1'])
+                ->name('notion.food.preview');
+            Route::post('/notion/food/import', [ImportController::class, 'importNotionFood'])
+                ->middleware(['module.access:import,create', 'throttle:10,1'])
+                ->name('notion.food.import');
             Route::post('/finance/transactions/preview', [ImportController::class, 'previewFinanceTransactions'])
                 ->middleware(['module.access:import,create', 'module.access:finance,view', 'module.access:finance,create', 'throttle:10,1'])
                 ->name('finance.transactions.preview');
