@@ -53,6 +53,7 @@ class McpAccessService
         'analytics:edit' => ['module' => 'analytics', 'capability' => ModuleCapability::Edit],
         'tasks:view' => ['module' => 'tasks', 'capability' => ModuleCapability::View],
         'import:view' => ['module' => 'import', 'capability' => ModuleCapability::View],
+        'import:create' => ['module' => 'import', 'capability' => ModuleCapability::Create],
         'receipts:view' => ['module' => 'receipts', 'capability' => ModuleCapability::View],
         'notes:view' => ['module' => 'notes', 'capability' => ModuleCapability::View],
         'notes:create' => ['module' => 'notes', 'capability' => ModuleCapability::Create],
