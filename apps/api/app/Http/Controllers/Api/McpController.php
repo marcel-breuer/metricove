@@ -5,8 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\McpAccessToken;
 use App\Services\AI\AssistantToolRegistry;
+use App\Services\Import\ImportService;
 use App\Services\Mcp\AssistantReadToolHandler;
+use App\Services\Mcp\ImportUtilityReadingsToolHandler;
 use App\Services\Mcp\McpAccessService;
+use App\Services\Mcp\McpDomainReadToolHandler;
+use App\Services\Mcp\McpDomainReadWorkflowRegistry;
+use App\Services\Mcp\McpWriteCompleteToolHandler;
+use App\Services\Mcp\McpWriteToolHandler;
+use App\Services\Mcp\McpWriteWorkflowRegistry;
+use App\Services\Mcp\McpWriteWorkflowService;
 use App\Services\Mcp\UtilityReadingCompleteToolHandler;
 use App\Services\Mcp\UtilityReadingMcpService;
 use App\Services\Mcp\UtilityReadingPreviewToolHandler;
@@ -31,6 +39,10 @@ class McpController extends Controller
         AssistantToolRegistry $registry,
         UtilityReadingMcpService $actions,
         McpAccessService $access,
+        McpWriteWorkflowRegistry $writeRegistry,
+        McpWriteWorkflowService $writeWorkflows,
+        ImportService $imports,
+        McpDomainReadWorkflowRegistry $domainReadRegistry,
     ): Response {
         $psrFactory = new Psr17Factory;
         $requestFactory = new PsrHttpFactory($psrFactory, $psrFactory, $psrFactory, $psrFactory);
@@ -70,10 +82,16 @@ class McpController extends Controller
                 continue;
             }
             $module = match ($name) {
-                'summarize_finance_month' => 'finance',
+                'summarize_finance_month', 'list_visible_financial_records' => 'finance',
                 'summarize_visible_utility_readings' => 'utilities',
                 'summarize_visible_vehicle_odometer_readings' => 'vehicles',
                 'summarize_visible_tracker_entries' => 'tracking',
+                'list_visible_recipes' => 'recipes',
+                'show_visible_meal_plans' => 'meal_planning',
+                'list_visible_pantry_items' => 'pantry',
+                'list_visible_shopping_lists' => 'shopping',
+                'show_visible_analytics' => 'analytics',
+                'list_visible_tasks' => 'tasks',
                 default => null,
             };
             if ($module === null || ! in_array($module.':view', $scopes, true)) {
@@ -91,6 +109,44 @@ class McpController extends Controller
                     annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false),
                 ),
                 new AssistantReadToolHandler($registry, $token, $module.':view', $name, $access),
+            );
+        }
+
+        foreach ($domainReadRegistry->all() as $read) {
+            if (array_diff($read['scopes'], $scopes) !== []) {
+                continue;
+            }
+
+            $server->add(
+                new McpToolSchema(
+                    name: $read['name'],
+                    title: $read['title'],
+                    inputSchema: $read['inputSchema'],
+                    description: $read['description'],
+                    annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false),
+                ),
+                new McpDomainReadToolHandler($domainReadRegistry, $access, $token, $read['name'], $read['scopes']),
+            );
+        }
+
+        if (in_array('import:view', $scopes, true) && in_array('utilities:view', $scopes, true)) {
+            $server->add(
+                new McpToolSchema(
+                    name: 'list_exportable_utility_readings',
+                    title: 'List exportable utility readings',
+                    inputSchema: [
+                        'type' => 'object',
+                        'properties' => [
+                            'meter_id' => ['type' => 'integer', 'minimum' => 1],
+                            'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50],
+                        ],
+                        'required' => ['meter_id'],
+                        'additionalProperties' => false,
+                    ],
+                    description: 'List up to 50 authorized utility reading rows in export order. Both Import and Utilities read access are required.',
+                    annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false),
+                ),
+                new ImportUtilityReadingsToolHandler($access, $imports, $token),
             );
         }
 
@@ -132,6 +188,48 @@ class McpController extends Controller
                     annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false),
                 ),
                 new UtilityReadingCompleteToolHandler($actions, $token),
+            );
+        }
+
+        $hasWriteTool = false;
+        foreach ($writeRegistry->all() as $workflow) {
+            $candidateScopes = array_map(fn (string $capability): string => $workflow['module'].':'.$capability, $workflow['capabilities']);
+            $hasScope = array_intersect($candidateScopes, $scopes) !== [];
+            if (! $hasScope) {
+                continue;
+            }
+            $hasWriteTool = true;
+            $name = substr($workflow['name'], strlen('preview_'));
+            $server->add(
+                new McpToolSchema(
+                    name: $workflow['name'],
+                    title: $workflow['title'],
+                    inputSchema: $workflow['inputSchema'],
+                    description: $workflow['description'],
+                    annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false),
+                ),
+                new McpWriteToolHandler($writeWorkflows, $token, $name),
+            );
+        }
+
+        if ($hasWriteTool) {
+            $server->add(
+                new McpToolSchema(
+                    name: 'complete_approved_mcp_change',
+                    title: 'Complete an approved Metricove change',
+                    inputSchema: [
+                        'type' => 'object',
+                        'properties' => [
+                            'preview_id' => ['type' => 'string', 'format' => 'uuid'],
+                            'idempotency_key' => ['type' => 'string', 'format' => 'uuid'],
+                        ],
+                        'required' => ['preview_id', 'idempotency_key'],
+                        'additionalProperties' => false,
+                    ],
+                    description: 'Complete a pending change only after its owner approved it in Metricove. Reuse the same idempotency key for a retry.',
+                    annotations: new ToolAnnotations(readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false),
+                ),
+                new McpWriteCompleteToolHandler($writeWorkflows, $token),
             );
         }
 

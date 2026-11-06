@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Contracts\ModuleResource;
 use App\Models\Concerns\HasResourcePermissions;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/** @property CarbonInterface $reading_date */
 class UtilityReading extends Model implements ModuleResource
 {
     use HasResourcePermissions;

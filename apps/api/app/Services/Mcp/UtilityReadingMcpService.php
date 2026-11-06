@@ -98,6 +98,7 @@ class UtilityReadingMcpService
     {
         return McpActionPreview::query()
             ->where('user_id', $user->id)
+            ->where('action', 'utility_reading.create')
             ->whereIn('state', ['pending', 'approved'])
             ->where('expires_at', '>', now())
             ->orderBy('created_at')

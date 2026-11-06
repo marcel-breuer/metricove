@@ -31,12 +31,6 @@ parameters:
 			path: app/Http/Controllers/Api/AdminMemberAuditController.php
 
 		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Api/ImportController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
 			identifier: property.notFound
 			count: 1
@@ -385,30 +379,6 @@ parameters:
 			path: app/Services/Finance/FinanceService.php
 
 		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Services/Import/ImportService.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_values contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/Import/ImportService.php
-
-		-
-			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/Import/ImportService.php
-
-		-
-			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/Import/ImportService.php
-
-		-
 			message: '#^Parameter \#1 \$array \(array\{0\: int, 1\: int, 2\?\: int\}\) of array_values is already a list, call has no effect\.$#'
 			identifier: arrayValues.list
 			count: 1
@@ -419,84 +389,6 @@ parameters:
 			identifier: method.nonObject
 			count: 4
 			path: app/Services/Mcp/McpAccessService.php
-
-		-
-			message: '#^Call to function is_array\(\) with string\|null will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Cannot call method isPast\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Cannot call method toISOString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''meter_id'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''meter_name'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''note'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''reading_date'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''unit'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Offset ''value'' does not exist on string\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of static method Illuminate\\Database\\Connection\:\:transaction\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
-			path: app/Services/Mcp/UtilityReadingMcpService.php
 
 		-
 			message: '#^Offset ''create''\|''edit''\|''manage''\|''view'' on array\{view\: bool, create\: bool, edit\: bool, manage\: bool\} on left side of \?\? always exists and is not nullable\.$#'
@@ -808,12 +700,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$reason\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Services/Utilities/UtilityService.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 7
 			path: app/Services/Utilities/UtilityService.php
 
 		-

@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\McpAccessToken;
 use App\Models\User;
 use App\Services\Mcp\McpAccessService;
-use App\Services\Mcp\UtilityReadingMcpService;
+use App\Services\Mcp\McpHumanApprovalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class McpAccessController extends Controller
 {
-    public function index(Request $request, McpAccessService $access, UtilityReadingMcpService $actions): JsonResponse
+    public function index(Request $request, McpAccessService $access, McpHumanApprovalService $actions): JsonResponse
     {
         $user = $this->actor($request);
         $tokens = McpAccessToken::query()
@@ -35,7 +35,7 @@ class McpAccessController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'scopes' => ['required', 'array', 'min:1', 'max:5'],
+            'scopes' => ['required', 'array', 'min:1', 'max:42'],
             'scopes.*' => ['required', 'string', 'distinct'],
             'expires_in_days' => ['present', 'nullable', 'integer', 'min:1', 'max:365'],
         ]);
@@ -61,14 +61,14 @@ class McpAccessController extends Controller
         return response()->json(['message' => 'MCP token revoked.'], 200, ['Cache-Control' => 'no-store']);
     }
 
-    public function approve(Request $request, string $preview, UtilityReadingMcpService $actions): JsonResponse
+    public function approve(Request $request, string $preview, McpHumanApprovalService $actions): JsonResponse
     {
         $actions->approve($this->actor($request), $preview);
 
         return response()->json(['message' => 'The MCP action is approved.'], 200, ['Cache-Control' => 'no-store']);
     }
 
-    public function reject(Request $request, string $preview, UtilityReadingMcpService $actions): JsonResponse
+    public function reject(Request $request, string $preview, McpHumanApprovalService $actions): JsonResponse
     {
         $actions->reject($this->actor($request), $preview);
 

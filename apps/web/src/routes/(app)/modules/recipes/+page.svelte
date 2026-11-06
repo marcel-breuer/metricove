@@ -19,6 +19,7 @@
 	const canAddRecipe = $derived(canCreate || canManageShared);
 
 	let recipes = $state<Recipe[]>([]);
+	const hasEditableRecipe = $derived(recipes.some((recipe) => recipe.can_edit));
 	let loading = $state(true);
 	let saving = $state(false);
 	let error = $state('');
@@ -357,6 +358,8 @@
 					<button type="submit" disabled={importBusy || (importType === 'pdf' && !importFile)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</button>
 				</form>
 			</Modal>
+		{/if}
+		{#if canAddRecipe || hasEditableRecipe}
 			<Modal bind:open={formOpen} title={$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}>
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
 				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
@@ -385,7 +388,8 @@
 			</aside>
 			</Modal>
 			{#if deleteTarget !== null}<ConfirmModal bind:open={deleteOpen} title={$t('Delete recipe?')} message={$t('Delete this recipe?')} onConfirm={() => void deleteRecipe(deleteTarget!)} />{/if}
-		{:else if canView}
+		{/if}
+		{#if canView && !canAddRecipe && !hasEditableRecipe}
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-6 text-slate-400 lg:sticky lg:top-6">{$t("Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes.")}</aside>
 		{/if}
 	</div>

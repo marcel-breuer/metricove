@@ -9,6 +9,7 @@ use App\Models\ModuleUserPermission;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
+use App\Services\Mcp\McpAccessService;
 use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,18 @@ class McpAccessTest extends TestCase
         $list = $this->mcp($secret, 'tools/list')->assertOk();
         $this->assertStringContainsString('no-store', $list->headers->get('Cache-Control', ''));
         $names = array_column($list->json('result.tools'), 'name');
-        $this->assertSame(['summarize_visible_utility_readings'], $names);
+        $this->assertContains('summarize_visible_utility_readings', $names);
+        $this->assertContains('show_visible_utility_meter', $names);
+        $this->assertContains('list_visible_utility_reading_revisions', $names);
+        $this->assertNotContains('show_visible_recipe', $names);
+
+        $profileSecret = $this->createToken($admin, ['core:profile:view']);
+        $profileNames = array_column($this->mcp($profileSecret, 'tools/list')->assertOk()->json('result.tools'), 'name');
+        $this->assertSame(['show_current_member_profile'], $profileNames);
+        $profile = $this->mcp($profileSecret, 'tools/call', ['name' => 'show_current_member_profile', 'arguments' => []])
+            ->assertOk()->json('result.structuredContent.profile');
+        $this->assertSame($admin->name, $profile['name']);
+        $this->assertArrayNotHasKey('email', $profile);
 
         $this->enableModule($admin, 'finance');
         $this->grant($admin, 'finance', ['view' => true]);
@@ -181,6 +193,155 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.executed']);
 
         $this->assertSame(0, HouseholdAuditEvent::query()->where('action', 'like', 'mcp.%')->whereRaw("CAST(details AS TEXT) LIKE '%987.000000%'")->count());
+    }
+
+    public function test_recipe_write_requires_member_approval_and_replays_idempotently(): void
+    {
+        $admin = $this->admin();
+        $this->enableModule($admin, 'recipes');
+        $this->grant($admin, 'recipes', ['view' => true, 'create' => true]);
+        $secret = $this->createToken($admin, ['recipes:create']);
+        $tools = $this->mcp($secret, 'tools/list')->assertOk();
+        $names = array_column($tools->json('result.tools'), 'name');
+        $this->assertContains('preview_create_recipe', $names);
+        $this->assertNotContains('preview_update_recipe', $names);
+        $this->assertNotContains('preview_delete_recipe', $names);
+
+        $previewResponse = $this->mcp($secret, 'tools/call', [
+            'name' => 'preview_create_recipe',
+            'arguments' => [
+                'title' => 'Approved pasta',
+                'instructions' => 'Boil and serve.',
+                'servings' => 2,
+                'visibility' => 'private',
+                'ingredients' => [['name' => 'Pasta', 'quantity' => '250', 'unit' => 'g']],
+            ],
+        ])->assertOk();
+        $preview = $previewResponse->json('result.structuredContent');
+        if (! is_array($preview)) {
+            $preview = json_decode($previewResponse->json('result.content.0.text'), true, flags: JSON_THROW_ON_ERROR);
+        }
+        $this->assertSame('pending_human_approval', $preview['state']);
+        $this->assertDatabaseCount('recipes', 0);
+        $this->assertStringNotContainsString('Approved pasta', DB::table('mcp_action_previews')->where('id', $preview['preview_id'])->value('payload'));
+
+        $this->actingAs($admin, 'web')->getJson('/api/profile/mcp')
+            ->assertOk()
+            ->assertJsonPath('actions.0.action', 'Create a recipe')
+            ->assertJsonPath('actions.0.details.title', 'Approved pasta');
+        $this->actingAs($admin, 'web')->postJson('/api/profile/mcp/actions/'.$preview['preview_id'].'/approve')->assertOk();
+        $idempotencyKey = (string) Str::uuid();
+        $firstResponse = $this->mcp($secret, 'tools/call', [
+            'name' => 'complete_approved_mcp_change',
+            'arguments' => ['preview_id' => $preview['preview_id'], 'idempotency_key' => $idempotencyKey],
+        ])->assertOk();
+        $first = $firstResponse->json('result.structuredContent');
+        if (! is_array($first)) {
+            $first = json_decode($firstResponse->json('result.content.0.text'), true, flags: JSON_THROW_ON_ERROR);
+        }
+        $this->assertSame(['status' => 'completed'], $first);
+        $this->assertDatabaseCount('recipes', 1);
+        $this->assertDatabaseHas('recipe_ingredients', ['name' => 'Pasta', 'quantity' => '250.0000']);
+
+        $replay = $this->mcp($secret, 'tools/call', [
+            'name' => 'complete_approved_mcp_change',
+            'arguments' => ['preview_id' => $preview['preview_id'], 'idempotency_key' => $idempotencyKey],
+        ])->assertOk();
+        $this->assertSame($first, $replay->json('result.structuredContent'));
+        $this->assertDatabaseCount('recipes', 1);
+        $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.previewed']);
+        $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.approved']);
+        $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.executed']);
+    }
+
+    public function test_write_tool_catalog_is_typed_and_gated_by_current_module_grants(): void
+    {
+        $admin = $this->admin();
+        $modules = ['tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning', 'pantry', 'shopping', 'analytics', 'tasks'];
+        foreach ($modules as $module) {
+            $this->enableModule($admin, $module);
+            $this->grant($admin, $module, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        }
+
+        $scopes = app(McpAccessService::class)->allowedScopes($admin);
+        $secret = $this->createToken($admin, $scopes);
+        $tools = [];
+        $cursor = null;
+        do {
+            $params = $cursor === null ? [] : ['cursor' => $cursor];
+            $page = $this->mcp($secret, 'tools/list', $params)->assertOk()->json('result');
+            $tools = [...$tools, ...($page['tools'] ?? [])];
+            $cursor = $page['nextCursor'] ?? null;
+        } while (is_string($cursor) && $cursor !== '');
+        $names = array_column($tools, 'name');
+
+        foreach ([
+            'preview_create_finance_category', 'preview_create_finance_budget', 'preview_create_finance_recurring_entry',
+            'preview_create_utility_meter', 'preview_update_utility_meter', 'preview_create_vehicle', 'preview_update_vehicle',
+            'preview_add_vehicle_maintenance', 'preview_add_vehicle_insurance', 'preview_add_vehicle_cost',
+            'preview_create_recipe', 'preview_create_meal_plan_slot', 'preview_create_pantry_item', 'preview_create_shopping_list',
+            'preview_create_analytics_widget', 'preview_create_household_task', 'complete_approved_mcp_change',
+            'show_current_member_profile', 'show_visible_recipe', 'list_meal_plan_week',
+            'list_visible_tracker_schemas', 'show_visible_tracker_schema', 'list_visible_tracker_entries',
+            'list_visible_finance_categories', 'show_visible_utility_meter', 'list_visible_utility_reading_revisions',
+            'show_visible_vehicle', 'list_visible_vehicle_odometer_revisions', 'list_visible_pantry_movements',
+            'show_visible_shopping_list', 'list_visible_shopping_history', 'list_visible_task_assignees',
+            'list_visible_task_history', 'list_visible_analytics_metrics',
+        ] as $name) {
+            $this->assertContains($name, $names, implode(', ', $names));
+        }
+
+        foreach ($tools as $tool) {
+            if (str_starts_with($tool['name'], 'preview_')) {
+                $this->assertSame(false, $tool['inputSchema']['additionalProperties'] ?? null, $tool['name']);
+            }
+        }
+
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', false);
+        $afterDisable = $this->mcp($secret, 'tools/list')->assertOk()->json('result.tools');
+        $this->assertNotContains('preview_create_vehicle', array_column($afterDisable, 'name'));
+    }
+
+    public function test_import_read_tool_requires_import_and_source_scopes_and_is_bounded(): void
+    {
+        $admin = $this->admin();
+        $this->enableModule($admin, 'import');
+        $this->enableModule($admin, 'utilities');
+        $this->grant($admin, 'import', ['view' => true]);
+        $this->grant($admin, 'utilities', ['view' => true]);
+        $meter = UtilityMeter::query()->create([
+            'owner_user_id' => null,
+            'created_by_user_id' => $admin->id,
+            'name' => 'Export meter',
+            'meter_type' => 'water',
+            'unit' => 'm³',
+            'is_private' => false,
+        ]);
+        foreach (['4.25', '5.50'] as $index => $value) {
+            UtilityReading::query()->create([
+                'utility_meter_id' => $meter->id,
+                'owner_user_id' => null,
+                'created_by_user_id' => $admin->id,
+                'is_private' => false,
+                'reading_date' => '2026-10-'.($index === 0 ? '01' : '20'),
+                'value' => $value,
+                'note' => 'Reading '.$index,
+            ]);
+        }
+
+        $missingSourceScope = $this->createToken($admin, ['import:view']);
+        $missingTools = $this->mcp($missingSourceScope, 'tools/list')->assertOk()->json('result.tools');
+        $this->assertNotContains('list_exportable_utility_readings', array_column($missingTools, 'name'));
+
+        $secret = $this->createToken($admin, ['import:view', 'utilities:view']);
+        $result = $this->mcp($secret, 'tools/call', [
+            'name' => 'list_exportable_utility_readings',
+            'arguments' => ['meter_id' => $meter->id, 'limit' => 1],
+        ])->assertOk()->json('result.structuredContent');
+        $this->assertSame(1, count($result['readings']));
+        $this->assertSame(true, $result['truncated']);
+        $this->assertSame('2026-10-01', $result['readings'][0]['reading_date']);
+        $this->assertSame('Reading 0', $result['readings'][0]['note']);
     }
 
     public function test_mcp_read_tools_respect_resource_privacy_and_token_scope(): void
