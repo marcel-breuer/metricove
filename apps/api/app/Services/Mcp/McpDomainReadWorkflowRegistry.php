@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Finance\FinanceService;
 use App\Services\MealPlanning\MealPlanningService;
+use App\Services\Notes\NoteService;
 use App\Services\Pantry\PantryService;
+use App\Services\Receipts\ReceiptService;
 use App\Services\Recipes\RecipeService;
 use App\Services\Shopping\ShoppingService;
 use App\Services\Tasks\HouseholdTaskService;
@@ -45,6 +47,41 @@ class McpDomainReadWorkflowRegistry
                 'schema' => ['type' => 'object', 'properties' => ['recipe_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['recipe_id'], 'additionalProperties' => false],
                 'rules' => ['recipe_id' => ['required', 'integer', 'min:1']],
                 'execute' => fn (User $actor, array $data): array => $this->container->make(RecipeService::class)->show($actor, (int) $data['recipe_id']),
+            ],
+            'list_visible_notes' => [
+                'module' => 'notes', 'scopes' => ['notes:view'], 'title' => 'List visible notes',
+                'description' => 'List a bounded page of notes currently visible to the member, with optional search and filters.',
+                'schema' => ['type' => 'object', 'properties' => ['search' => ['type' => 'string', 'maxLength' => 160], 'folder_id' => ['type' => 'integer', 'minimum' => 1], 'tag' => ['type' => 'string', 'maxLength' => 48], 'status' => ['type' => 'string', 'enum' => ['active', 'archived', 'all']], 'page' => ['type' => 'integer', 'minimum' => 1]], 'additionalProperties' => false],
+                'rules' => ['search' => ['nullable', 'string', 'max:160'], 'folder_id' => ['nullable', 'integer', 'min:1'], 'tag' => ['nullable', 'string', 'max:48'], 'status' => ['nullable', 'in:active,archived,all'], 'page' => ['nullable', 'integer', 'min:1']],
+                'execute' => fn (User $actor, array $data): array => $this->container->make(NoteService::class)->index($actor, $data),
+            ],
+            'show_visible_note' => [
+                'module' => 'notes', 'scopes' => ['notes:view'], 'title' => 'Show a visible note',
+                'description' => 'Show one note, including its body, only when the member can view that resource.',
+                'schema' => ['type' => 'object', 'properties' => ['note_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['note_id'], 'additionalProperties' => false],
+                'rules' => ['note_id' => ['required', 'integer', 'min:1']],
+                'execute' => fn (User $actor, array $data): array => ['note' => $this->container->make(NoteService::class)->show($actor, (int) $data['note_id'])],
+            ],
+            'list_visible_note_folders' => [
+                'module' => 'notes', 'scopes' => ['notes:view'], 'title' => 'List note folders',
+                'description' => 'List folders owned by the authenticated member.',
+                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
+                'execute' => fn (User $actor): array => ['folders' => $this->container->make(NoteService::class)->folders($actor)],
+            ],
+            'list_visible_receipts' => [
+                'module' => 'receipts', 'scopes' => ['receipts:view'], 'title' => 'List visible receipts',
+                'description' => 'List a bounded page of receipts and invoice metadata currently visible to the member. Original files are not returned.',
+                'schema' => ['type' => 'object', 'properties' => ['search' => ['type' => 'string', 'maxLength' => 100], 'date_from' => ['type' => 'string', 'format' => 'date'], 'date_to' => ['type' => 'string', 'format' => 'date'], 'min_amount' => ['type' => 'string', 'maxLength' => 19], 'max_amount' => ['type' => 'string', 'maxLength' => 19], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'target_type' => ['type' => 'string', 'enum' => ['finance', 'vehicle', 'archive']], 'sharing_status' => ['type' => 'string', 'enum' => ['private', 'shared']], 'page' => ['type' => 'integer', 'minimum' => 1]], 'additionalProperties' => false],
+                'rules' => ['search' => ['nullable', 'string', 'max:100'], 'date_from' => ['nullable', 'date_format:Y-m-d'], 'date_to' => ['nullable', 'date_format:Y-m-d'], 'min_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'max_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'currency' => ['nullable', 'regex:/\A[A-Z]{3}\z'], 'target_type' => ['nullable', 'in:finance,vehicle,archive'], 'sharing_status' => ['nullable', 'in:private,shared'], 'page' => ['nullable', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data): array {
+                    $result = $this->container->make(ReceiptService::class)->index($actor, $data);
+                    foreach ($result['receipts'] as &$receipt) {
+                        unset($receipt['file_url']);
+                    }
+                    unset($receipt);
+
+                    return $result;
+                },
             ],
             'list_meal_plan_week' => [
                 'module' => 'meal_planning', 'scopes' => ['meal_planning:view', 'recipes:view'], 'title' => 'List a visible meal plan week',

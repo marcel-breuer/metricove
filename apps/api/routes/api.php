@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\McpController;
 use App\Http\Controllers\Api\MealPlanningController;
 use App\Http\Controllers\Api\ModuleDiscoveryController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\PantryController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReceiptController;
@@ -374,6 +375,19 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.update');
             Route::delete('/slots/{slot}', [MealPlanningController::class, 'destroy'])
                 ->middleware('module.enabled:meal_planning')->whereNumber('slot')->name('slots.destroy');
+        });
+
+        Route::prefix('pantry')->name('pantry.')->group(function (): void {
+            Route::get('/', [PantryController::class, 'index'])
+                ->middleware('module.access:pantry,view')->name('index');
+            Route::post('/', [PantryController::class, 'store'])
+                ->middleware('module.enabled:pantry')->name('store');
+            Route::get('/{item}/movements', [PantryController::class, 'movements'])
+                ->middleware('module.access:pantry,view')->whereNumber('item')->name('movements.index');
+            Route::patch('/{item}', [PantryController::class, 'update'])
+                ->middleware('module.enabled:pantry')->whereNumber('item')->name('update');
+            Route::post('/{item}/adjustments', [PantryController::class, 'adjust'])
+                ->middleware('module.enabled:pantry')->whereNumber('item')->name('adjustments.store');
         });
 
         Route::prefix('shopping')->name('shopping.')->group(function (): void {

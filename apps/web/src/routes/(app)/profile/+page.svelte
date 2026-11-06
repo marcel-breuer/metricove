@@ -65,7 +65,7 @@
 	] as const;
 	const moduleScopeLabels: Record<string, string> = {
 		tracking: 'Tracking', utilities: 'Utilities', vehicles: 'Vehicles', finance: 'Finance', recipes: 'Recipes',
-		core: 'Core', meal_planning: 'Meal Planning', pantry: 'Pantry', shopping: 'Shopping', analytics: 'Analytics', tasks: 'Tasks', import: 'Import'
+		core: 'Core', meal_planning: 'Meal Planning', pantry: 'Pantry', shopping: 'Shopping', analytics: 'Analytics', tasks: 'Tasks', import: 'Import', notes: 'Notes', receipts: 'Receipts'
 	};
 
 	function scopeLabel(scope: string): string {

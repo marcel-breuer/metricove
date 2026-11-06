@@ -19,7 +19,7 @@ class McpAccessService
     /** @var list<string> */
     private const MCP_VIEW_MODULES = [
         'tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning',
-        'pantry', 'shopping', 'analytics', 'tasks', 'import',
+        'pantry', 'shopping', 'analytics', 'tasks', 'import', 'notes', 'receipts',
     ];
 
     private const CORE_PROFILE_SCOPE = 'core:profile:view';
@@ -53,6 +53,11 @@ class McpAccessService
         'analytics:edit' => ['module' => 'analytics', 'capability' => ModuleCapability::Edit],
         'tasks:view' => ['module' => 'tasks', 'capability' => ModuleCapability::View],
         'import:view' => ['module' => 'import', 'capability' => ModuleCapability::View],
+        'receipts:view' => ['module' => 'receipts', 'capability' => ModuleCapability::View],
+        'notes:view' => ['module' => 'notes', 'capability' => ModuleCapability::View],
+        'notes:create' => ['module' => 'notes', 'capability' => ModuleCapability::Create],
+        'notes:edit' => ['module' => 'notes', 'capability' => ModuleCapability::Edit],
+        'notes:manage' => ['module' => 'notes', 'capability' => ModuleCapability::Manage],
         'tasks:create' => ['module' => 'tasks', 'capability' => ModuleCapability::Create],
         'tasks:edit' => ['module' => 'tasks', 'capability' => ModuleCapability::Edit],
         'tracking:create' => ['module' => 'tracking', 'capability' => ModuleCapability::Create],

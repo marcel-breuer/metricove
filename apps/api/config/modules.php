@@ -51,6 +51,13 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
+        'pantry' => [
+            'label' => 'Pantry',
+            'description' => 'Private and household food stock, quantities, storage and best-before dates.',
+            'version' => '0.1.0',
+            'dependencies' => ['core'],
+            'always_enabled' => false,
+        ],
         'shopping' => [
             'label' => 'Shopping',
             'description' => 'Private and shared shopping lists, quantities, history and reversible check-off.',

@@ -22,6 +22,7 @@ use App\Services\Import\TesseractMeterPhotoOcr;
 use App\Services\Mcp\McpWriteWorkflowRegistry;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
+use App\Services\Pantry\PantryService;
 use App\Services\Recipes\RecipeService;
 use App\Services\Shopping\ShoppingService;
 use App\Services\Tasks\HouseholdTaskService;
@@ -57,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(VehiclesSnapshotTool::class),
                 new VisibleSnapshotTool('recipes', 'list_visible_recipes', 'List recipes the signed-in member is allowed to view, including only their authorized ingredients.', fn (User $actor): array => ['recipes' => $app->make(RecipeService::class)->index($actor)]),
                 new VisibleSnapshotTool('meal_planning', 'show_visible_meal_plans', 'Show the current Monday-to-Sunday meal plan slots visible to the signed-in member.', fn (User $actor): array => $app->make(MealPlanningService::class)->week($actor, now()->startOfWeek()->toDateString())),
+                new VisibleSnapshotTool('pantry', 'list_visible_pantry_items', 'List pantry stock lines and quantities visible to the signed-in member.', fn (User $actor): array => ['items' => $app->make(PantryService::class)->index($actor)]),
                 new VisibleSnapshotTool('shopping', 'list_visible_shopping_lists', 'List visible shopping lists and their currently visible items.', function (User $actor) use ($app): array {
                     $shopping = $app->make(ShoppingService::class);
                     $lists = array_slice($shopping->index($actor), 0, 12);

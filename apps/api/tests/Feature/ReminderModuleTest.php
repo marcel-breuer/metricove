@@ -160,6 +160,7 @@ class ReminderModuleTest extends TestCase
                 'finance' => false,
                 'vehicles' => true,
                 'utilities' => true,
+                'pantry' => true,
                 'tasks' => true,
             ]);
         $this->actingAs($owner, 'web')->patchJson('/api/reminders/preferences', ['lead_days' => 31])

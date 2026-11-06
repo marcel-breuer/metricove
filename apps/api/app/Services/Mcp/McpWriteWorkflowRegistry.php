@@ -12,7 +12,9 @@ use App\Models\FinanceRecurringEntry;
 use App\Models\FinancialTransaction;
 use App\Models\HouseholdTask;
 use App\Models\MealPlanSlot;
+use App\Models\NoteFolder;
 use App\Models\PantryItem;
+use App\Models\PersonalNote;
 use App\Models\Recipe;
 use App\Models\ShoppingItem;
 use App\Models\ShoppingList;
@@ -28,6 +30,7 @@ use App\Services\Finance\FinanceDecimalValue;
 use App\Services\Finance\FinanceService;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
+use App\Services\Notes\NoteService;
 use App\Services\Pantry\PantryQuantity;
 use App\Services\Pantry\PantryService;
 use App\Services\Recipes\RecipeQuantity;
@@ -605,6 +608,61 @@ class McpWriteWorkflowRegistry
                     return $this->container->make(UtilityService::class)->correctReading($actor, $id, $data);
                 },
             ],
+            'create_note' => [
+                'module' => 'notes', 'capability' => 'create', 'title' => 'Create a note', 'description' => 'Prepare a private note for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['title' => ['type' => 'string', 'maxLength' => 180], 'body' => ['type' => 'string', 'maxLength' => 100000], 'folder_id' => ['type' => 'integer', 'minimum' => 1], 'tags' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'string', 'maxLength' => 48]]], 'required' => ['title', 'body'], 'additionalProperties' => false],
+                'rules' => ['title' => ['required', 'string', 'max:180'], 'body' => ['present', 'string', 'max:100000'], 'folder_id' => ['nullable', 'integer', 'min:1'], 'tags' => ['sometimes', 'array', 'max:20'], 'tags.*' => ['required', 'string', 'max:48']],
+                'execute' => fn (User $actor, array $data): array => ['note' => $this->container->make(NoteService::class)->create($actor, $data)],
+            ],
+            'update_note' => [
+                'module' => 'notes', 'capability' => 'edit', 'title' => 'Update a note', 'description' => 'Prepare a version-checked note update for member approval. Sharing requires notes manage access.',
+                'schema' => ['type' => 'object', 'properties' => ['note_id' => ['type' => 'integer', 'minimum' => 1], 'expected_version' => ['type' => 'integer', 'minimum' => 1], 'title' => ['type' => 'string', 'maxLength' => 180], 'body' => ['type' => 'string', 'maxLength' => 100000], 'folder_id' => ['type' => ['integer', 'null'], 'minimum' => 1], 'tags' => ['type' => 'array', 'maxItems' => 20, 'items' => ['type' => 'string', 'maxLength' => 48]], 'shared_with_household' => ['type' => 'boolean']], 'required' => ['note_id', 'expected_version'], 'additionalProperties' => false],
+                'rules' => ['note_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1'], 'title' => ['sometimes', 'required', 'string', 'max:180'], 'body' => ['sometimes', 'present', 'string', 'max:100000'], 'folder_id' => ['sometimes', 'nullable', 'integer', 'min:1'], 'tags' => ['sometimes', 'array', 'max:20'], 'tags.*' => ['required', 'string', 'max:48'], 'shared_with_household' => ['sometimes', 'boolean']],
+                'execute' => function (User $actor, array $data): array {
+                    $id = (int) $data['note_id'];
+                    unset($data['note_id']);
+
+                    return ['note' => $this->container->make(NoteService::class)->update($actor, $id, $data)];
+                },
+            ],
+            'archive_note' => [
+                'module' => 'notes', 'capability' => 'edit', 'title' => 'Archive or restore a note', 'description' => 'Prepare a version-checked archive or restore for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['note_id' => ['type' => 'integer', 'minimum' => 1], 'archived' => ['type' => 'boolean'], 'expected_version' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['note_id', 'archived', 'expected_version'], 'additionalProperties' => false],
+                'rules' => ['note_id' => ['required', 'integer', 'min:1'], 'archived' => ['required', 'boolean'], 'expected_version' => ['required', 'integer', 'min:1']],
+                'execute' => fn (User $actor, array $data): array => ['note' => $this->container->make(NoteService::class)->archive($actor, (int) $data['note_id'], (bool) $data['archived'], (int) $data['expected_version'])],
+            ],
+            'delete_note' => [
+                'module' => 'notes', 'capability' => 'edit', 'title' => 'Delete a note', 'description' => 'Prepare deletion of an owned note for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['note_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['note_id'], 'additionalProperties' => false],
+                'rules' => ['note_id' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data): array {
+                    $this->container->make(NoteService::class)->delete($actor, (int) $data['note_id']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
+            'create_note_folder' => [
+                'module' => 'notes', 'capability' => 'create', 'title' => 'Create a note folder', 'description' => 'Prepare a private note folder for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string', 'maxLength' => 80]], 'required' => ['name'], 'additionalProperties' => false],
+                'rules' => ['name' => ['required', 'string', 'max:80']],
+                'execute' => fn (User $actor, array $data): array => ['folder' => $this->container->make(NoteService::class)->createFolder($actor, $data['name'])],
+            ],
+            'update_note_folder' => [
+                'module' => 'notes', 'capability' => 'edit', 'title' => 'Rename a note folder', 'description' => 'Prepare a version-checked folder rename for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['folder_id' => ['type' => 'integer', 'minimum' => 1], 'name' => ['type' => 'string', 'maxLength' => 80], 'expected_version' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['folder_id', 'name', 'expected_version'], 'additionalProperties' => false],
+                'rules' => ['folder_id' => ['required', 'integer', 'min:1'], 'name' => ['required', 'string', 'max:80'], 'expected_version' => ['required', 'integer', 'min:1']],
+                'execute' => fn (User $actor, array $data): array => ['folder' => $this->container->make(NoteService::class)->updateFolder($actor, (int) $data['folder_id'], $data['name'], (int) $data['expected_version'])],
+            ],
+            'delete_note_folder' => [
+                'module' => 'notes', 'capability' => 'edit', 'title' => 'Delete a note folder', 'description' => 'Prepare deletion of an owned note folder for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['folder_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['folder_id'], 'additionalProperties' => false],
+                'rules' => ['folder_id' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data): array {
+                    $this->container->make(NoteService::class)->deleteFolder($actor, (int) $data['folder_id']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
         ];
     }
 
@@ -638,6 +696,9 @@ class McpWriteWorkflowRegistry
     public function requiredCapabilities(string $name, array $arguments): array
     {
         $workflow = $this->get($name);
+        if ($name === 'update_note' && array_key_exists('shared_with_household', $arguments)) {
+            return ['edit', 'manage'];
+        }
         if (($arguments['visibility'] ?? null) === 'household') {
             return ['manage'];
         }
@@ -648,6 +709,7 @@ class McpWriteWorkflowRegistry
             'update_finance_budget', 'delete_finance_budget' => FinanceBudget::query()->find($arguments['budget_id'] ?? null),
             'update_finance_recurring_entry', 'delete_finance_recurring_entry', 'record_finance_recurring_occurrence' => FinanceRecurringEntry::query()->find($arguments['entry_id'] ?? null),
             'update_recipe', 'delete_recipe' => Recipe::query()->find($arguments['recipe_id'] ?? null),
+            'update_note', 'archive_note', 'delete_note' => PersonalNote::query()->find($arguments['note_id'] ?? null),
             'update_tracker_schema', 'delete_tracker' => TrackerDefinition::query()->find($arguments['tracker_id'] ?? null),
             'update_meal_plan_slot', 'delete_meal_plan_slot' => MealPlanSlot::query()->find($arguments['slot_id'] ?? null),
             'update_utility_meter' => UtilityMeter::query()->find($arguments['meter_id'] ?? null),
@@ -743,12 +805,16 @@ class McpWriteWorkflowRegistry
     {
         match ($name) {
             'create_financial_transaction' => $this->authorizeResource($actor, 'finance', 'create', FinanceCategory::class, (int) $arguments['finance_category_id']),
+            'create_note' => isset($arguments['folder_id']) ? $this->authorizeNoteFolder($actor, (int) $arguments['folder_id'], 'create') : null,
+            'update_note' => isset($arguments['folder_id']) ? $this->authorizeNoteFolder($actor, (int) $arguments['folder_id'], 'edit') : null,
             'add_tracker_entry' => $this->authorizeResource($actor, 'tracking', 'create', TrackerDefinition::class, (int) $arguments['tracker_id']),
             'add_vehicle_odometer_reading' => $this->authorizeResource($actor, 'vehicles', 'create', Vehicle::class, (int) $arguments['vehicle_id']),
             'update_vehicle' => $this->authorizeResource($actor, 'vehicles', 'manage', Vehicle::class, (int) $arguments['vehicle_id']),
             'add_vehicle_maintenance', 'add_vehicle_insurance', 'add_vehicle_cost' => $this->authorizeResource($actor, 'vehicles', 'create', Vehicle::class, (int) $arguments['vehicle_id']),
             'create_shopping_item' => $this->authorizeResource($actor, 'shopping', 'create', ShoppingList::class, (int) $arguments['list_id']),
             'update_recipe', 'delete_recipe' => $this->authorizeResource($actor, 'recipes', 'edit', Recipe::class, (int) $arguments['recipe_id']),
+            'update_note', 'archive_note', 'delete_note' => $this->authorizeOwnedNote($actor, (int) $arguments['note_id']),
+            'update_note_folder', 'delete_note_folder' => $this->authorizeNoteFolder($actor, (int) $arguments['folder_id'], 'edit'),
             'update_meal_plan_slot', 'delete_meal_plan_slot' => $this->authorizeResource($actor, 'meal_planning', 'edit', MealPlanSlot::class, (int) $arguments['slot_id']),
             'update_pantry_item', 'adjust_pantry_stock' => $this->authorizeResource($actor, 'pantry', 'edit', PantryItem::class, (int) $arguments['item_id']),
             'update_shopping_list' => $this->authorizeResource($actor, 'shopping', 'edit', ShoppingList::class, (int) $arguments['list_id']),
@@ -812,6 +878,21 @@ class McpWriteWorkflowRegistry
     {
         $item = ShoppingItem::query()->with('shoppingList')->whereKey($itemId)->firstOrFail();
         $this->authorizeResource($actor, 'shopping', 'edit', ShoppingList::class, (int) $item->shopping_list_id);
+    }
+
+    private function authorizeNoteFolder(User $actor, int $folderId, string $capability): void
+    {
+        NoteFolder::query()->whereKey($folderId)->where('owner_user_id', $actor->id)->firstOrFail();
+        $this->access->authorize($actor, 'notes', ModuleCapability::from($capability));
+    }
+
+    private function authorizeOwnedNote(User $actor, int $noteId): void
+    {
+        $note = PersonalNote::query()->whereKey($noteId)->firstOrFail();
+        if ($note->ownerUserId() !== (int) $actor->id) {
+            throw new AuthorizationException('Only the note owner can change this note.');
+        }
+        $this->access->authorize($actor, 'notes', ModuleCapability::Edit, $note);
     }
 
     private function authorizeTrackerEntry(User $actor, int $entryId): void

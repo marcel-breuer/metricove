@@ -6,6 +6,7 @@ use App\Models\HouseholdAuditEvent;
 use App\Models\HouseholdSettings;
 use App\Models\McpAccessToken;
 use App\Models\ModuleUserPermission;
+use App\Models\ReceiptDocument;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
@@ -254,10 +255,79 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.executed']);
     }
 
+    public function test_notes_mcp_writes_require_approval_and_keep_note_content_out_of_audit(): void
+    {
+        $admin = $this->admin();
+        $this->enableModule($admin, 'notes');
+        $this->grant($admin, 'notes', ['view' => true, 'create' => true, 'edit' => true]);
+        $secret = $this->createToken($admin, ['notes:view', 'notes:create', 'notes:edit']);
+
+        $names = array_column($this->mcp($secret, 'tools/list')->assertOk()->json('result.tools'), 'name');
+        $this->assertContains('list_visible_notes', $names);
+        $this->assertContains('show_visible_note', $names);
+        $this->assertContains('preview_create_note', $names);
+        $this->assertContains('preview_update_note', $names);
+        $this->assertNotContains('preview_update_note', array_column(
+            $this->mcp($this->createToken($admin, ['notes:view']), 'tools/list')->assertOk()->json('result.tools'), 'name',
+        ));
+
+        $response = $this->mcp($secret, 'tools/call', [
+            'name' => 'preview_create_note',
+            'arguments' => ['title' => 'Private MCP note', 'body' => 'Review the pantry list.'],
+        ])->assertOk();
+        $preview = $response->json('result.structuredContent');
+        if (! is_array($preview)) {
+            $preview = json_decode($response->json('result.content.0.text'), true, flags: JSON_THROW_ON_ERROR);
+        }
+        $this->assertDatabaseCount('notes', 0);
+        $this->actingAs($admin, 'web')->postJson('/api/profile/mcp/actions/'.$preview['preview_id'].'/approve')->assertOk();
+        $completed = $this->mcp($secret, 'tools/call', [
+            'name' => 'complete_approved_mcp_change',
+            'arguments' => ['preview_id' => $preview['preview_id'], 'idempotency_key' => (string) Str::uuid()],
+        ])->assertOk();
+        $this->assertSame('completed', $completed->json('result.structuredContent.status'));
+        $this->assertDatabaseCount('notes', 1);
+        $this->assertSame(0, HouseholdAuditEvent::query()->where('action', 'like', 'mcp.%')
+            ->whereRaw("CAST(details AS TEXT) LIKE '%Review the pantry list.%'")->count());
+    }
+
+    public function test_receipt_mcp_read_is_scoped_and_omits_file_links(): void
+    {
+        $admin = $this->admin();
+        $this->enableModule($admin, 'receipts');
+        $this->grant($admin, 'receipts', ['view' => true]);
+        ReceiptDocument::query()->create([
+            'owner_user_id' => $admin->id,
+            'is_private' => true,
+            'file_path' => 'receipts/private-test.pdf',
+            'mime_type' => 'application/pdf',
+            'merchant' => 'Local shop',
+            'invoice_date' => '2026-11-01',
+            'amount' => '12.50',
+            'currency' => 'EUR',
+            'idempotency_key' => (string) Str::uuid(),
+            'file_digest' => str_repeat('a', 64),
+            'request_fingerprint' => str_repeat('b', 64),
+        ]);
+
+        $secret = $this->createToken($admin, ['receipts:view']);
+        $response = $this->mcp($secret, 'tools/call', [
+            'name' => 'list_visible_receipts',
+            'arguments' => ['search' => 'Local shop'],
+        ])->assertOk();
+        $receipt = $response->json('result.structuredContent.receipts.0');
+        $this->assertSame('Local shop', $receipt['merchant']);
+        $this->assertArrayNotHasKey('file_url', $receipt);
+
+        $coreSecret = $this->createToken($admin, ['core:profile:view']);
+        $coreTools = array_column($this->mcp($coreSecret, 'tools/list')->assertOk()->json('result.tools'), 'name');
+        $this->assertNotContains('list_visible_receipts', $coreTools);
+    }
+
     public function test_write_tool_catalog_is_typed_and_gated_by_current_module_grants(): void
     {
         $admin = $this->admin();
-        $modules = ['tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning', 'pantry', 'shopping', 'analytics', 'tasks'];
+        $modules = ['tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning', 'pantry', 'shopping', 'analytics', 'tasks', 'notes', 'receipts'];
         foreach ($modules as $module) {
             $this->enableModule($admin, $module);
             $this->grant($admin, $module, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
@@ -287,6 +357,8 @@ class McpAccessTest extends TestCase
             'show_visible_vehicle', 'list_visible_vehicle_odometer_revisions', 'list_visible_pantry_movements',
             'show_visible_shopping_list', 'list_visible_shopping_history', 'list_visible_task_assignees',
             'list_visible_task_history', 'list_visible_analytics_metrics',
+            'list_visible_notes', 'show_visible_note', 'list_visible_note_folders', 'list_visible_receipts',
+            'preview_create_note', 'preview_update_note', 'preview_archive_note', 'preview_create_note_folder',
         ] as $name) {
             $this->assertContains($name, $names, implode(', ', $names));
         }

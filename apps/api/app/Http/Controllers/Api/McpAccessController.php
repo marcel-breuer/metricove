@@ -35,7 +35,7 @@ class McpAccessController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'scopes' => ['required', 'array', 'min:1', 'max:42'],
+            'scopes' => ['required', 'array', 'min:1', 'max:47'],
             'scopes.*' => ['required', 'string', 'distinct'],
             'expires_in_days' => ['present', 'nullable', 'integer', 'min:1', 'max:365'],
         ]);
