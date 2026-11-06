@@ -64,13 +64,28 @@ class MealShoppingSuggestionService
         }
 
         $selected = [];
+        $quantities = $data['quantities'] ?? [];
+        $selectedIds = $data['suggestion_ids'];
+        foreach (array_keys($quantities) as $id) {
+            if (! in_array($id, $selectedIds, true)) {
+                throw ValidationException::withMessages([
+                    'quantities' => 'Only selected suggestions can have adjusted quantities.',
+                ]);
+            }
+        }
+
         foreach ($data['suggestion_ids'] as $id) {
             if (! isset($byId[$id])) {
                 throw ValidationException::withMessages([
                     'suggestion_ids' => 'Choose suggestions from the current preview.',
                 ]);
             }
-            $selected[] = $byId[$id];
+            $suggestion = $byId[$id];
+            if (array_key_exists($id, $quantities)) {
+                $normalized = ShoppingQuantity::normalize($quantities[$id], $suggestion['unit']);
+                $suggestion['quantity'] = $normalized['quantity'];
+            }
+            $selected[] = $suggestion;
         }
 
         return $this->shopping->addSuggestedItems(

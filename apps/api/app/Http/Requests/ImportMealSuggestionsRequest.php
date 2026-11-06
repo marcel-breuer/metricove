@@ -21,6 +21,8 @@ class ImportMealSuggestionsRequest extends FormRequest
             'confirmed' => ['required', 'accepted'],
             'suggestion_ids' => ['required', 'array', 'min:1', 'max:100'],
             'suggestion_ids.*' => ['required', 'string', 'distinct', 'regex:/\A[a-f0-9]{64}\z/'],
+            'quantities' => ['sometimes', 'array', 'max:100'],
+            'quantities.*' => ['required', 'string', 'regex:/\A(?:0|[1-9]\d{0,10})(?:\.\d{1,3})?\z/'],
         ];
     }
 }

@@ -56,6 +56,7 @@
 	let suggestionWeekStart = $state(mondayDate());
 	let suggestionPreview = $state<MealSuggestionPreview | null>(null);
 	let selectedSuggestionIds = $state<string[]>([]);
+	let suggestionQuantities = $state<Record<string, string>>({});
 	let suggestionLoading = $state(false);
 	let suggestionImporting = $state(false);
 
@@ -109,6 +110,7 @@
 				activity = [];
 				suggestionPreview = null;
 				selectedSuggestionIds = [];
+				suggestionQuantities = {};
 			}
 			if (next) await loadList(next.id);
 			else {
@@ -201,6 +203,7 @@
 		suggestionLoading = true;
 		suggestionPreview = null;
 		selectedSuggestionIds = [];
+		suggestionQuantities = {};
 		try {
 			const result = await api<MealSuggestionsResponse>(
 				'/api/shopping/lists/' + activeListId + '/meal-suggestions',
@@ -209,6 +212,12 @@
 			);
 			suggestionPreview = result.preview ?? null;
 			selectedSuggestionIds = [];
+			suggestionQuantities = Object.fromEntries(
+				(suggestionPreview?.suggestions ?? []).map((suggestion) => [
+					suggestion.id,
+					formatDecimalInput(suggestion.quantity, $numberLocale)
+				])
+			);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'Meal suggestions could not be prepared.';
 		} finally {
@@ -222,6 +231,12 @@
 		message = '';
 		suggestionImporting = true;
 		try {
+			const quantities = Object.fromEntries(
+				selectedSuggestionIds.map((id) => [
+					id,
+					canonicalizeDecimalInput(suggestionQuantities[id] ?? '', $numberLocale)
+				])
+			);
 			const result = await api<MealSuggestionsResponse>(
 				'/api/shopping/lists/' + activeListId + '/meal-suggestions/import',
 				'POST',
@@ -231,12 +246,14 @@
 					preview_expires_at: suggestionPreview.preview_expires_at,
 					preview_token: suggestionPreview.preview_token,
 					confirmed: true,
-					suggestion_ids: selectedSuggestionIds
+					suggestion_ids: selectedSuggestionIds,
+					quantities
 				}
 			);
 			const added = result.items?.length ?? 0;
 			suggestionPreview = null;
 			selectedSuggestionIds = [];
+			suggestionQuantities = {};
 			message = `${added} meal suggestion${added === 1 ? '' : 's'} added to the list.`;
 			await refresh();
 		} catch (cause) {
@@ -244,6 +261,7 @@
 			if (error.toLowerCase().includes('changed') || error.toLowerCase().includes('expired')) {
 				suggestionPreview = null;
 				selectedSuggestionIds = [];
+				suggestionQuantities = {};
 			}
 		} finally {
 			suggestionImporting = false;
@@ -420,6 +438,7 @@
 	function invalidateMealPreview(): void {
 		suggestionPreview = null;
 		selectedSuggestionIds = [];
+		suggestionQuantities = {};
 	}
 </script>
 
@@ -560,20 +579,19 @@
 											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">{$t("No importable recipe ingredients were found for this week.")}</p>
 										{:else}
 											<div class="flex flex-wrap items-center justify-between gap-2">
-												<p class="text-xs text-slate-400">{$t("Select each ingredient you want to import. Quantities are combined across linked recipes.")}</p>
+												<p class="text-xs text-slate-400">{$t("Select the ingredients you want and adjust each quantity for what you already have. Matching ingredients are combined across linked recipes.")}</p>
 												<button type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs font-medium text-slate-200 hover:border-violet-300/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</button>
 											</div>
 											<div class="max-h-80 space-y-2 overflow-y-auto">
 												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
-													<label class="flex min-h-12 items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-3">
-														<input bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} class="mt-0.5 size-4 shrink-0 accent-violet-300" />
-														<span class="min-w-0 flex-1">
-															<span class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-																<span class="break-words text-sm font-medium text-white">{suggestion.name}</span>
-																<span class="text-sm tabular-nums text-violet-100">{formatMeasurement(suggestion.quantity, suggestion.unit)} {suggestion.unit}</span>
-															</span>
-														</span>
-													</label>
+													<div class="grid min-h-12 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+														<input id={'meal-suggestion-' + suggestion.id} bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} aria-label={$t('Select {item}', { item: suggestion.name })} class="size-4 shrink-0 accent-violet-300" />
+														<label for={'meal-suggestion-' + suggestion.id} class="break-words text-sm font-medium text-white">{suggestion.name}</label>
+														<div class="flex items-center gap-2">
+															<input bind:value={suggestionQuantities[suggestion.id]} type="text" inputmode="decimal" autocomplete="off" aria-label={$t('Quantity to add for {item}', { item: suggestion.name })} class="min-h-10 w-24 rounded-lg border border-slate-700 bg-slate-950 px-2 text-right text-sm tabular-nums text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
+															<span class="min-w-8 text-sm text-violet-100">{suggestion.unit}</span>
+														</div>
+													</div>
 												{/each}
 											</div>
 											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
