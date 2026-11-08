@@ -10,6 +10,7 @@
 	import Modal from '#lib/ui/Modal.svelte';
 import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement, formatCurrency } from '#lib/number-format';
+	import { calculateMissingFuelValue, type FuelCalculationField } from '#lib/vehicle-fuel';
 	import { defaultCurrency, formatDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { vehicleCostCategories, vehicleDistanceChartPoints, vehiclePeriods, type Vehicle, type VehicleCost, type VehicleDistanceTrend, type VehicleInsurancePolicy, type VehicleMaintenanceRecord, type VehicleOdometerReading, type VehicleOdometerRevision, type VehicleResponse } from '#lib/vehicles';
 
@@ -80,6 +81,8 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	let costFuelLiters = $state('');
 	let costFuelUnitPrice = $state('');
 	let costFuelOdometer = $state('');
+	let costFuelFullTank = $state(false);
+	let costCalculatedFuelField = $state<FuelCalculationField | null>(null);
 	let costPeriodStart = $state(localDate());
 	let costPeriodEnd = $state('');
 	let costPeriod = $state<'once' | 'monthly' | 'quarterly' | 'yearly'>('once');
@@ -325,8 +328,8 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 
 	async function saveCost(event: SubmitEvent): Promise<void> {
 		event.preventDefault(); if (!vehicle || (!editingCostId && !canCreate)) return;
-		const payload = { category: costCategory, amount: canonicalizeDecimalInput(costAmount, $numberLocale), currency: costCurrency, period_start: costPeriodStart, period_end: costPeriodEnd || null, period: costPeriod, description: costDescription, fuel_liters: costCategory === 'fuel' && costFuelLiters ? canonicalizeDecimalInput(costFuelLiters, $numberLocale) : null, fuel_unit_price: costCategory === 'fuel' && costFuelUnitPrice ? canonicalizeDecimalInput(costFuelUnitPrice, $numberLocale) : null, fuel_odometer_value: costCategory === 'fuel' && costFuelOdometer ? canonicalizeDecimalInput(costFuelOdometer, $numberLocale) : null };
-		const reset = () => { costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costCurrency = $defaultCurrency; costCategory = 'fuel'; };
+		const payload = { category: costCategory, amount: costCategory === 'fuel' && costCalculatedFuelField === 'amount' ? null : canonicalizeDecimalInput(costAmount, $numberLocale), currency: costCurrency, period_start: costPeriodStart, period_end: costPeriodEnd || null, period: costPeriod, description: costDescription, fuel_liters: costCategory === 'fuel' && costCalculatedFuelField !== 'fuel_liters' && costFuelLiters ? canonicalizeDecimalInput(costFuelLiters, $numberLocale) : null, fuel_unit_price: costCategory === 'fuel' && costCalculatedFuelField !== 'fuel_unit_price' && costFuelUnitPrice ? canonicalizeDecimalInput(costFuelUnitPrice, $numberLocale) : null, fuel_odometer_value: costCategory === 'fuel' && costFuelOdometer ? canonicalizeDecimalInput(costFuelOdometer, $numberLocale) : null, fuel_full_tank: costCategory === 'fuel' && costFuelFullTank };
+		const reset = () => { costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costFuelFullTank = false; costCalculatedFuelField = null; costCurrency = $defaultCurrency; costCategory = 'fuel'; };
 		if (!editingCostId) {
 			await createRecord('costs', payload, reset);
 			return;
@@ -362,15 +365,45 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 		costFuelLiters = cost.fuel_liters ? formatDecimalInput(cost.fuel_liters, $numberLocale) : '';
 		costFuelUnitPrice = cost.fuel_unit_price ? formatDecimalInput(cost.fuel_unit_price, $numberLocale) : '';
 		costFuelOdometer = cost.fuel_odometer_value ? formatDecimalInput(cost.fuel_odometer_value, $numberLocale) : '';
+		costFuelFullTank = cost.fuel_full_tank;
+		costCalculatedFuelField = null;
 		message = ''; error = ''; costModalOpen = true;
 	}
 
 	function beginCreateCost(): void {
 		editingCostId = null;
 		costCategory = 'fuel'; costAmount = ''; costCurrency = $defaultCurrency;
-		costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = '';
+		costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costFuelFullTank = false; costCalculatedFuelField = null;
 		costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costDescription = '';
 		message = ''; error = ''; costModalOpen = true;
+	}
+
+	function fuelConsumptionReason(reason: VehicleCost['fuel_consumption_unavailable_reason']): string {
+		switch (reason) {
+			case 'not_full_to_full': return 'Mark this and the previous refueling as full to see consumption.';
+			case 'missing_previous_full_tank': return 'A previous full refueling is needed to calculate consumption.';
+			case 'missing_odometer': return 'Add odometer readings to both full refuelings to calculate consumption.';
+			case 'non_comparable': return 'Consumption cannot be calculated because the odometer values are not comparable.';
+			default: return '';
+		}
+	}
+
+	function updateCostFuelCalculation(changed: FuelCalculationField): void {
+		if (costCalculatedFuelField && costCalculatedFuelField !== changed) {
+			if (costCalculatedFuelField === 'amount') costAmount = '';
+			if (costCalculatedFuelField === 'fuel_liters') costFuelLiters = '';
+			if (costCalculatedFuelField === 'fuel_unit_price') costFuelUnitPrice = '';
+			costCalculatedFuelField = null;
+		}
+		const calculated = calculateMissingFuelValue({ amount: costAmount, fuel_liters: costFuelLiters, fuel_unit_price: costFuelUnitPrice, locale: $numberLocale });
+		if (calculated) {
+			if (calculated.field === 'amount') costAmount = formatDecimalInput(calculated.value, $numberLocale);
+			if (calculated.field === 'fuel_liters') costFuelLiters = formatDecimalInput(calculated.value, $numberLocale);
+			if (calculated.field === 'fuel_unit_price') costFuelUnitPrice = formatDecimalInput(calculated.value, $numberLocale);
+			costCalculatedFuelField = calculated.field;
+		} else if (costCalculatedFuelField === changed) {
+			costCalculatedFuelField = null;
+		}
 	}
 
 	async function createRecord(kind: 'maintenance' | 'insurance' | 'costs', payload: Record<string, unknown>, reset: () => void): Promise<void> {
@@ -523,8 +556,8 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 
 			<section aria-labelledby="costs-heading"><div><p class="text-sm font-medium text-accent-ink">{$t("Ownership")}</p><h2 id="costs-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Costs")}</h2></div>{#if canCreate || editingCostId}<Modal bind:open={costModalOpen} size="wide" title={$t(editingCostId ? "Edit vehicle cost" : "Add vehicle cost")}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}<form id="vehicle-cost-form" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6" onsubmit={saveCost}>
 					<label class="block text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Category")}<select bind:value={costCategory} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-control px-3 text-sm text-ink max-sm:text-base">{#each vehicleCostCategories as category}<option value={category.value}>{$t(category.label)}</option>{/each}</select></label>
-					{#if costCategory === 'fuel'}<fieldset class="min-w-0 rounded-xl border border-line bg-surface-subtle p-4 sm:col-span-2 lg:col-span-4"><legend class="px-1 text-sm font-medium text-ink-secondary">{$t("Fuel details")}</legend><p class="mb-3 text-sm leading-5 text-ink-muted">{$t("Fuel quantity and price must be entered together, or left blank.")}</p><div class="grid gap-3 sm:grid-cols-3"><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Fuel quantity (liters)")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelLiters} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Price per liter")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelUnitPrice} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Odometer reading")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional")}</span><input bind:value={costFuelOdometer} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label></div></fieldset>{/if}
-					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Amount")}<input bind:value={costAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" placeholder={formatDecimalInput('125.00', $numberLocale)} /></label>
+					{#if costCategory === 'fuel'}<fieldset class="min-w-0 rounded-xl border border-line bg-surface-subtle p-4 sm:col-span-2 lg:col-span-4"><legend class="px-1 text-sm font-medium text-ink-secondary">{$t("Fuel details")}</legend><p class="mb-3 text-sm leading-5 text-ink-muted">{$t("Enter any two of amount, quantity and price to calculate the third.")}</p><div class="grid gap-3 sm:grid-cols-3"><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Fuel quantity (liters)")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelLiters} oninput={() => updateCostFuelCalculation("fuel_liters")} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Price per liter")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelUnitPrice} oninput={() => updateCostFuelCalculation("fuel_unit_price")} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Odometer reading")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional")}</span><input bind:value={costFuelOdometer} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label></div><label class="flex items-start gap-2 text-sm text-ink-secondary sm:col-span-3"><input bind:checked={costFuelFullTank} type="checkbox" class="mt-1 accent-accent" /><span><span class="font-medium">{$t("Full tank")}</span><span class="mt-1 block text-xs leading-5 text-ink-muted">{$t("Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.")}</span></span></label>{#if costCalculatedFuelField}<p class="text-xs text-ink-muted sm:col-span-3" role="status">{$t("Calculated from the other two values.")}</p>{/if}</fieldset>{/if}
+					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Amount")}<input bind:value={costAmount} oninput={() => updateCostFuelCalculation("amount")} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" placeholder={formatDecimalInput('125.00', $numberLocale)} /></label>
 					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-1">{$t("Currency")}<input bind:value={costCurrency} required maxlength="3" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" placeholder={$t("EUR")} /></label>
 					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Period starts")}<input bind:value={costPeriodStart} type="date" required class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label>
 					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-1">{$t("Period")}<select bind:value={costPeriod} class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base">{#each vehiclePeriods as period}<option value={period.value}>{$t(period.label)}</option>{/each}</select></label>
@@ -534,7 +567,7 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 					<Button variant="secondary" type="button" onclick={() => (costModalOpen = false)}>{$t('Cancel')}</Button>
 					<Button type="submit" form="vehicle-cost-form" disabled={saving}>{$t(editingCostId ? "Update cost" : "Save cost")}</Button>
 				{/snippet}
-			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.can_edit}<div class="mt-3 flex flex-wrap gap-2"><Button type="button" size="small" variant="secondary" onclick={() => editCost(cost)}>{$t("Edit")}</Button><button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
+			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}{#if cost.fuel_full_tank} · {$t("Full tank")}{/if}</p>{/if}{#if cost.category === 'fuel' && cost.fuel_consumption_l_per_100km !== null}<p class="mt-2 text-sm font-medium text-accent-ink">{$t("Fuel consumption")}: {formatMeasurement(cost.fuel_consumption_l_per_100km, "L/100 km", $numberLocale)} L/100 km</p>{:else if cost.category === 'fuel' && cost.fuel_consumption_unavailable_reason}<p class="mt-2 text-xs leading-5 text-ink-muted">{$t(fuelConsumptionReason(cost.fuel_consumption_unavailable_reason))}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.can_edit}<div class="mt-3 flex flex-wrap gap-2"><Button type="button" size="small" variant="secondary" onclick={() => editCost(cost)}>{$t("Edit")}</Button><button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
 	</section>
 	{#if deleteTarget}<ConfirmModal bind:open={deleteOpen} title={$t("Delete vehicle record?")} message={$t(deleteTarget.type === 'odometer' ? 'Delete this odometer reading and its correction history? The timeline will be recalculated.' : 'Delete this vehicle record?')} busy={deleting} onConfirm={() => void deleteRecord()} />{/if}
 {:else}

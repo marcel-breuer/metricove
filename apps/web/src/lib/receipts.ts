@@ -63,6 +63,7 @@ export type ReceiptDocument = {
 	fuel_liters: string | null;
 	fuel_unit_price: string | null;
 	fuel_odometer_value: string | null;
+	fuel_full_tank: boolean;
 	mime_type: string;
 	file_url: string;
 	created_at: string | null;

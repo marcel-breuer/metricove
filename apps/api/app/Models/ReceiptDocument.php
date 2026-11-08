@@ -28,6 +28,7 @@ class ReceiptDocument extends Model implements ModuleResource
         'fuel_liters',
         'fuel_unit_price',
         'fuel_odometer_value',
+        'fuel_full_tank',
         'idempotency_key',
         'file_digest',
         'request_fingerprint',
@@ -37,6 +38,7 @@ class ReceiptDocument extends Model implements ModuleResource
     {
         return [
             'is_private' => 'boolean',
+            'fuel_full_tank' => 'boolean',
             'invoice_date' => 'date:Y-m-d',
             'amount' => 'decimal:2',
             'tax_amount' => 'decimal:2',

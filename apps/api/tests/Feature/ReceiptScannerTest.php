@@ -65,6 +65,13 @@ class ReceiptScannerTest extends TestCase
             'Idempotency-Key' => 'c690c9f1-a81e-4fd2-9cad-531dd06505dc',
         ];
 
+        $invalidMarkerPayload = $payload;
+        $invalidMarkerPayload['file'] = $this->imageFile('invoice-marker.png');
+        $invalidMarkerPayload['fuel_full_tank'] = true;
+        $this->actingAs($admin, 'web')->post('/api/receipts/confirm', $invalidMarkerPayload, $headers)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('fuel_full_tank');
+
         $created = $this->actingAs($admin, 'web')->post('/api/receipts/confirm', $payload, $headers)
             ->assertCreated()
             ->assertJsonPath('receipt.target_type', 'finance')
@@ -139,12 +146,12 @@ class ReceiptScannerTest extends TestCase
             'merchant' => 'Werkstatt Nord',
             'invoice_number' => 'RN-2026-104',
             'invoice_date' => '2026-10-29',
-            'amount' => '64.30',
             'currency' => 'EUR',
             'tax_amount' => '10.26',
             'fuel_liters' => '39.20',
             'fuel_unit_price' => '1.6400',
             'fuel_odometer_value' => '81234',
+            'fuel_full_tank' => true,
             'reviewed_fields' => ['merchant', 'fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'],
         ], [
             'Accept' => 'application/json',
@@ -157,16 +164,22 @@ class ReceiptScannerTest extends TestCase
             'category' => 'fuel',
             'period' => 'once',
             'period_start' => '2026-10-29',
-            'amount' => '64.30',
+            'amount' => '64.29',
             'fuel_liters' => '39.20',
             'fuel_unit_price' => '1.6400',
             'fuel_odometer_value' => '81234.000',
+            'fuel_full_tank' => true,
         ]);
         $this->assertDatabaseHas('receipt_documents', [
             'id' => $saved->json('receipt.id'),
             'vehicle_cost_id' => $saved->json('target.id'),
             'financial_transaction_id' => null,
             'owner_user_id' => $admin->id,
+            'amount' => '64.29',
+            'fuel_liters' => '39.20',
+            'fuel_unit_price' => '1.6400',
+            'fuel_odometer_value' => '81234.000',
+            'fuel_full_tank' => true,
         ]);
         $this->assertFalse(app(ModuleStateService::class)->isEnabled('import'));
     }

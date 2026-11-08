@@ -117,6 +117,9 @@ export type VehicleCost = {
 	fuel_liters: string | null;
 	fuel_unit_price: string | null;
 	fuel_odometer_value: string | null;
+	fuel_full_tank: boolean;
+	fuel_consumption_l_per_100km: string | null;
+	fuel_consumption_unavailable_reason: 'not_full_to_full' | 'missing_previous_full_tank' | 'missing_odometer' | 'non_comparable' | null;
 	can_edit: boolean;
 };
 
