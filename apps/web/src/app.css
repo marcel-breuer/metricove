@@ -470,6 +470,12 @@ main [class~="shadow-lg"], main [class~="shadow-xl"], main [class~="shadow-2xl"]
 }
 }
 
+/* Unlayered so space-y-* utilities on a dialog's parent cannot pull it to the top. */
+dialog.ui-modal { margin: auto; }
+@media (max-width: 640px) {
+	dialog.ui-modal { margin: auto 0 0; }
+}
+
 .mobile-drawer {
 	animation: drawer-in 160ms ease-out;
 }

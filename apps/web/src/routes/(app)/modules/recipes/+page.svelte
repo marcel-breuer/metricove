@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
+	import EmptyState from '#lib/ui/EmptyState.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { tick } from 'svelte';
@@ -46,6 +47,9 @@
 	let deleteTarget = $state<number | null>(null);
 	let formOpen = $state(false);
 	let deleteOpen = $state(false);
+	let detailOpen = $state(false);
+	let viewedRecipeId = $state<number | null>(null);
+	const viewedRecipe = $derived(recipes.find((recipe) => recipe.id === viewedRecipeId) ?? null);
 	let importOpen = $state(false);
 	let importType = $state<'url' | 'pdf'>('url');
 	let importUrl = $state('');
@@ -187,7 +191,18 @@
 		importNotices = [];
 	}
 
+	function openRecipe(recipe: Recipe): void {
+		viewedRecipeId = recipe.id;
+		detailOpen = true;
+	}
+
+	function confirmDelete(id: number): void {
+		deleteTarget = id;
+		deleteOpen = true;
+	}
+
 	function editRecipe(recipe: Recipe): void {
+		detailOpen = false;
 		formOpen = true;
 		message = '';
 		formError = '';
@@ -260,6 +275,7 @@
 			await api<RecipeResponse>(`/api/recipes/${id}`, 'DELETE');
 			deleteTarget = null;
 			deleteOpen = false;
+			if (viewedRecipeId === id) detailOpen = false;
 			if (recipeId === id) resetForm();
 			message = 'Recipe deleted.';
 			await loadRecipes();
@@ -279,6 +295,14 @@
 	<meta name="description" content={$t("Keep household recipes, measured ingredients and preparation notes together.")} />
 </svelte:head>
 
+{#snippet star(filled: boolean)}
+	<svg aria-hidden="true" viewBox="0 0 24 24" class="size-4" fill={filled ? 'currentColor' : 'none'}><path d="m12 3.5 2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9L12 3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg>
+{/snippet}
+
+{#snippet favoriteButton(recipe: Recipe)}
+	<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="ui-icon-button recipe-favorite">{@render star(recipe.is_favorite)}</button>
+{/snippet}
+
 <div class="mx-auto max-w-7xl space-y-8">
 	<PageHeading eyebrow="Food · Recipes" title="Recipes worth keeping" description="A private collection for your household: clear quantities, useful notes and the way you like to make it.">
 		{#snippet actions()}
@@ -290,57 +314,109 @@
 	{#if message}<Notice tone="success" message={message} />{/if}
 	{#if error}<Notice tone="error" message={error} />{/if}
 
-	<div class="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
-		<section aria-labelledby="recipe-list-title" class="min-w-0 space-y-5">
-			<div class="flex flex-col gap-3 sm:flex-row">
-				<label class="min-w-0 flex-1 text-xs font-medium text-slate-400">{$t("Search recipes and ingredients")}
-					<input bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
-				</label>
-				<label class="text-xs font-medium text-slate-400">{$t("Category")}
-					<select bind:value={categoryFilter} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20 sm:min-w-40">
-						<option value="all">{$t("All categories")}</option>
-						{#each categories as recipeCategory}<option value={recipeCategory}>{recipeCategory}</option>{/each}
-					</select>
-				</label>
-				<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="mt-auto min-h-11 rounded-xl border px-4 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 {favoriteOnly ? 'border-amber-200/50 bg-amber-200/10 text-amber-100' : 'border-slate-700 text-slate-300 hover:border-slate-500'}">{$t("★ Favorites")}</button>
-			</div>
+	<section aria-labelledby="recipe-list-title" class="space-y-6">
+		<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+			<label class="ui-field-label block">{$t("Search recipes and ingredients")}
+				<input bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="ui-control mt-1.5" />
+			</label>
+			<label class="ui-field-label block">{$t("Category")}
+				<select bind:value={categoryFilter} class="ui-control mt-1.5">
+					<option value="all">{$t("All categories")}</option>
+					{#each categories as recipeCategory}<option value={recipeCategory}>{recipeCategory}</option>{/each}
+				</select>
+			</label>
+			<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="recipe-filter-toggle ui-button ui-button--secondary ui-button--medium">
+				{@render star(favoriteOnly)}{$t("Favorites")}
+			</button>
+		</div>
 
-			<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
-			{#if loading}
-				<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-400">{$t("Loading recipes…")}</div>
-			{:else if !canView}
-				<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm leading-6 text-slate-400">{$t("Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission.")}</div>
-			{:else if visibleRecipes.length === 0}
-				<div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center sm:p-12">
-					<p class="text-lg font-medium text-white">{$t(recipes.length === 0 ? 'Your recipe book is ready.' : 'No recipes match these filters.')}</p>
-					<p class="mt-2 text-sm leading-6 text-slate-400">{$t(recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.')}</p>
-					{#if recipes.length === 0 && canAddRecipe}<button type="button" onclick={() => { resetForm(); formOpen = true; }} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create the first recipe")}</button>{/if}
-				</div>
-			{:else}
-				<div class="grid gap-4 xl:grid-cols-2">
-					{#each visibleRecipes as recipe (recipe.id)}
-						<article class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/75 shadow-lg shadow-black/10">
-							{#if recipe.photo_url}<img src={recipe.photo_url} alt="Photo of {recipe.title}" loading="lazy" class="h-44 w-full border-b border-slate-800 object-cover" />{/if}
-							<div class="space-y-4 p-5">
-								<div class="flex items-start justify-between gap-3">
-								<div class="min-w-0"><p class="text-xs font-medium text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3>{#if recipe.needs_review}<span class="mt-2 inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">{$t('Needs review')}</span>{/if}</div>
-									<button type="button" aria-label={recipe.is_favorite ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="min-h-11 min-w-11 rounded-xl border border-slate-700 text-xl transition hover:border-amber-200/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 {recipe.is_favorite ? 'text-amber-200' : 'text-slate-500'}">★</button>
+		<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
+		{#if loading}
+			<p class="ui-panel ui-panel--medium text-sm text-[var(--text-muted)]">{$t("Loading recipes…")}</p>
+		{:else if !canView}
+			<Notice tone="info" message="Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission." />
+		{:else if visibleRecipes.length === 0}
+			<EmptyState
+				title={recipes.length === 0 ? 'Your recipe book is ready.' : 'No recipes match these filters.'}
+				description={recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.'}
+			>
+				{#snippet actions()}
+					{#if recipes.length === 0 && canAddRecipe}<Button onclick={() => { resetForm(); formOpen = true; }}>{$t("Create the first recipe")}</Button>{/if}
+				{/snippet}
+			</EmptyState>
+		{:else}
+			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+				{#each visibleRecipes as recipe (recipe.id)}
+					<li class="ui-panel flex min-w-0 flex-col overflow-hidden">
+						{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-[var(--border-default)] object-cover" />{/if}
+						<div class="flex flex-1 flex-col gap-3 p-5">
+							<div class="flex items-start justify-between gap-3">
+								<div class="min-w-0">
+									<p class="text-xs text-[var(--text-muted)]">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
+									<h3 class="mt-1 text-lg font-semibold leading-snug text-[var(--text-primary)]">
+										<button type="button" onclick={() => openRecipe(recipe)} class="recipe-title-link text-left">{recipe.title}</button>
+									</h3>
 								</div>
-								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">{#if recipe.servings}<span>{recipe.servings} servings</span>{:else}<span class="text-amber-200">{$t('Servings missing')}</span>{/if}{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
-								<div><h4 class="text-xs font-semibold text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2">{#if ingredient.quantity && ingredient.unit}<span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="shrink-0 text-amber-200">{$t('Amount missing')}</span>{/if}<span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}{#if recipe.ingredients.length === 0}<li class="text-slate-500">{$t('No ingredients recorded.')}</li>{/if}</ul></div>
-								<div><h4 class="text-xs font-semibold text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions || $t('No preparation steps recorded.')}</p></div>
+								{@render favoriteButton(recipe)}
+							</div>
+							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-[var(--text-muted)]">
+								{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-[var(--warning-text)]">{$t('Servings missing')}</span>{/if}
+								{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}
+								<span>{$t(recipe.ingredients.length === 1 ? '{count} ingredient' : '{count} ingredients', { count: recipe.ingredients.length })}</span>
+								{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
+							</p>
+							<p class="line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
+								{recipe.ingredients.length > 0 ? recipe.ingredients.map((item) => item.name).join(', ') : $t('No ingredients recorded.')}
+							</p>
+							<div class="mt-auto flex flex-wrap items-center gap-2 border-t border-[var(--border-default)] pt-3">
+								<Button variant="secondary" size="small" onclick={() => openRecipe(recipe)}>{$t('Show recipe')}</Button>
 								{#if recipe.can_edit}
-									<div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
-										<button type="button" onclick={() => editRecipe(recipe)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300/50 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200">{$t("Edit")}</button>
-											<button type="button" onclick={() => { deleteTarget = recipe.id; deleteOpen = true; }} class="min-h-10 px-3 text-sm text-slate-400 hover:text-rose-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t("Delete")}</button>
-									</div>
+									<Button variant="ghost" size="small" onclick={() => editRecipe(recipe)}>{$t("Edit")}</Button>
+									<Button variant="ghost" size="small" class="ml-auto" onclick={() => confirmDelete(recipe.id)}>{$t("Delete")}</Button>
 								{/if}
 							</div>
-						</article>
-					{/each}
-				</div>
-			{/if}
-		</section>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+
+	{#if viewedRecipe}
+		<Modal bind:open={detailOpen} title={viewedRecipe.title} description={`${viewedRecipe.category ?? $t('Uncategorized')} · ${$t(viewedRecipe.visibility === 'household' ? 'Household' : 'Private')}`} class="recipe-detail">
+			{#if viewedRecipe.photo_url}<img src={viewedRecipe.photo_url} alt={$t('Photo of {title}', { title: viewedRecipe.title })} class="mb-5 aspect-[16/9] w-full rounded-xl object-cover" />{/if}
+			<div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm tabular-nums text-[var(--text-muted)]">
+				{#if viewedRecipe.servings}<span>{$t(viewedRecipe.servings === 1 ? '{count} serving' : '{count} servings', { count: viewedRecipe.servings })}</span>{:else}<span class="text-[var(--warning-text)]">{$t('Servings missing')}</span>{/if}
+				{#if viewedRecipe.preparation_minutes}<span>{$t('{count} min', { count: viewedRecipe.preparation_minutes })}</span>{/if}
+				{#if viewedRecipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
+			</div>
+			<div class="mt-6 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+				<section>
+					<h3 class="text-sm font-semibold text-[var(--text-primary)]">{$t("Ingredients")}</h3>
+					<ul class="mt-3 divide-y divide-[var(--border-default)] text-sm">
+						{#each viewedRecipe.ingredients as ingredient (ingredient.id)}
+							<li class="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 py-2">
+								{#if ingredient.quantity && ingredient.unit}<span class="tabular-nums text-[var(--accent-text)]">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="text-xs leading-5 text-[var(--warning-text)]">{$t('Amount missing')}</span>{/if}
+								<span class="text-[var(--text-primary)]">{ingredient.name}{#if ingredient.note}<span class="text-[var(--text-muted)]"> · {ingredient.note}</span>{/if}</span>
+							</li>
+						{/each}
+						{#if viewedRecipe.ingredients.length === 0}<li class="py-2 text-[var(--text-muted)]">{$t('No ingredients recorded.')}</li>{/if}
+					</ul>
+				</section>
+				<section>
+					<h3 class="text-sm font-semibold text-[var(--text-primary)]">{$t("Preparation")}</h3>
+					<p class="mt-3 whitespace-pre-line text-sm leading-7 text-[var(--text-secondary)]">{viewedRecipe.instructions || $t('No preparation steps recorded.')}</p>
+				</section>
+			</div>
+			<div class="ui-modal-actions mt-6">
+				{@render favoriteButton(viewedRecipe)}
+				{#if viewedRecipe.can_edit}
+					<Button variant="ghost" onclick={() => confirmDelete(viewedRecipe!.id)}>{$t("Delete")}</Button>
+					<Button variant="secondary" onclick={() => editRecipe(viewedRecipe!)}>{$t("Edit")}</Button>
+				{/if}
+			</div>
+		</Modal>
+	{/if}
 
 		{#if canAddRecipe}
 			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
@@ -385,7 +461,23 @@
 			{#if deleteTarget !== null}<ConfirmModal bind:open={deleteOpen} title={$t('Delete recipe?')} message={$t('Delete this recipe?')} onConfirm={() => void deleteRecipe(deleteTarget!)} />{/if}
 		{/if}
 		{#if canView && !canAddRecipe && !hasEditableRecipe}
-			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-6 text-slate-400 lg:sticky lg:top-6">{$t("Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes.")}</aside>
+			<Notice tone="info" message="Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes." />
 		{/if}
-	</div>
 </div>
+
+<style>
+	.recipe-title-link {
+		border-radius: 0.25rem;
+		color: inherit;
+		transition: color 150ms ease;
+	}
+	.recipe-title-link:hover { color: var(--accent-text); }
+	.recipe-title-link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+	.recipe-favorite[aria-pressed='true'] { color: var(--warning-text); }
+	.recipe-filter-toggle { gap: 0.5rem; }
+	.recipe-filter-toggle[aria-pressed='true'] { border-color: var(--warning-text); color: var(--warning-text); }
+	@media (min-width: 641px) {
+		:global(.recipe-detail.ui-modal) { width: min(100% - 2rem, 56rem); }
+	}
+	:global(.recipe-detail .ui-modal-actions > .recipe-favorite) { margin-right: auto; }
+</style>
