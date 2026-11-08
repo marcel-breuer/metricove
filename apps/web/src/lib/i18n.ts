@@ -6,6 +6,14 @@ export type NumberLocale = 'de-DE' | 'en-US' | 'en-GB';
 export type CurrencyDisplay = 'code' | 'symbol';
 
 const german: Record<string, string> = {
+	'Full tank': 'Vollgetankt', 'Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.': 'Nur nach vollständigem Tanken markieren. Der Verbrauch wird zwischen aufeinanderfolgenden Volltankungen mit Kilometerständen berechnet.',
+	'Enter any two of amount, quantity and price to calculate the third.': 'Gib zwei der Werte Betrag, Kraftstoffmenge und Literpreis ein, um den dritten zu berechnen.',
+	'Calculated from the other two values.': 'Aus den beiden anderen Werten berechnet.', 'Fuel consumption': 'Kraftstoffverbrauch',
+	'Fuel consumption: {value} L/100 km': 'Kraftstoffverbrauch: {value} l/100 km',
+	'Mark this and the previous refueling as full to see consumption.': 'Markiere diesen und den vorherigen Tankvorgang als Volltankung, um den Verbrauch zu sehen.',
+	'A previous full refueling is needed to calculate consumption.': 'Für die Berechnung ist eine vorherige Volltankung erforderlich.',
+	'Add odometer readings to both full refuelings to calculate consumption.': 'Ergänze Kilometerstände für beide Volltankungen, um den Verbrauch zu berechnen.',
+	'Consumption cannot be calculated because the odometer values are not comparable.': 'Der Verbrauch kann nicht berechnet werden, da die Kilometerstände nicht vergleichbar sind.',
 	'Overview': 'Übersicht', 'Profile': 'Profil', 'Members': 'Mitglieder', 'Module rights': 'Modulrechte',
 	'Modules': 'Module', 'General settings': 'Allgemeine Einstellungen', 'Invitations': 'Einladungen',
 	'Assistant': 'Assistent', 'Tracking': 'Tracking', 'Tracker history': 'Tracker-Verlauf', 'Module': 'Modul',

@@ -13,6 +13,7 @@
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import { defaultCurrency, formatDate, numberLocale, t } from '#lib/i18n';
 	import { canonicalizeDecimalInput, formatCurrency, formatDecimalInput } from '#lib/number-format';
+	import { calculateFuelTotal, calculateMissingFuelValue, currencyAmountsDiffer, type FuelCalculationField } from '#lib/vehicle-fuel';
 	import { createReceiptPdf, receiptFileSizeLimit, receiptPageLimit } from '#lib/receipt-files';
 	import { vehicleCostCategories } from '#lib/vehicles';
 	import type { ReceiptDocument, ReceiptDuplicateMatch, ReceiptFieldStatus, ReceiptOptions, ReceiptPagination, ReceiptPreview, ReceiptResponse, ReceiptSuggestions } from '#lib/receipts';
@@ -75,6 +76,8 @@
 	let fuelLiters = $state('');
 	let fuelUnitPrice = $state('');
 	let fuelOdometerValue = $state('');
+	let fuelFullTank = $state(false);
+	let calculatedFuelField = $state<FuelCalculationField | null>(null);
 	let loading = $state(true);
 	let previewing = $state(false);
 	let confirming = $state(false);
@@ -108,12 +111,26 @@
 	const showFuelFields = true;
 	const canConfirm = $derived(!confirming && !preparingScan && reviewRequired.every((field) => reviewedFields.includes(field)) && (duplicateMatches.length === 0 || duplicateAcknowledged));
 	const fuelCalculatedTotal = $derived.by(() => {
-		const liters = Number(fuelLiters);
-		const unitPrice = Number(fuelUnitPrice);
-		return fuelLiters.trim() !== '' && fuelUnitPrice.trim() !== '' && Number.isFinite(liters) && Number.isFinite(unitPrice)
-			? liters * unitPrice
-			: null;
+		return calculateFuelTotal(fuelLiters, fuelUnitPrice, $numberLocale);
 	});
+
+	function updateReceiptFuelCalculation(changed: FuelCalculationField): void {
+		if (calculatedFuelField && calculatedFuelField !== changed) {
+			if (calculatedFuelField === 'amount') amount = '';
+			if (calculatedFuelField === 'fuel_liters') fuelLiters = '';
+			if (calculatedFuelField === 'fuel_unit_price') fuelUnitPrice = '';
+			calculatedFuelField = null;
+		}
+		const calculated = calculateMissingFuelValue({ amount, fuel_liters: fuelLiters, fuel_unit_price: fuelUnitPrice, locale: $numberLocale });
+		if (calculated) {
+			if (calculated.field === 'amount') amount = formatDecimalInput(calculated.value, $numberLocale);
+			if (calculated.field === 'fuel_liters') fuelLiters = formatDecimalInput(calculated.value, $numberLocale);
+			if (calculated.field === 'fuel_unit_price') fuelUnitPrice = formatDecimalInput(calculated.value, $numberLocale);
+			calculatedFuelField = calculated.field;
+		} else if (calculatedFuelField === changed) {
+			calculatedFuelField = null;
+		}
+	}
 	const currentReceiptTarget = (receipt: ReceiptDocument): string => {
 		if (receipt.target_type === 'finance') return 'Finance expense';
 		if (receipt.target_type === 'vehicle') return 'Vehicle cost';
@@ -456,11 +473,14 @@
 			invoiceNumber = result.suggestions?.invoice_number ?? '';
 			invoiceDate = result.suggestions?.invoice_date ?? '';
 			amount = formatDecimalInput(result.suggestions?.amount, $numberLocale);
+			calculatedFuelField = null;
+			fuelFullTank = false;
 			currency = result.suggestions?.currency ?? result.default_currency ?? $defaultCurrency;
 			taxAmount = formatDecimalInput(result.suggestions?.tax_amount, $numberLocale);
 			fuelLiters = formatDecimalInput(result.suggestions?.fuel_liters, $numberLocale);
 			fuelUnitPrice = formatDecimalInput(result.suggestions?.fuel_unit_price, $numberLocale);
 			fuelOdometerValue = formatDecimalInput(result.suggestions?.fuel_odometer_value, $numberLocale);
+			updateReceiptFuelCalculation('amount');
 			description = merchant ? get(t)('Invoice from') + ' ' + merchant : get(t)('Invoice expense');
 			idempotencyKey = makeIdempotencyKey();
 			if (expenseCategories.length > 0) financeCategoryId = String(expenseCategories[0].id);
@@ -497,13 +517,15 @@
 		form.set('merchant', merchant);
 		form.set('invoice_number', invoiceNumber);
 		form.set('invoice_date', invoiceDate);
-		form.set('amount', canonicalizeDecimalInput(amount, $numberLocale));
+		const vehicleFuelTarget = targetType === 'vehicle' && vehicleCategory === 'fuel';
+		form.set('amount', vehicleFuelTarget && calculatedFuelField === 'amount' ? '' : canonicalizeDecimalInput(amount, $numberLocale));
 		form.set('currency', currency);
 		form.set('tax_amount', taxAmount ? canonicalizeDecimalInput(taxAmount, $numberLocale) : '');
 		if (showFuelFields) {
-			form.set('fuel_liters', fuelLiters ? canonicalizeDecimalInput(fuelLiters, $numberLocale) : '');
-			form.set('fuel_unit_price', fuelUnitPrice ? canonicalizeDecimalInput(fuelUnitPrice, $numberLocale) : '');
+			form.set('fuel_liters', vehicleFuelTarget && calculatedFuelField === 'fuel_liters' ? '' : fuelLiters ? canonicalizeDecimalInput(fuelLiters, $numberLocale) : '');
+			form.set('fuel_unit_price', vehicleFuelTarget && calculatedFuelField === 'fuel_unit_price' ? '' : fuelUnitPrice ? canonicalizeDecimalInput(fuelUnitPrice, $numberLocale) : '');
 			form.set('fuel_odometer_value', fuelOdometerValue ? canonicalizeDecimalInput(fuelOdometerValue, $numberLocale) : '');
+			form.set('fuel_full_tank', targetType === 'vehicle' && vehicleCategory === 'fuel' && fuelFullTank ? '1' : '0');
 		}
 		for (const field of reviewedFields) form.append('reviewed_fields[]', field);
 		if (duplicateMatches.length > 0) form.set('duplicate_acknowledged', duplicateAcknowledged ? '1' : '0');
@@ -695,7 +717,7 @@
 									{#if needsReview('invoice_date')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('invoice_date'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_date')} onchange={(event) => setFieldReview('invoice_date', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(invoiceDate))}</span></label></div>{/if}
 								</label>
 								<label class="block text-sm font-medium text-ink-secondary">{$t('Total amount')}
-									<input bind:value={amount} oninput={() => clearFieldReview('amount')} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" placeholder={formatDecimalInput('125.00', $numberLocale)} />
+									<input bind:value={amount} oninput={() => { clearFieldReview('amount'); updateReceiptFuelCalculation('amount'); }} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" placeholder={formatDecimalInput('125.00', $numberLocale)} />
 									{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
 								</label>
 								<label class="block text-sm font-medium text-ink-secondary">{$t('Currency')}
@@ -713,11 +735,11 @@
 									<p class="mb-3 text-xs leading-5 text-ink-muted">{$t('Review liters and unit price before saving. Odometer is optional.')}</p>
 									<div class="grid gap-4 sm:grid-cols-3">
 										<label class="block text-sm font-medium text-ink-secondary">{$t('Fuel quantity (liters)')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-										<input bind:value={fuelLiters} oninput={() => clearFieldReview('fuel_liters')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
+										<input bind:value={fuelLiters} oninput={() => { clearFieldReview('fuel_liters'); updateReceiptFuelCalculation('fuel_liters'); }} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
 										{#if needsReview('fuel_liters')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_liters'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_liters')} onchange={(event) => setFieldReview('fuel_liters', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelLiters))}</span></label></div>{/if}
 										</label>
 										<label class="block text-sm font-medium text-ink-secondary">{$t('Price per liter')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-										<input bind:value={fuelUnitPrice} oninput={() => clearFieldReview('fuel_unit_price')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
+										<input bind:value={fuelUnitPrice} oninput={() => { clearFieldReview('fuel_unit_price'); updateReceiptFuelCalculation('fuel_unit_price'); }} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
 										{#if needsReview('fuel_unit_price')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_unit_price'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_unit_price')} onchange={(event) => setFieldReview('fuel_unit_price', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelUnitPrice))}</span></label></div>{/if}
 										</label>
 										<label class="block text-sm font-medium text-ink-secondary">{$t('Odometer reading')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
@@ -725,9 +747,11 @@
 										{#if needsReview('fuel_odometer_value')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_odometer_value'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_odometer_value')} onchange={(event) => setFieldReview('fuel_odometer_value', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelOdometerValue))}</span></label></div>{/if}
 										</label>
 									</div>
+									{#if targetType === 'vehicle' && vehicleCategory === 'fuel'}<label class="mt-3 flex items-start gap-2 text-sm text-ink-secondary"><input bind:checked={fuelFullTank} type="checkbox" class="mt-1 accent-accent" /><span><span class="font-medium">{$t('Full tank')}</span><span class="mt-1 block text-xs leading-5 text-ink-muted">{$t('Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.')}</span></span></label>{/if}
+									{#if calculatedFuelField}<p class="mt-3 text-xs text-ink-muted" role="status">{$t('Calculated from the other two values.')}</p>{/if}
 									{#if fuelCalculatedTotal !== null && currency.length === 3}
-										<p class="mt-3 text-sm text-ink-secondary">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal.toFixed(2), currency)}</p>
-										{#if amount && Math.abs(fuelCalculatedTotal - Number(amount)) > 0.01}<p role="status" class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</p>{/if}
+										<p class="mt-3 text-sm text-ink-secondary">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal, currency)}</p>
+										{#if amount && currencyAmountsDiffer(fuelCalculatedTotal, canonicalizeDecimalInput(amount, $numberLocale), $numberLocale)}<p role="status" class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</p>{/if}
 									{/if}
 								</fieldset>
 							{/if}
@@ -826,7 +850,7 @@
 								<p class="truncate font-semibold text-ink">{receipt.merchant ?? $t('Invoice')}</p>
 								<p class="mt-1 text-sm text-ink-muted">{formatDate(receipt.invoice_date)} · {formatCurrency(receipt.amount, receipt.currency)} · {$t(currentReceiptTarget(receipt))}</p>
 								{#if receipt.invoice_number}<p class="mt-1 text-xs text-ink-subtle">{$t('Invoice number')}: {receipt.invoice_number}</p>{/if}
-								{#if receipt.fuel_liters && receipt.fuel_unit_price}<p class="mt-1 text-xs text-ink-muted">{receipt.fuel_liters} {$t('liters')} × {formatCurrency(receipt.fuel_unit_price, receipt.currency)}/{$t('liter')}{#if receipt.fuel_odometer_value} · {$t('Odometer reading')}: {receipt.fuel_odometer_value}{/if}</p>{/if}
+								{#if receipt.fuel_liters && receipt.fuel_unit_price}<p class="mt-1 text-xs text-ink-muted">{receipt.fuel_liters} {$t('liters')} × {formatCurrency(receipt.fuel_unit_price, receipt.currency)}/{$t('liter')}{#if receipt.fuel_odometer_value} · {$t('Odometer reading')}: {receipt.fuel_odometer_value}{/if}{#if receipt.fuel_full_tank} · {$t('Full tank')}{/if}</p>{/if}
 								<span class="mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-medium {receipt.shared_with_household ? 'border-positive/30 bg-positive/10 text-positive' : 'border-line-strong text-ink-secondary'}">{$t(receipt.shared_with_household ? 'Shared with household' : 'Private')}</span>
 							</div>
 							<div class="flex shrink-0 flex-wrap gap-2">
