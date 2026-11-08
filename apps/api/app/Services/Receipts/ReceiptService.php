@@ -316,6 +316,7 @@ class ReceiptService
                                 'fuel_liters' => $normalized['vehicle_category'] === 'fuel' ? $normalized['fuel_liters'] : null,
                                 'fuel_unit_price' => $normalized['vehicle_category'] === 'fuel' ? $normalized['fuel_unit_price'] : null,
                                 'fuel_odometer_value' => $normalized['vehicle_category'] === 'fuel' ? $normalized['fuel_odometer_value'] : null,
+                                'fuel_full_tank' => $normalized['vehicle_category'] === 'fuel' && $normalized['fuel_full_tank'],
                             ]);
                             $targetId = (int) $target['id'];
                             $financialTransactionId = null;
@@ -352,6 +353,7 @@ class ReceiptService
                     'fuel_liters' => $normalized['fuel_liters'],
                     'fuel_unit_price' => $normalized['fuel_unit_price'],
                     'fuel_odometer_value' => $normalized['fuel_odometer_value'],
+                    'fuel_full_tank' => $normalized['fuel_full_tank'],
                     'idempotency_key' => $normalized['idempotency_key'],
                     'file_digest' => $digest,
                     'request_fingerprint' => $fingerprint,
@@ -532,6 +534,7 @@ class ReceiptService
                     'fuel_liters' => $data['vehicle_category'] === 'fuel' ? $receipt->fuel_liters : null,
                     'fuel_unit_price' => $data['vehicle_category'] === 'fuel' ? $receipt->fuel_unit_price : null,
                     'fuel_odometer_value' => $data['vehicle_category'] === 'fuel' ? $receipt->fuel_odometer_value : null,
+                    'fuel_full_tank' => $data['vehicle_category'] === 'fuel' && $receipt->fuel_full_tank,
                 ]);
                 $receipt->vehicle_cost_id = (int) $target['id'];
                 $targetType = 'vehicle';
@@ -621,7 +624,7 @@ class ReceiptService
     }
 
     /** @param array<string, mixed> $data
-     * @return array{target_type: string, finance_category_id: ?int, vehicle_id: ?int, vehicle_category: ?string, description: string, merchant: ?string, invoice_number: ?string, invoice_date: string, amount: string, currency: string, tax_amount: ?string, fuel_liters: ?string, fuel_unit_price: ?string, fuel_odometer_value: ?string, reviewed_fields: list<string>, duplicate_acknowledged: bool, idempotency_key: string}
+     * @return array{target_type: string, finance_category_id: ?int, vehicle_id: ?int, vehicle_category: ?string, description: string, merchant: ?string, invoice_number: ?string, invoice_date: string, amount: string, currency: string, tax_amount: ?string, fuel_liters: ?string, fuel_unit_price: ?string, fuel_odometer_value: ?string, fuel_full_tank: bool, reviewed_fields: list<string>, duplicate_acknowledged: bool, idempotency_key: string}
      */
     private function normalizeConfirmation(array $data): array
     {
@@ -631,9 +634,6 @@ class ReceiptService
             ? null
             : VehicleDecimalValue::money($rawTaxAmount);
 
-        if ($amount === null) {
-            throw ValidationException::withMessages(['amount' => 'Enter a valid non-negative invoice total.']);
-        }
         if ($rawTaxAmount !== null && $rawTaxAmount !== '' && $taxAmount === null) {
             throw ValidationException::withMessages(['tax_amount' => 'Enter a valid non-negative tax amount.']);
         }
@@ -644,15 +644,23 @@ class ReceiptService
         $fuelLiters = $rawFuelLiters === null || $rawFuelLiters === '' ? null : VehicleDecimalValue::fuelQuantity($rawFuelLiters);
         $fuelUnitPrice = $rawFuelUnitPrice === null || $rawFuelUnitPrice === '' ? null : VehicleDecimalValue::fuelUnitPrice($rawFuelUnitPrice);
         $fuelOdometerValue = $rawFuelOdometerValue === null || $rawFuelOdometerValue === '' ? null : VehicleDecimalValue::distance($rawFuelOdometerValue);
-        if (($rawFuelLiters !== null && $rawFuelLiters !== '' && ($fuelLiters === null || preg_match('/\A0(?:\.0+)?\z/', $fuelLiters) === 1))
-            || ($rawFuelUnitPrice !== null && $rawFuelUnitPrice !== '' && ($fuelUnitPrice === null || preg_match('/\A0(?:\.0+)?\z/', $fuelUnitPrice) === 1))) {
-            throw ValidationException::withMessages(['fuel_liters' => 'Enter valid positive fuel quantity and unit price values.']);
+        $fuelFullTank = filter_var($data['fuel_full_tank'] ?? false, FILTER_VALIDATE_BOOL);
+        if ($fuelFullTank && ($data['target_type'] !== 'vehicle' || $data['vehicle_category'] !== 'fuel')) {
+            throw ValidationException::withMessages(['fuel_full_tank' => 'Full-tank details are only available for vehicle fuel costs.']);
         }
-        if (($fuelLiters === null) !== ($fuelUnitPrice === null)) {
-            throw ValidationException::withMessages(['fuel_liters' => 'Enter both fuel quantity and unit price, or leave both blank.']);
+        if (($data['target_type'] === 'vehicle' && $data['vehicle_category'] === 'fuel') || $fuelLiters !== null || $fuelUnitPrice !== null) {
+            $calculated = VehicleDecimalValue::calculateFuelValues($amount, $rawFuelLiters, $rawFuelUnitPrice);
+            $amount = $calculated['amount'];
+            $fuelLiters = $calculated['liters'];
+            $fuelUnitPrice = $calculated['unit_price'];
+        } elseif ($amount === null) {
+            throw ValidationException::withMessages(['amount' => 'Enter a valid non-negative invoice total.']);
         }
         if ($rawFuelOdometerValue !== null && $rawFuelOdometerValue !== '' && $fuelOdometerValue === null) {
             throw ValidationException::withMessages(['fuel_odometer_value' => 'Enter a valid non-negative odometer value.']);
+        }
+        if ($fuelFullTank && ($fuelLiters === null || $fuelOdometerValue === null)) {
+            throw ValidationException::withMessages(['fuel_full_tank' => 'A full-tank refueling record needs fuel quantity and an odometer reading.']);
         }
 
         $reviewedFields = $data['reviewed_fields'] ?? [];
@@ -673,6 +681,7 @@ class ReceiptService
             'fuel_liters' => $fuelLiters,
             'fuel_unit_price' => $fuelUnitPrice,
             'fuel_odometer_value' => $fuelOdometerValue,
+            'fuel_full_tank' => $fuelFullTank,
             'reviewed_fields' => $reviewedFields,
             'duplicate_acknowledged' => filter_var($data['duplicate_acknowledged'] ?? false, FILTER_VALIDATE_BOOL),
             'idempotency_key' => (string) $data['idempotency_key'],
@@ -698,6 +707,7 @@ class ReceiptService
             'fuel_liters' => $normalized['fuel_liters'],
             'fuel_unit_price' => $normalized['fuel_unit_price'],
             'fuel_odometer_value' => $normalized['fuel_odometer_value'],
+            'fuel_full_tank' => $normalized['fuel_full_tank'],
             'reviewed_fields' => $normalized['reviewed_fields'],
             'duplicate_acknowledged' => $normalized['duplicate_acknowledged'],
         ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -903,6 +913,7 @@ class ReceiptService
             'fuel_liters' => $receipt->fuel_liters === null ? null : (string) $receipt->fuel_liters,
             'fuel_unit_price' => $receipt->fuel_unit_price === null ? null : (string) $receipt->fuel_unit_price,
             'fuel_odometer_value' => $receipt->fuel_odometer_value === null ? null : (string) $receipt->fuel_odometer_value,
+            'fuel_full_tank' => (bool) $receipt->fuel_full_tank,
             'shared_with_household' => ! $receipt->isPrivate(),
             'is_owner' => $receipt->ownerUserId() === $actor->id,
             'mime_type' => $receipt->mime_type,

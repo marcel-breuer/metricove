@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Vehicles\VehicleDecimalValue;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 
 class StoreVehicleCostRequest extends FormRequest
@@ -24,7 +25,7 @@ class StoreVehicleCostRequest extends FormRequest
     {
         return [
             'category' => ['required', 'in:fuel,maintenance,insurance,tax,registration,finance,other'],
-            'amount' => ['required'],
+            'amount' => ['nullable'],
             'currency' => ['required', 'string', 'regex:/\A[A-Z]{3}\z/'],
             'period_start' => ['required', 'date_format:Y-m-d'],
             'period_end' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:period_start'],
@@ -33,30 +34,34 @@ class StoreVehicleCostRequest extends FormRequest
             'fuel_liters' => ['nullable', 'regex:/\A\d{1,11}(?:\.\d{1,3})?\z/'],
             'fuel_unit_price' => ['nullable', 'regex:/\A\d{1,10}(?:\.\d{1,4})?\z/'],
             'fuel_odometer_value' => ['nullable', 'regex:/\A\d{1,17}(?:\.\d{1,3})?\z/'],
+            'fuel_full_tank' => ['sometimes', 'boolean'],
         ];
     }
 
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            if (VehicleDecimalValue::money($this->input('amount')) === null) {
-                $validator->errors()->add('amount', 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.');
-            }
-
-            $fuelFields = ['fuel_liters', 'fuel_unit_price', 'fuel_odometer_value'];
-            $hasFuelDetails = collect($fuelFields)->contains(fn (string $field): bool => $this->input($field) !== null && $this->input($field) !== '');
+            $fuelFields = ['fuel_liters', 'fuel_unit_price', 'fuel_odometer_value', 'fuel_full_tank'];
+            $hasFuelDetails = collect(array_slice($fuelFields, 0, 3))->contains(fn (string $field): bool => $this->input($field) !== null && $this->input($field) !== '')
+                || filter_var($this->input('fuel_full_tank', false), FILTER_VALIDATE_BOOL);
 
             if ($this->input('category') !== 'fuel' && $hasFuelDetails) {
                 $validator->errors()->add('category', 'Fuel details are only available for fuel costs.');
             }
-            if (($this->input('fuel_liters') === null || $this->input('fuel_liters') === '') !== ($this->input('fuel_unit_price') === null || $this->input('fuel_unit_price') === '')) {
-                $validator->errors()->add('fuel_liters', 'Enter both fuel quantity and unit price, or leave both blank.');
-            }
-            if ($this->input('fuel_liters') !== null && $this->input('fuel_liters') !== '' && preg_match('/\A0(?:\.0+)?\z/', (string) $this->input('fuel_liters')) === 1) {
-                $validator->errors()->add('fuel_liters', 'Fuel quantity must be greater than zero.');
-            }
-            if ($this->input('fuel_unit_price') !== null && $this->input('fuel_unit_price') !== '' && preg_match('/\A0(?:\.0+)?\z/', (string) $this->input('fuel_unit_price')) === 1) {
-                $validator->errors()->add('fuel_unit_price', 'Fuel unit price must be greater than zero.');
+
+            $amount = $this->input('amount');
+            if ($this->input('category') === 'fuel') {
+                try {
+                    VehicleDecimalValue::calculateFuelValues($amount, $this->input('fuel_liters'), $this->input('fuel_unit_price'));
+                } catch (ValidationException $exception) {
+                    foreach ($exception->errors() as $field => $messages) {
+                        foreach ($messages as $message) {
+                            $validator->errors()->add($field, $message);
+                        }
+                    }
+                }
+            } elseif (VehicleDecimalValue::money($amount) === null) {
+                $validator->errors()->add('amount', 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.');
             }
         });
     }

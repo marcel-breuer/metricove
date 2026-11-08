@@ -26,12 +26,14 @@ class VehicleCost extends Model implements ModuleResource
         'fuel_liters',
         'fuel_unit_price',
         'fuel_odometer_value',
+        'fuel_full_tank',
     ];
 
     protected function casts(): array
     {
         return [
             'is_private' => 'boolean',
+            'fuel_full_tank' => 'boolean',
             'amount' => 'decimal:2',
             'period_start' => 'date:Y-m-d',
             'period_end' => 'date:Y-m-d',

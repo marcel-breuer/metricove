@@ -550,17 +550,15 @@ class VehicleService
      */
     private function costAttributes(array $data): array
     {
-        $amount = VehicleDecimalValue::money($data['amount']);
+        $amount = VehicleDecimalValue::money($data['amount'] ?? null);
         $rawFuelLiters = $data['fuel_liters'] ?? null;
         $rawFuelUnitPrice = $data['fuel_unit_price'] ?? null;
         $rawFuelOdometerValue = $data['fuel_odometer_value'] ?? null;
+        $fuelFullTank = filter_var($data['fuel_full_tank'] ?? false, FILTER_VALIDATE_BOOL);
         $fuelLiters = $rawFuelLiters === null || $rawFuelLiters === '' ? null : VehicleDecimalValue::fuelQuantity($rawFuelLiters);
         $fuelUnitPrice = $rawFuelUnitPrice === null || $rawFuelUnitPrice === '' ? null : VehicleDecimalValue::fuelUnitPrice($rawFuelUnitPrice);
         $fuelOdometerValue = $rawFuelOdometerValue === null || $rawFuelOdometerValue === '' ? null : VehicleDecimalValue::distance($rawFuelOdometerValue);
 
-        if ($amount === null) {
-            throw ValidationException::withMessages(['amount' => 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.']);
-        }
         if ($rawFuelLiters !== null && $rawFuelLiters !== '' && ($fuelLiters === null || preg_match('/\A0(?:\.0+)?\z/', $fuelLiters) === 1)) {
             throw ValidationException::withMessages(['fuel_liters' => 'Enter a positive fuel quantity with up to 11 whole and 3 fractional digits.']);
         }
@@ -570,11 +568,19 @@ class VehicleService
         if ($rawFuelOdometerValue !== null && $rawFuelOdometerValue !== '' && $fuelOdometerValue === null) {
             throw ValidationException::withMessages(['fuel_odometer_value' => 'Enter a non-negative odometer value with up to 17 whole and 3 fractional digits.']);
         }
-        if (($fuelLiters === null) !== ($fuelUnitPrice === null)) {
-            throw ValidationException::withMessages(['fuel_liters' => 'Enter both fuel quantity and unit price, or leave both blank.']);
-        }
-        if ($data['category'] !== 'fuel' && ($fuelLiters !== null || $fuelUnitPrice !== null || $fuelOdometerValue !== null)) {
+        if ($data['category'] !== 'fuel' && ($fuelLiters !== null || $fuelUnitPrice !== null || $fuelOdometerValue !== null || $fuelFullTank)) {
             throw ValidationException::withMessages(['category' => 'Fuel details are only available for fuel costs.']);
+        }
+        if ($data['category'] === 'fuel') {
+            $calculated = VehicleDecimalValue::calculateFuelValues($data['amount'] ?? null, $rawFuelLiters, $rawFuelUnitPrice);
+            $amount = $calculated['amount'];
+            $fuelLiters = $calculated['liters'];
+            $fuelUnitPrice = $calculated['unit_price'];
+            if ($fuelFullTank && ($fuelLiters === null || $fuelOdometerValue === null)) {
+                throw ValidationException::withMessages(['fuel_full_tank' => 'A full-tank refueling record needs fuel quantity and an odometer reading.']);
+            }
+        } elseif ($amount === null) {
+            throw ValidationException::withMessages(['amount' => 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.']);
         }
 
         return [
@@ -588,6 +594,7 @@ class VehicleService
             'fuel_liters' => $fuelLiters,
             'fuel_unit_price' => $fuelUnitPrice,
             'fuel_odometer_value' => $fuelOdometerValue,
+            'fuel_full_tank' => $fuelFullTank,
         ];
     }
 

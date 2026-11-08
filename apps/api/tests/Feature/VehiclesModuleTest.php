@@ -357,6 +357,66 @@ class VehiclesModuleTest extends TestCase
         $this->assertDatabaseMissing('vehicle_costs', ['id' => $costId]);
     }
 
+    public function test_fuel_cost_fields_are_calculated_exactly_and_consumption_requires_consecutive_full_tanks(): void
+    {
+        $admin = $this->admin();
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($member, ['view' => true, 'create' => true]);
+        $vehicleId = $this->createVehicle($member, 'private');
+        $this->grant($member, ['view' => true]);
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '60', 'fuel_liters' => '30', 'currency' => 'EUR',
+            'period_start' => '2026-09-30', 'period' => 'once',
+        ])->assertForbidden();
+        $this->assertDatabaseCount('vehicle_costs', 0);
+        $this->grant($member, ['view' => true, 'create' => true]);
+
+        $first = $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'fuel_liters' => '30', 'fuel_unit_price' => '2', 'currency' => 'EUR',
+            'period_start' => '2026-10-01', 'period' => 'once', 'fuel_odometer_value' => '10000', 'fuel_full_tank' => true,
+        ])->assertCreated()->assertJsonPath('cost.amount', '60.00')
+            ->assertJsonPath('cost.fuel_consumption_l_per_100km', null)
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', 'missing_previous_full_tank');
+        $this->assertSame('60.00', $first->json('cost.amount'));
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '80.00', 'fuel_liters' => '40', 'currency' => 'EUR',
+            'period_start' => '2026-10-10', 'period' => 'once', 'fuel_odometer_value' => '10500', 'fuel_full_tank' => true,
+        ])->assertCreated()->assertJsonPath('cost.fuel_unit_price', '2.0000')
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', null)
+            ->assertJsonPath('cost.fuel_consumption_l_per_100km', '8.000');
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '20.00', 'fuel_liters' => '10', 'fuel_unit_price' => '2', 'currency' => 'EUR',
+            'period_start' => '2026-10-12', 'period' => 'once', 'fuel_odometer_value' => '10500', 'fuel_full_tank' => true,
+        ])->assertCreated()->assertJsonPath('cost.fuel_consumption_l_per_100km', null)
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', 'non_comparable');
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '20.00', 'fuel_unit_price' => '2', 'currency' => 'EUR',
+            'period_start' => '2026-10-15', 'period' => 'once', 'fuel_odometer_value' => '10600', 'fuel_full_tank' => false,
+        ])->assertCreated()->assertJsonPath('cost.fuel_liters', '10.000')
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', 'not_full_to_full');
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '20.00', 'fuel_liters' => '10', 'fuel_unit_price' => '9', 'currency' => 'EUR',
+            'period_start' => '2026-10-20', 'period' => 'once', 'fuel_odometer_value' => '10700', 'fuel_full_tank' => true,
+        ])->assertCreated()->assertJsonPath('cost.amount', '20.00')->assertJsonPath('cost.fuel_unit_price', '9.0000')
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', 'missing_previous_full_tank');
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => 'invalid', 'fuel_liters' => '10', 'fuel_unit_price' => '2', 'currency' => 'EUR',
+            'period_start' => '2026-10-21', 'period' => 'once',
+        ])->assertUnprocessable()->assertJsonValidationErrors('amount');
+
+        $this->actingAs($member, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'insurance', 'amount' => '12.30', 'currency' => 'EUR',
+            'period_start' => '2026-10-01', 'period' => 'monthly', 'fuel_full_tank' => false,
+        ])->assertCreated();
+    }
+
     public function test_private_vehicle_and_related_records_require_exact_grants_and_disable_preserves_data(): void
     {
         $admin = $this->admin();
