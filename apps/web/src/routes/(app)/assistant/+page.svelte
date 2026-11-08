@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { onMount, tick } from 'svelte';
@@ -223,11 +225,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-4xl space-y-6">
-	<header>
-		<p class="text-sm font-medium text-cyan-200">{$t("Metricove Assistant")}</p>
-		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Ask your household assistant.")}</h1>
-		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t("Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools.")}</p>
-	</header>
+	<PageHeading eyebrow="Metricove Assistant" title="Ask your household assistant" description="Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools." />
 
 	{#if loading}
 		<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300" role="status">{$t("Loading assistant settings…")}</div>
@@ -295,7 +293,7 @@
 				<ul class="mt-6 divide-y divide-slate-800 rounded-xl border border-slate-800">
 					{#each contextEntries as entry (entry.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0 flex-1"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">{entry.content}</p><p class="mt-1 text-xs text-slate-500">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
+							<div class="min-w-0 flex-1"><p class="text-xs font-medium text-cyan-200">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-200">{entry.content}</p><p class="mt-1 text-xs text-slate-500">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
 							<div class="flex shrink-0 gap-2"><button type="button" onclick={() => beginContextEdit(entry)} class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300">{$t("Edit")}</button><button type="button" onclick={() => { contextToDelete = entry; contextDeleteOpen = true; }} class="min-h-10 rounded-lg border border-rose-300/20 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-300/10">{$t("Delete")}</button></div>
 						</li>
 					{/each}
@@ -308,7 +306,7 @@
 		</section>
 	{/if}
 
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	{#if error}<Notice tone="error" message={error} />{/if}
 	{#if answer}
 		<section aria-labelledby="assistant-answer-title" class="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-5 sm:p-7">
 			<h2 id="assistant-answer-title" class="text-base font-semibold text-cyan-100">{$t("Answer")}</h2>

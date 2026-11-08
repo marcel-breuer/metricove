@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import Button from '#lib/ui/Button.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -269,30 +272,27 @@
 	<meta name="description" content={$t("Plan the week with free-text dishes or recipes you can access.")} />
 </svelte:head>
 
-<div class="mx-auto max-w-[90rem] space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{$t("Food · Meal planning")}</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("A week that works")}</h1>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Plan breakfast, lunch and dinner with a saved recipe or a simple dish name. Your plan works on its own.")}</p>
-		</div>
-		<div class="flex flex-wrap items-center gap-2">
-			<button type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class="min-h-11 rounded-xl border border-slate-700 px-3 text-sm text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-cyan-200">← <span class="sm:hidden">{$t("Previous")}</span></button>
-			<div class="min-w-44 text-center text-sm font-medium text-white" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-			<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="min-h-11 rounded-xl border border-slate-700 px-3 text-sm text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-cyan-200"><span class="sm:hidden">{$t("Next")} </span>→</button>
-			<button type="button" onclick={() => (weekStart = mondayOf(new Date()))} class="min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("This week")}</button>
-			{#if canCreate && isCurrentWeek}<button type="button" onclick={() => (copyPreviousWeekOpen = true)} disabled={copyingWeek} class="min-h-11 rounded-xl border border-cyan-300/40 px-4 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/10 disabled:opacity-50">{$t("Copy previous week")}</button>{/if}
-		</div>
-	</header>
+<div class="mx-auto max-w-[90rem] space-y-8">
+	<PageHeading eyebrow="Food · Meal planning" title="A week that works" description="Plan breakfast, lunch and dinner with a saved recipe or a simple dish name. Your plan works on its own.">
+		{#snippet actions()}
+			<div class="ui-segmented" role="group" aria-label={$t("Week")}>
+				<button type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class="ui-segmented-button"><span aria-hidden="true">‹</span></button>
+				<div class="min-w-0 flex-1 px-2 text-center text-sm font-medium text-[var(--text-primary)] tabular-nums" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+				<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="ui-segmented-button"><span aria-hidden="true">›</span></button>
+			</div>
+			<Button variant="secondary" disabled={isCurrentWeek} onclick={() => (weekStart = mondayOf(new Date()))}>{$t("This week")}</Button>
+			{#if canCreate && isCurrentWeek}<Button variant="secondary" onclick={() => (copyPreviousWeekOpen = true)} disabled={copyingWeek}>{$t("Copy previous week")}</Button>{/if}
+		{/snippet}
+	</PageHeading>
 
 	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message, messageParams)}</p>{/if}
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
+	{#if error}<Notice tone="error" message={error} />{/if}
 
 	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
 		<section id="meal-editor" aria-labelledby="meal-editor-title" class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 sm:p-7">
 			<div class="mb-5 flex items-start justify-between gap-4">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')}</p>
+					<p class="text-xs font-semibold text-cyan-300">{$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')}</p>
 					<h2 id="meal-editor-title" class="mt-2 text-xl font-semibold text-white">{formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' })} · {$t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '')}</h2>
 				</div>
 				<button type="button" onclick={closeEditor} class="min-h-11 rounded-lg px-3 text-sm text-slate-300 hover:bg-slate-800">{$t("Close")}</button>
@@ -360,7 +360,7 @@
 			{#each days as day (day)}
 				<article class="min-w-0 rounded-2xl border border-slate-800 bg-slate-900/55 p-3 sm:p-4">
 					<header class="mb-3 border-b border-slate-800 pb-3">
-						<p class="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">{formatDay(day, { weekday: 'short' })}</p>
+						<p class="text-xs font-semibold text-cyan-300">{formatDay(day, { weekday: 'short' })}</p>
 						<h2 class="mt-1 text-lg font-semibold text-white">{formatDay(day, { month: 'short', day: 'numeric' })}</h2>
 					</header>
 					<div class="space-y-3">
@@ -368,7 +368,7 @@
 							{@const slot = slotFor(day, entry.key)}
 							<section aria-label={$t(entry.label)} class="min-h-24 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
 								<div class="flex items-center justify-between gap-2">
-									<h3 class="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{$t(entry.label)}</h3>
+									<h3 class="text-[0.68rem] font-semibold text-slate-500">{$t(entry.label)}</h3>
 									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-cyan-300">{$t("Household")}</span>{/if}
 								</div>
 								{#if slot}

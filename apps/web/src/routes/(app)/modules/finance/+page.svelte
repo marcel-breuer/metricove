@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -72,6 +74,12 @@
 		budget: 'Delete this budget? This cannot be undone.',
 		category: 'Delete this category? This cannot be undone.',
 		'recurring entry': 'Delete this recurring entry? This cannot be undone.'
+	};
+	const deletedMessages: Record<keyof typeof deleteMessages, string> = {
+		transaction: 'Transaction deleted.',
+		budget: 'Budget deleted.',
+		category: 'Category deleted.',
+		'recurring entry': 'Recurring entry deleted.'
 	};
 	type DeleteSubject = keyof typeof deleteMessages;
 	let pendingDelete = $state<{ path: string; subject: DeleteSubject } | null>(null);
@@ -329,7 +337,7 @@
 		clearFormMessages();
 		try {
 			await api<FinanceResponse>(path, 'DELETE');
-			message = `${subject[0].toUpperCase()}${subject.slice(1)} deleted.`;
+			message = deletedMessages[subject as DeleteSubject];
 			pendingDelete = null;
 			deleteOpen = false;
 			await loadFinance();
@@ -366,19 +374,20 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="flex flex-col gap-5 border-b border-slate-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Finance module")}</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("A clearer view of your money.")}</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t("Record income and spending, set a monthly category budget and keep recurring charges ready to record when they are due.")}</p></div>
-		<div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 p-1" aria-label={$t("Budget month")}>
-			<button type="button" class="min-h-10 min-w-10 rounded-lg text-lg text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-cyan-300" aria-label={$t("Previous month")} onclick={() => shiftMonth(-1)}>‹</button>
-			<label class="sr-only" for="finance-month">{$t("Budget month")}</label><input id="finance-month" type="month" bind:value={month} class="min-h-10 w-36 rounded-lg border-0 bg-transparent px-2 text-sm text-white focus:ring-2 focus:ring-cyan-300/30" />
-			<button type="button" class="min-h-10 min-w-10 rounded-lg text-lg text-slate-200 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-cyan-300" aria-label={$t("Next month")} onclick={() => shiftMonth(1)}>›</button>
-		</div>
-{#if pendingDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete record?')} message={$t(deleteMessages[pendingDelete.subject])} onConfirm={() => void remove(pendingDelete!.path, pendingDelete!.subject)} />{/if}
-	</div>
+	<PageHeading eyebrow="Finance module" title="A clearer view of your money" description="Record income and spending, set a monthly category budget and keep recurring charges ready to record when they are due.">
+		{#snippet actions()}
+			<div class="ui-segmented" role="group" aria-label={$t("Budget month")}>
+				<button type="button" class="ui-segmented-button" aria-label={$t("Previous month")} onclick={() => shiftMonth(-1)}><span aria-hidden="true">‹</span></button>
+				<label class="sr-only" for="finance-month">{$t("Budget month")}</label><input id="finance-month" type="month" bind:value={month} class="min-h-10 w-40 min-w-0 flex-1 rounded-lg border-0 bg-transparent px-2 text-sm text-[var(--text-primary)]" />
+				<button type="button" class="ui-segmented-button" aria-label={$t("Next month")} onclick={() => shiftMonth(1)}><span aria-hidden="true">›</span></button>
+			</div>
+		{/snippet}
+	</PageHeading>
+	{#if pendingDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete record?')} message={$t(deleteMessages[pendingDelete.subject])} onConfirm={() => void remove(pendingDelete!.path, pendingDelete!.subject)} />{/if}
 
-	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-	{#if formError}<p role="alert" class="mt-5 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(formError)}</p>{/if}
-	{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
+	{#if formError}<Notice tone="error" message={formError} class="mt-5" />{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 
 	{#if shell.loading || loading}
 		<div role="status" class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-300">{$t("Loading finance records…")}</div>
@@ -389,7 +398,7 @@
 		{#if overview}
 			<section class="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label={$t("Monthly totals")}>
 				{#each overview.totals as total (total.currency)}
-					<article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><p class="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{total.currency} · {month}</p><div class="mt-4 grid grid-cols-3 gap-3"><div><p class="text-xs text-slate-500">{$t("Income")}</p><p class="mt-1 text-sm font-semibold text-emerald-200">{formatNumber(total.income, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-slate-500">{$t("Spending")}</p><p class="mt-1 text-sm font-semibold text-rose-200">{formatNumber(total.expenses, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-slate-500">{$t("Net")}</p><p class="mt-1 text-sm font-semibold text-white">{formatNumber(total.net, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div></div></article>
+					<article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><p class="text-xs font-medium text-slate-400">{total.currency} · {month}</p><div class="mt-4 grid grid-cols-3 gap-3"><div><p class="text-xs text-slate-500">{$t("Income")}</p><p class="mt-1 text-sm font-semibold text-emerald-200">{formatNumber(total.income, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-slate-500">{$t("Spending")}</p><p class="mt-1 text-sm font-semibold text-rose-200">{formatNumber(total.expenses, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-slate-500">{$t("Net")}</p><p class="mt-1 text-sm font-semibold text-white">{formatNumber(total.net, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div></div></article>
 				{:else}
 					<article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:col-span-2 xl:col-span-3"><p class="text-sm font-medium text-slate-200">{$t("No transactions for")} {month}</p><p class="mt-1 text-sm text-slate-400">{$t("Your totals will appear here once you add income or spending.")}</p></article>
 				{/each}
@@ -406,7 +415,7 @@
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={transactionType} disabled={transactionId !== null && transactionCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={transactionCategory} required={transactionId === null || transactionCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each typeCategories as category (category.id)}<option value={String(category.id)}>{category.name}{$t(category.visibility === 'household' ? ' · household' : '')}</option>{/each}</select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={transactionAmount} type="text" inputmode="decimal" required maxlength="19" placeholder={formatDecimalInput('42.50', $numberLocale)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={transactionCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={transactionCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={transactionDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Groceries")} /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Payee")}<input bind:value={transactionPayee} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Date")}<input bind:value={transactionDate} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
@@ -437,14 +446,14 @@
 					<form class="mt-4 grid gap-3 sm:grid-cols-2" onsubmit={saveBudget}>
 						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Expense category")}<select bind:value={budgetCategory} required={budgetId === null} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose a category")}</option>{#each expenseCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
 						<label class="block text-sm font-medium text-slate-200">{$t("Monthly limit")}<input bind:value={budgetAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={formatDecimalInput('500.00', $numberLocale)} /></label>
-						<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={budgetCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
+						<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={budgetCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if !budgetId && canManageShared}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={budgetVisibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="private">{$t("Private")}</option><option value="household">{$t("Shared household")}</option></select></label>{/if}
 						<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={saving} class="min-h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{budgetId ? $t('Save budget') : $t('Set {month} budget', { month })}</button>{#if budgetId}<button type="button" class="min-h-10 rounded-xl border border-slate-700 px-4 text-sm text-slate-200" onclick={resetBudget}>{$t("Cancel")}</button>{/if}</div>
 					</form>
 					</Modal>
 				{/if}
 				{#if overview?.budgets.length}
-					<ul class="mt-5 space-y-3">{#each overview.budgets as budget (budget.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-medium text-white">{budget.category?.name ?? 'Category'} <span class="text-xs font-normal text-slate-500">{budget.visibility}</span></p><p class="mt-1 text-sm text-slate-400">{formatCurrency(budget.spent, budget.currency)} of {formatCurrency(budget.amount, budget.currency)} {$t("· remaining")} {formatCurrency(budget.remaining, budget.currency)}</p></div>{#if canMutate(budget.visibility)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editBudget(budget)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/budgets/${budget.id}`, 'budget')}>{$t("Delete")}</button></div>{/if}</div><div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-cyan-300" style={`width: ${Math.min(100, (Number(budget.spent) / Number(budget.amount)) * 100)}%`}></div></div></li>{/each}</ul>
+					<ul class="mt-5 space-y-3">{#each overview.budgets as budget (budget.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-medium text-white">{budget.category?.name ?? 'Category'} <span class="text-xs font-normal text-slate-500">{$t(visibilityLabel(budget.visibility))}</span></p><p class="mt-1 text-sm text-slate-400">{formatCurrency(budget.spent, budget.currency)} of {formatCurrency(budget.amount, budget.currency)} {$t("· remaining")} {formatCurrency(budget.remaining, budget.currency)}</p></div>{#if canMutate(budget.visibility)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editBudget(budget)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/budgets/${budget.id}`, 'budget')}>{$t("Delete")}</button></div>{/if}</div><div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-cyan-300" style={`width: ${Math.min(100, (Number(budget.spent) / Number(budget.amount)) * 100)}%`}></div></div></li>{/each}</ul>
 				{:else}<p class="mt-5 rounded-xl border border-dashed border-slate-700 p-4 text-sm leading-6 text-slate-400">{$t("No budget is set for this month. Add one to compare planned spending with visible expense transactions.")}</p>{/if}
 			</section>
 
@@ -460,7 +469,7 @@
 					</form>
 					</Modal>
 				{/if}
-				{#if categories.length}<ul class="mt-5 divide-y divide-slate-800">{#each categories as category (category.id)}<li class="flex items-center justify-between gap-3 py-3"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-100">{category.name}</p><p class="mt-0.5 text-xs text-slate-500">{category.type} · {category.visibility}</p></div>{#if canEditCategory(category)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editCategory(category)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/categories/${category.id}`, 'category')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-4 text-sm text-slate-400">{$t("No categories are visible yet.")}</p>{/if}
+				{#if categories.length}<ul class="mt-5 divide-y divide-slate-800">{#each categories as category (category.id)}<li class="flex items-center justify-between gap-3 py-3"><div class="min-w-0"><p class="truncate text-sm font-medium text-slate-100">{category.name}</p><p class="mt-0.5 text-xs text-slate-500">{category.type} · {$t(visibilityLabel(category.visibility))}</p></div>{#if canEditCategory(category)}<div class="flex gap-2"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editCategory(category)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/categories/${category.id}`, 'category')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-4 text-sm text-slate-400">{$t("No categories are visible yet.")}</p>{/if}
 			</section>
 		</div>
 
@@ -473,7 +482,7 @@
 					<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={recurringType} disabled={recurringId !== null && recurringCategory === ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white disabled:opacity-50"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Category")}<select bind:value={recurringCategory} required={recurringId === null || recurringCategory !== ''} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white"><option value="">{$t("Choose a category")}</option>{#each recurringCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Amount")}<input bind:value={recurringAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('49.99', $numberLocale)} /></label>
-					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={recurringCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white" /></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Currency")}<input bind:value={recurringCurrency} required minlength="3" maxlength="3" pattern="[A-Za-z]{3}" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>
 					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<input bind:value={recurringDescription} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={$t("Internet plan")} /></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Frequency")}<select bind:value={recurringFrequency} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each financeFrequencies as frequency}<option value={frequency.value}>{$t(frequency.label)}</option>{/each}</select></label>
 					<label class="block text-sm font-medium text-slate-200">{$t("Starts on")}<input bind:value={recurringStartsOn} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>
@@ -484,7 +493,7 @@
 				</form>
 				</Modal>
 			{/if}
-			{#if recurringEntries.length}<ul class="mt-5 grid gap-3 md:grid-cols-2">{#each recurringEntries as entry (entry.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="font-medium text-white">{entry.description}</p><p class="mt-1 text-sm text-slate-400">{entry.category?.name ?? 'Category'} · {entry.frequency} · {formatCurrency(entry.amount, entry.currency)}</p><p class="mt-1 text-xs text-slate-500">{entry.is_active ? `Next due ${entry.next_due_on ?? 'date unavailable'}` : 'Paused or complete'} · {entry.visibility}</p></div>{#if canCreate && (entry.visibility === 'private' || canManageShared) && entry.is_active && entry.next_due_on}<button type="button" class="min-h-10 rounded-lg bg-emerald-300 px-3 text-xs font-semibold text-slate-950 hover:bg-emerald-200" onclick={() => recordOccurrence(entry)}>{$t("Record due entry")}</button>{/if}</div>{#if canMutate(entry.visibility)}<div class="mt-3 flex gap-2 border-t border-slate-800 pt-3"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editRecurring(entry)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/recurring/${entry.id}`, 'recurring entry')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-5 text-sm text-slate-400">{$t("No recurring entries are visible.")}</p>{/if}
+			{#if recurringEntries.length}<ul class="mt-5 grid gap-3 md:grid-cols-2">{#each recurringEntries as entry (entry.id)}<li class="rounded-xl border border-slate-800 bg-slate-950/50 p-4"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><p class="font-medium text-white">{entry.description}</p><p class="mt-1 text-sm text-slate-400">{entry.category?.name ?? 'Category'} · {entry.frequency} · {formatCurrency(entry.amount, entry.currency)}</p><p class="mt-1 text-xs text-slate-500">{entry.is_active ? `Next due ${entry.next_due_on ?? 'date unavailable'}` : 'Paused or complete'} · {$t(visibilityLabel(entry.visibility))}</p></div>{#if canCreate && (entry.visibility === 'private' || canManageShared) && entry.is_active && entry.next_due_on}<button type="button" class="min-h-10 rounded-lg bg-emerald-300 px-3 text-xs font-semibold text-slate-950 hover:bg-emerald-200" onclick={() => recordOccurrence(entry)}>{$t("Record due entry")}</button>{/if}</div>{#if canMutate(entry.visibility)}<div class="mt-3 flex gap-2 border-t border-slate-800 pt-3"><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-slate-200" onclick={() => editRecurring(entry)}>{$t("Edit")}</button><button type="button" class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs text-rose-200" onclick={() => requestRemove(`/api/finance/recurring/${entry.id}`, 'recurring entry')}>{$t("Delete")}</button></div>{/if}</li>{/each}</ul>{:else}<p class="mt-5 text-sm text-slate-400">{$t("No recurring entries are visible.")}</p>{/if}
 		</section>
 	{/if}
 </section>

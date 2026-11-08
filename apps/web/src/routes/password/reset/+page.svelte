@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -81,13 +82,13 @@
 
 <main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 sm:px-10 sm:py-16">
 	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-xl flex-col">
-		<a href="/" class="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-cyan-300 uppercase">
+		<a href="/" class="flex items-center gap-3 text-sm font-semibold text-cyan-300">
 			<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
 			Metricove
 		</a>
 
 		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
-			<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t("Account recovery")}</p>
+			<p class="text-sm font-medium text-slate-400">{$t("Account recovery")}</p>
 			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Choose a new password")}</h1>
 			<form class="mt-8 space-y-5" onsubmit={resetPassword}>
 				<div>
@@ -105,10 +106,10 @@
 					<input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" bind:value={confirmation} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 				</div>
 				{#if message}
-					<p role="status" class="rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">{$t(message)}</p>
+					<Notice tone="success" message={message} />
 				{/if}
 				{#if error}
-					<p role="alert" class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(error)}</p>
+					<Notice tone="error" message={error} />
 				{/if}
 				<button type="submit" disabled={busy || Boolean(message) || !resetToken} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60">
 					{$t(busy ? 'Saving…' : 'Set new password')}

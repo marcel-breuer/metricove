@@ -1,4 +1,8 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import Badge from '#lib/ui/Badge.svelte';
+	import Button from '#lib/ui/Button.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { tick } from 'svelte';
 	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -275,21 +279,16 @@
 	<meta name="description" content={$t("Keep household recipes, measured ingredients and preparation notes together.")} />
 </svelte:head>
 
-<div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{$t("Food · Recipes")}</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Recipes worth keeping")}</h1>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("A private collection for your household: clear quantities, useful notes and the way you like to make it.")}</p>
-		</div>
-		<div class="flex items-center gap-3 text-sm text-slate-400">
-			<span class="rounded-full border border-slate-700 px-3 py-1.5">{recipes.length} {$t(recipes.length === 1 ? 'recipe' : 'recipes')}</span>
-			{#if canAddRecipe}<button type="button" onclick={openImport} class="inline-flex min-h-11 items-center rounded-xl border border-slate-700 px-4 font-semibold text-slate-100 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Import recipe")}</button><button type="button" onclick={() => { resetForm(); formOpen = true; }} class="inline-flex min-h-11 items-center rounded-xl bg-cyan-300 px-4 font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100">{$t("Add a recipe")}</button>{/if}
-		</div>
-	</header>
+<div class="mx-auto max-w-7xl space-y-8">
+	<PageHeading eyebrow="Food · Recipes" title="Recipes worth keeping" description="A private collection for your household: clear quantities, useful notes and the way you like to make it.">
+		{#snippet actions()}
+			<Badge>{recipes.length} {$t(recipes.length === 1 ? 'recipe' : 'recipes')}</Badge>
+			{#if canAddRecipe}<Button variant="secondary" onclick={openImport}>{$t("Import recipe")}</Button><Button onclick={() => { resetForm(); formOpen = true; }}>{$t("Add a recipe")}</Button>{/if}
+		{/snippet}
+	</PageHeading>
 
-	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
+	{#if message}<Notice tone="success" message={message} />{/if}
+	{#if error}<Notice tone="error" message={error} />{/if}
 
 	<div class="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
 		<section aria-labelledby="recipe-list-title" class="min-w-0 space-y-5">
@@ -324,12 +323,12 @@
 							{#if recipe.photo_url}<img src={recipe.photo_url} alt="Photo of {recipe.title}" loading="lazy" class="h-44 w-full border-b border-slate-800 object-cover" />{/if}
 							<div class="space-y-4 p-5">
 								<div class="flex items-start justify-between gap-3">
-								<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-[0.18em] text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3>{#if recipe.needs_review}<span class="mt-2 inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">{$t('Needs review')}</span>{/if}</div>
+								<div class="min-w-0"><p class="text-xs font-medium text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3>{#if recipe.needs_review}<span class="mt-2 inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">{$t('Needs review')}</span>{/if}</div>
 									<button type="button" aria-label={recipe.is_favorite ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="min-h-11 min-w-11 rounded-xl border border-slate-700 text-xl transition hover:border-amber-200/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 {recipe.is_favorite ? 'text-amber-200' : 'text-slate-500'}">★</button>
 								</div>
 								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">{#if recipe.servings}<span>{recipe.servings} servings</span>{:else}<span class="text-amber-200">{$t('Servings missing')}</span>{/if}{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
-								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2">{#if ingredient.quantity && ingredient.unit}<span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="shrink-0 text-amber-200">{$t('Amount missing')}</span>{/if}<span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}{#if recipe.ingredients.length === 0}<li class="text-slate-500">{$t('No ingredients recorded.')}</li>{/if}</ul></div>
-								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions || $t('No preparation steps recorded.')}</p></div>
+								<div><h4 class="text-xs font-semibold text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2">{#if ingredient.quantity && ingredient.unit}<span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="shrink-0 text-amber-200">{$t('Amount missing')}</span>{/if}<span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}{#if recipe.ingredients.length === 0}<li class="text-slate-500">{$t('No ingredients recorded.')}</li>{/if}</ul></div>
+								<div><h4 class="text-xs font-semibold text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions || $t('No preparation steps recorded.')}</p></div>
 								{#if recipe.can_edit}
 									<div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
 										<button type="button" onclick={() => editRecipe(recipe)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300/50 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200">{$t("Edit")}</button>
@@ -347,7 +346,7 @@
 			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
 				<div class="mb-4 grid grid-cols-2 gap-2"><button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'url' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('Web link')}</button><button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'pdf' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('PDF file')}</button></div>
 				<form onsubmit={importRecipe} class="space-y-4">
-					{#if importType === 'url'}<label class="block text-sm font-medium text-slate-200">{$t('Recipe page URL')}<input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{:else}<label class="block text-sm font-medium text-slate-200">{$t('Recipe PDF')}<input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5" /><span class="mt-1 block text-xs text-slate-500">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>{/if}
+					{#if importType === 'url'}<label class="block text-sm font-medium text-slate-200">{$t('Recipe page URL')}<input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{:else}<label class="block text-sm font-medium text-slate-200">{$t('Recipe PDF')}<input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="ui-file-input mt-2" /><span class="mt-1 block text-xs text-slate-500">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>{/if}
 					<label class="block text-sm font-medium text-slate-200">{$t('Save as')}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
 					{#if importError}<p role="alert" class="text-sm text-rose-200">{$t(importError)}</p>{/if}
 					<button type="submit" disabled={importBusy || (importType === 'pdf' && !importFile)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</button>
@@ -357,8 +356,8 @@
 		{#if canAddRecipe || hasEditableRecipe}
 			<Modal bind:open={formOpen} title={$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}>
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
-				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
-				{#if formError}<p role="alert" class="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-sm text-rose-200">{$t(formError)}</p>{/if}
+				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
+				{#if formError}<Notice tone="error" message={formError} class="mt-4" />{/if}
 				{#if recipeId !== null && recipes.find((recipe) => recipe.id === recipeId)?.needs_review}<p role="status" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2.5 text-sm text-amber-100">{$t('This recipe has source details to review. Blank fields are kept as provided; fill in what you know.')}</p>{/if}
 				{#if importNotices.length}<ul role="status" class="mt-4 list-disc space-y-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-8 py-2.5 text-sm text-amber-100">{#each importNotices as notice}<li>{$t(notice)}</li>{/each}</ul>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
@@ -377,7 +376,7 @@
 						<button type="button" onclick={addIngredient} disabled={ingredients.length >= 100} class="min-h-10 rounded-lg border border-dashed border-slate-700 px-3 text-sm text-cyan-200 hover:border-cyan-300/50 disabled:opacity-40">+ {$t('Add ingredient')}</button>
 					</fieldset>
 					<label class="block text-sm font-medium text-slate-200">{$t("Preparation instructions")}<textarea bind:value={instructions} maxlength="20000" rows="5" placeholder={$t("Write the steps in the order you follow them…")} class="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
-					<div><label class="block text-sm font-medium text-slate-200">{$t("Recipe photo")} <span class="text-xs font-normal text-slate-500">{$t("optional · JPEG, PNG or WebP · 5 MB max")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={choosePhoto} class="mt-1.5 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:outline-none" /></label>
+					<div><label class="block text-sm font-medium text-slate-200">{$t("Recipe photo")} <span class="text-xs font-normal text-slate-500">{$t("optional · JPEG, PNG or WebP · 5 MB max")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={choosePhoto} class="ui-file-input mt-1.5" /></label>
 						{#if photoFile}<p class="mt-1 text-xs text-slate-400">{$t("Selected:")} {photoFile.name}</p>{:else if existingPhoto && !removePhoto}<div class="mt-2 flex items-center gap-3"><img src={existingPhoto} alt={$t("Current recipe")} class="h-14 w-20 rounded-lg object-cover" /><button type="button" onclick={() => (removePhoto = true)} class="min-h-9 px-2 text-xs text-slate-400 hover:text-rose-200">{$t("Remove current photo")}</button></div>{:else if removePhoto}<p class="mt-2 text-xs text-slate-400">{$t("The current photo will be removed when you save.")}</p>{/if}</div>
 					<div class="border-t border-slate-800 pt-4"><p class="text-xs leading-5 text-slate-500">{$t("Private recipes and photos remain hidden from administrators unless you grant access. Household recipes require an active admin with Recipes Manage.")}</p><div class="mt-4 flex gap-2"><button type="submit" disabled={saving} class="min-h-11 flex-1 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : recipeId === null ? 'Save recipe' : 'Save changes')}</button>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm text-slate-300 hover:border-slate-500">{$t("Cancel")}</button>{/if}</div></div>
 				</form>

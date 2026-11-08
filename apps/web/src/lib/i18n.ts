@@ -376,7 +376,7 @@ const routeGerman: Record<string, string> = {
 	'A due occurrence is added to transactions only when you record it.': 'Ein fälliger Eintrag wird erst dann zu den Buchungen hinzugefügt, wenn du ihn erfasst.',
 	'A private collection for your household: clear quantities, useful notes and the way you like to make it.': 'Eine private Sammlung für deinen Haushalt: klare Mengenangaben, hilfreiche Notizen und deine bevorzugte Zubereitung.',
 	'A reading can be added out of order when its value fits between the neighboring readings.': 'Ein Messwert kann nachträglich eingefügt werden, wenn er zwischen die benachbarten Messwerte passt.',
-	'Accept invitation': 'Einladung annehmen', 'Account recovery': 'Kontowiederherstellung', 'Actions': 'Aktionen', 'active administrator(s)': 'aktive Admins',
+	'Accept invitation': 'Einladung annehmen', 'Account recovery': 'Kontowiederherstellung', 'Actions': 'Aktionen', 'active administrator': 'aktiver Admin', 'active administrators': 'aktive Admins',
 	'Active cover': 'Aktueller Versicherungsschutz', 'Activity': 'Aktivität',
 	'Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.': 'Füge ein Diagramm hinzu, um Ausgaben, Versorgerverbrauch oder Fahrtstrecken aus deinen zugänglichen Daten zu verfolgen.',
 	'Add a private meter for your own records, or ask an active administrator to create one shared across the household.': 'Lege einen privaten Zähler für dich an oder bitte eine aktive Administration um einen gemeinsamen Haushaltszähler.',
@@ -1150,6 +1150,31 @@ Object.assign(routeGerman, {
 	'Checklist progress could not be updated.': 'Der Checklistenfortschritt konnte nicht aktualisiert werden.',
 	'Checklist order could not be updated.': 'Die Reihenfolge der Checklistenpunkte konnte nicht aktualisiert werden.',
 	'Task checklist reminders': 'Task-Checklisten-Erinnerungen',
+	'Filter and sort': 'Filtern und sortieren',
+	'A clearer view of everyday life': 'Mehr Überblick über den Alltag',
+	'Make your own measures': 'Erstelle eigene Messgrößen',
+	'Know what your meters use': 'Behalte deinen Verbrauch im Blick',
+	'Every mile, in one place': 'Jeder Kilometer an einem Ort',
+	'Ask your household assistant': 'Frage deinen Haushaltsassistenten',
+	'A clearer view of your money': 'Mehr Überblick über deine Finanzen',
+	'Invite a member': 'Lade ein Mitglied ein',
+	'Manage members': 'Mitglieder verwalten',
+	'Your Metricove profile': 'Dein Metricove-Profil',
+	'Review upcoming household reminders and manage how you receive them.': 'Prüfe anstehende Haushaltserinnerungen und lege fest, wie du sie erhältst.',
+	'Income category': 'Einnahmenkategorie',
+	'Week': 'Woche',
+	'checked': 'abgehakt',
+	'Alert above {value} {unit} per interval': 'Warnung über {value} {unit} pro Intervall',
+	'No interval alert set': 'Keine Intervallwarnung festgelegt',
+	'Module · Metricove': 'Modul · Metricove',
+	'A connected MCP client cannot approve its own writes. The account owner must approve each preview in the profile before it can be completed.': 'Ein verbundener MCP-Client kann eigene Schreibvorgänge nicht freigeben. Der Kontoinhaber muss jede Vorschau im Profil freigeben, bevor sie abgeschlossen werden kann.',
+	'Preview tools only create an encrypted, expiring review record.': 'Vorschau-Tools erstellen nur einen verschlüsselten, ablaufenden Prüfdatensatz.',
+	'Use': 'Verwende',
+	'with its': 'mit dessen',
+	'for the tools above.': 'für die oben genannten Tools.',
+	'The utility reading flow also supports its original': 'Der Ablauf für Zählerstände unterstützt außerdem das ursprüngliche Tool',
+	'tool.': '.',
+	'requires': 'erfordert',
 });
 
 export const uiLanguage = writable<UiLanguage>('en');
@@ -1206,3 +1231,8 @@ export function setDateFormatLocale(locale: string): void {
 }
 
 numberLocale.subscribe(setDateFormatLocale);
+
+/** Returns the translatable label for a record's private or household visibility. */
+export function visibilityLabel(visibility: string): string {
+	return visibility === 'private' ? 'Private' : 'Shared';
+}

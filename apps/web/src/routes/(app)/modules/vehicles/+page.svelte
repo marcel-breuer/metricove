@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import Badge from '#lib/ui/Badge.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -85,12 +88,9 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Vehicles module")}</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Every mile, in one place.")}</h1></div>
-		<p class="max-w-xl text-sm leading-6 text-slate-400">{$t("Track odometer history, service, insurance dates and running costs. Keep a vehicle private or share it with the household.")}</p>
-	</div>
-	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	<PageHeading eyebrow="Vehicles module" title="Every mile, in one place" description="Track odometer history, service, insurance dates and running costs. Keep a vehicle private or share it with the household." />
+	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="vehicles-heading">
@@ -103,7 +103,7 @@
 				<ul class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 					{#each vehicles as vehicle (vehicle.id)}
 						<li><a href={`/modules/vehicles/${vehicle.id}`} class="group flex min-h-40 flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-cyan-300/50 hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-							<span><span class="flex flex-wrap items-start justify-between gap-2"><span class="font-semibold text-slate-100">{vehicle.name}</span><span class="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{vehicle.visibility}</span></span><span class="mt-2 block text-sm text-slate-400">{vehicle.make} {vehicle.model}{vehicle.model_year ? ` · ${vehicle.model_year}` : ''}</span><span class="mt-1 block text-xs capitalize text-slate-500">{vehicle.fuel_type} {$t("· odometer in")} {vehicle.odometer_unit}</span></span>
+							<span><span class="flex flex-wrap items-start justify-between gap-2"><span class="font-semibold text-slate-100">{vehicle.name}</span><Badge>{$t(visibilityLabel(vehicle.visibility))}</Badge></span><span class="mt-2 block text-sm text-slate-400">{vehicle.make} {vehicle.model}{vehicle.model_year ? ` · ${vehicle.model_year}` : ''}</span><span class="mt-1 block text-xs capitalize text-slate-500">{vehicle.fuel_type} {$t("· odometer in")} {vehicle.odometer_unit}</span></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">{$t("Open vehicle record")} <span aria-hidden="true">→</span></span>
 						</a></li>
 					{/each}

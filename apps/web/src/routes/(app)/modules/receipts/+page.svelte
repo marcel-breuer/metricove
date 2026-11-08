@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Button from '#lib/ui/Button.svelte';
+	import Disclosure from '#lib/ui/Disclosure.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 	import { getContext } from 'svelte';
@@ -577,11 +580,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-6xl space-y-6">
-	<header class="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 sm:p-8">
-		<p class="text-sm font-medium tracking-wide text-cyan-200">{$t('Private documents')}</p>
-		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t('Receipts')}</h1>
-		<p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400">{$t('Upload a receipt or invoice, review the extracted details, then archive it or create a matching entry.')}</p>
-	</header>
+	<PageHeading eyebrow="Private documents" title="Receipts" description="Upload a receipt or invoice, review the extracted details, then archive it or create a matching entry." />
 
 	{#if error}<p role="alert" class="rounded-xl border border-rose-300/30 bg-rose-400/10 p-4 text-sm text-rose-100">{error}</p>{/if}
 	{#if statusMessage}<p role="status" class="rounded-xl border border-emerald-300/30 bg-emerald-400/10 p-4 text-sm text-emerald-100">{statusMessage}</p>{/if}
@@ -595,13 +594,13 @@
 			<form class="space-y-5" onsubmit={previewFile}>
 				<div class="grid gap-3 sm:grid-cols-3">
 					<label class="block text-sm font-medium text-slate-200">{$t('Choose a PDF')}
-						<input bind:this={pdfInput} type="file" accept="application/pdf,.pdf" onchange={choosePdf} class="mt-2 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:min-h-8 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-3 file:text-xs file:font-semibold file:text-slate-950" />
+						<input bind:this={pdfInput} type="file" accept="application/pdf,.pdf" onchange={choosePdf} class="ui-file-input mt-2" />
 					</label>
 					<label class="block text-sm font-medium text-slate-200">{$t('Take a photo page')}
-						<input bind:this={cameraInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" onchange={addPhotoPages} class="mt-2 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:min-h-8 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-3 file:text-xs file:font-semibold file:text-slate-950" />
+						<input bind:this={cameraInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" onchange={addPhotoPages} class="ui-file-input mt-2" />
 					</label>
 					<label class="block text-sm font-medium text-slate-200">{$t('Add photo pages')}
-						<input bind:this={photosInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple onchange={addPhotoPages} class="mt-2 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 file:mr-3 file:min-h-8 file:rounded-lg file:border-0 file:bg-cyan-300 file:px-3 file:text-xs file:font-semibold file:text-slate-950" />
+						<input bind:this={photosInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple onchange={addPhotoPages} class="ui-file-input mt-2" />
 					</label>
 				</div>
 				<p class="mt-2 text-xs leading-5 text-slate-500">{$t('PDF up to 10 MB and 5 pages. Add up to 5 JPEG, PNG or iPhone HEIC photo pages; they are converted and combined on this device.')}</p>
@@ -684,7 +683,7 @@
 							{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
 						</label>
 						<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
-							<input bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength="3" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm uppercase text-white" placeholder="EUR" />
+							<input bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength="3" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="EUR" />
 							{#if needsReview('currency')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('currency'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('currency')} onchange={(event) => setFieldReview('currency', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(currency))}</span></label></div>{/if}
 						</label>
 						<label class="block text-sm font-medium text-slate-200">{$t('Tax amount')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
@@ -749,7 +748,8 @@
 				{#if loading}<span class="text-sm text-slate-400">{$t('Loading…')}</span>{/if}
 			</div>
 			{#if receiptError}<p role="alert" class="mt-4 rounded-xl border border-rose-300/30 bg-rose-400/10 p-4 text-sm text-rose-100">{receiptError}</p>{/if}
-			<form class="mt-5 grid gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-4 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
+			<Disclosure summary="Filter receipts" hint={$t('Receipts found') + ': ' + pagination.total} class="mt-5">
+			<form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
 				<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t('Search merchant or invoice number')}
 					<input bind:value={receiptSearch} type="search" maxlength="100" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white" />
 				</label>
@@ -795,11 +795,12 @@
 					</select>
 				</label>
 				<div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4">
-					<button type="submit" disabled={loading} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-60">{$t('Apply filters')}</button>
-					<button type="button" onclick={clearReceiptFilters} disabled={loading} class="min-h-10 rounded-lg border border-slate-700 px-4 text-sm font-medium text-slate-200 disabled:opacity-60">{$t('Clear filters')}</button>
+					<Button type="submit" size="small" disabled={loading}>{$t('Apply filters')}</Button>
+					<Button type="button" variant="secondary" size="small" onclick={clearReceiptFilters} disabled={loading}>{$t('Clear filters')}</Button>
 					<span class="ml-auto text-sm text-slate-400">{$t('Receipts found')}: {pagination.total}</span>
 				</div>
 			</form>
+			</Disclosure>
 			<ol class="mt-4 space-y-3">
 				{#each receipts as receipt (receipt.id)}
 					<li class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">

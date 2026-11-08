@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { formatDate, t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -159,9 +161,9 @@
 	}
 
 	function periodLabel(value: string, range: AnalyticsRange): string {
-		if (range === '12m') return new Intl.DateTimeFormat(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(`${value}-01T00:00:00Z`));
+		if (range === '12m') return formatDate(new Date(`${value}-01T00:00:00Z`), { month: 'short', year: '2-digit', timeZone: 'UTC' });
 		const date = new Date(`${value}T00:00:00Z`);
-		return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(date);
+		return formatDate(date, { month: 'short', day: 'numeric', timeZone: 'UTC' });
 	}
 
 	function displayedValue(value: string, currency: boolean): string {
@@ -177,16 +179,10 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div>
-			<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Your data, at a glance")}</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Analytics dashboard")}</h1>
-		</div>
-		<p class="max-w-xl text-sm leading-6 text-slate-400">{$t("Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private.")}</p>
-	</div>
+	<PageHeading eyebrow="Your data, at a glance" title="Analytics dashboard" description="Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private." />
 
-	{#if error}<p role="alert" class="mt-5 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
-	{#if message}<p role="status" class="mt-5 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
+	{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 
 	{#if canCreate}
 		<div class="mt-6 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950">{$t('Add a chart')}</button></div>
@@ -241,7 +237,7 @@
 			{#each widgets as widget (widget.id)}
 				<article class="min-w-0 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6">
 					<div class="flex flex-wrap items-start justify-between gap-3">
-						<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-wide text-cyan-200">{catalog.find((metric) => metric.key === widget.metric_key)?.source_label ?? 'Source unavailable'} · {analyticsRanges.find((range) => range.value === widget.range_key)?.label}</p><h2 class="mt-1 truncate text-xl font-semibold text-white">{widget.title}</h2></div>
+						<div class="min-w-0"><p class="text-xs font-medium text-cyan-200">{catalog.find((metric) => metric.key === widget.metric_key)?.source_label ?? 'Source unavailable'} · {analyticsRanges.find((range) => range.value === widget.range_key)?.label}</p><h2 class="mt-1 truncate text-xl font-semibold text-white">{widget.title}</h2></div>
 						{#if canEdit}<button type="button" onclick={() => beginEdit(widget)} class="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Configure")}</button>{/if}
 					</div>
 

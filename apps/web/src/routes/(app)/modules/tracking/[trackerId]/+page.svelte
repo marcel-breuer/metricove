@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { page } from '$app/state';
@@ -439,8 +440,8 @@
 			{/if}
 		</div>
 
-		{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-		{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+		{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
+		{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
 		<Modal bind:open={schemaOpen} title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
 			<section class="rounded-2xl border border-cyan-300/20 bg-slate-900/70 p-5 sm:p-8" aria-labelledby="edit-schema-heading">
@@ -549,7 +550,7 @@
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
 						<table class="min-w-full border-collapse text-left text-sm">
-							<thead class="bg-slate-950/80 text-xs uppercase tracking-wide text-slate-400"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
+							<thead class="bg-slate-950/80 text-xs text-slate-400"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
 							<tbody class="divide-y divide-slate-800">
 								{#each entries as entry (entry.id)}
 									<tr class="align-top">

@@ -34,11 +34,11 @@
 		module_keys?: string[];
 	};
 
-	let modules: ModuleEntry[] = [];
-	let loading = true;
-	let busyKey = '';
-	let message = '';
-	let error = '';
+	let modules = $state<ModuleEntry[]>([]);
+	let loading = $state(true);
+	let busyKey = $state('');
+	let message = $state('');
+	let error = $state('');
 	let pendingDisable = $state<ModuleEntry | null>(null);
 	let disableOpen = $state(false);
 	let disableAllOpen = $state(false);
@@ -200,7 +200,7 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<PageHeading class="max-w-3xl" eyebrow={$t('Household settings')} title={$t('Manage modules.')} description={$t('Optional modules start disabled. Enabling one gives every active member all four module capabilities; you can narrow access per member afterward. Disabling a module preserves its data.')} />
+		<PageHeading class="max-w-3xl" eyebrow="Household settings" title="Manage modules" description="Optional modules start disabled. Enabling one gives every active member all four module capabilities; you can narrow access per member afterward. Disabling a module preserves its data." />
 
 		{#if message}
 			<Notice class="mt-8" tone="success" message={$t(message)} />

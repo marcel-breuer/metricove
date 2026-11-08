@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import Notice from '#lib/ui/Notice.svelte';
+	import Badge from '#lib/ui/Badge.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -7,7 +10,7 @@
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
 	import { canonicalizeDecimalInput, formatDecimalInput, formatMeasurement } from '#lib/number-format';
-	import { numberLocale } from '#lib/i18n';
+	import { formatDate as formatLocaleDate, numberLocale } from '#lib/i18n';
 	import type {
 		MealSuggestionPreview,
 		MealSuggestionsResponse,
@@ -424,8 +427,8 @@
 	}
 
 	function formatDate(value: string | null): string {
-		if (!value) return 'Just now';
-		return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+		if (!value) return $t('Just now');
+		return formatLocaleDate(value, { dateStyle: 'medium', timeStyle: 'short' });
 	}
 
 	function mondayDate(): string {
@@ -447,23 +450,18 @@
 	<meta name="description" content={$t("Keep shared shopping lists organized, current and easy to restore.")} />
 </svelte:head>
 
-<div class="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-	<header class="flex flex-col gap-5 border-b border-slate-800 pb-7 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">{$t("Food · Shopping")}</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("The list everyone can trust")}</h1>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.")}</p>
-		</div>
-		{#if activeList}
-			<div class="flex gap-2 text-xs text-slate-400">
-				<span class="rounded-full border border-slate-700 px-3 py-2">{openItems.length} {$t("to buy")}</span>
-				<span class="rounded-full border border-slate-700 px-3 py-2">{checkedItems.length} checked</span>
-			</div>
-		{/if}
-	</header>
+<div class="mx-auto max-w-7xl space-y-8">
+	<PageHeading eyebrow="Food · Shopping" title="The list everyone can trust" description="Add what you need, check it off at the store and put it back if plans change. Shopping works on its own.">
+		{#snippet actions()}
+			{#if activeList}
+				<Badge>{openItems.length} {$t("to buy")}</Badge>
+				<Badge>{checkedItems.length} {$t("checked")}</Badge>
+			{/if}
+		{/snippet}
+	</PageHeading>
 
-	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>{/if}
+	{#if message}<Notice tone="success" message={message} />{/if}
+	{#if error}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
 		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">{$t("Loading your shopping lists…")}</div>
@@ -487,7 +485,7 @@
 								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 {activeListId === list.id ? 'border-cyan-300/50 bg-cyan-300/10' : 'border-slate-800 bg-slate-950/40 hover:border-slate-600'}">
 									<span class="flex items-center justify-between gap-2">
 										<span class="truncate text-sm font-medium text-white">{list.name}</span>
-										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] uppercase tracking-wide text-cyan-300">{$t("Shared")}</span>{/if}
+										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] text-cyan-300">{$t("Shared")}</span>{/if}
 									</span>
 									<span class="mt-1 block text-xs text-slate-500">{list.open_item_count} {$t("open ·")} {list.item_count} total</span>
 								</button>
@@ -522,7 +520,7 @@
 
 			{#if !activeList}
 				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
-					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">{$t("Ready when you are")}</p>
+					<p class="text-xs font-semibold text-cyan-300">{$t("Ready when you are")}</p>
 					<h2 class="mt-3 text-2xl font-semibold text-white">{$t("Start with one thing.")}</h2>
 					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
 				</section>
@@ -534,7 +532,7 @@
 						<form onsubmit={addItem} class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-4 shadow-lg shadow-cyan-950/10 sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
-									<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Quick add")}</p>
+									<p class="text-xs font-semibold text-cyan-300">{$t("Quick add")}</p>
 									<h2 class="mt-1 text-lg font-semibold text-white">{$t("What do you need?")}</h2>
 								</div>
 								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">{$t("Shared list")}</span>{/if}
@@ -559,7 +557,7 @@
 					{#if activeList.can_add_items}
 						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">{$t("Optional connection")}</p>
+								<p class="text-xs font-semibold text-violet-300">{$t("Optional connection")}</p>
 								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Add ingredients from the weekly plan")}</h2>
 								<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Preview recipe ingredients and combined quantities for a week, then choose only what you want to add to this list.")}</p>
 							</div>
@@ -611,7 +609,7 @@
 							<div class="min-w-0">
 								<div class="flex flex-wrap items-center gap-2">
 									<h2 class="truncate text-xl font-semibold text-white">{activeList.name}</h2>
-									<span class="rounded-full border border-slate-700 px-2.5 py-1 text-[0.65rem] uppercase tracking-wide {activeList.visibility === 'household' ? 'text-cyan-200' : 'text-slate-400'}">{activeList.visibility}</span>
+									<Badge tone={activeList.visibility === 'household' ? 'accent' : 'neutral'}>{$t(visibilityLabel(activeList.visibility))}</Badge>
 								</div>
 								<p class="mt-1 text-xs text-slate-500">{activeList.open_item_count} {$t("left to buy ·")} {activeList.item_count} total</p>
 							</div>

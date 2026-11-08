@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -21,12 +23,12 @@
 		invitation?: Invitation;
 	};
 
-	let email = '';
-	let invitations: Invitation[] = [];
-	let loading = true;
-	let busy = false;
-	let message = '';
-	let error = '';
+	let email = $state('');
+	let invitations = $state<Invitation[]>([]);
+	let loading = $state(true);
+	let busy = $state(false);
+	let message = $state('');
+	let error = $state('');
 	let createOpen = $state(false);
 	let revokeOpen = $state(false);
 	let invitationToRevoke = $state<Invitation | null>(null);
@@ -160,21 +162,18 @@
 </svelte:head>
 
 <section class="mx-auto w-full max-w-screen-xl">
-	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col">
-		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
+	<div class="mx-auto max-w-5xl">
+		<section class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
 			<div class="max-w-xl">
-				<p class="mb-5 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t("Household access")}</p>
-				<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{$t("Invite a member.")}</h1>
-				<p class="mt-6 text-base leading-7 text-slate-300">{$t("Send an invitation using only their email address. They will choose their own name and password.")}</p>
-				<a href="/profile" class="mt-6 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">{$t("Return to your profile")}</a>
+				<PageHeading eyebrow="Household access" title="Invite a member" description="Send an invitation using only their email address. They will choose their own name and password." />
 			</div>
 
 			<div class="space-y-6">
 				<section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="invite-heading">
 					<h2 id="invite-heading" class="text-xl font-semibold">{$t("Send an invitation")}</h2>
 					<button type="button" onclick={() => (createOpen = true)} class="mt-5 inline-flex items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Send an invitation")}</button>
-					{#if message}<p role="status" class="mt-4 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">{$t(message)}</p>{/if}
-					{#if error}<p role="alert" class="mt-4 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(error)}</p>{/if}
+					{#if message}<Notice tone="success" message={message} class="mt-4" />{/if}
+					{#if error}<Notice tone="error" message={error} class="mt-4" />{/if}
 				</section>
 				<Modal bind:open={createOpen} title={$t("Send an invitation")} description={$t("Send an invitation using only their email address. They will choose their own name and password.")}>
 					<form class="space-y-5" onsubmit={createInvitation}>
@@ -182,7 +181,7 @@
 							<label for="email" class="mb-2 block text-sm font-medium text-slate-200">{$t("Recipient email")}</label>
 							<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
 						</div>
-						{#if error}<p role="alert" class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(error)}</p>{/if}
+						{#if error}<Notice tone="error" message={error} />{/if}
 						<button type="submit" disabled={busy} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60">
 							{$t(busy ? 'Sending…' : 'Send invitation')}
 						</button>

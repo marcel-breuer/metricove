@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { csrfToken, type ApiResponse } from '#lib/auth';
@@ -89,13 +91,9 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="border-b border-slate-800 pb-6">
-		<p class="text-sm font-medium tracking-wide text-cyan-200">{$t('Household')} · {$t('Core')}</p>
-		<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t('Reminders')}</h1>
-		<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{$t('Keep upcoming bills, service dates, utility alerts and task checklists in one place. Reminders only show records you can currently view.')}</p>
-	</div>
-	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	<PageHeading eyebrow="Household" title="Reminders" description="Keep upcoming bills, service dates, utility alerts and task checklists in one place. Reminders only show records you can currently view." />
+	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
 	<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="inbox-heading">
 		<div class="flex flex-wrap items-end justify-between gap-3">
