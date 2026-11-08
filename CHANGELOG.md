@@ -8,6 +8,37 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.22.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.21.0...metricove-v0.22.0) (2026-11-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **import:** POST /api/import/notion/food/preview, POST /api/import/notion/food/import and the preview_import_notion_recipes MCP tool are removed.
+
+### refactor
+
+* **import:** remove Notion food import ([b7f667d](https://github.com/marcel-breuer/metricove/commit/b7f667d3c54df9bdb794be51066ad9e0044e7e3b))
+
+
+### Features
+
+* **ui:** add glass surfaces across the app ([5145488](https://github.com/marcel-breuer/metricove/commit/514548860ea9e2c57882ef5dcacde32b79d005da))
+* **ui:** refresh the interface with glass surfaces ([e12c118](https://github.com/marcel-breuer/metricove/commit/e12c118ddfc7093861ff41563ffff339a911fd53))
+* **vehicles:** edit existing vehicle costs ([eef9a92](https://github.com/marcel-breuer/metricove/commit/eef9a920995edc615d22a5bb30046dbeb01dbe5b))
+* **vehicles:** edit existing vehicle costs ([8530333](https://github.com/marcel-breuer/metricove/commit/85303338d189776d01addb80290a0626c2e44cd8))
+* **vehicles:** edit existing vehicle costs ([#229](https://github.com/marcel-breuer/metricove/issues/229)) ([eef9a92](https://github.com/marcel-breuer/metricove/commit/eef9a920995edc615d22a5bb30046dbeb01dbe5b))
+* **web:** add fullscreen modal variant for create and edit forms ([96c9f08](https://github.com/marcel-breuer/metricove/commit/96c9f085e23a6c4082b22a44e166eb9dc0f9d8f6))
+* **web:** fullscreen create/edit modals and detail subpages ([67adef8](https://github.com/marcel-breuer/metricove/commit/67adef855fb762b0b85b8f73fff120c3fcdec879))
+* **web:** move recipe and note details to subpages ([d429e87](https://github.com/marcel-breuer/metricove/commit/d429e87e1b5469c43eaf35541800deaddbd351ef))
+* **web:** use fullscreen modals for module create and edit forms ([8b642d6](https://github.com/marcel-breuer/metricove/commit/8b642d6f450ff4e2859ad013766859955dc3bf19))
+
+
+### Bug Fixes
+
+* **vehicles:** clarify paired fuel details ([bf0959c](https://github.com/marcel-breuer/metricove/commit/bf0959ca195a1fe16cb45817a60c509d4235211f))
+* **web:** use full width for recipe cards on desktop ([9e14660](https://github.com/marcel-breuer/metricove/commit/9e146608a2238d0c7bfaac715f45b7b6941fcf19))
+* **web:** use full width for recipe cards on desktop ([0f98028](https://github.com/marcel-breuer/metricove/commit/0f980283adf1aef227bcc86dad7d1e9742f9262f)), closes [#215](https://github.com/marcel-breuer/metricove/issues/215)
+
 ## [0.21.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.20.0...metricove-v0.21.0) (2026-11-08)
 
 
