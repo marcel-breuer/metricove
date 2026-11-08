@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { numberLocale, t } from '#lib/i18n';
+	import Badge from '#lib/ui/Badge.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { numberLocale, t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { getContext, onMount } from 'svelte';
@@ -177,16 +180,10 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div>
-			<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Tracking module")}</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Make your own measures.")}</h1>
-		</div>
-		<p class="max-w-xl text-sm leading-6 text-slate-400">{$t("Build a small schema around what matters to your household. Each measurement is saved with its own owner, date and unit.")}</p>
-	</div>
+	<PageHeading eyebrow="Tracking module" title="Make your own measures" description="Build a small schema around what matters to your household. Each measurement is saved with its own owner, date and unit." />
 
-	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="trackers-heading">
@@ -209,7 +206,7 @@
 								<span class="min-w-0">
 									<span class="flex flex-wrap items-center gap-2">
 										<span class="font-semibold text-slate-100">{tracker.name}</span>
-										<span class="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{tracker.visibility}</span>
+										<Badge>{$t(visibilityLabel(tracker.visibility))}</Badge>
 									</span>
 									<span class="mt-1 block text-sm leading-5 text-slate-400">{tracker.description ?? tracker.fields.map((field) => field.label).join(' · ')}</span>
 									<span class="mt-2 block text-xs text-slate-500">{tracker.fields.length} {$t(tracker.fields.length === 1 ? 'field' : 'fields')} {$t("· schema v")}{tracker.schema_version}</span>

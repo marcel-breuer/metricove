@@ -5,7 +5,8 @@
 	import type { LayoutProps } from './$types';
 	import { csrfToken, type ApiResponse, type AuthUser } from '#lib/auth';
 	import Button from '#lib/ui/Button.svelte';
-import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 	import { setUserPreferences, t } from '#lib/i18n';
 	import {
 		APP_SHELL_CONTEXT,
@@ -39,7 +40,22 @@ import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 	};
 	setContext(APP_SHELL_CONTEXT, shellContext);
 
+	type NavLink = { href: string; label: string; icon: string };
+
+	const generalLinks: NavLink[] = [
+		{ href: '/', label: 'Overview', icon: 'overview' },
+		{ href: '/reminders', label: 'Reminders', icon: 'reminders' },
+		{ href: '/mcp-docs', label: 'MCP documentation', icon: 'mcp' }
+	];
+	const adminLinks: NavLink[] = [
+		{ href: '/admin/members', label: 'Members', icon: 'members' },
+		{ href: '/admin/modules', label: 'Modules', icon: 'modules' },
+		{ href: '/admin/settings', label: 'General settings', icon: 'settings' },
+		{ href: '/admin/invitations', label: 'Invitations', icon: 'invitations' }
+	];
+
 	const pathname = $derived(page.url.pathname);
+	const moduleLinks = $derived<NavLink[]>(modules.map((module) => ({ href: `/modules/${module.key}`, label: module.label, icon: module.key })));
 	const pageTitle = $derived($t(titleForPath(pathname)));
 	const trackingModule = $derived(modules.find((module) => module.key === 'tracking'));
 	const canCreateTracker = $derived(
@@ -230,134 +246,122 @@ import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 
 <svelte:window onkeydown={handleWindowKeydown} />
 
-<div class="app-shell min-h-screen bg-slate-950 text-slate-100 lg:flex">
-	<aside class="hidden w-64 shrink-0 border-r border-slate-800 bg-slate-950 px-4 py-6 lg:flex lg:flex-col">
-		<a href="/" class="mb-9 flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-white" aria-label={$t("Metricove overview")}>
-			<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg text-cyan-300" aria-hidden="true">M</span>
-			<span>Metric<span class="text-cyan-300">ove</span></span>
-		</a>
-		<nav aria-label={$t("Main navigation")} class="flex-1 space-y-7">
-			<div class="space-y-1">
-				<a href="/" aria-current={isActive('/') ? 'page' : undefined} class="nav-item {isActive('/') ? 'nav-item-active' : ''}">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-					{$t('Overview')}
-				</a>
-				<a href="/reminders" aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-					{$t('Reminders')}
-				</a>
-				<a href="/mcp-docs" aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-					{$t('MCP documentation')}
-				</a>
-			</div>
-			{#if modules.length > 0}
-				<div>
-					<p class="nav-section-label">{$t('Your modules')}</p>
-					<div class="mt-2 space-y-1">
-						{#each modules as module (module.key)}
-							<a href={`/modules/${module.key}`} aria-current={isActive(`/modules/${module.key}`) ? 'page' : undefined} class="nav-item {isActive(`/modules/${module.key}`) ? 'nav-item-active' : ''}">
-								<ModuleIcon name={module.key} />
-								{$t(module.label)}
-							</a>
-						{/each}
-					</div>
-				</div>
-			{/if}
-			{#if currentUser?.is_admin}
-				<div class="border-t border-slate-800 pt-5">
-					<p class="nav-section-label">{$t('Administration')}</p>
-					<div class="mt-2 space-y-1">
-						<a href="/admin/members" aria-current={isActive('/admin/members') ? 'page' : undefined} class="nav-item {isActive('/admin/members') ? 'nav-item-active' : ''}">
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 11a3 3 0 1 0 0-6M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-							{$t('Members')}
-						</a>
-						<a href="/admin/modules" aria-current={isActive('/admin/modules') ? 'page' : undefined} class="nav-item {isActive('/admin/modules') ? 'nav-item-active' : ''}">
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.5V21" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-							{$t('Modules')}
-						</a>
-						<a href="/admin/settings" aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-							{$t('General settings')}
-						</a>
-						<a href="/admin/invitations" aria-current={isActive('/admin/invitations') ? 'page' : undefined} class="nav-item {isActive('/admin/invitations') ? 'nav-item-active' : ''}">
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7" /><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /></svg>
-							{$t('Invitations')}
-						</a>
-					</div>
-				</div>
-			{/if}
-		</nav>
-		<div class="mt-8 border-t border-slate-800 pt-4">
-			<a href="/profile" class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-slate-800 text-sm font-semibold text-cyan-200" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
-				<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-slate-400">{$t('Profile & account')}</span></span>
+{#snippet brand(onNavigate?: () => void)}
+	<a href="/" onclick={onNavigate} class="flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-[var(--text-primary)]" aria-label={$t('Metricove overview')}>
+		<span class="grid size-9 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] text-lg text-[var(--accent-text)]" aria-hidden="true">M</span>
+		<span>Metric<span class="text-[var(--accent-text)]">ove</span></span>
+	</a>
+{/snippet}
+
+{#snippet navLinks(links: NavLink[], onNavigate?: () => void)}
+	<div class="space-y-1">
+		{#each links as link (link.href)}
+			<a href={link.href} onclick={onNavigate} aria-current={isActive(link.href) ? 'page' : undefined} class="nav-item {isActive(link.href) ? 'nav-item-active' : ''}">
+				<ModuleIcon name={link.icon} />
+				<span class="min-w-0 truncate">{$t(link.label)}</span>
 			</a>
-			<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">{$t('Sign out')}</Button>
-		</div>
+		{/each}
+	</div>
+{/snippet}
+
+{#snippet navigation(label: string, onNavigate?: () => void)}
+	<nav aria-label={$t(label)} class="flex-1 space-y-6 overflow-y-auto">
+		{@render navLinks(generalLinks, onNavigate)}
+		{#if moduleLinks.length > 0}
+			<div>
+				<p class="nav-section-label">{$t('Your modules')}</p>
+				<div class="mt-2">{@render navLinks(moduleLinks, onNavigate)}</div>
+			</div>
+		{/if}
+		{#if currentUser?.is_admin}
+			<div class="border-t border-[var(--border-default)] pt-5">
+				<p class="nav-section-label">{$t('Administration')}</p>
+				<div class="mt-2">{@render navLinks(adminLinks, onNavigate)}</div>
+			</div>
+		{/if}
+	</nav>
+{/snippet}
+
+{#snippet account(onNavigate?: () => void)}
+	<div class="mt-6 border-t border-[var(--border-default)] pt-4">
+		<a href="/profile" onclick={onNavigate} aria-current={isActive('/profile') ? 'page' : undefined} class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-[var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)]">
+			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--accent-text)]" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
+			<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-[var(--text-primary)]">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-[var(--text-muted)]">{$t('Profile & account')}</span></span>
+		</a>
+		<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">{$t('Sign out')}</Button>
+	</div>
+{/snippet}
+
+<div class="app-shell min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] lg:flex">
+	<aside class="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--border-default)] px-4 py-6 lg:flex lg:flex-col">
+		<div class="mb-8">{@render brand()}</div>
+		{@render navigation('Main navigation')}
+		{@render account()}
 	</aside>
 
 	<div class="min-w-0 flex-1">
-		<header class="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-4 border-b border-slate-800 bg-slate-950/95 px-4 backdrop-blur sm:px-7 lg:px-10">
-			<div class="flex min-w-0 items-center gap-3">
-				<button bind:this={drawerTrigger} type="button" aria-label={$t("Open navigation")} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-800 text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 lg:hidden">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
-				</button>
-				<div class="min-w-0">
-					<p class="truncate text-base font-semibold tracking-tight text-slate-100">{pageTitle}</p>
-					<p class="hidden text-xs text-slate-500 sm:block">{$t('Your household, in one private place')}</p>
+		<header class="sticky top-0 z-20 border-b border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-page)_95%,transparent)] px-4 backdrop-blur sm:px-7 lg:px-10">
+			<div class="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-3 py-3 sm:flex-nowrap">
+				<div class="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
+					<button bind:this={drawerTrigger} type="button" aria-label={$t('Open navigation')} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="ui-icon-button lg:hidden">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+					</button>
+					<div class="min-w-0">
+						<p class="truncate text-base font-semibold tracking-tight text-[var(--text-primary)]">{pageTitle}</p>
+						<p class="hidden text-xs text-[var(--text-muted)] xl:block">{$t('Your household, in one private place')}</p>
+					</div>
 				</div>
-			</div>
-			<form
-				role="search"
-				onsubmit={submitAssistantSearch}
-				class="mx-auto flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 focus-within:border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-300/20 sm:max-w-2xl"
-			>
-				<label for="header-assistant-search" class="sr-only">{$t('Search your household with AI')}</label>
-				<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-slate-400">
-					<circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8" />
-					<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-				</svg>
-				<input
-					id="header-assistant-search"
-					type="search"
-					bind:value={assistantSearch}
-					maxlength="4000"
-					disabled={loading || currentUser === null}
-					aria-keyshortcuts="Meta+K Control+K"
-					placeholder={$t('Search your household with AI…')}
-					class="min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
-				/>
-				<kbd aria-hidden="true" class="hidden shrink-0 rounded border border-slate-700 px-1.5 py-0.5 text-[0.65rem] text-slate-400 md:inline">⌘ K</kbd>
-				<button
-					type="submit"
-					disabled={loading || currentUser === null}
-					class="grid size-10 shrink-0 place-items-center rounded-lg bg-cyan-300 text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-					aria-label={$t('Search with AI')}
+				{#if canCreateTracker}
+					<Button href="/modules/tracking?create=1" size="small" aria-label={$t('Create tracker')} class="shrink-0 sm:order-last">
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+						<span class="hidden md:inline">{$t('Create tracker')}</span>
+						<span class="md:hidden">{$t('Create')}</span>
+					</Button>
+				{/if}
+				<form
+					role="search"
+					onsubmit={submitAssistantSearch}
+					class="flex w-full min-w-0 items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--control-background)] py-1 pr-1 pl-3 focus-within:border-[var(--accent-text)] sm:mx-auto sm:w-auto sm:max-w-2xl sm:flex-1"
 				>
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m5 12 14 0m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
-				</button>
-			</form>
-			{#if canCreateTracker}
-				<a href="/modules/tracking?create=1" aria-label={$t('Create tracker')} class="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg bg-cyan-300 px-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 sm:px-4">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-					<span class="hidden sm:inline">{$t('Create tracker')}</span>
-					<span class="sm:hidden">{$t('Create')}</span>
-				</a>
-			{/if}
+					<label for="header-assistant-search" class="sr-only">{$t('Search your household with AI')}</label>
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-[var(--text-muted)]">
+						<circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7" />
+						<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+					</svg>
+					<input
+						id="header-assistant-search"
+						type="search"
+						bind:value={assistantSearch}
+						maxlength="4000"
+						disabled={loading || currentUser === null}
+						aria-keyshortcuts="Meta+K Control+K"
+						placeholder={$t('Search your household with AI…')}
+						class="min-h-9 min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-subtle)] disabled:cursor-not-allowed"
+					/>
+					<kbd aria-hidden="true" class="hidden shrink-0 rounded border border-[var(--border-default)] px-1.5 py-0.5 text-[0.6875rem] text-[var(--text-muted)] md:inline">⌘ K</kbd>
+					<button
+						type="submit"
+						disabled={loading || currentUser === null}
+						class="grid size-9 shrink-0 place-items-center rounded-lg bg-[var(--accent)] text-[var(--accent-ink)] transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-50"
+						aria-label={$t('Search with AI')}
+					>
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m5 12 14 0m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+					</button>
+				</form>
+			</div>
 		</header>
 
 		<main id="main-content" class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
-			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-cyan-300 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950">{$t('Skip to content')}</a>
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--accent-ink)]">{$t('Skip to content')}</a>
 			{#if shellError}
-				<div role="alert" class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+				<div role="alert" class="ui-notice ui-notice--error mb-6 flex flex-wrap items-center justify-between gap-3">
 					<p>{$t(shellError)}</p>
-					<button type="button" onclick={() => void loadShell()} class="rounded-lg border border-rose-200/30 px-3 py-2 font-semibold hover:border-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200">{$t('Try again')}</button>
+					<Button variant="secondary" size="small" onclick={() => void loadShell()}>{$t('Try again')}</Button>
 				</div>
 			{/if}
-			{#if signOutError}<p role="alert" class="mb-6 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{$t(signOutError)}</p>{/if}
+			{#if signOutError}<Notice tone="error" message={signOutError} class="mb-6" />{/if}
 			{#if loading}
-				<p role="status" class="text-sm text-slate-400">{$t('Loading account')}…</p>
+				<p role="status" class="text-sm text-[var(--text-muted)]">{$t('Loading account')}…</p>
 			{:else if !shellError && currentUser}
 				{@render children()}
 			{/if}
@@ -367,99 +371,16 @@ import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 
 {#if drawerOpen}
 	<div class="fixed inset-0 z-40 lg:hidden">
-		<button type="button" aria-label={$t("Close navigation")} class="absolute inset-0 bg-slate-950/75 backdrop-blur-sm" onclick={() => void closeDrawer()}></button>
-		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t("Main navigation")} tabindex="-1" class="mobile-drawer absolute inset-y-0 left-0 flex w-[min(21rem,88vw)] flex-col border-r border-slate-800 bg-slate-950 px-4 py-5 shadow-2xl shadow-black/40 outline-none">
-			<div class="mb-8 flex items-center justify-between px-2">
-				<a href="/" aria-label={$t("Metricove overview")} onclick={() => (drawerOpen = false)} class="flex items-center gap-3 text-lg font-semibold tracking-tight text-white"><span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-cyan-300" aria-hidden="true">M</span><span>Metric<span class="text-cyan-300">ove</span></span></a>
-				<button type="button" aria-label={$t("Close navigation")} onclick={() => void closeDrawer()} class="grid size-10 place-items-center rounded-xl border border-slate-800 text-slate-300 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"><span aria-hidden="true" class="text-xl">×</span></button>
+		<button type="button" aria-label={$t('Close navigation')} class="absolute inset-0 bg-[var(--overlay)]" onclick={() => void closeDrawer()}></button>
+		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="mobile-drawer absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--border-default)] bg-[var(--surface-page)] px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
+			<div class="mb-6 flex items-center justify-between">
+				{@render brand(() => (drawerOpen = false))}
+				<button type="button" aria-label={$t('Close navigation')} onclick={() => void closeDrawer()} class="ui-icon-button">
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+				</button>
 			</div>
-			<nav aria-label={$t("Mobile main navigation")} class="flex-1 space-y-7 overflow-y-auto">
-				<div class="space-y-1">
-					<a
-						href="/"
-						onclick={() => (drawerOpen = false)}
-						aria-current={isActive('/') ? 'page' : undefined}
-						class="nav-item {isActive('/') ? 'nav-item-active' : ''}"
-					>
-						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
-							<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-						</svg>
-						{$t('Overview')}
-					</a>
-					<a href="/mcp-docs" onclick={() => (drawerOpen = false)} aria-current={isActive('/mcp-docs') ? 'page' : undefined} class="nav-item {isActive('/mcp-docs') ? 'nav-item-active' : ''}">
-						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-10-4 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-						{$t('MCP documentation')}
-					</a>
-					<a href="/reminders" onclick={() => (drawerOpen = false)} aria-current={isActive('/reminders') ? 'page' : undefined} class="nav-item {isActive('/reminders') ? 'nav-item-active' : ''}">
-						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-						{$t('Reminders')}
-					</a>
-				</div>
-				{#if modules.length > 0}
-					<div>
-						<p class="nav-section-label">{$t("Your modules")}</p>
-						<div class="mt-2 space-y-1">
-							{#each modules as module (module.key)}
-								<a
-									href={`/modules/${module.key}`}
-									onclick={() => (drawerOpen = false)}
-									aria-current={isActive(`/modules/${module.key}`) ? 'page' : undefined}
-									class="nav-item {isActive(`/modules/${module.key}`) ? 'nav-item-active' : ''}"
-								>
-									<ModuleIcon name={module.key} />
-								{$t(module.label)}
-								</a>
-							{/each}
-						</div>
-					</div>
-				{/if}
-				{#if currentUser?.is_admin}
-					<div class="border-t border-slate-800 pt-5">
-						<p class="nav-section-label">{$t("Administration")}</p>
-						<div class="mt-2 space-y-1">
-							<a
-								href="/admin/members"
-								onclick={() => (drawerOpen = false)}
-								aria-current={isActive('/admin/members') ? 'page' : undefined}
-								class="nav-item {isActive('/admin/members') ? 'nav-item-active' : ''}"
-							>
-								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
-									<path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 11a3 3 0 1 0 0-6M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-								</svg>
-								{$t("Members")}
-							</a>
-							<a
-								href="/admin/modules"
-								onclick={() => (drawerOpen = false)}
-								aria-current={isActive('/admin/modules') ? 'page' : undefined}
-								class="nav-item {isActive('/admin/modules') ? 'nav-item-active' : ''}"
-							>
-								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
-									<path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-									<path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.5V21" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-								</svg>
-								{$t("Modules")}
-							</a>
-							<a
-								href="/admin/invitations"
-								onclick={() => (drawerOpen = false)}
-								aria-current={isActive('/admin/invitations') ? 'page' : undefined}
-								class="nav-item {isActive('/admin/invitations') ? 'nav-item-active' : ''}"
-							>
-								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5">
-									<rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7" />
-									<path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-								</svg>
-								{$t("Invitations")}
-							</a>
-			<a href="/admin/settings" onclick={() => (drawerOpen = false)} aria-current={isActive('/admin/settings') ? 'page' : undefined} class="nav-item {isActive('/admin/settings') ? 'nav-item-active' : ''}">
-				<span aria-hidden="true">⚙</span>{$t("General settings")}
-			</a>
-						</div>
-					</div>
-				{/if}
-			</nav>
-			<div class="mt-6 border-t border-slate-800 pt-4"><a href="/profile" onclick={() => (drawerOpen = false)} class="block rounded-xl px-3 py-3 text-sm font-medium text-slate-100 hover:bg-slate-900">{currentUser?.name ?? $t('Profile')}<span class="mt-1 block text-xs text-slate-400">{$t("Profile & account")}</span></a><button type="button" onclick={signOut} class="mt-1 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Sign out")}</button></div>
+			{@render navigation('Mobile main navigation', () => (drawerOpen = false))}
+			{@render account(() => (drawerOpen = false))}
 		</div>
 	</div>
 {/if}

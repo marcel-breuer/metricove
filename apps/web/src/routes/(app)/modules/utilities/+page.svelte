@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { t } from '#lib/i18n';
+	import Badge from '#lib/ui/Badge.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
+	import { t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { getContext, onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
@@ -92,12 +95,9 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<div class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-6">
-		<div><p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Utilities module")}</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Know what your meters use.")}</h1></div>
-		<p class="max-w-xl text-sm leading-6 text-slate-400">{$t("Keep dated electricity, gas and water readings together. Metricove derives interval usage from the cumulative register and highlights unusually large jumps.")}</p>
-	</div>
-	{#if message}<p role="status" class="mt-6 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>{/if}
-	{#if error}<p role="alert" class="mt-6 rounded-xl border border-rose-300/30 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>{/if}
+	<PageHeading eyebrow="Utilities module" title="Know what your meters use" description="Keep dated electricity, gas and water readings together. Metricove derives interval usage from the cumulative register and highlights unusually large jumps." />
+	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
+	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="meters-heading">
@@ -110,7 +110,7 @@
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
 						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-cyan-300/50 hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-slate-100">{meter.name}</span><span class="rounded-full border border-slate-700 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{meter.visibility}</span></span><span class="mt-2 block text-sm text-slate-400">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-slate-500">{meter.description || (meter.alert_threshold ? `Alert above ${formatMeasurement(meter.alert_threshold, meter.unit)} ${meter.unit} per interval` : 'No interval alert set')}</span></span>
+							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-slate-100">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-slate-400">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-slate-500">{meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))}</span></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">{$t("Open readings")} <span aria-hidden="true">→</span></span>
 						</a></li>
 					{/each}

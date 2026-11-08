@@ -21,8 +21,8 @@
 </script>
 
 <Modal bind:open {title}>
-	<p class="text-sm leading-6 text-slate-300">{message}</p>
-	<div class="mt-6 flex flex-wrap justify-end gap-3">
+	<p class="text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
+	<div class="ui-modal-actions">
 		<Button variant="secondary" type="button" disabled={busy} onclick={() => (open = false)}>{$t('Cancel')}</Button>
 		<Button variant="danger" type="button" disabled={busy} onclick={() => void onConfirm()}>{busy ? $t('Working…') : $t(confirmLabel)}</Button>
 	</div>

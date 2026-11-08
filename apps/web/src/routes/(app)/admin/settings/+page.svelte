@@ -133,7 +133,7 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<PageHeading eyebrow={$t('Household settings')} title={$t('General settings.')} description={$t('Configure the assistant provider and network access for this installation. Provider credentials are encrypted at rest and never shown again after saving.')} />
+		<PageHeading eyebrow="Household settings" title="General settings" description="Configure the assistant provider and network access for this installation. Provider credentials are encrypted at rest and never shown again after saving." />
 		{#if message}<Notice class="mt-8" tone="success" message={$t(message)} />{/if}
 		{#if error}<Notice class="mt-8" tone="error" message={$t(error)} />{/if}
 		<Panel padding="large" class="mt-8 sm:p-8">

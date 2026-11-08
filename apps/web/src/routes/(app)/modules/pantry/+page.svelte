@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import Button from '#lib/ui/Button.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate, formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -246,23 +249,18 @@
 	<meta name="description" content={$t("Track food stock, storage, quantities and best-before dates.")} />
 </svelte:head>
 
-<div class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-	<header class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">{$t("Food · Stock")}</p>
-			<h1 class="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">{$t("Pantry")}</h1>
-			<p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Keep quantities and best-before dates together. Each stock change is recorded with its own unit and history.")}</p>
-		</div>
-		{#if canAdd}
-			<button type="button" onclick={openNewItem} class="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200">{$t("Add pantry item")}</button>
-		{/if}
-	</header>
+<div class="mx-auto max-w-6xl space-y-8">
+	<PageHeading eyebrow="Food · Stock" title="Pantry" description="Keep quantities and best-before dates together. Each stock change is recorded with its own unit and history.">
+		{#snippet actions()}
+			{#if canAdd}<Button onclick={openNewItem}>{$t("Add pantry item")}</Button>{/if}
+		{/snippet}
+	</PageHeading>
 
 	{#if message}
-		<p role="status" class="rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t(message)}</p>
+		<Notice tone="success" message={message} />
 	{/if}
 	{#if error}
-		<p role="alert" class="rounded-xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">{$t(error)}</p>
+		<Notice tone="error" message={error} />
 	{/if}
 
 	{#if !shell.loading && !canView}
@@ -287,7 +285,7 @@
 			<section class="rounded-2xl border border-emerald-200/20 bg-slate-900/90 p-5 shadow-xl shadow-black/10 sm:p-6" aria-labelledby="pantry-editor-title">
 				<div class="mb-5 flex items-start justify-between gap-4">
 					<div>
-						<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">{$t(editingItem ? 'Item details' : 'New stock line')}</p>
+						<p class="text-xs font-semibold text-emerald-300">{$t(editingItem ? 'Item details' : 'New stock line')}</p>
 						<h2 id="pantry-editor-title" class="mt-1 text-xl font-semibold text-white">{editingItem ? `Edit ${editingItem.name}` : 'Add to pantry'}</h2>
 					</div>
 					<button type="button" onclick={closeEditor} class="rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-white">{$t("Close")}</button>
@@ -337,7 +335,7 @@
 		<section class="space-y-4" aria-labelledby="stock-list-title">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{$t("Inventory")}</p>
+					<p class="text-xs font-semibold text-slate-500">{$t("Inventory")}</p>
 					<h2 id="stock-list-title" class="mt-1 text-xl font-semibold text-white">{$t("Your stock")}</h2>
 				</div>
 				<div class="flex flex-wrap gap-2" role="group" aria-label={$t("Filter pantry items by best-before date")}>

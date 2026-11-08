@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Badge from '#lib/ui/Badge.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse, type AuthUser } from '#lib/auth';
@@ -321,12 +322,12 @@
 </svelte:head>
 
 <section class="mx-auto w-full max-w-screen-xl">
-	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl flex-col">
-		<section class="my-auto grid gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
+	<div class="mx-auto max-w-5xl">
+		<section class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16">
 			<div class="max-w-xl">
-				<PageHeading eyebrow={$t('Account settings')} title={$t('Your Metricove profile.')} description={$t('Update the name and email address used for this household account.')} />
+				<PageHeading eyebrow="Account settings" title="Your Metricove profile" description="Update the name and email address used for this household account." />
 				{#if user?.is_admin}
-					<p class="mt-5 inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-sm font-medium text-cyan-200">{$t('Household administrator')}</p>
+					<p class="mt-5"><Badge tone="accent">{$t('Household administrator')}</Badge></p>
 				{/if}
 				<ThemePicker class="mt-8 max-w-xs" />
 			</div>
@@ -396,7 +397,7 @@
 
 		<section class="mb-12 grid gap-8 lg:grid-cols-2">
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
-				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t('External access')}</p>
+				<p class="text-sm font-medium text-slate-400">{$t('External access')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('MCP access tokens')}</h2>
 				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.')}</p>
 				<a href="/mcp-docs" class="mt-3 inline-flex text-sm font-semibold text-cyan-200 underline decoration-cyan-200/40 underline-offset-4">{$t('Read the MCP documentation')}</a>
@@ -430,7 +431,7 @@
 							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-cyan-300" />
 							<span>{$t("Never expires")}</span>
 						</label>
-						{#if mcpError}<p role="alert" class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(mcpError)}</p>{/if}
+						{#if mcpError}<Notice tone="error" message={mcpError} />{/if}
 						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
 					</form>
 					</Modal>
@@ -443,8 +444,8 @@
 						<code class="mt-3 block break-all rounded-lg bg-slate-950 p-3 text-xs text-slate-100">{newSecret}</code>
 					</div>
 				{/if}
-				{#if mcpMessage}<p role="status" class="mt-4 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">{$t(mcpMessage)}</p>{/if}
-				{#if mcpError}<p role="alert" class="mt-4 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{$t(mcpError)}</p>{/if}
+				{#if mcpMessage}<Notice tone="success" message={mcpMessage} class="mt-4" />{/if}
+				{#if mcpError}<Notice tone="error" message={mcpError} class="mt-4" />{/if}
 				<div class="mt-8 space-y-3">
 					<h3 class="text-base font-semibold">{$t('Your tokens')}</h3>
 					{#if mcpTokens.length === 0}<p class="text-sm text-slate-400">{$t('No tokens created yet.')}</p>{/if}
@@ -461,7 +462,7 @@
 			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token {name}?', { name: tokenToRevoke.name })} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
 			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
-				<p class="text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t('Human approval')}</p>
+				<p class="text-sm font-medium text-slate-400">{$t('Human approval')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
 				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
 				<div class="mt-6 space-y-4">
@@ -477,9 +478,5 @@
 				</div>
 			</div>
 		</section>
-
-		<footer class="border-t border-slate-800 pt-5 text-sm text-slate-500">
-			<a href="/" class="hover:text-slate-300">{$t('Return home')}</a>
-		</footer>
 	</div>
 </section>

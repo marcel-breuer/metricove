@@ -121,7 +121,7 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<PageHeading class="mt-12 max-w-2xl" eyebrow={$t('Member access')} title={$t('Module rights.')} description={`${member ? $t('Choose the capabilities available to {name}.', { name: member.name }) : $t('Choose the capabilities available to this household member.')}${$t(' Administrators need explicit module rights too; administrator status does not grant access to private records.')}`} />
+		<PageHeading class="max-w-2xl" eyebrow="Member access" title="Module rights" description={`${member ? $t('Choose the capabilities available to {name}.', { name: member.name }) : $t('Choose the capabilities available to this household member.')}${$t(' Administrators need explicit module rights too; administrator status does not grant access to private records.')}`} />
 
 		{#if message}
 			<Notice class="mt-8" tone="success" message={$t(message)} />

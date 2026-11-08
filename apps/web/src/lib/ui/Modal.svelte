@@ -32,17 +32,19 @@
 <dialog
 	bind:this={dialog}
 	aria-label={title}
-	class="m-auto max-h-[min(90dvh,52rem)] w-[min(100%-2rem,48rem)] max-w-none overflow-y-auto rounded-2xl border border-slate-700 bg-slate-950 p-0 text-slate-100 shadow-2xl backdrop:bg-slate-950/75 backdrop:backdrop-blur-sm {className}"
+	class="ui-modal {className}"
 	onclose={close}
 	onclick={(event) => { if (event.target === dialog) close(); }}
 >
-	<div class="p-5 sm:p-7">
-		<header class="mb-5 flex items-start justify-between gap-4">
-			<div>
-				<h2 class="text-xl font-semibold text-white">{title}</h2>
-				{#if description}<p class="mt-1 text-sm leading-6 text-slate-400">{description}</p>{/if}
+	<div class="ui-modal-body">
+		<header class="ui-modal-header">
+			<div class="min-w-0">
+				<h2 class="ui-modal-title">{title}</h2>
+				{#if description}<p class="ui-modal-description">{description}</p>{/if}
 			</div>
-			<button type="button" aria-label={$t('Close dialog')} onclick={close} class="grid size-10 shrink-0 place-items-center rounded-lg border border-slate-700 text-xl text-slate-300 transition hover:border-slate-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">×</button>
+			<button type="button" aria-label={$t('Close dialog')} onclick={close} class="ui-icon-button">
+				<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+			</button>
 		</header>
 		{@render children()}
 	</div>

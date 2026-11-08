@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { get } from 'svelte/store';
@@ -367,7 +368,7 @@
 			<Panel>
 				<div class="flex flex-wrap items-start justify-between gap-3">
 					<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t(editing ? 'Edit task' : 'New task')}</p>
+					<p class="text-xs font-semibold text-cyan-300">{$t(editing ? 'Edit task' : 'New task')}</p>
 					<h2 class="mt-2 text-xl font-semibold text-white">{$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}</h2>
 					</div>
 					{#if editing}<Button variant="ghost" size="small" onclick={resetForm}>{$t('Cancel')}</Button>{/if}
@@ -375,11 +376,11 @@
 				<form class="mt-5 grid gap-4 md:grid-cols-2" onsubmit={saveTask}>
 					<label class="block md:col-span-2">
 						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Task title')}</span>
-						<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="ui-field w-full" />
+						<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="ui-control" />
 					</label>
 					<label class="block md:col-span-2">
 						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Details')}</span>
-						<textarea maxlength="4000" bind:value={description} rows="2" placeholder={$t('Add the context someone needs to get it done.')} class="ui-field w-full resize-y"></textarea>
+						<textarea maxlength="4000" bind:value={description} rows="2" placeholder={$t('Add the context someone needs to get it done.')} class="ui-control resize-y"></textarea>
 					</label>
 					<label class="block">
 						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Due date')}</span>
@@ -387,32 +388,32 @@
 					</label>
 					<label class="block">
 						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Priority')}</span>
-						<select bind:value={priority} class="ui-field w-full">
+						<select bind:value={priority} class="ui-control">
 							<option value="low">{$t('Low')}</option><option value="medium">{$t('Medium')}</option><option value="high">{$t('High')}</option>
 						</select>
 					</label>
 					{#if canAssign}
 						<label class="block">
 							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Assignee')}</span>
-							<select bind:value={assigneeId} class="ui-field w-full"><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select>
+							<select bind:value={assigneeId} class="ui-control"><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select>
 						</label>
 					{/if}
 					<label class="block">
 						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Repeats')}</span>
-						<select bind:value={frequency} class="ui-field w-full">
+						<select bind:value={frequency} class="ui-control">
 							<option value="none">{$t('Does not repeat')}</option><option value="daily">{$t('Daily')}</option><option value="weekly">{$t('Weekly')}</option><option value="monthly">{$t('Monthly')}</option><option value="yearly">{$t('Yearly')}</option>
 						</select>
 					</label>
 					{#if frequency !== 'none'}
 						<label class="block">
 							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Every')}</span>
-							<input type="number" min="1" max="99" bind:value={interval} required class="ui-field w-full" />
+							<input type="number" min="1" max="99" bind:value={interval} required class="ui-control" />
 						</label>
 					{/if}
 					{#if canCreateShared && !editing}
 						<label class="block">
 							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Visibility')}</span>
-							<select bind:value={visibility} class="ui-field w-full"><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></select>
+							<select bind:value={visibility} class="ui-control"><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></select>
 						</label>
 					{/if}
 					<div class="flex flex-wrap items-center gap-3 md:col-span-2">
@@ -426,14 +427,16 @@
 
 		<Panel>
 			<div class="flex flex-wrap items-end justify-between gap-4">
-				<div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t('Your tasks')}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t('Keep the household moving.')}</h2></div>
-				<div class="grid w-full gap-3 sm:grid-cols-2 xl:w-auto xl:grid-cols-5">
-					<label><span class="mb-1 block text-xs text-slate-400">{$t('Status')}</span><select bind:value={statusFilter} onchange={updateFilters} class="ui-field w-full"><option value="open">{$t('Open')}</option><option value="completed">{$t('Completed')}</option><option value="all">{$t('All')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-slate-400">{$t('Priority')}</span><select bind:value={priorityFilter} onchange={updateFilters} class="ui-field w-full"><option value="all">{$t('All priorities')}</option><option value="high">{$t('High')}</option><option value="medium">{$t('Medium')}</option><option value="low">{$t('Low')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><select bind:value={dueFilter} onchange={updateFilters} class="ui-field w-full"><option value="all">{$t('Any date')}</option><option value="overdue">{$t('Overdue')}</option><option value="upcoming">{$t('Upcoming')}</option><option value="none">{$t('No due date')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-slate-400">{$t('Assignee')}</span><select bind:value={assigneeFilter} onchange={updateFilters} class="ui-field w-full"><option value="">{$t('Anyone')}</option>{#each visibleAssignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select></label>
-					<label><span class="mb-1 block text-xs text-slate-400">{$t('Sort by')}</span><select bind:value={sortMode} onchange={updateFilters} class="ui-field w-full"><option value="due_at">{$t('Due date')}</option><option value="priority">{$t('Priority')}</option><option value="assignee">{$t('Assignee')}</option></select></label>
+				<div><p class="ui-eyebrow">{$t('Your tasks')}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t('Keep the household moving.')}</h2></div>
+				<Disclosure summary="Filter and sort" class="w-full">
+				<div class="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-5">
+					<label><span class="mb-1 block text-xs text-slate-400">{$t('Status')}</span><select bind:value={statusFilter} onchange={updateFilters} class="ui-control"><option value="open">{$t('Open')}</option><option value="completed">{$t('Completed')}</option><option value="all">{$t('All')}</option></select></label>
+					<label><span class="mb-1 block text-xs text-slate-400">{$t('Priority')}</span><select bind:value={priorityFilter} onchange={updateFilters} class="ui-control"><option value="all">{$t('All priorities')}</option><option value="high">{$t('High')}</option><option value="medium">{$t('Medium')}</option><option value="low">{$t('Low')}</option></select></label>
+					<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><select bind:value={dueFilter} onchange={updateFilters} class="ui-control"><option value="all">{$t('Any date')}</option><option value="overdue">{$t('Overdue')}</option><option value="upcoming">{$t('Upcoming')}</option><option value="none">{$t('No due date')}</option></select></label>
+					<label><span class="mb-1 block text-xs text-slate-400">{$t('Assignee')}</span><select bind:value={assigneeFilter} onchange={updateFilters} class="ui-control"><option value="">{$t('Anyone')}</option>{#each visibleAssignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select></label>
+					<label><span class="mb-1 block text-xs text-slate-400">{$t('Sort by')}</span><select bind:value={sortMode} onchange={updateFilters} class="ui-control"><option value="due_at">{$t('Due date')}</option><option value="priority">{$t('Priority')}</option><option value="assignee">{$t('Assignee')}</option></select></label>
 				</div>
+				</Disclosure>
 			</div>
 
 			{#if loading}
@@ -472,9 +475,9 @@
 											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
 												{#if editingChecklistItemId === item.id}
 													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
-														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="ui-field w-full" /></label>
-														<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistEditDueInput} class="ui-field w-full" /></label>
-														<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistEditLead} disabled={!checklistEditDueInput} class="ui-field w-full"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="ui-control" /></label>
+														<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistEditDueInput} class="ui-control" /></label>
+														<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistEditLead} disabled={!checklistEditDueInput} class="ui-control"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
 														<div class="flex gap-2 sm:col-span-2"><Button type="submit" size="small">{$t('Save item')}</Button><Button type="button" variant="ghost" size="small" onclick={() => (editingChecklistItemId = null)}>{$t('Cancel')}</Button></div>
 													</form>
 												{:else}
@@ -491,16 +494,16 @@
 									</ol>
 									{#if task.can_edit_checklist && !task.is_completed}
 										<form class="mt-4 grid gap-3 border-t border-slate-800 pt-4 sm:grid-cols-2" onsubmit={(event) => void addChecklistItem(event, task)}>
-											<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('New checklist item')}</span><input required maxlength="180" bind:value={checklistTitle} placeholder={$t('e.g. Take a photo of the meter')} class="ui-field w-full" /></label>
-											<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistDueInput} class="ui-field w-full" /></label>
-											<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistLead} disabled={!checklistDueInput} class="ui-field w-full"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+											<label class="sm:col-span-2"><span class="mb-1 block text-xs text-slate-400">{$t('New checklist item')}</span><input required maxlength="180" bind:value={checklistTitle} placeholder={$t('e.g. Take a photo of the meter')} class="ui-control" /></label>
+											<label><span class="mb-1 block text-xs text-slate-400">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistDueInput} class="ui-control" /></label>
+											<label><span class="mb-1 block text-xs text-slate-400">{$t('Remind before due')}</span><select bind:value={checklistLead} disabled={!checklistDueInput} class="ui-control"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
 											<div class="sm:col-span-2"><Button type="submit">{$t('Add checklist item')}</Button></div>
 										</form>
 									{/if}
 								{/if}
 							</div>
 							{#if historyOpen === task.id}
-								<div class="mt-4 border-t border-slate-800 pt-4"><p class="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">{$t('Completion history')}</p>
+								<div class="mt-4 border-t border-slate-800 pt-4"><p class="text-xs font-semibold text-slate-400">{$t('Completion history')}</p>
 									{#if (histories[task.id] ?? []).length === 0}<p class="mt-2 text-sm text-slate-400">{$t('No completed occurrences yet.')}</p>{:else}<ol class="mt-3 space-y-3">{#each histories[task.id] as completion (completion.id)}<li class="rounded-xl border border-slate-800 p-3"><div class="flex flex-wrap justify-between gap-2 text-sm text-slate-300"><span>{$t('Occurrence')} {completion.occurrence_number} · {completion.completed_by ?? $t('Former member')}</span><time datetime={completion.completed_at}>{formatDateTime(completion.completed_at)}</time></div>{#if completion.checklist_items.length > 0}<ul class="mt-2 space-y-1 text-xs text-slate-400">{#each completion.checklist_items as item, itemIndex (`${completion.id}-${itemIndex}`)}<li>{item.is_completed ? '✓' : '○'} {item.title}{#if item.completed_by} · {item.completed_by}{/if}</li>{/each}</ul>{/if}</li>{/each}</ol>{/if}
 								</div>
 							{/if}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Notice from '#lib/ui/Notice.svelte';
+	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDateTime } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -34,15 +36,16 @@
 	type AuditResponse = ApiResponse & { events?: AuditEvent[] };
 	type AccessChanges = Partial<Pick<Member, 'is_admin' | 'is_active'>>;
 
-	let me: AuthUser | null = null;
-	let members: Member[] = [];
-	let events: AuditEvent[] = [];
-	let loading = true;
-	let busy = false;
+	let me = $state<AuthUser | null>(null);
+	let members = $state<Member[]>([]);
+	let events = $state<AuditEvent[]>([]);
+	let loading = $state(true);
+	let busy = $state(false);
+	const activeAdminCount = $derived(members.filter((member) => member.is_admin && member.is_active).length);
 	let memberToRemove = $state<Member | null>(null);
 	let removeModalOpen = $state(false);
-	let message = '';
-	let error = '';
+	let message = $state('');
+	let error = $state('');
 
 	onMount(() => {
 		void loadMembers();
@@ -200,24 +203,20 @@
 
 <section class="mx-auto w-full max-w-screen-xl">
 	<div class="mx-auto max-w-5xl">
-		<section class="mt-12 max-w-2xl">
-			<p class="mb-4 text-sm font-medium tracking-[0.18em] text-slate-400 uppercase">{$t("Household access")}</p>
-			<h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{$t("Manage members.")}</h1>
-			<p class="mt-5 text-base leading-7 text-slate-300">{$t("Grant administrator access, suspend accounts or remove members. At least one active administrator must remain.")}</p>
-		</section>
+		<PageHeading eyebrow="Household access" title="Manage members" description="Grant administrator access, suspend accounts or remove members. At least one active administrator must remain." />
 
 		{#if message}
-			<p role="status" class="mt-8 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message)}</p>
+			<Notice tone="success" message={message} class="mt-8" />
 		{/if}
 		{#if error}
-			<p role="alert" class="mt-8 rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{$t(error)}</p>
+			<Notice tone="error" message={error} class="mt-8" />
 		{/if}
 
 		<section class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
-					<p class="mt-1 text-sm text-slate-400">{members.filter((member) => member.is_admin && member.is_active).length} {$t("active administrator(s)")}</p>
+					<p class="mt-1 text-sm text-slate-400">{activeAdminCount} {$t(activeAdminCount === 1 ? "active administrator" : "active administrators")}</p>
 				</div>
 				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
@@ -275,6 +274,5 @@
 			{/if}
 		</section>
 
-		<footer class="mt-8 border-t border-slate-800 pt-5 text-sm text-slate-500"><a href="/profile" class="hover:text-slate-300">{$t("Return to your profile")}</a></footer>
 	</div>
 </section>

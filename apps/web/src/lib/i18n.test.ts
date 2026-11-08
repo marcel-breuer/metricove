@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { get } from 'svelte/store';
-import { defaultCurrency, formatDate, numberLocale, setUserPreferences, t, uiLanguage } from './i18n';
+import { defaultCurrency, formatDate, numberLocale, setUserPreferences, t, uiLanguage, visibilityLabel } from './i18n';
 
 afterEach(() => setUserPreferences({ language: 'en', number_locale: 'en-US', default_currency: 'EUR', currency_display: 'code' }));
 
@@ -30,6 +30,11 @@ describe('interface translations', () => {
 		expect(translate('{capability} permission for {module}', { capability: translate('View'), module: translate('Finance') })).toBe('Berechtigung „Ansehen“ für Finanzen');
 		expect(translate('Bring recipes and old meal plans into Metricove')).toBe('Übertrage Rezepte und alte Wochenpläne zu Metricove');
 		expect(translate('Unsupported recipe fields need review before importing.')).toBe('Nicht unterstützte Rezeptfelder müssen vor dem Import geprüft werden.');
+		expect(translate('Alert above {value} {unit} per interval', { value: '12,5', unit: 'kWh' })).toBe('Warnung über 12,5 kWh pro Intervall');
+		expect(translate(visibilityLabel('private'))).toBe('Privat');
+		expect(translate(visibilityLabel('household'))).toBe('Gemeinsam');
+		expect(translate('Category deleted.')).toBe('Kategorie gelöscht.');
+		expect(translate('active administrators')).toBe('aktive Admins');
 		expect(translate('Notion import result: {imported} imported; {duplicates} duplicates skipped.', { imported: 4, duplicates: 2 })).toBe('Notion-Import abgeschlossen: 4 importiert; 2 Duplikate übersprungen.');
 	});
 });
