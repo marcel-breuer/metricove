@@ -19,6 +19,7 @@ export type Recipe = {
 	visibility: RecipeVisibility;
 	is_favorite: boolean;
 	can_edit: boolean;
+	can_change_visibility: boolean;
 	needs_review: boolean;
 	photo_url: string | null;
 	ingredients: RecipeIngredient[];

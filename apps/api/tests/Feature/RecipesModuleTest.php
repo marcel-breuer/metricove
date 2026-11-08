@@ -131,6 +131,56 @@ class RecipesModuleTest extends TestCase
             ->assertOk()->assertJsonPath('recipe.title', 'Updated shared soup');
     }
 
+    public function test_recipe_owner_with_household_manage_access_can_change_visibility(): void
+    {
+        $owner = $this->member('Visibility Admin', true);
+        $viewer = $this->member('Visibility Viewer');
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($viewer, ['view' => true]);
+        $this->enableRecipes($owner);
+
+        $recipeId = (int) $this->actingAs($owner, 'web')->postJson('/api/recipes', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('recipe.visibility', 'private')
+            ->assertJsonPath('recipe.can_change_visibility', true)
+            ->json('recipe.id');
+
+        $this->actingAs($viewer, 'web')->getJson("/api/recipes/{$recipeId}")->assertNotFound();
+
+        $this->actingAs($owner, 'web')->patchJson("/api/recipes/{$recipeId}", ['visibility' => 'household'])
+            ->assertOk()
+            ->assertJsonPath('recipe.visibility', 'household')
+            ->assertJsonPath('recipe.can_change_visibility', true);
+        $this->assertDatabaseHas('recipes', ['id' => $recipeId, 'is_private' => false, 'owner_user_id' => null]);
+        $this->actingAs($viewer, 'web')->getJson("/api/recipes/{$recipeId}")->assertOk();
+
+        $this->actingAs($owner, 'web')->patchJson("/api/recipes/{$recipeId}", ['visibility' => 'private'])
+            ->assertOk()->assertJsonPath('recipe.visibility', 'private');
+        $this->assertDatabaseHas('recipes', ['id' => $recipeId, 'is_private' => true, 'owner_user_id' => $owner->id]);
+        $this->actingAs($viewer, 'web')->getJson("/api/recipes/{$recipeId}")->assertNotFound();
+    }
+
+    public function test_recipe_visibility_cannot_be_broadened_without_active_admin_manage_access(): void
+    {
+        $admin = $this->member('Visibility Manager', true);
+        $owner = $this->member('Visibility Owner');
+        $this->grant($admin, ['view' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->enableRecipes($admin);
+
+        $recipeId = (int) $this->actingAs($owner, 'web')->postJson('/api/recipes', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('recipe.can_change_visibility', false)
+            ->json('recipe.id');
+
+        $this->actingAs($owner, 'web')->patchJson("/api/recipes/{$recipeId}", ['visibility' => 'household'])
+            ->assertForbidden();
+        $this->assertDatabaseHas('recipes', ['id' => $recipeId, 'is_private' => true, 'owner_user_id' => $owner->id]);
+        $this->actingAs($admin, 'web')->getJson("/api/recipes/{$recipeId}")->assertNotFound();
+        $this->actingAs($owner, 'web')->patchJson("/api/recipes/{$recipeId}", ['visibility' => 'public'])
+            ->assertUnprocessable();
+    }
+
     public function test_recipe_photos_use_private_storage_and_require_recipe_access(): void
     {
         Storage::fake('local');
