@@ -8,6 +8,22 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.23.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.22.0...metricove-v0.23.0) (2026-11-08)
+
+
+### Features
+
+* **recipes:** allow changing visibility ([7f59f83](https://github.com/marcel-breuer/metricove/commit/7f59f836eaca5152440803c49206b7f946a9807c))
+* **recipes:** allow changing visibility ([c65e754](https://github.com/marcel-breuer/metricove/commit/c65e754ded12e9380f32da4cd0d055f3f05cef7e))
+* **vehicles:** calculate fuel costs and consumption ([64787eb](https://github.com/marcel-breuer/metricove/commit/64787eb17c13bb4f814edac1071e622fbac0bff7))
+* **vehicles:** calculate fuel costs and consumption ([a16e4e5](https://github.com/marcel-breuer/metricove/commit/a16e4e5c6a75ca6bef3359cc22fe0a2e1e52ba92))
+* **vehicles:** calculate fuel costs in forms ([72048d2](https://github.com/marcel-breuer/metricove/commit/72048d23f78ae44f85b236057a2b2516dbdb4835))
+
+
+### Bug Fixes
+
+* **vehicles:** preserve fuel markers when editing costs ([8758d5e](https://github.com/marcel-breuer/metricove/commit/8758d5e531eb2a77499a6e5e83fbbe49d32707b0))
+
 ## [0.22.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.21.0...metricove-v0.22.0) (2026-11-08)
 
 
