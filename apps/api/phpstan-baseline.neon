@@ -415,19 +415,7 @@ parameters:
 			path: app/Services/Recipes/RecipeService.php
 
 		-
-			message: '#^Parameter \#1 \$array \(list\<array\{name\: string, quantity\: mixed, unit\: string, note\?\: string\|null\}\>\) of array_values is already a list, call has no effect\.$#'
-			identifier: arrayValues.list
-			count: 1
-			path: app/Services/Recipes/RecipeService.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\Recipe\)\: array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Recipes/RecipeService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, position\: int\<0, max\>, name\: string, quantity\: numeric\-string&uppercase\-string, unit\: string, note\: string\|null\}, Closure\(App\\Models\\RecipeIngredient\)\: array\{id\: int\<0, max\>, position\: int\<0, max\>, name\: string, quantity\: numeric\-string&uppercase\-string, unit\: string, note\: string\|null\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Services/Recipes/RecipeService.php

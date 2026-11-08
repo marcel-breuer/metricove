@@ -14,12 +14,12 @@ class Recipe extends Model implements ModuleResource
 
     protected $fillable = [
         'owner_user_id', 'created_by_user_id', 'is_private', 'title', 'category', 'instructions',
-        'servings', 'preparation_minutes', 'photo_path',
+        'servings', 'preparation_minutes', 'photo_path', 'needs_review',
     ];
 
     protected function casts(): array
     {
-        return ['is_private' => 'boolean', 'servings' => 'integer', 'preparation_minutes' => 'integer'];
+        return ['is_private' => 'boolean', 'needs_review' => 'boolean', 'servings' => 'integer', 'preparation_minutes' => 'integer'];
     }
 
     public function ingredients(): HasMany

@@ -35,14 +35,14 @@ class UpdateRecipeRequest extends FormRequest
         return [
             'title' => ['sometimes', 'required', 'string', 'max:180'],
             'category' => ['sometimes', 'nullable', 'string', 'max:80'],
-            'instructions' => ['sometimes', 'required', 'string', 'max:20000'],
-            'servings' => ['sometimes', 'required', 'integer', 'between:1,1000'],
+            'instructions' => ['sometimes', 'nullable', 'string', 'max:20000'],
+            'servings' => ['sometimes', 'nullable', 'integer', 'between:1,1000'],
             'preparation_minutes' => ['sometimes', 'nullable', 'integer', 'between:1,1440'],
-            'ingredients' => ['sometimes', 'required', 'array', 'min:1', 'max:100'],
+            'ingredients' => ['sometimes', 'present', 'array', 'max:100'],
             'ingredients.*' => ['required', 'array:name,quantity,unit,note'],
             'ingredients.*.name' => ['required', 'string', 'max:120'],
-            'ingredients.*.quantity' => ['required'],
-            'ingredients.*.unit' => ['required', 'string', 'max:40'],
+            'ingredients.*.quantity' => ['nullable'],
+            'ingredients.*.unit' => ['nullable', 'string', 'max:40'],
             'ingredients.*.note' => ['nullable', 'string', 'max:160'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_photo' => ['sometimes', 'boolean'],
@@ -56,7 +56,12 @@ class UpdateRecipeRequest extends FormRequest
 
             if (is_array($ingredients)) {
                 foreach ($ingredients as $index => $ingredient) {
-                    if (is_array($ingredient) && RecipeQuantity::normalize($ingredient['quantity'] ?? null) === null) {
+                    if (! is_array($ingredient)) {
+                        continue;
+                    }
+                    $quantity = RecipeQuantity::normalize($ingredient['quantity'] ?? null);
+                    $unit = trim((string) ($ingredient['unit'] ?? ''));
+                    if (($quantity === null) !== ($unit === '')) {
                         $validator->errors()->add("ingredients.{$index}.quantity", 'Enter a positive quantity with up to 10 whole and 4 fractional digits.');
                     }
                 }

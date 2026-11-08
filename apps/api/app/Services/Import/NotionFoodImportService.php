@@ -67,8 +67,11 @@ class NotionFoodImportService
             if (! isset($bySource[$sourceId])) {
                 throw ValidationException::withMessages(['selected_source_ids' => 'The selection no longer matches the import preview. Review the file again.']);
             }
-            if (! $bySource[$sourceId]['ready'] && ! $bySource[$sourceId]['duplicate']) {
-                throw ValidationException::withMessages(['selected_source_ids' => 'Resolve items marked for review before importing them.']);
+            $eligible = $bySource[$sourceId]['type'] === 'recipe'
+                ? ($bySource[$sourceId]['importable'] ?? false)
+                : $bySource[$sourceId]['ready'];
+            if (! $eligible && ! $bySource[$sourceId]['duplicate']) {
+                throw ValidationException::withMessages(['selected_source_ids' => 'Resolve unsupported or unavailable items before importing them.']);
             }
         }
 
@@ -121,15 +124,18 @@ class NotionFoodImportService
         $sourceId = $recipe['source_id'];
         $warnings = [];
         $ready = true;
+        $importable = true;
         $unsupported = array_values(array_diff(array_keys($recipe), ['source_id', 'title', 'category', 'instructions', 'servings', 'preparation_minutes', 'ingredients']));
         if ($unsupported !== []) {
             $ready = false;
+            $importable = false;
             $warnings[] = 'Unsupported recipe fields need review before importing.';
         }
         try {
             $this->access->authorize($actor, 'recipes', ModuleCapability::Create);
         } catch (AuthorizationException|ModuleDisabled) {
             $ready = false;
+            $importable = false;
             $warnings[] = 'Recipes is disabled or this account does not have Recipes Create access.';
         }
 
@@ -138,6 +144,7 @@ class NotionFoodImportService
         $title = trim((string) ($recipe['title'] ?? ''));
         if ($title === '') {
             $ready = false;
+            $importable = false;
             $warnings[] = 'Recipe title is missing and needs review.';
         }
         if ($instructions === '') {
@@ -149,7 +156,8 @@ class NotionFoodImportService
             $warnings[] = 'Recipe ingredients are missing and need review.';
         }
         if (! isset($recipe['servings'])) {
-            $warnings[] = 'Serving count is missing; the import will use two servings.';
+            $ready = false;
+            $warnings[] = 'Serving count is missing and will remain blank for review.';
         }
         foreach ($ingredients as $ingredient) {
             if (array_diff(array_keys($ingredient), ['name', 'quantity', 'unit', 'note']) !== []) {
@@ -186,6 +194,7 @@ class NotionFoodImportService
                 'note' => $ingredient['note'] ?? null,
             ], $ingredients),
             'ready' => $ready,
+            'importable' => $importable,
             'duplicate' => $duplicate,
             'warnings' => $warnings,
             'unsupported_fields' => $unsupported,
@@ -272,17 +281,17 @@ class NotionFoodImportService
     private function recipeData(array $source): array
     {
         $ingredients = array_map(static fn (array $ingredient): array => [
-            'name' => trim($ingredient['name']),
-            'quantity' => RecipeQuantity::normalize($ingredient['quantity']),
-            'unit' => trim($ingredient['unit']),
+            'name' => trim((string) ($ingredient['name'] ?? '')),
+            'quantity' => RecipeQuantity::normalize($ingredient['quantity'] ?? null),
+            'unit' => trim((string) ($ingredient['unit'] ?? '')) ?: null,
             'note' => $ingredient['note'] ?? null,
-        ], $source['ingredients']);
+        ], $source['ingredients'] ?? []);
 
         return [
             'title' => trim($source['title']),
             'category' => $source['category'] ?? null,
-            'instructions' => $this->text($source['instructions']),
-            'servings' => (int) ($source['servings'] ?? 2),
+            'instructions' => $this->text($source['instructions'] ?? null),
+            'servings' => $source['servings'] ?? null,
             'preparation_minutes' => $source['preparation_minutes'] ?? null,
             'visibility' => 'private',
             'ingredients' => $ingredients,

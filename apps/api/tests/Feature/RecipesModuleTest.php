@@ -65,7 +65,7 @@ class RecipesModuleTest extends TestCase
         $this->assertDatabaseCount('recipe_favorites', 0);
     }
 
-    public function test_recipe_quantities_servings_and_ingredient_counts_are_validated(): void
+    public function test_recipe_quantities_and_servings_are_validated_while_incomplete_records_are_supported(): void
     {
         $admin = $this->member('Recipe Validation Admin', true);
         $member = $this->member('Recipe Author');
@@ -78,7 +78,6 @@ class RecipesModuleTest extends TestCase
             ['servings' => 1001, 'ingredients' => $this->payload()['ingredients']],
             ['servings' => 2, 'ingredients' => [['name' => 'Salt', 'quantity' => '0', 'unit' => 'g']]],
             ['servings' => 2, 'ingredients' => [['name' => 'Salt', 'quantity' => '1.00001', 'unit' => 'g']]],
-            ['servings' => 2, 'ingredients' => []],
         ] as $invalid) {
             $payload = array_merge($this->payload(), $invalid);
             $response = $this->actingAs($member, 'web')->postJson('/api/recipes', $payload)->assertUnprocessable();
@@ -87,6 +86,10 @@ class RecipesModuleTest extends TestCase
 
         $this->assertDatabaseCount('recipes', 0);
         $this->assertDatabaseCount('recipe_ingredients', 0);
+
+        $this->actingAs($member, 'web')->postJson('/api/recipes', array_merge($this->payload(), [
+            'instructions' => '', 'ingredients' => [],
+        ]))->assertCreated()->assertJsonPath('recipe.needs_review', true)->assertJsonPath('recipe.ingredients', []);
     }
 
     public function test_private_and_household_visibility_follow_module_and_resource_permissions(): void
