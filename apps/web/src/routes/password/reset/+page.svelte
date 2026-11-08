@@ -87,7 +87,7 @@
 			Metricove
 		</a>
 
-		<section class="my-auto rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+		<section class="my-auto rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8">
 			<p class="text-sm font-medium text-ink-muted">{$t("Account recovery")}</p>
 			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Choose a new password")}</h1>
 			<form class="mt-8 space-y-5" onsubmit={resetPassword}>

@@ -148,7 +148,7 @@
 					<ul class="mt-5 grid gap-3 md:grid-cols-2">
 						{#each notes as note (note.id)}
 							<li>
-								<a href="/modules/notes/{note.id}" class="flex h-full flex-col rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+								<a href="/modules/notes/{note.id}" class="flex h-full flex-col rounded-xl border border-line glass-surface px-4 py-3 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 									<span class="flex items-center justify-between gap-2"><span class="truncate font-medium text-ink">{note.title}</span>{#if note.shared_with_household}<Badge tone="accent" class="shrink-0">{$t('Shared')}</Badge>{/if}</span>
 									<span class="mt-1 line-clamp-2 text-sm leading-5 text-ink-muted">{note.preview || $t('No preview text.')}</span>
 									<span class="mt-auto flex flex-wrap items-center gap-1.5 pt-2">

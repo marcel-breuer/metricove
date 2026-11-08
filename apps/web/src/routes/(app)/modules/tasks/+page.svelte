@@ -366,7 +366,7 @@
 	{:else}
 		{#if canCreate || canCreateShared || editing}
 			<div class="flex justify-end"><Button onclick={() => { resetForm(); formOpen = true; }}>{$t('Add task')}</Button></div>
-			<Modal bind:open={formOpen} size="fullscreen" title={$t(editing ? 'Edit task' : 'New task')} description={$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}>
+			<Modal bind:open={formOpen} size="wide" title={$t(editing ? 'Edit task' : 'New task')} description={$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}>
 				{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="task-form" class="grid gap-x-6 gap-y-5 md:grid-cols-2 lg:grid-cols-4" onsubmit={saveTask}>
 				<label class="block md:col-span-2 lg:col-span-4">
@@ -467,7 +467,7 @@
 									{#if task.checklist_items.length === 0}<p class="mt-2 text-sm text-ink-muted">{$t('No checklist items yet.')}</p>{/if}
 									<ol class="mt-3 space-y-3">
 										{#each task.checklist_items as item, index (item.id)}
-											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border border-line bg-surface p-3">
+											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border border-line glass-surface p-3">
 												{#if editingChecklistItemId === item.id}
 													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
 														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="{control}" /></label>

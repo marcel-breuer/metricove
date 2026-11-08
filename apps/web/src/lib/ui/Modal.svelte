@@ -16,10 +16,10 @@
 		title: string;
 		description?: string;
 		/**
-		 * `default` is a compact centered dialog (bottom sheet on phones), `wide` the same with more room for reading.
+		 * `default` is a compact centered dialog (bottom sheet on phones), `wide` is the standard size for routine forms and reading.
 		 * `fullscreen` fills the viewport minus a small inset on desktop and the whole
 		 * viewport on phones, with a fixed header, scrolling body and sticky footer.
-		 * Use it for create/edit forms so long forms need less scrolling.
+		 * Reserve it for large editing or review workspaces that benefit from extra room.
 		 */
 		size?: 'default' | 'wide' | 'fullscreen';
 		children: Snippet;
@@ -75,7 +75,7 @@
 	data-size={size}
 	aria-labelledby={titleId}
 	aria-describedby={description ? descriptionId : undefined}
-	class="m-auto! max-w-none rounded-2xl border border-line-strong bg-surface p-0 text-ink shadow-[0_12px_32px_rgb(28_41_37/14%)] backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
+	class="m-auto! max-w-none rounded-2xl border border-line-strong glass-chrome p-0 text-ink shadow-[0_12px_32px_rgb(28_41_37/14%)] backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
 	onclose={restoreFocus}
 	onclick={handleBackdropClick}
 >

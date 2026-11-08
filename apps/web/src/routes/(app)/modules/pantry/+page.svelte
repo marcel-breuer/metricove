@@ -265,10 +265,10 @@
 	{/if}
 
 	{#if !shell.loading && !canView}
-		<section class="rounded-2xl border border-line bg-surface p-6 text-sm text-ink-secondary">{$t("Pantry access is not enabled for your account.")}</section>
+		<section class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Pantry access is not enabled for your account.")}</section>
 	{:else}
 		<section class="grid gap-3 sm:grid-cols-3" aria-label={$t("Pantry summary")}>
-			<div class="rounded-2xl border border-line bg-surface p-5">
+			<div class="rounded-2xl border border-line glass-surface p-5">
 				<p class="text-sm text-ink-muted">{$t("Stock lines")}</p>
 				<p class="mt-2 text-3xl font-semibold text-ink">{loading ? '—' : totalStockLines}</p>
 			</div>
@@ -282,7 +282,7 @@
 			</div>
 		</section>
 
-		<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
+		<Modal bind:open={editorOpen} size="wide" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 			<form id="pantry-item-form" onsubmit={saveItem} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
 				<label class="{field} sm:col-span-2">
@@ -340,9 +340,9 @@
 			</div>
 
 			{#if loading}
-				<div class="rounded-2xl border border-line bg-surface p-8 text-center text-sm text-ink-muted">{$t("Loading pantry…")}</div>
+				<div class="rounded-2xl border border-line glass-surface p-8 text-center text-sm text-ink-muted">{$t("Loading pantry…")}</div>
 			{:else if items.length === 0}
-				<div class="rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
+				<div class="rounded-2xl border border-dashed border-line glass-surface px-6 py-12 text-center">
 					<p class="text-base font-medium text-ink">{$t(filter === 'all' ? 'Nothing in the pantry yet' : 'No items match this date filter')}</p>
 					<p class="mt-2 text-sm text-ink-muted">{$t(filter === 'all' ? 'Add a food item to keep its quantity, location and best-before date in one place.' : 'Try another best-before filter to see more of your stock.')}</p>
 					{#if filter === 'all' && canAdd}<button type="button" onclick={openNewItem} class="mt-5 rounded-xl border border-positive/25 px-4 py-2.5 text-sm font-medium text-positive hover:bg-positive/10">{$t("Add first item")}</button>{/if}
@@ -350,7 +350,7 @@
 			{:else}
 				<div class="grid gap-3 lg:grid-cols-2">
 					{#each items as item (item.id)}
-						<article class="overflow-hidden rounded-2xl border border-line bg-surface">
+						<article class="overflow-hidden rounded-2xl border border-line glass-surface">
 							<div class="p-5">
 								<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 									<div class="min-w-0">

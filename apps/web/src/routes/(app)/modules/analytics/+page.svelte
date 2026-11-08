@@ -187,7 +187,7 @@
 	{#if canCreate}
 		<div class="mt-6 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">{$t('Add a chart')}</button></div>
 		<Modal bind:open={createOpen} title={$t('Add a chart')} description={$t('Available charts follow your current module access.')}>
-		<section class="rounded-2xl border border-line bg-surface p-4 sm:p-6" aria-labelledby="add-widget-heading">
+		<section class="rounded-2xl border border-line glass-surface p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-ink">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Available charts follow your current module access.")}</p></div>
 				<span class="rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted">{$t('{count} / 12 widgets', { count: widgets.length })}</span>
@@ -227,7 +227,7 @@
 			<p class="mt-4 text-sm text-ink-secondary">{$t("Loading your charts…")}</p>
 		</div>
 	{:else if widgets.length === 0}
-		<div class="mt-6 rounded-2xl border border-dashed border-line-strong bg-surface px-5 py-14 text-center">
+		<div class="mt-6 rounded-2xl border border-dashed border-line-strong glass-surface px-5 py-14 text-center">
 			<div class="mx-auto grid size-14 place-items-center rounded-2xl border border-line-strong bg-page text-xl text-accent-ink" aria-hidden="true">⌁</div>
 			<h2 class="mt-4 text-xl font-semibold text-ink">{$t("Your dashboard is ready to configure.")}</h2>
 			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-ink-muted">{$t("Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.")}</p>
@@ -235,7 +235,7 @@
 	{:else}
 		<div class="mt-6 grid gap-4 xl:grid-cols-2">
 			{#each widgets as widget (widget.id)}
-				<article class="min-w-0 rounded-2xl border border-line bg-surface p-4 sm:p-6">
+				<article class="min-w-0 rounded-2xl border border-line glass-surface p-4 sm:p-6">
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div class="min-w-0"><p class="text-xs font-medium text-accent-ink">{catalog.find((metric) => metric.key === widget.metric_key)?.source_label ?? 'Source unavailable'} · {analyticsRanges.find((range) => range.value === widget.range_key)?.label}</p><h2 class="mt-1 truncate text-xl font-semibold text-ink">{widget.title}</h2></div>
 						{#if canEdit}<button type="button" onclick={() => beginEdit(widget)} class="shrink-0 rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Configure")}</button>{/if}

@@ -464,7 +464,7 @@
 	{#if error}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border border-line bg-surface p-7 text-sm text-ink-muted">{$t("Loading your shopping lists…")}</div>
+		<div class="rounded-2xl border border-line glass-surface p-7 text-sm text-ink-muted">{$t("Loading your shopping lists…")}</div>
 	{:else if !canView}
 		<section class="rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8">
 			<p class="text-sm font-medium text-warning">{$t("Shopping View access is required.")}</p>
@@ -474,7 +474,7 @@
 	{:else}
 		<div class="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
 			<aside class="space-y-4">
-				<section class="rounded-2xl border border-line bg-surface p-4">
+				<section class="rounded-2xl border border-line glass-surface p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
 						<h2 class="text-sm font-semibold text-ink">{$t("Your lists")}</h2>
 						<span class="text-xs text-ink-subtle">{lists.length} / 100</span>
@@ -499,7 +499,7 @@
 				{#if canCreateList}
 					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Create a list')}</button>
 					<Modal bind:open={listModalOpen} title={$t('Create a list')}>
-					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-line bg-surface p-4">
+					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-line glass-surface p-4">
 						<h2 class="text-sm font-semibold text-ink">{$t("Create a list")}</h2>
 						<label class="block text-xs font-medium text-ink-muted">{$t("List name")}
 							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
@@ -519,7 +519,7 @@
 			</aside>
 
 			{#if !activeList}
-				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-line bg-surface px-6 py-10 text-center">
+				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-line glass-surface px-6 py-10 text-center">
 					<p class="text-xs font-semibold text-accent-ink">{$t("Ready when you are")}</p>
 					<h2 class="mt-3 text-2xl font-semibold text-ink">{$t("Start with one thing.")}</h2>
 					<p class="mt-2 max-w-md text-sm leading-6 text-ink-muted">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
@@ -529,7 +529,7 @@
 					{#if activeList.can_add_items}
 						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add item')}</button>
 						<Modal bind:open={addItemModalOpen} title={$t('Add item')} description={activeList.name}>
-						<form onsubmit={addItem} class="rounded-2xl border border-accent-ink/30 bg-surface p-4 shadow-xs sm:p-5">
+						<form onsubmit={addItem} class="rounded-2xl border border-accent-ink/30 glass-surface p-4 shadow-xs sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
 									<p class="text-xs font-semibold text-accent-ink">{$t("Quick add")}</p>
@@ -555,7 +555,7 @@
 					{/if}
 
 					{#if activeList.can_add_items}
-						<section class="rounded-2xl border border-accent-ink/25 bg-surface p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
+						<section class="rounded-2xl border border-accent-ink/25 glass-surface p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
 								<p class="text-xs font-semibold text-accent-ink">{$t("Optional connection")}</p>
 								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-ink">{$t("Add ingredients from the weekly plan")}</h2>
@@ -604,7 +604,7 @@
 						</section>
 					{/if}
 
-					<div class="rounded-2xl border border-line bg-surface">
+					<div class="rounded-2xl border border-line glass-surface">
 						<header class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
 							<div class="min-w-0">
 								<div class="flex flex-wrap items-center gap-2">
@@ -685,7 +685,7 @@
 						{/if}
 					</div>
 
-					<section class="overflow-hidden rounded-2xl border border-line bg-surface">
+					<section class="overflow-hidden rounded-2xl border border-line glass-surface">
 						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-ink-secondary hover:bg-surface sm:px-5">
 							<span>{$t("List activity")}</span><span class="text-xs text-ink-subtle">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
 						</button>

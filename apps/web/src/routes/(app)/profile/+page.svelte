@@ -396,7 +396,7 @@
 		</section>
 
 		<section class="mb-12 grid gap-8 lg:grid-cols-2">
-			<div class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+			<div class="rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8">
 				<p class="text-sm font-medium text-ink-muted">{$t('External access')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('MCP access tokens')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.')}</p>
@@ -461,7 +461,7 @@
 			</div>
 			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token {name}?', { name: tokenToRevoke.name })} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
-			<div class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+			<div class="rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8">
 				<p class="text-sm font-medium text-ink-muted">{$t('Human approval')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>

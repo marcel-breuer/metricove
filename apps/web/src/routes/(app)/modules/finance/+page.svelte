@@ -392,7 +392,7 @@
 	{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 
 	{#if shell.loading || loading}
-		<div role="status" class="mt-8 rounded-2xl border border-line bg-surface p-6 text-sm text-ink-secondary">{$t("Loading finance records…")}</div>
+		<div role="status" class="mt-8 rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Loading finance records…")}</div>
 	{:else if !canView && !canCreate && !canManageShared}
 		<div class="mt-8 rounded-2xl border border-warning/20 bg-warning/5 p-5 text-sm leading-6 text-warning"><p class="font-semibold">{$t("View access is not enabled.")}</p><p class="mt-1 text-warning/75">{$t("Financial records are private. Ask an administrator for Finance View access to browse your transactions and budget overview.")}</p></div>
 	{:else}
@@ -400,19 +400,19 @@
 		{#if overview}
 			<section class="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label={$t("Monthly totals")}>
 				{#each overview.totals as total (total.currency)}
-					<article class="rounded-2xl border border-line bg-surface p-5"><p class="text-xs font-medium text-ink-muted">{total.currency} · {month}</p><div class="mt-4 grid grid-cols-3 gap-3"><div><p class="text-xs text-ink-subtle">{$t("Income")}</p><p class="mt-1 text-sm font-semibold text-positive">{formatNumber(total.income, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-ink-subtle">{$t("Spending")}</p><p class="mt-1 text-sm font-semibold text-danger">{formatNumber(total.expenses, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-ink-subtle">{$t("Net")}</p><p class="mt-1 text-sm font-semibold text-ink">{formatNumber(total.net, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div></div></article>
+					<article class="rounded-2xl border border-line glass-surface p-5"><p class="text-xs font-medium text-ink-muted">{total.currency} · {month}</p><div class="mt-4 grid grid-cols-3 gap-3"><div><p class="text-xs text-ink-subtle">{$t("Income")}</p><p class="mt-1 text-sm font-semibold text-positive">{formatNumber(total.income, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-ink-subtle">{$t("Spending")}</p><p class="mt-1 text-sm font-semibold text-danger">{formatNumber(total.expenses, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div><div><p class="text-xs text-ink-subtle">{$t("Net")}</p><p class="mt-1 text-sm font-semibold text-ink">{formatNumber(total.net, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p></div></div></article>
 				{:else}
-					<article class="rounded-2xl border border-line bg-surface p-5 sm:col-span-2 xl:col-span-3"><p class="text-sm font-medium text-ink-secondary">{$t("No transactions for")} {month}</p><p class="mt-1 text-sm text-ink-muted">{$t("Your totals will appear here once you add income or spending.")}</p></article>
+					<article class="rounded-2xl border border-line glass-surface p-5 sm:col-span-2 xl:col-span-3"><p class="text-sm font-medium text-ink-secondary">{$t("No transactions for")} {month}</p><p class="mt-1 text-sm text-ink-muted">{$t("Your totals will appear here once you add income or spending.")}</p></article>
 				{/each}
 			</section>
 		{/if}
 
 		{#if canCreate || canManageShared}
-			<section class="mt-7 rounded-2xl border border-line bg-surface p-5 sm:p-7" aria-labelledby="transaction-form-title">
+			<section class="mt-7 rounded-2xl border border-line glass-surface p-5 sm:p-7" aria-labelledby="transaction-form-title">
 				<div><p class="text-sm font-medium text-accent-ink">{$t(transactionId ? 'Edit record' : 'Quick entry')}</p><h2 id="transaction-form-title" class="mt-1 text-xl font-semibold text-ink">{$t(transactionId ? 'Update a transaction.' : 'Add a transaction.')}</h2></div>
 				{#if categories.length === 0}<p class="mt-4 rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-sm text-warning">{$t("Create a category below before recording a transaction.")}</p>{/if}
 				<button type="button" onclick={() => { resetTransaction(); transactionOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add transaction')}</button>
-				<Modal bind:open={transactionOpen} size="fullscreen" title={$t(transactionId ? 'Edit transaction' : 'Add transaction')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+				<Modal bind:open={transactionOpen} size="wide" title={$t(transactionId ? 'Edit transaction' : 'Add transaction')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="finance-transaction-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={saveTransaction}>
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={transactionType} disabled={transactionId !== null && transactionCategory === ''} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 disabled:opacity-50 max-sm:text-base"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Category")}<select bind:value={transactionCategory} required={transactionId === null || transactionCategory !== ''} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="">{$t("Choose a category")}</option>{#each typeCategories as category (category.id)}<option value={String(category.id)}>{category.name}{$t(category.visibility === 'household' ? ' · household' : '')}</option>{/each}</select></label>
@@ -434,8 +434,8 @@
 
 		<section class="mt-8" aria-labelledby="transactions-title">
 			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Activity")}</p><h2 id="transactions-title" class="mt-1 text-2xl font-semibold text-ink">{$t("Transactions")}</h2></div><p class="text-sm text-ink-muted">{$t("Showing up to 200 records for")} {month}.</p></div>
-			{#if visibleTransactions.length === 0}<p class="mt-4 rounded-xl border border-line bg-surface p-5 text-sm text-ink-muted">{$t("No transactions are visible for this month.")}</p>{:else}
-				<ul class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+			{#if visibleTransactions.length === 0}<p class="mt-4 rounded-xl border border-line glass-surface p-5 text-sm text-ink-muted">{$t("No transactions are visible for this month.")}</p>{:else}
+				<ul class="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line glass-surface">
 					{#each visibleTransactions as transaction (transaction.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><p class="truncate font-medium text-ink">{transaction.description}</p><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {transaction.type === 'income' ? 'bg-positive/10 text-positive' : 'bg-danger/10 text-danger'}">{$t(transaction.type)}</span><span class="text-xs text-ink-subtle">{$t(transaction.visibility)}</span></div>{#if transaction.payee}<p class="mt-1 text-sm text-ink-secondary">{$t('Payee')}: {transaction.payee}</p>{/if}<p class="mt-1 text-sm text-ink-muted">{transaction.category?.name ?? $t('Uncategorized')} · {formatDate(transaction.occurred_on)}</p></div><div class="flex items-center justify-between gap-3 sm:justify-end"><p class="whitespace-nowrap text-sm font-semibold {transaction.type === 'income' ? 'text-positive' : 'text-ink'}">{$t(transaction.type === 'expense' ? '−' : '+')}{formatCurrency(transaction.amount, transaction.currency)}</p>{#if canMutate(transaction.visibility)}<div class="flex gap-2"><button type="button" class="min-h-10 rounded-lg border border-line-strong px-3 text-xs font-semibold text-ink-secondary hover:border-accent-ink" aria-label={`${$t("Edit")} ${transaction.description}`} onclick={() => editTransaction(transaction)}>{$t("Edit")}</button><button type="button" class="min-h-10 rounded-lg border border-line-strong px-3 text-xs font-semibold text-danger hover:border-danger" aria-label={`${$t("Delete")} ${transaction.description}`} onclick={() => requestRemove(`/api/finance/transactions/${transaction.id}`, 'transaction')}>{$t("Delete")}</button></div>{/if}</div></li>
 					{/each}
@@ -444,7 +444,7 @@
 		</section>
 
 		<div class="mt-8 grid gap-6 xl:grid-cols-2">
-			<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="budgets-title">
+			<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="budgets-title">
 				<p class="text-sm font-medium text-accent-ink">{$t("Plan")}</p><h2 id="budgets-title" class="mt-1 text-xl font-semibold text-ink">{$t("Monthly budgets")}</h2>
 				{#if (canCreate || canManageShared) && expenseCategories.length > 0}
 					<button type="button" onclick={() => { resetBudget(); budgetOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Set budget')}</button>
@@ -463,7 +463,7 @@
 				{:else}<p class="mt-5 rounded-xl border border-dashed border-line-strong p-4 text-sm leading-6 text-ink-muted">{$t("No budget is set for this month. Add one to compare planned spending with visible expense transactions.")}</p>{/if}
 			</section>
 
-			<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="category-title">
+			<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="category-title">
 				<p class="text-sm font-medium text-accent-ink">{$t("Organize")}</p><h2 id="category-title" class="mt-1 text-xl font-semibold text-ink">{$t("Categories")}</h2>
 				{#if canCreate || canManageShared}
 					<button type="button" onclick={() => { resetCategory(); categoryOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add category')}</button>
@@ -479,11 +479,11 @@
 			</section>
 		</div>
 
-		<section class="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="recurring-title">
+		<section class="mt-8 rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="recurring-title">
 			<div><p class="text-sm font-medium text-accent-ink">{$t("On a schedule")}</p><h2 id="recurring-title" class="mt-1 text-xl font-semibold text-ink">{$t("Recurring entries")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("A due occurrence is added to transactions only when you record it.")}</p></div>
 			{#if canCreate || canManageShared}
 				<button type="button" onclick={() => { resetRecurring(); recurringOpen = true; }} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add schedule')}</button>
-				<Modal bind:open={recurringOpen} size="fullscreen" title={$t(recurringId ? 'Edit schedule' : 'Add recurring schedule')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+				<Modal bind:open={recurringOpen} size="wide" title={$t(recurringId ? 'Edit schedule' : 'Add recurring schedule')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="finance-recurring-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={saveRecurring}>
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={recurringType} disabled={recurringId !== null && recurringCategory === ''} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink disabled:opacity-50 max-sm:text-base"><option value="expense">{$t("Expense")}</option><option value="income">{$t("Income")}</option></select></label>
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Category")}<select bind:value={recurringCategory} required={recurringId === null || recurringCategory !== ''} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base"><option value="">{$t("Choose a category")}</option>{#each recurringCategories as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select></label>

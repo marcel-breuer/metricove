@@ -26,7 +26,7 @@
 	});
 </script>
 
-<details class="group rounded-xl border border-line bg-surface-subtle {className}" bind:open>
+<details class="group rounded-xl border border-line bg-surface-subtle glass-control {className}" bind:open>
 	<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2 text-sm font-semibold text-ink focus-visible:rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink [&::-webkit-details-marker]:hidden">
 		<span>{$t(summary)}{#if hint}<span class="ml-2 font-normal text-ink-muted">{hint}</span>{/if}</span>
 		<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4 text-ink-muted transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>

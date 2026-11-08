@@ -212,7 +212,7 @@
 			<Notice tone="error" message={error} class="mt-8" />
 		{/if}
 
-		<section class="mt-10 rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-8" aria-labelledby="members-heading">
+		<section class="mt-10 rounded-2xl border border-line glass-surface p-5 shadow-xs sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
@@ -250,7 +250,7 @@
 	</section>
 	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove {name} from this household? This cannot be undone.', { name: memberToRemove.name })} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
 
-		<section class="mt-8 rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-8" aria-labelledby="audit-heading">
+		<section class="mt-8 rounded-2xl border border-line glass-surface p-5 shadow-xs sm:p-8" aria-labelledby="audit-heading">
 			<div>
 				<h2 id="audit-heading" class="text-xl font-semibold">{$t("Recent access history")}</h2>
 				<p class="mt-1 text-sm text-ink-muted">{$t("The latest 100 role and account status changes.")}</p>

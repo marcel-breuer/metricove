@@ -416,9 +416,9 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border border-line bg-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
+	<div role="status" class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
 {:else if error && !tracker}
-	<section class="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+	<section class="rounded-2xl border border-line glass-surface p-6 sm:p-8">
 		<p class="text-sm font-medium text-warning">{$t("Tracker unavailable")}</p>
 		<h1 class="mt-2 text-2xl font-semibold text-ink">{$t("You cannot open this tracker.")}</h1>
 		<p role="alert" class="mt-3 text-sm leading-6 text-ink-muted">{$t(error)}</p>
@@ -433,7 +433,7 @@
 					<p class="text-sm font-medium text-accent-ink">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
 					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
 				</div>
-				<h1 class="mt-2 break-words text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{tracker.name}</h1>
+				<h1 class="page-title break-words">{tracker.name}</h1>
 				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{tracker.description}</p>{/if}
 			</div>
 			{#if tracker.can_manage_schema}
@@ -444,7 +444,7 @@
 		{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
-		<Modal bind:open={schemaOpen} size="fullscreen" title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
+		<Modal bind:open={schemaOpen} size="wide" title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="tracker-schema-form" class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={saveSchema}>
 					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -479,7 +479,7 @@
 		{#if canCreate}
 			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</button></div>
 			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
-			<section class="rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-7" aria-labelledby="new-entry-heading">
+			<section class="rounded-2xl border border-line glass-surface p-5 shadow-xs sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div><p class="text-sm font-medium text-accent-ink">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-ink">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Your entries are private to your account by default.")}</p></div>
 					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</button>{/if}
@@ -521,7 +521,7 @@
 				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each numericColumns as field (field.key)}
 						{@const series = numericSeries(field)}
-						<article class="rounded-2xl border border-line bg-surface p-4 sm:p-5">
+						<article class="rounded-2xl border border-line glass-surface p-4 sm:p-5">
 							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-muted">{field.unit ?? '—'}</span></div>
 							{#if series.length > 0}
 								<div class="mt-4 overflow-hidden rounded-xl border border-line bg-page p-2" role="img" aria-label={field.label + ' measurement history'}>
@@ -541,9 +541,9 @@
 			{/if}
 
 			{#if entries.length === 0}
-				<div class="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
+				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
 			{:else}
-				<div class="mt-5 overflow-hidden rounded-2xl border border-line bg-surface">
+				<div class="mt-5 overflow-hidden rounded-2xl border border-line glass-surface">
 					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-ink-muted sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
@@ -570,7 +570,7 @@
 		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: tracker.name })} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
-			<details class="mt-7 rounded-2xl border border-line bg-surface p-5">
+			<details class="mt-7 rounded-2xl border border-line glass-surface p-5">
 				<summary class="cursor-pointer font-semibold text-ink-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-ink-muted">({revisions.length})</span></summary>
 				<ol class="mt-4 divide-y divide-line">
 					{#each revisions as revision (revision.version)}

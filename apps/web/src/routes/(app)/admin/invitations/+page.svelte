@@ -169,7 +169,7 @@
 			</div>
 
 			<div class="space-y-6">
-				<section class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8" aria-labelledby="invite-heading">
+				<section class="rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8" aria-labelledby="invite-heading">
 					<h2 id="invite-heading" class="text-xl font-semibold">{$t("Send an invitation")}</h2>
 					<button type="button" onclick={() => (createOpen = true)} class="mt-5 inline-flex items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Send an invitation")}</button>
 					{#if message}<Notice tone="success" message={message} class="mt-4" />{/if}
@@ -188,7 +188,7 @@
 					</form>
 				</Modal>
 
-				<section class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8" aria-labelledby="pending-heading">
+				<section class="rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8" aria-labelledby="pending-heading">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<h2 id="pending-heading" class="text-xl font-semibold">{$t("Pending invitations")}</h2>
 						<button type="button" onclick={() => void loadInvitations()} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Refresh")}</button>

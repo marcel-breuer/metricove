@@ -25,7 +25,7 @@
 		</div>
 	{:else if shell.modules.length === 0}
 		<div class="mx-auto flex min-h-80 max-w-2xl flex-col items-center justify-center py-12 text-center">
-			<div class="grid size-16 place-items-center rounded-2xl border border-line-strong bg-surface text-2xl text-ink-muted" aria-hidden="true"><ModuleIcon name="overview" class="size-6" /></div>
+			<div class="grid size-16 place-items-center rounded-2xl border border-line-strong glass-surface text-2xl text-ink-muted" aria-hidden="true"><ModuleIcon name="overview" class="size-6" /></div>
 			<h2 class="mt-5 text-2xl font-semibold tracking-tight text-ink">{$t('Your workspace is ready.')}</h2>
 			<p class="mt-3 max-w-lg text-sm leading-6 text-ink-muted">{$t('No modules are available to your account yet. An administrator can enable household modules and grant each member their own capabilities.')}</p>
 			{#if shell.currentUser?.is_admin}
@@ -35,7 +35,7 @@
 	{:else}
 		<div class="grid min-h-72 place-items-center py-10">
 			<div class="flex max-w-xl flex-col items-center text-center">
-				<div class="grid size-16 place-items-center rounded-2xl border border-line-strong bg-surface text-2xl text-ink-muted" aria-hidden="true"><ModuleIcon name="analytics" class="size-6" /></div>
+				<div class="grid size-16 place-items-center rounded-2xl border border-line-strong glass-surface text-2xl text-ink-muted" aria-hidden="true"><ModuleIcon name="analytics" class="size-6" /></div>
 				<h2 class="mt-5 text-2xl font-semibold tracking-tight text-ink">{$t('Your dashboard is taking shape.')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-muted">{$t('Your modules are enabled and ready. Open Analytics to configure charts from the data you can access.')}</p>
 				{#if analyticsAvailable}<Button href="/modules/analytics" class="mt-5">{$t('Open Analytics')}</Button>{/if}
@@ -47,7 +47,7 @@
 				<div><h2 id="your-modules-heading" class="text-xl font-semibold text-ink">{$t('Your modules')}</h2><p class="mt-1 text-sm text-ink-muted">{shell.modules.length} {$t(shell.modules.length === 1 ? 'module available to you' : 'modules available to you')}</p></div>
 				{#if shell.currentUser?.is_admin}<Button href="/admin/modules" variant="secondary" size="small">{$t('Manage modules')}</Button>{/if}
 			</div>
-			<ul class="mt-5 divide-y divide-line rounded-2xl border border-line bg-surface">
+			<ul class="mt-5 divide-y divide-line rounded-2xl border border-line glass-surface">
 				{#each shell.modules as module (module.key)}
 					<li>
 						<a href={`/modules/${module.key}`} class="group flex min-h-20 items-center gap-4 px-4 py-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:px-6">

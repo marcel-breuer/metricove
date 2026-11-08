@@ -229,7 +229,7 @@
 			{#if loading}
 				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading modules…")}</p>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border border-line bg-surface p-5 text-sm text-ink-muted">{$t("No modules are registered.")}</p>
+				<p class="mt-6 rounded-xl border border-line glass-surface p-5 text-sm text-ink-muted">{$t("No modules are registered.")}</p>
 			{:else}
 					<Panel padding="none" class="mt-5 overflow-hidden">
 					<ul class="divide-y divide-line px-4 sm:px-6">
