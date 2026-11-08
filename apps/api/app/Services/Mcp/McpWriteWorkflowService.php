@@ -183,13 +183,8 @@ class McpWriteWorkflowService
                     return null;
                 }
 
-                $execution = $this->registry->execute($workflowName, $actor, $arguments);
+                $this->registry->execute($workflowName, $actor, $arguments);
                 $result = ['status' => 'completed'];
-                if ($workflowName === 'import_notion_recipes') {
-                    $result['imported_count'] = (int) ($execution['imported_count'] ?? 0);
-                    $result['duplicate_count'] = (int) ($execution['duplicate_count'] ?? 0);
-                    $result['review_count'] = (int) ($execution['review_count'] ?? 0);
-                }
                 $preview->forceFill([
                     'state' => 'completed',
                     'idempotency_key' => $idempotencyKey,

@@ -255,7 +255,7 @@ class McpAccessTest extends TestCase
         $this->assertDatabaseHas('household_audit_events', ['action' => 'mcp.action.executed']);
     }
 
-    public function test_notion_recipe_batch_requires_both_scopes_and_approval_and_skips_replays(): void
+    public function test_notion_recipe_import_tool_is_no_longer_offered(): void
     {
         $admin = $this->admin();
         foreach (['import', 'recipes'] as $module) {
@@ -263,66 +263,18 @@ class McpAccessTest extends TestCase
             $this->grant($admin, $module, ['view' => true, 'create' => true]);
         }
 
-        $recipes = [[
-            'source_id' => 'notion-recipe-1', 'title' => 'Lemon pasta', 'instructions' => 'Boil and serve.', 'servings' => 2,
-            'ingredients' => [['name' => 'Pasta', 'quantity' => '250', 'unit' => 'g']],
-        ], [
-            'source_id' => 'notion-recipe-2', 'title' => 'Unfinished soup',
-            'ingredients' => [['name' => 'Salt']],
-        ]];
-        $recipeOnly = $this->createToken($admin, ['recipes:create']);
-        $recipeOnlyNames = array_column($this->mcp($recipeOnly, 'tools/list')->assertOk()->json('result.tools'), 'name');
-        $this->assertNotContains('preview_import_notion_recipes', $recipeOnlyNames);
+        $this->assertNotContains('import:create', app(McpAccessService::class)->allowedScopes($admin));
 
-        $secret = $this->createToken($admin, ['recipes:create', 'import:create']);
+        $secret = $this->createToken($admin, ['recipes:create']);
         $names = array_column($this->mcp($secret, 'tools/list')->assertOk()->json('result.tools'), 'name');
-        $this->assertContains('preview_import_notion_recipes', $names);
-
-        $previewResponse = $this->mcp($secret, 'tools/call', [
-            'name' => 'preview_import_notion_recipes', 'arguments' => ['recipes' => $recipes],
-        ])->assertOk();
-        $preview = $previewResponse->json('result.structuredContent');
-        if (! is_array($preview)) {
-            $preview = json_decode($previewResponse->json('result.content.0.text'), true, flags: JSON_THROW_ON_ERROR);
-        }
-        $this->assertSame('pending_human_approval', $preview['state']);
-        $this->assertSame(1, $preview['summary']['ready_count']);
-        $this->assertSame(1, $preview['summary']['review_count']);
-        $this->assertNotEmpty($preview['summary']['items'][1]['warnings']);
-        $this->assertDatabaseCount('recipes', 0);
-        $this->actingAs($admin, 'web')->postJson('/api/profile/mcp/actions/'.$preview['preview_id'].'/approve')->assertOk();
-
-        $idempotencyKey = (string) Str::uuid();
-        $complete = fn () => $this->mcp($secret, 'tools/call', [
-            'name' => 'complete_approved_mcp_change',
-            'arguments' => ['preview_id' => $preview['preview_id'], 'idempotency_key' => $idempotencyKey],
-        ])->assertOk();
-        $result = $complete();
-        $this->assertSame(['status' => 'completed', 'imported_count' => 2, 'duplicate_count' => 0, 'review_count' => 1], $result->json('result.structuredContent'));
-        $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-1', 'is_private' => true]);
-        $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-2', 'needs_review' => true, 'instructions' => '', 'servings' => null]);
-        $this->assertDatabaseHas('recipe_ingredients', ['name' => 'Salt', 'quantity' => null, 'unit' => null]);
-        $this->assertSame($result->json('result.structuredContent'), $complete()->json('result.structuredContent'));
-        $this->assertDatabaseCount('recipes', 2);
-    }
-
-    public function test_notion_recipe_batch_rejects_repeated_source_ids(): void
-    {
-        $admin = $this->admin();
-        foreach (['import', 'recipes'] as $module) {
-            $this->enableModule($admin, $module);
-            $this->grant($admin, $module, ['view' => true, 'create' => true]);
-        }
-        $secret = $this->createToken($admin, ['recipes:create', 'import:create']);
-        $recipe = ['source_id' => 'same-page', 'title' => 'Soup', 'instructions' => 'Cook.', 'servings' => 2,
-            'ingredients' => [['name' => 'Water', 'quantity' => '1', 'unit' => 'l']]];
+        $this->assertNotContains('preview_import_notion_recipes', $names);
 
         $response = $this->mcp($secret, 'tools/call', [
-            'name' => 'preview_import_notion_recipes', 'arguments' => ['recipes' => [$recipe, $recipe]],
-        ])->assertOk();
-
-        $this->assertTrue($response->json('result.isError') === true);
+            'name' => 'preview_import_notion_recipes', 'arguments' => ['recipes' => [['source_id' => 'notion-recipe-1', 'title' => 'Lemon pasta']]],
+        ])->assertStatus(400);
+        $this->assertNotNull($response->json('error'));
         $this->assertDatabaseCount('mcp_action_previews', 0);
+        $this->assertDatabaseCount('recipes', 0);
     }
 
     public function test_notes_mcp_writes_require_approval_and_keep_note_content_out_of_audit(): void

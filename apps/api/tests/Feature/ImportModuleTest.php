@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\MeterPhotoOcr;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
+use App\Models\Recipe;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
@@ -311,6 +312,28 @@ class ImportModuleTest extends TestCase
             ['photo' => UploadedFile::fake()->createWithContent('meter.png', $png)],
             ['Accept' => 'application/json'],
         )->assertNotFound();
+    }
+
+    public function test_notion_food_import_routes_are_removed_and_previously_imported_records_remain(): void
+    {
+        $admin = $this->configuredAdmin();
+        $this->grant($admin, 'recipes', ['view' => true, 'create' => true, 'edit' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'recipes', true);
+        $recipe = Recipe::query()->create([
+            'owner_user_id' => $admin->id, 'created_by_user_id' => $admin->id, 'is_private' => true,
+            'title' => 'Lemon pasta', 'instructions' => '', 'needs_review' => true,
+        ]);
+        Recipe::query()->whereKey($recipe->id)->update(['source_system' => 'notion', 'source_id' => 'recipe-page-1']);
+
+        foreach (['/api/import/notion/food/preview', '/api/import/notion/food/import'] as $uri) {
+            $this->actingAs($admin, 'web')->postJson($uri, ['recipes' => [['source_id' => 'recipe-page-2', 'title' => 'Soup']]])
+                ->assertNotFound();
+        }
+
+        $this->assertDatabaseCount('recipes', 1);
+        $this->assertDatabaseHas('recipes', ['id' => $recipe->id, 'source_system' => 'notion', 'source_id' => 'recipe-page-1', 'needs_review' => true]);
+        $this->actingAs($admin, 'web')->getJson("/api/recipes/{$recipe->id}")
+            ->assertOk()->assertJsonPath('recipe.title', 'Lemon pasta');
     }
 
     private function configuredAdmin(): User
