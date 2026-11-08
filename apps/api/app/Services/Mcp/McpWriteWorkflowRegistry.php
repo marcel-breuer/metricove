@@ -150,7 +150,7 @@ class McpWriteWorkflowRegistry
             'import_notion_recipes' => [
                 'module' => 'recipes', 'capability' => 'create', 'required_scopes' => ['import:create'],
                 'title' => 'Import Notion recipes',
-                'description' => 'Review up to 50 Notion recipe pages. Missing fields remain flagged without invented ingredient amounts; only ready recipes are imported and existing source IDs are skipped. Both Import Create and Recipes Create access plus member approval in Metricove are required.',
+                'description' => 'Review up to 50 Notion recipe pages. Incomplete source data is imported unchanged and visibly flagged for editing; unsupported fields are held for review and existing source IDs are skipped. Both Import Create and Recipes Create access plus member approval in Metricove are required.',
                 'schema' => ['type' => 'object', 'properties' => [
                     'recipes' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 50, 'items' => ['type' => 'object', 'properties' => [
                         'source_id' => ['type' => 'string', 'maxLength' => 180], 'title' => ['type' => 'string', 'maxLength' => 180],
@@ -184,7 +184,7 @@ class McpWriteWorkflowRegistry
                 'execute' => function (User $actor, array $data): array {
                     $importer = $this->container->make(NotionFoodImportService::class);
                     $preview = $importer->preview($actor, ['recipes' => $data['recipes']]);
-                    $eligible = array_values(array_filter($preview['items'], static fn (array $item): bool => $item['ready'] || $item['duplicate']));
+                    $eligible = array_values(array_filter($preview['items'], static fn (array $item): bool => ($item['importable'] ?? false) || $item['duplicate']));
                     $result = $eligible === []
                         ? ['imported_count' => 0, 'duplicate_count' => 0]
                         : $importer->import($actor, [

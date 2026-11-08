@@ -28,15 +28,15 @@ class StoreRecipeRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:180'],
             'category' => ['nullable', 'string', 'max:80'],
-            'instructions' => ['required', 'string', 'max:20000'],
+            'instructions' => ['nullable', 'string', 'max:20000'],
             'servings' => ['required', 'integer', 'between:1,1000'],
             'preparation_minutes' => ['nullable', 'integer', 'between:1,1440'],
             'visibility' => ['required', 'in:private,household'],
-            'ingredients' => ['required', 'array', 'min:1', 'max:100'],
+            'ingredients' => ['present', 'array', 'max:100'],
             'ingredients.*' => ['required', 'array:name,quantity,unit,note'],
             'ingredients.*.name' => ['required', 'string', 'max:120'],
-            'ingredients.*.quantity' => ['required'],
-            'ingredients.*.unit' => ['required', 'string', 'max:40'],
+            'ingredients.*.quantity' => ['nullable'],
+            'ingredients.*.unit' => ['nullable', 'string', 'max:40'],
             'ingredients.*.note' => ['nullable', 'string', 'max:160'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
@@ -52,7 +52,12 @@ class StoreRecipeRequest extends FormRequest
             }
 
             foreach ($ingredients as $index => $ingredient) {
-                if (is_array($ingredient) && RecipeQuantity::normalize($ingredient['quantity'] ?? null) === null) {
+                if (! is_array($ingredient)) {
+                    continue;
+                }
+                $quantity = RecipeQuantity::normalize($ingredient['quantity'] ?? null);
+                $unit = trim((string) ($ingredient['unit'] ?? ''));
+                if (($quantity === null) !== ($unit === '')) {
                     $validator->errors()->add("ingredients.{$index}.quantity", 'Enter a positive quantity with up to 10 whole and 4 fractional digits.');
                 }
             }

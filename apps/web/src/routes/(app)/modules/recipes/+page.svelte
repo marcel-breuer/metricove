@@ -9,7 +9,7 @@
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { canonicalizeDecimalInput, formatMeasurement } from '#lib/number-format';
 	import { numberLocale } from '#lib/i18n';
-	import type { Recipe, RecipeIngredientInput, RecipeResponse, RecipeVisibility } from '#lib/recipes';
+	import { editableRecipeIngredients, type Recipe, type RecipeIngredientInput, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'recipes'));
@@ -194,12 +194,7 @@
 		preparationMinutes = recipe.preparation_minutes === null ? '' : String(recipe.preparation_minutes);
 		instructions = recipe.instructions;
 		visibility = recipe.visibility;
-		ingredients = recipe.ingredients.map((item) => ({
-			name: item.name,
-			quantity: item.quantity.replace(/0+$/, '').replace(/\.$/, ''),
-			unit: item.unit,
-			note: item.note ?? ''
-		}));
+		ingredients = editableRecipeIngredients(recipe.ingredients);
 		photoFile = null;
 		existingPhoto = recipe.photo_url;
 		removePhoto = false;
@@ -210,7 +205,7 @@
 	}
 
 	function removeIngredient(index: number): void {
-		if (ingredients.length > 1) ingredients = ingredients.filter((_, current) => current !== index);
+		ingredients = ingredients.filter((_, current) => current !== index);
 	}
 
 	async function saveRecipe(event: SubmitEvent): Promise<void> {
@@ -224,7 +219,7 @@
 		form.set('preparation_minutes', preparationMinutes);
 		form.set('instructions', instructions);
 		form.set('ingredients', JSON.stringify(ingredients.map((item) => ({
-			name: item.name, quantity: canonicalizeDecimalInput(item.quantity, $numberLocale), unit: item.unit, note: item.note
+			name: item.name, quantity: item.quantity.trim() ? canonicalizeDecimalInput(item.quantity, $numberLocale) : null, unit: item.unit.trim() || null, note: item.note
 		}))));
 		if (recipeId === null) form.set('visibility', visibility);
 		if (photoFile) form.set('photo', photoFile);
@@ -329,12 +324,12 @@
 							{#if recipe.photo_url}<img src={recipe.photo_url} alt="Photo of {recipe.title}" loading="lazy" class="h-44 w-full border-b border-slate-800 object-cover" />{/if}
 							<div class="space-y-4 p-5">
 								<div class="flex items-start justify-between gap-3">
-									<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-[0.18em] text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3></div>
+								<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-[0.18em] text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3>{#if recipe.needs_review}<span class="mt-2 inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">{$t('Needs review')}</span>{/if}</div>
 									<button type="button" aria-label={recipe.is_favorite ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="min-h-11 min-w-11 rounded-xl border border-slate-700 text-xl transition hover:border-amber-200/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 {recipe.is_favorite ? 'text-amber-200' : 'text-slate-500'}">★</button>
 								</div>
 								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400"><span>{recipe.servings} servings</span>{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
-								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2"><span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span><span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}</ul></div>
-								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions}</p></div>
+								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2">{#if ingredient.quantity && ingredient.unit}<span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="shrink-0 text-amber-200">{$t('Amount missing')}</span>{/if}<span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}{#if recipe.ingredients.length === 0}<li class="text-slate-500">{$t('No ingredients recorded.')}</li>{/if}</ul></div>
+								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions || $t('No preparation steps recorded.')}</p></div>
 								{#if recipe.can_edit}
 									<div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
 										<button type="button" onclick={() => editRecipe(recipe)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300/50 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200">{$t("Edit")}</button>
@@ -364,6 +359,7 @@
 			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
 				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
 				{#if formError}<p role="alert" class="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2.5 text-sm text-rose-200">{$t(formError)}</p>{/if}
+				{#if recipeId !== null && recipes.find((recipe) => recipe.id === recipeId)?.needs_review}<p role="status" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2.5 text-sm text-amber-100">{$t('This recipe has source details to review. Blank fields are kept as provided; fill in what you know.')}</p>{/if}
 				{#if importNotices.length}<ul role="status" class="mt-4 list-disc space-y-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-8 py-2.5 text-sm text-amber-100">{#each importNotices as notice}<li>{$t(notice)}</li>{/each}</ul>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
 					<label class="block text-sm font-medium text-slate-200">{$t("Title")}<input id="recipe-title" bind:value={title} required maxlength="180" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
@@ -374,13 +370,13 @@
 					<fieldset class="space-y-3"><legend class="text-sm font-semibold text-slate-200">{$t("Ingredients")}</legend>
 						{#each ingredients as ingredient, index (index)}
 							<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-								<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]"><label class="min-w-0 text-xs text-slate-400">{$t("Ingredient")}<input bind:value={ingredient.name} required maxlength="120" placeholder={$t("Pasta")} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-3 text-xs text-slate-400 sm:order-none">{$t("Quantity")}<input bind:value={ingredient.quantity} required type="text" inputmode="decimal" placeholder="250" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-4 text-xs text-slate-400 sm:order-none">{$t("Unit")}<input bind:value={ingredient.unit} required maxlength="40" placeholder="g" class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><button type="button" aria-label={$t("Remove ingredient")} disabled={ingredients.length === 1} onclick={() => removeIngredient(index)} class="order-2 mt-5 min-h-10 min-w-9 rounded-lg text-slate-500 hover:bg-rose-400/10 hover:text-rose-200 disabled:opacity-30 sm:order-none">×</button></div>
+							<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]"><label class="min-w-0 text-xs text-slate-400">{$t("Ingredient")}<input bind:value={ingredient.name} required maxlength="120" placeholder={$t("Pasta")} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-3 text-xs text-slate-400 sm:order-none">{$t("Quantity")}<input bind:value={ingredient.quantity} type="text" inputmode="decimal" placeholder={$t('Optional')} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-4 text-xs text-slate-400 sm:order-none">{$t("Unit")}<input bind:value={ingredient.unit} maxlength="40" placeholder={$t('Optional')} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><button type="button" aria-label={$t("Remove ingredient")} onclick={() => removeIngredient(index)} class="order-2 mt-5 min-h-10 min-w-9 rounded-lg text-slate-500 hover:bg-rose-400/10 hover:text-rose-200 sm:order-none">×</button></div>
 								<label class="mt-2 block text-xs text-slate-400">{$t("Note")} <span class="text-slate-600">{$t('optional')}</span><input bind:value={ingredient.note} maxlength="160" placeholder={$t("finely grated")} class="mt-1 min-h-9 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label>
 							</div>
 						{/each}
 						<button type="button" onclick={addIngredient} disabled={ingredients.length >= 100} class="min-h-10 rounded-lg border border-dashed border-slate-700 px-3 text-sm text-cyan-200 hover:border-cyan-300/50 disabled:opacity-40">+ {$t('Add ingredient')}</button>
 					</fieldset>
-					<label class="block text-sm font-medium text-slate-200">{$t("Preparation instructions")}<textarea bind:value={instructions} required maxlength="20000" rows="5" placeholder={$t("Write the steps in the order you follow them…")} class="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
+					<label class="block text-sm font-medium text-slate-200">{$t("Preparation instructions")}<textarea bind:value={instructions} maxlength="20000" rows="5" placeholder={$t("Write the steps in the order you follow them…")} class="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
 					<div><label class="block text-sm font-medium text-slate-200">{$t("Recipe photo")} <span class="text-xs font-normal text-slate-500">{$t("optional · JPEG, PNG or WebP · 5 MB max")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={choosePhoto} class="mt-1.5 block min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 focus:border-cyan-300 focus:outline-none" /></label>
 						{#if photoFile}<p class="mt-1 text-xs text-slate-400">{$t("Selected:")} {photoFile.name}</p>{:else if existingPhoto && !removePhoto}<div class="mt-2 flex items-center gap-3"><img src={existingPhoto} alt={$t("Current recipe")} class="h-14 w-20 rounded-lg object-cover" /><button type="button" onclick={() => (removePhoto = true)} class="min-h-9 px-2 text-xs text-slate-400 hover:text-rose-200">{$t("Remove current photo")}</button></div>{:else if removePhoto}<p class="mt-2 text-xs text-slate-400">{$t("The current photo will be removed when you save.")}</p>{/if}</div>
 					<div class="border-t border-slate-800 pt-4"><p class="text-xs leading-5 text-slate-500">{$t("Private recipes and photos remain hidden from administrators unless you grant access. Household recipes require an active admin with Recipes Manage.")}</p><div class="mt-4 flex gap-2"><button type="submit" disabled={saving} class="min-h-11 flex-1 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : recipeId === null ? 'Save recipe' : 'Save changes')}</button>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm text-slate-300 hover:border-slate-500">{$t("Cancel")}</button>{/if}</div></div>

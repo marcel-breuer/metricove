@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\HouseholdSettings;
 use App\Models\MealPlanSlot;
 use App\Models\ModuleUserPermission;
+use App\Models\Recipe;
 use App\Models\User;
 use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,6 +72,32 @@ class NotionFoodImportTest extends TestCase
         ])->assertOk()->assertJsonPath('items.0.ready', false)->assertJsonPath('items.1.ready', false);
         $this->assertStringContainsString('Recipe title is missing', implode(' ', $incomplete->json('items.0.warnings')));
         $this->assertStringContainsString('valid meal date', implode(' ', $incomplete->json('items.1.warnings')));
+    }
+
+    public function test_incomplete_recipe_source_is_imported_unchanged_flagged_and_editable(): void
+    {
+        $admin = $this->member('Incomplete recipe admin', true);
+        $this->enable($admin, 'import');
+        $this->enable($admin, 'recipes');
+        $this->grant($admin, 'import', ['view' => true, 'create' => true]);
+        $this->grant($admin, 'recipes', ['view' => true, 'create' => true, 'edit' => true]);
+        $payload = ['recipes' => [[
+            'source_id' => 'source-incomplete-1', 'title' => 'Soup from notes', 'instructions' => '', 'servings' => 3,
+            'ingredients' => [['name' => 'Salt', 'quantity' => null, 'unit' => null]],
+        ]]];
+
+        $this->actingAs($admin, 'web')->postJson('/api/import/notion/food/preview', $payload)
+            ->assertOk()->assertJsonPath('items.0.ready', false)->assertJsonPath('review_count', 1);
+        $this->actingAs($admin, 'web')->postJson('/api/import/notion/food/import', array_merge($payload, ['selected_source_ids' => ['source-incomplete-1']]))
+            ->assertOk()->assertJsonPath('imported_count', 1);
+        $recipe = Recipe::query()->where('source_id', 'source-incomplete-1')->firstOrFail();
+        $this->assertTrue($recipe->needs_review);
+        $this->assertSame('', $recipe->instructions);
+        $this->assertDatabaseHas('recipe_ingredients', ['recipe_id' => $recipe->id, 'name' => 'Salt', 'quantity' => null, 'unit' => null]);
+
+        $this->actingAs($admin, 'web')->patchJson('/api/recipes/'.$recipe->id, [
+            'instructions' => 'Season to taste.', 'ingredients' => [['name' => 'Salt', 'quantity' => '1', 'unit' => 'pinch']],
+        ])->assertOk()->assertJsonPath('recipe.needs_review', false)->assertJsonPath('recipe.ingredients.0.quantity', '1.0000');
     }
 
     /** @return array<string, mixed> */

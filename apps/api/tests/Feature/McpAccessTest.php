@@ -298,11 +298,12 @@ class McpAccessTest extends TestCase
             'arguments' => ['preview_id' => $preview['preview_id'], 'idempotency_key' => $idempotencyKey],
         ])->assertOk();
         $result = $complete();
-        $this->assertSame(['status' => 'completed', 'imported_count' => 1, 'duplicate_count' => 0, 'review_count' => 1], $result->json('result.structuredContent'));
+        $this->assertSame(['status' => 'completed', 'imported_count' => 2, 'duplicate_count' => 0, 'review_count' => 1], $result->json('result.structuredContent'));
         $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-1', 'is_private' => true]);
-        $this->assertDatabaseMissing('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-2']);
+        $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-2', 'needs_review' => true, 'instructions' => '']);
+        $this->assertDatabaseHas('recipe_ingredients', ['name' => 'Salt', 'quantity' => null, 'unit' => null]);
         $this->assertSame($result->json('result.structuredContent'), $complete()->json('result.structuredContent'));
-        $this->assertDatabaseCount('recipes', 1);
+        $this->assertDatabaseCount('recipes', 2);
     }
 
     public function test_notion_recipe_batch_rejects_repeated_source_ids(): void

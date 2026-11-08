@@ -75,13 +75,14 @@ class RecipeService
                     'is_private' => $isPrivate,
                     'title' => trim($data['title']),
                     'category' => $this->nullableTrim($data['category'] ?? null),
-                    'instructions' => trim($data['instructions']),
+                    'instructions' => trim($data['instructions'] ?? ''),
                     'servings' => (int) $data['servings'],
                     'preparation_minutes' => $data['preparation_minutes'] ?? null,
                     'photo_path' => $photoPath,
                 ]);
                 $this->access->authorize($actor, self::MODULE, $capability, $recipe);
                 $this->replaceIngredients($recipe, $data['ingredients']);
+                $this->refreshReviewStatus($recipe);
 
                 return $recipe->load('ingredients');
             }, 3);
@@ -118,7 +119,7 @@ class RecipeService
 
                 foreach (['title', 'instructions', 'servings', 'preparation_minutes'] as $field) {
                     if (array_key_exists($field, $data)) {
-                        $recipe->{$field} = in_array($field, ['title', 'instructions'], true) ? trim($data[$field]) : $data[$field];
+                        $recipe->{$field} = in_array($field, ['title', 'instructions'], true) ? trim((string) ($data[$field] ?? '')) : $data[$field];
                     }
                 }
 
@@ -140,6 +141,7 @@ class RecipeService
                     $recipe->ingredients()->delete();
                     $this->replaceIngredients($recipe, $data['ingredients']);
                 }
+                $this->refreshReviewStatus($recipe);
 
                 return [$recipe->fresh()->load('ingredients'), $oldPath];
             }, 3);
@@ -253,7 +255,7 @@ class RecipeService
         $this->access->authorize($admin, self::MODULE, ModuleCapability::Manage);
     }
 
-    /** @param list<array{name: string, quantity: mixed, unit: string, note?: ?string}> $ingredients */
+    /** @param list<array{name: string, quantity?: mixed, unit?: ?string, note?: ?string}> $ingredients */
     private function replaceIngredients(Recipe $recipe, array $ingredients): void
     {
         $rows = [];
@@ -261,20 +263,29 @@ class RecipeService
         foreach (array_values($ingredients) as $position => $ingredient) {
             $quantity = RecipeQuantity::normalize($ingredient['quantity'] ?? null);
 
-            if ($quantity === null) {
-                throw ValidationException::withMessages(["ingredients.{$position}.quantity" => 'Enter a positive recipe quantity.']);
+            $unit = $this->nullableTrim($ingredient['unit'] ?? null);
+            if (($quantity === null) !== ($unit === null)) {
+                throw ValidationException::withMessages(["ingredients.{$position}.quantity" => 'Add both quantity and unit, or leave both blank.']);
             }
 
             $rows[] = [
                 'position' => $position,
                 'name' => trim($ingredient['name']),
                 'quantity' => $quantity,
-                'unit' => trim($ingredient['unit']),
+                'unit' => $unit,
                 'note' => $this->nullableTrim($ingredient['note'] ?? null),
             ];
         }
 
         $recipe->ingredients()->createMany($rows);
+    }
+
+    private function refreshReviewStatus(Recipe $recipe): void
+    {
+        $recipe->load('ingredients');
+        $recipe->needs_review = trim($recipe->instructions) === '' || $recipe->ingredients->isEmpty()
+            || $recipe->ingredients->contains(fn (RecipeIngredient $ingredient): bool => trim($ingredient->name) === '' || $ingredient->quantity === null || $ingredient->unit === null);
+        $recipe->save();
     }
 
     private function storePhoto(mixed $photo, User $actor): ?string
@@ -304,6 +315,7 @@ class RecipeService
             'title' => $recipe->title,
             'category' => $recipe->category,
             'instructions' => $recipe->instructions,
+            'needs_review' => (bool) $recipe->needs_review,
             'servings' => (int) $recipe->servings,
             'preparation_minutes' => $recipe->preparation_minutes === null ? null : (int) $recipe->preparation_minutes,
             'visibility' => $recipe->is_private ? 'private' : 'household',
@@ -314,7 +326,7 @@ class RecipeService
                 'id' => (int) $ingredient->id,
                 'position' => (int) $ingredient->position,
                 'name' => $ingredient->name,
-                'quantity' => (string) $ingredient->quantity,
+                'quantity' => $ingredient->quantity === null ? null : (string) $ingredient->quantity,
                 'unit' => $ingredient->unit,
                 'note' => $ingredient->note,
             ])->all(),
