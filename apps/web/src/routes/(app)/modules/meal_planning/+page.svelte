@@ -289,7 +289,7 @@
 	{#if message}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm text-positive">{$t(message, messageParams)}</p>{/if}
 	{#if error}<Notice tone="error" message={error} />{/if}
 
-	<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
+	<Modal bind:open={editorOpen} size="wide" title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
 		{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<form id="meal-slot-form" onsubmit={saveSlot} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
 			<label class="text-xs font-medium text-ink-muted">{$t("Day")}

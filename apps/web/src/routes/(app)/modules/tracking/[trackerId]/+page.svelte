@@ -433,7 +433,7 @@
 					<p class="text-sm font-medium text-accent-ink">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
 					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
 				</div>
-				<h1 class="mt-2 break-words text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{tracker.name}</h1>
+				<h1 class="page-title break-words">{tracker.name}</h1>
 				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{tracker.description}</p>{/if}
 			</div>
 			{#if tracker.can_manage_schema}
@@ -444,7 +444,7 @@
 		{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
-		<Modal bind:open={schemaOpen} size="fullscreen" title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
+		<Modal bind:open={schemaOpen} size="wide" title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="tracker-schema-form" class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={saveSchema}>
 					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">

@@ -125,7 +125,7 @@
 		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
 			<div class="min-w-0">
 				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{$t(note.shared_with_household ? 'Shared with household' : 'Private note')}{#if note.archived_at} · {$t('Archived')}{/if}</p>
-				<h1 class="mt-2 break-words text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.16] font-[650] tracking-[-0.03em] text-ink">{note.title}</h1>
+				<h1 class="page-title break-words">{note.title}</h1>
 				<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-muted">
 					{#if note.folder}<span>{$t('Folder')}: {note.folder.name}</span>{/if}
 					{#if note.updated_at}<span>{$t('Updated')} {formatDateTime(note.updated_at)}</span>{/if}

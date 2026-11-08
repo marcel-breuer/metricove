@@ -116,7 +116,7 @@
 		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
 			<div class="min-w-0">
 				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
-				<h1 class="mt-2 break-words text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.16] font-[650] tracking-[-0.03em] text-ink">{recipe.title}</h1>
+				<h1 class="page-title break-words">{recipe.title}</h1>
 				<p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums text-ink-muted">
 					{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('Servings missing')}</span>{/if}
 					{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}

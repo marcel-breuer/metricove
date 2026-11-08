@@ -229,7 +229,7 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t("Create tracker")}</button></div>
-		<Modal bind:open={createOpen} size="fullscreen" title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
+		<Modal bind:open={createOpen} size="wide" title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 			<form id="tracker-create-form" class="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={createTracker}>
 				<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">

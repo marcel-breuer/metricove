@@ -282,7 +282,7 @@
 			</div>
 		</section>
 
-		<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
+		<Modal bind:open={editorOpen} size="wide" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 			<form id="pantry-item-form" onsubmit={saveItem} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
 				<label class="{field} sm:col-span-2">

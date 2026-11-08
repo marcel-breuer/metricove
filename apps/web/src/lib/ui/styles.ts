@@ -16,7 +16,7 @@ export const fileInput = `box-border block min-h-12 w-full cursor-pointer rounde
 
 export const iconButton = `grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line bg-transparent text-ink-secondary transition-colors hover:border-line-strong hover:bg-surface-subtle hover:text-ink ${focusRing}`;
 
-export const panel = 'glass-surface rounded-[14px] border border-line';
+export const panel = 'glass-surface rounded-2xl border border-line';
 
 export const segmented = 'inline-flex min-h-11 items-center gap-1 rounded-[10px] border border-control-line bg-surface glass-control p-0.5';
 
@@ -47,7 +47,7 @@ export function buttonClasses({
 	align = 'center'
 }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; align?: 'center' | 'start' } = {}): string {
 	return [
-		'inline-flex cursor-pointer items-center gap-2 border leading-5 font-[650] no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-55',
+		'inline-flex cursor-pointer items-center gap-2 border leading-5 font-semibold no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-55',
 		align === 'start' ? 'justify-start' : 'justify-center',
 		focusRing,
 		buttonVariants[variant],

@@ -124,7 +124,7 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Create meter')}</button></div>
-		<Modal bind:open={createOpen} size="fullscreen" title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+		<Modal bind:open={createOpen} size="wide" title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<div>
 			<p class="mb-6 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
 			<form id="meter-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createMeter}>

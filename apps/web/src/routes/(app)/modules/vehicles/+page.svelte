@@ -117,7 +117,7 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Create vehicle')}</button></div>
-		<Modal bind:open={createOpen} size="fullscreen" title={$t('Add a vehicle.')} description={$t('Keep vehicle details and records together.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+		<Modal bind:open={createOpen} size="wide" title={$t('Add a vehicle.')} description={$t('Keep vehicle details and records together.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<div>
 			<p class="mb-6 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.")}</p>
 			<form id="vehicle-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createVehicle}>
