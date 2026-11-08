@@ -6,15 +6,13 @@
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { tick } from 'svelte';
 	import { t } from '#lib/i18n';
-	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
-	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
 	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
-	import { canonicalizeDecimalInput, formatMeasurement } from '#lib/number-format';
-	import { numberLocale } from '#lib/i18n';
-	import { editableRecipeIngredients, type Recipe, type RecipeIngredientInput, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
+	import { emptyRecipeIngredient, parseImportedIngredient, type Recipe, type RecipeDraft, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
+	import RecipeEditor from './RecipeEditor.svelte';
+	import { recipeRequest as api } from '#lib/api-client';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'recipes'));
@@ -26,71 +24,36 @@
 	let recipes = $state<Recipe[]>([]);
 	const hasEditableRecipe = $derived(recipes.some((recipe) => recipe.can_edit));
 	let loading = $state(true);
-	let saving = $state(false);
 	let error = $state('');
 	let message = $state('');
-	let formError = $state('');
 	let search = $state('');
 	let categoryFilter = $state('all');
 	let favoriteOnly = $state(false);
-	let recipeId = $state<number | null>(null);
-	let title = $state('');
-	let category = $state('');
-	let servings = $state('2');
-	let preparationMinutes = $state('');
-	let instructions = $state('');
-	let visibility = $state<RecipeVisibility>('private');
-	let ingredients = $state<RecipeIngredientInput[]>([{ name: '', quantity: '', unit: '', note: '' }]);
-	let photoFile = $state<File | null>(null);
-	let existingPhoto = $state<string | null>(null);
-	let removePhoto = $state(false);
+	let editorOpen = $state(false);
+	let editingRecipe = $state<Recipe | null>(null);
+	let editorDraft = $state<RecipeDraft | null>(null);
+	let importNotices = $state<string[]>([]);
 	let deleteTarget = $state<number | null>(null);
-	let formOpen = $state(false);
 	let deleteOpen = $state(false);
-	let detailOpen = $state(false);
-	let viewedRecipeId = $state<number | null>(null);
-	const viewedRecipe = $derived(recipes.find((recipe) => recipe.id === viewedRecipeId) ?? null);
 	let importOpen = $state(false);
 	let importType = $state<'url' | 'pdf'>('url');
 	let importUrl = $state('');
 	let importFile = $state<File | null>(null);
+	let importVisibility = $state<RecipeVisibility>('private');
 	let importBusy = $state(false);
 	let importError = $state('');
-	let importNotices = $state<string[]>([]);
 	const categories = $derived([...new Set(recipes.map((recipe) => recipe.category).filter((value): value is string => Boolean(value)))].sort());
 	const visibleRecipes = $derived(recipes.filter((recipe) => {
 		const matchesSearch = `${recipe.title} ${recipe.category ?? ''} ${recipe.ingredients.map((item) => item.name).join(' ')}`
 			.toLowerCase().includes(search.trim().toLowerCase());
 		return matchesSearch && (categoryFilter === 'all' || recipe.category === categoryFilter) && (!favoriteOnly || recipe.is_favorite);
 	}));
-	const formVisibilityOptions = $derived(canCreate && canManageShared ? ['private', 'household'] : canManageShared ? ['household'] : ['private']);
+	const formVisibilityOptions = $derived<RecipeVisibility[]>(canCreate && canManageShared ? ['private', 'household'] : canManageShared ? ['household'] : ['private']);
+	const visibilityHint = $derived(canManageShared && !canCreate ? 'Shared recipes are managed by household admins.' : 'New recipes are private to you.');
 
 	$effect(() => {
 		if (!shell.loading) void loadRecipes();
 	});
-
-	async function api<T extends object>(path: string, method = 'GET', body?: object | FormData): Promise<T> {
-		const headers: Record<string, string> = { Accept: 'application/json' };
-		if (method !== 'GET') {
-			const token = csrfToken();
-			if (!token) throw new Error('Reload this page and try again.');
-			headers['X-XSRF-TOKEN'] = token;
-			if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
-		}
-		const response = await fetch(path, {
-			method,
-			credentials: 'same-origin',
-			headers,
-			...(body ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {})
-		});
-		if (response.status === 401) {
-			await goto('/login');
-			throw new Error('Your session has expired.');
-		}
-		const result = (await response.json()) as T & ApiResponse;
-		if (!response.ok) throw new Error(firstError(result) || result.message || 'Recipes could not complete that request.');
-		return result as T;
-	}
 
 	async function loadRecipes(): Promise<void> {
 		loading = true;
@@ -115,23 +78,22 @@
 		importBusy = true;
 		importError = '';
 		const body = new FormData();
-		const importVisibility = visibility;
-		body.set('visibility', visibility);
+		body.set('visibility', importVisibility);
 		if (importType === 'url') body.set('source_url', importUrl.trim());
 		else if (importFile) body.set('file', importFile);
 		try {
 			const preview = await api<{ recipe: { title: string; category: string; servings: number; preparation_minutes: number | null; ingredients: string[]; instructions: string[] }; warnings: string[] }>('/api/recipes/import-preview', 'POST', body);
 			const parsedIngredients = preview.recipe.ingredients.slice(0, 100).map(parseImportedIngredient);
-			resetForm();
-			visibility = importVisibility;
-			title = preview.recipe.title;
-			category = preview.recipe.category;
-			servings = String(preview.recipe.servings || 2);
-			preparationMinutes = preview.recipe.preparation_minutes === null ? '' : String(preview.recipe.preparation_minutes);
-			instructions = preview.recipe.instructions.join('\n');
-			ingredients = parsedIngredients.length > 0
-				? parsedIngredients
-				: [{ name: '', quantity: '', unit: '', note: '' }];
+			editingRecipe = null;
+			editorDraft = {
+				title: preview.recipe.title,
+				category: preview.recipe.category,
+				servings: String(preview.recipe.servings || 2),
+				preparationMinutes: preview.recipe.preparation_minutes === null ? '' : String(preview.recipe.preparation_minutes),
+				instructions: preview.recipe.instructions.join('\n'),
+				visibility: importVisibility,
+				ingredients: parsedIngredients.length > 0 ? parsedIngredients : [emptyRecipeIngredient()]
+			};
 			importNotices = [
 				...preview.warnings,
 				...(parsedIngredients.some((item) => !item.quantity || !item.unit) ? ['Check imported ingredient quantities and units before saving.'] : [])
@@ -140,28 +102,12 @@
 			importFile = null;
 			importOpen = false;
 			await tick();
-			formOpen = true;
+			editorOpen = true;
 		} catch (cause) {
 			importError = cause instanceof Error ? cause.message : 'The recipe could not be imported.';
 		} finally {
 			importBusy = false;
 		}
-	}
-
-	function parseImportedIngredient(raw: string): RecipeIngredientInput {
-		const fractionValues: Record<string, string> = { '¼': '0.25', '½': '0.5', '¾': '0.75', '⅓': '0.3333', '⅔': '0.6667' };
-		const match = raw.trim().match(/^(?:(\d+\s+)?(\d+\s*\/\s*\d+|\d+(?:[.,]\d+)?|[¼½¾⅓⅔]))\s*(.*)$/u);
-		if (!match) return { name: raw.trim(), quantity: '', unit: '', note: '' };
-		let quantity = match[2].replace(/\s/g, '');
-		if (fractionValues[quantity]) quantity = fractionValues[quantity];
-		else if (quantity.includes('/')) {
-			const [numerator, denominator] = quantity.split('/').map(Number);
-			quantity = denominator > 0 ? String(Number((numerator / denominator).toFixed(4))) : '';
-		} else quantity = quantity.replace(',', '.');
-		if (match[1]) quantity = String(Number(match[1]) + Number(quantity));
-		const tail = match[3].trim();
-		const unitMatch = tail.match(/^(tsp|teaspoons?|tbsp|tablespoons?|cups?|ml|l|liters?|litres?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|pinches?|cloves?)\b\s*(.*)$/i);
-		return { name: unitMatch?.[2]?.trim() || tail, quantity, unit: unitMatch?.[1] ?? '', note: '' };
 	}
 
 	function chooseImportFile(event: Event): void {
@@ -170,30 +116,24 @@
 
 	function openImport(): void {
 		importError = '';
-		if (!formVisibilityOptions.includes(visibility)) visibility = canCreate ? 'private' : 'household';
+		if (!formVisibilityOptions.includes(importVisibility)) importVisibility = formVisibilityOptions[0];
 		importOpen = true;
 	}
 
-	function resetForm(): void {
-		formOpen = false;
-		recipeId = null;
-		title = '';
-		category = '';
-		servings = '2';
-		preparationMinutes = '';
-		instructions = '';
-		visibility = canCreate ? 'private' : 'household';
-		ingredients = [{ name: '', quantity: '', unit: '', note: '' }];
-		photoFile = null;
-		existingPhoto = null;
-		removePhoto = false;
-		formError = '';
+	function createRecipe(): void {
+		message = '';
+		editingRecipe = null;
+		editorDraft = null;
 		importNotices = [];
+		editorOpen = true;
 	}
 
-	function openRecipe(recipe: Recipe): void {
-		viewedRecipeId = recipe.id;
-		detailOpen = true;
+	function editRecipe(recipe: Recipe): void {
+		message = '';
+		editingRecipe = recipe;
+		editorDraft = null;
+		importNotices = [];
+		editorOpen = true;
 	}
 
 	function confirmDelete(id: number): void {
@@ -201,60 +141,9 @@
 		deleteOpen = true;
 	}
 
-	function editRecipe(recipe: Recipe): void {
-		detailOpen = false;
-		formOpen = true;
-		message = '';
-		formError = '';
-		recipeId = recipe.id;
-		title = recipe.title;
-		category = recipe.category ?? '';
-		servings = recipe.servings === null ? '' : String(recipe.servings);
-		preparationMinutes = recipe.preparation_minutes === null ? '' : String(recipe.preparation_minutes);
-		instructions = recipe.instructions;
-		visibility = recipe.visibility;
-		ingredients = editableRecipeIngredients(recipe.ingredients);
-		photoFile = null;
-		existingPhoto = recipe.photo_url;
-		removePhoto = false;
-	}
-
-	function addIngredient(): void {
-		ingredients = [...ingredients, { name: '', quantity: '', unit: '', note: '' }];
-	}
-
-	function removeIngredient(index: number): void {
-		ingredients = ingredients.filter((_, current) => current !== index);
-	}
-
-	async function saveRecipe(event: SubmitEvent): Promise<void> {
-		event.preventDefault();
-		message = '';
-		formError = '';
-		const form = new FormData();
-		form.set('title', title);
-		form.set('category', category);
-		form.set('servings', servings || '');
-		form.set('preparation_minutes', preparationMinutes);
-		form.set('instructions', instructions);
-		form.set('ingredients', JSON.stringify(ingredients.map((item) => ({
-			name: item.name, quantity: item.quantity.trim() ? canonicalizeDecimalInput(item.quantity, $numberLocale) : null, unit: item.unit.trim() || null, note: item.note
-		}))));
-		if (recipeId === null) form.set('visibility', visibility);
-		if (photoFile) form.set('photo', photoFile);
-		if (removePhoto) form.set('remove_photo', '1');
-		if (recipeId !== null) form.set('_method', 'PATCH');
-		saving = true;
-		try {
-			await api<RecipeResponse>(recipeId === null ? '/api/recipes' : `/api/recipes/${recipeId}`, 'POST', form);
-			message = recipeId === null ? 'Recipe created.' : 'Recipe updated.';
-			resetForm();
-			await loadRecipes();
-		} catch (cause) {
-			formError = cause instanceof Error ? cause.message : 'The recipe could not be saved.';
-		} finally {
-			saving = false;
-		}
+	async function recipeSaved(saved: Recipe | null, created: boolean): Promise<void> {
+		message = created ? 'Recipe created.' : 'Recipe updated.';
+		await loadRecipes();
 	}
 
 	async function toggleFavorite(recipe: Recipe): Promise<void> {
@@ -275,18 +164,11 @@
 			await api<RecipeResponse>(`/api/recipes/${id}`, 'DELETE');
 			deleteTarget = null;
 			deleteOpen = false;
-			if (viewedRecipeId === id) detailOpen = false;
-			if (recipeId === id) resetForm();
 			message = 'Recipe deleted.';
 			await loadRecipes();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The recipe could not be deleted.';
 		}
-	}
-
-	function choosePhoto(event: Event): void {
-		photoFile = (event.currentTarget as HTMLInputElement).files?.[0] ?? null;
-		if (photoFile) removePhoto = false;
 	}
 </script>
 
@@ -307,7 +189,7 @@
 	<PageHeading eyebrow="Food · Recipes" title="Recipes worth keeping" description="A private collection for your household: clear quantities, useful notes and the way you like to make it.">
 		{#snippet actions()}
 			<Badge>{recipes.length} {$t(recipes.length === 1 ? 'recipe' : 'recipes')}</Badge>
-			{#if canAddRecipe}<Button variant="secondary" onclick={openImport}>{$t("Import recipe")}</Button><Button onclick={() => { resetForm(); formOpen = true; }}>{$t("Add a recipe")}</Button>{/if}
+			{#if canAddRecipe}<Button variant="secondary" onclick={openImport}>{$t("Import recipe")}</Button><Button onclick={createRecipe}>{$t("Add a recipe")}</Button>{/if}
 		{/snippet}
 	</PageHeading>
 
@@ -341,7 +223,7 @@
 				description={recipes.length === 0 ? 'Start with a dish you make often. Recipes stay independent from meal planning and shopping.' : 'Clear the search or favorite filter to see the rest of your collection.'}
 			>
 				{#snippet actions()}
-					{#if recipes.length === 0 && canAddRecipe}<Button onclick={() => { resetForm(); formOpen = true; }}>{$t("Create the first recipe")}</Button>{/if}
+					{#if recipes.length === 0 && canAddRecipe}<Button onclick={createRecipe}>{$t("Create the first recipe")}</Button>{/if}
 				{/snippet}
 			</EmptyState>
 		{:else}
@@ -354,7 +236,7 @@
 								<div class="min-w-0">
 									<p class="text-xs text-[var(--text-muted)]">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
 									<h3 class="mt-1 text-lg font-semibold leading-snug text-[var(--text-primary)]">
-										<button type="button" onclick={() => openRecipe(recipe)} class="recipe-title-link text-left">{recipe.title}</button>
+										<a href="/modules/recipes/{recipe.id}" class="recipe-title-link">{recipe.title}</a>
 									</h3>
 								</div>
 								{@render favoriteButton(recipe)}
@@ -369,7 +251,7 @@
 								{recipe.ingredients.length > 0 ? recipe.ingredients.map((item) => item.name).join(', ') : $t('No ingredients recorded.')}
 							</p>
 							<div class="mt-auto flex flex-wrap items-center gap-2 border-t border-[var(--border-default)] pt-3">
-								<Button variant="secondary" size="small" onclick={() => openRecipe(recipe)}>{$t('Show recipe')}</Button>
+								<Button href="/modules/recipes/{recipe.id}" variant="secondary" size="small">{$t('Show recipe')}</Button>
 								{#if recipe.can_edit}
 									<Button variant="ghost" size="small" onclick={() => editRecipe(recipe)}>{$t("Edit")}</Button>
 									<Button variant="ghost" size="small" class="ml-auto" onclick={() => confirmDelete(recipe.id)}>{$t("Delete")}</Button>
@@ -382,82 +264,26 @@
 		{/if}
 	</section>
 
-	{#if viewedRecipe}
-		<Modal bind:open={detailOpen} title={viewedRecipe.title} description={`${viewedRecipe.category ?? $t('Uncategorized')} · ${$t(viewedRecipe.visibility === 'household' ? 'Household' : 'Private')}`} class="recipe-detail">
-			{#if viewedRecipe.photo_url}<img src={viewedRecipe.photo_url} alt={$t('Photo of {title}', { title: viewedRecipe.title })} class="mb-5 aspect-[16/9] w-full rounded-xl object-cover" />{/if}
-			<div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm tabular-nums text-[var(--text-muted)]">
-				{#if viewedRecipe.servings}<span>{$t(viewedRecipe.servings === 1 ? '{count} serving' : '{count} servings', { count: viewedRecipe.servings })}</span>{:else}<span class="text-[var(--warning-text)]">{$t('Servings missing')}</span>{/if}
-				{#if viewedRecipe.preparation_minutes}<span>{$t('{count} min', { count: viewedRecipe.preparation_minutes })}</span>{/if}
-				{#if viewedRecipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
-			</div>
-			<div class="mt-6 grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-				<section>
-					<h3 class="text-sm font-semibold text-[var(--text-primary)]">{$t("Ingredients")}</h3>
-					<ul class="mt-3 divide-y divide-[var(--border-default)] text-sm">
-						{#each viewedRecipe.ingredients as ingredient (ingredient.id)}
-							<li class="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 py-2">
-								{#if ingredient.quantity && ingredient.unit}<span class="tabular-nums text-[var(--accent-text)]">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="text-xs leading-5 text-[var(--warning-text)]">{$t('Amount missing')}</span>{/if}
-								<span class="text-[var(--text-primary)]">{ingredient.name}{#if ingredient.note}<span class="text-[var(--text-muted)]"> · {ingredient.note}</span>{/if}</span>
-							</li>
-						{/each}
-						{#if viewedRecipe.ingredients.length === 0}<li class="py-2 text-[var(--text-muted)]">{$t('No ingredients recorded.')}</li>{/if}
-					</ul>
-				</section>
-				<section>
-					<h3 class="text-sm font-semibold text-[var(--text-primary)]">{$t("Preparation")}</h3>
-					<p class="mt-3 whitespace-pre-line text-sm leading-7 text-[var(--text-secondary)]">{viewedRecipe.instructions || $t('No preparation steps recorded.')}</p>
-				</section>
-			</div>
-			<div class="ui-modal-actions mt-6">
-				{@render favoriteButton(viewedRecipe)}
-				{#if viewedRecipe.can_edit}
-					<Button variant="ghost" onclick={() => confirmDelete(viewedRecipe!.id)}>{$t("Delete")}</Button>
-					<Button variant="secondary" onclick={() => editRecipe(viewedRecipe!)}>{$t("Edit")}</Button>
-				{/if}
-			</div>
-		</Modal>
-	{/if}
-
 		{#if canAddRecipe}
 			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
-				<div class="mb-4 grid grid-cols-2 gap-2"><button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'url' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('Web link')}</button><button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="min-h-10 rounded-lg border px-3 text-sm font-medium {importType === 'pdf' ? 'border-cyan-300 bg-cyan-300/10 text-cyan-100' : 'border-slate-700 text-slate-300'}">{$t('PDF file')}</button></div>
+				<div class="mb-4 grid grid-cols-2 gap-2" role="group" aria-label={$t('Import a recipe')}>
+					<button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="recipe-import-type ui-button ui-button--secondary ui-button--medium">{$t('Web link')}</button>
+					<button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="recipe-import-type ui-button ui-button--secondary ui-button--medium">{$t('PDF file')}</button>
+				</div>
 				<form onsubmit={importRecipe} class="space-y-4">
-					{#if importType === 'url'}<label class="block text-sm font-medium text-slate-200">{$t('Recipe page URL')}<input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label>{:else}<label class="block text-sm font-medium text-slate-200">{$t('Recipe PDF')}<input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="ui-file-input mt-2" /><span class="mt-1 block text-xs text-slate-500">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>{/if}
-					<label class="block text-sm font-medium text-slate-200">{$t('Save as')}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
-					{#if importError}<p role="alert" class="text-sm text-rose-200">{$t(importError)}</p>{/if}
-					<button type="submit" disabled={importBusy || (importType === 'pdf' && !importFile)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 disabled:opacity-50">{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</button>
+					{#if importType === 'url'}
+						<label class="ui-field"><span class="ui-field-label">{$t('Recipe page URL')}</span><input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="ui-control" /></label>
+					{:else}
+						<label class="ui-field"><span class="ui-field-label">{$t('Recipe PDF')}</span><input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="ui-file-input" /><span class="text-xs text-[var(--text-muted)]">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>
+					{/if}
+					<label class="ui-field"><span class="ui-field-label">{$t('Save as')}</span><select bind:value={importVisibility} class="ui-control">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
+					{#if importError}<Notice tone="error" message={importError} />{/if}
+					<Button type="submit" fullWidth disabled={importBusy || (importType === 'pdf' && !importFile)}>{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</Button>
 				</form>
 			</Modal>
 		{/if}
 		{#if canAddRecipe || hasEditableRecipe}
-			<Modal bind:open={formOpen} title={$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}>
-			<aside class="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/15 sm:p-6">
-				<div class="flex items-start justify-between gap-3"><div><p class="text-xs font-semibold text-cyan-300">{$t("Recipe editor")}</p><h2 class="mt-2 text-xl font-semibold text-white">{$t(recipeId === null ? 'Add a recipe' : 'Edit recipe')}</h2></div>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-10 px-2 text-sm text-slate-400 hover:text-white">{$t("Cancel edit")}</button>{/if}</div>
-				{#if formError}<Notice tone="error" message={formError} class="mt-4" />{/if}
-				{#if recipeId !== null && recipes.find((recipe) => recipe.id === recipeId)?.needs_review}<p role="status" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-2.5 text-sm text-amber-100">{$t('This recipe has source details to review. Blank fields are kept as provided; fill in what you know.')}</p>{/if}
-				{#if importNotices.length}<ul role="status" class="mt-4 list-disc space-y-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-8 py-2.5 text-sm text-amber-100">{#each importNotices as notice}<li>{$t(notice)}</li>{/each}</ul>{/if}
-				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
-					<label class="block text-sm font-medium text-slate-200">{$t("Title")}<input id="recipe-title" bind:value={title} required maxlength="180" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
-					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Category")} <span class="text-xs font-normal text-slate-500">{$t('optional')}</span><input bind:value={category} maxlength="80" placeholder={$t("Dinner")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label><label class="block text-sm font-medium text-slate-200">{$t("Servings")}<input bind:value={servings} type="number" min="1" max="1000" required={recipeId === null} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label></div>
-					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Prep time")} <span class="text-xs font-normal text-slate-500">{$t('minutes')}</span><input bind:value={preparationMinutes} type="number" min="1" max="1440" placeholder={$t("Optional")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
-						{#if recipeId === null && formVisibilityOptions.length > 1}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Household")}</option></select></label>{:else}<div class="flex items-end pb-3 text-xs leading-5 text-slate-500">{recipeId !== null ? $t('Visibility: {visibility}', { visibility: $t(visibility === 'private' ? 'Private' : 'Household') }) : $t(canManageShared && !canCreate ? 'Shared recipes are managed by household admins.' : 'New recipes are private to you.')}</div>{/if}
-					</div>
-					<fieldset class="space-y-3"><legend class="text-sm font-semibold text-slate-200">{$t("Ingredients")}</legend>
-						{#each ingredients as ingredient, index (index)}
-							<div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-							<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_auto]"><label class="min-w-0 text-xs text-slate-400">{$t("Ingredient")}<input bind:value={ingredient.name} required maxlength="120" placeholder={$t("Pasta")} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-3 text-xs text-slate-400 sm:order-none">{$t("Quantity")}<input bind:value={ingredient.quantity} type="text" inputmode="decimal" placeholder={$t('Optional')} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><label class="order-4 text-xs text-slate-400 sm:order-none">{$t("Unit")}<input bind:value={ingredient.unit} maxlength="40" placeholder={$t('Optional')} class="mt-1 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label><button type="button" aria-label={$t("Remove ingredient")} onclick={() => removeIngredient(index)} class="order-2 mt-5 min-h-10 min-w-9 rounded-lg text-slate-500 hover:bg-rose-400/10 hover:text-rose-200 sm:order-none">×</button></div>
-								<label class="mt-2 block text-xs text-slate-400">{$t("Note")} <span class="text-slate-600">{$t('optional')}</span><input bind:value={ingredient.note} maxlength="160" placeholder={$t("finely grated")} class="mt-1 min-h-9 w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none" /></label>
-							</div>
-						{/each}
-						<button type="button" onclick={addIngredient} disabled={ingredients.length >= 100} class="min-h-10 rounded-lg border border-dashed border-slate-700 px-3 text-sm text-cyan-200 hover:border-cyan-300/50 disabled:opacity-40">+ {$t('Add ingredient')}</button>
-					</fieldset>
-					<label class="block text-sm font-medium text-slate-200">{$t("Preparation instructions")}<textarea bind:value={instructions} maxlength="20000" rows="5" placeholder={$t("Write the steps in the order you follow them…")} class="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
-					<div><label class="block text-sm font-medium text-slate-200">{$t("Recipe photo")} <span class="text-xs font-normal text-slate-500">{$t("optional · JPEG, PNG or WebP · 5 MB max")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={choosePhoto} class="ui-file-input mt-1.5" /></label>
-						{#if photoFile}<p class="mt-1 text-xs text-slate-400">{$t("Selected:")} {photoFile.name}</p>{:else if existingPhoto && !removePhoto}<div class="mt-2 flex items-center gap-3"><img src={existingPhoto} alt={$t("Current recipe")} class="h-14 w-20 rounded-lg object-cover" /><button type="button" onclick={() => (removePhoto = true)} class="min-h-9 px-2 text-xs text-slate-400 hover:text-rose-200">{$t("Remove current photo")}</button></div>{:else if removePhoto}<p class="mt-2 text-xs text-slate-400">{$t("The current photo will be removed when you save.")}</p>{/if}</div>
-					<div class="border-t border-slate-800 pt-4"><p class="text-xs leading-5 text-slate-500">{$t("Private recipes and photos remain hidden from administrators unless you grant access. Household recipes require an active admin with Recipes Manage.")}</p><div class="mt-4 flex gap-2"><button type="submit" disabled={saving} class="min-h-11 flex-1 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : recipeId === null ? 'Save recipe' : 'Save changes')}</button>{#if recipeId !== null}<button type="button" onclick={resetForm} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm text-slate-300 hover:border-slate-500">{$t("Cancel")}</button>{/if}</div></div>
-				</form>
-			</aside>
-			</Modal>
+			<RecipeEditor bind:open={editorOpen} recipe={editingRecipe} draft={editorDraft} notices={importNotices} visibilityOptions={formVisibilityOptions} {visibilityHint} onSaved={recipeSaved} />
 			{#if deleteTarget !== null}<ConfirmModal bind:open={deleteOpen} title={$t('Delete recipe?')} message={$t('Delete this recipe?')} onConfirm={() => void deleteRecipe(deleteTarget!)} />{/if}
 		{/if}
 		{#if canView && !canAddRecipe && !hasEditableRecipe}
@@ -476,8 +302,5 @@
 	.recipe-favorite[aria-pressed='true'] { color: var(--warning-text); }
 	.recipe-filter-toggle { gap: 0.5rem; }
 	.recipe-filter-toggle[aria-pressed='true'] { border-color: var(--warning-text); color: var(--warning-text); }
-	@media (min-width: 641px) {
-		:global(.recipe-detail.ui-modal) { width: min(100% - 2rem, 56rem); }
-	}
-	:global(.recipe-detail .ui-modal-actions > .recipe-favorite) { margin-right: auto; }
+	.recipe-import-type[aria-pressed='true'] { border-color: var(--accent-text); color: var(--accent-text); }
 </style>

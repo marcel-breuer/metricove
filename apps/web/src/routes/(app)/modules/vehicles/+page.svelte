@@ -8,6 +8,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import { vehicleFuelTypes, type Vehicle, type VehicleResponse, type VehicleVisibility } from '#lib/vehicles';
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -116,10 +117,10 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Create vehicle')}</button></div>
-		<Modal bind:open={createOpen} title={$t('Add a vehicle.')} description={$t('Keep vehicle details and records together.')}>
-		<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-vehicle-heading">
-			<p class="text-sm font-medium text-cyan-200">{$t("Add to the fleet")}</p><h2 id="new-vehicle-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Set up a vehicle.")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.")}</p>
-			<form class="mt-7 grid gap-4 sm:grid-cols-2" onsubmit={createVehicle}>
+		<Modal bind:open={createOpen} size="fullscreen" title={$t('Add a vehicle.')} description={$t('Keep vehicle details and records together.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+		<div>
+			<p class="mb-6 max-w-2xl text-sm leading-6 text-slate-400">{$t("Choose the odometer unit before recording mileage. The unit is fixed once readings or maintenance mileage exist.")}</p>
+			<form id="vehicle-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createVehicle}>
 				<label class="block text-sm font-medium text-slate-200">{$t("Display name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Daily car")} /></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Make")}<input bind:value={make} required maxlength="80" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Volvo")} /></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Model")}<input bind:value={model} required maxlength="80" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder="V60" /></label>
@@ -128,9 +129,13 @@
 				<label class="block text-sm font-medium text-slate-200">{$t("Odometer unit")}<select bind:value={odometerUnit} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="km">{$t("Kilometres · km")}</option><option value="mi">{$t("Miles · mi")}</option></select></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household vehicle")}</option>{/if}</select></label>
 				<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Context for this vehicle")}></textarea></label>
-				<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private vehicle, insurance, mileage and cost details are hidden from administrators unless the owner grants access.")}</p><button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create vehicle')}</button></div>
+				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-slate-500">{$t("Private vehicle, insurance, mileage and cost details are hidden from administrators unless the owner grants access.")}</p></div>
 			</form>
-		</section>
+		</div>
+			{#snippet footer()}
+				<Button variant="secondary" type="button" onclick={() => (createOpen = false)}>{$t('Cancel')}</Button>
+				<Button type="submit" form="vehicle-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create vehicle')}</Button>
+			{/snippet}
 		</Modal>
 	{:else}
 		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a vehicle. Ask an administrator for Vehicles Create access.")}</p>

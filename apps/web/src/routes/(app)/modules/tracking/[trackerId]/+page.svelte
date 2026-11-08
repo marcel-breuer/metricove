@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Notice from '#lib/ui/Notice.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { page } from '$app/state';
@@ -443,19 +444,16 @@
 		{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
-		<Modal bind:open={schemaOpen} title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
-			<section class="rounded-2xl border border-cyan-300/20 bg-slate-900/70 p-5 sm:p-8" aria-labelledby="edit-schema-heading">
-				<div class="max-w-2xl">
-					<p class="text-sm font-medium text-cyan-200">{$t("Schema builder · new revision")}</p>
-					<h2 id="edit-schema-heading" class="mt-2 text-2xl font-semibold text-white">{$t("Update tracker fields.")}</h2>
-					<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
-				</div>
-				<form class="mt-6 space-y-5" onsubmit={saveSchema}>
-					<div class="grid gap-4 sm:grid-cols-2">
+		<Modal bind:open={schemaOpen} size="fullscreen" title={$t('Update tracker fields.')} description={$t('Removed fields remain in past measurements.')}>
+			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+				<form id="tracker-schema-form" class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={saveSchema}>
+					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
+						<p class="text-sm leading-6 text-slate-400 sm:col-span-2 lg:col-span-1">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
 						<label class="block text-sm font-medium text-slate-200">{$t("Tracker name")}<input bind:value={schemaName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-						<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")}<textarea bind:value={schemaDescription} maxlength="500" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
+						<label class="block text-sm font-medium text-slate-200 sm:col-span-2 lg:col-span-1">{$t("Description")}<textarea bind:value={schemaDescription} maxlength="500" rows="4" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
 					</div>
-					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-5">
+					<div class="space-y-4">
+					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-5 lg:border-t-0 lg:pt-0">
 						<div><h3 class="font-semibold text-slate-100">{$t("Current fields")}</h3><p class="mt-1 text-sm text-slate-400">{$t("Leave a field out to retire it while retaining its history.")}</p></div>
 						<button type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Add field")}</button>
 					</div>
@@ -470,12 +468,12 @@
 							</li>
 						{/each}
 					</ol>
-					<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:justify-end">
-						<button type="button" onclick={() => (schemaOpen = false)} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Cancel")}</button>
-						<button type="submit" disabled={savingSchema} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:opacity-60">{$t(savingSchema ? 'Saving revision…' : 'Save schema revision')}</button>
 					</div>
 				</form>
-			</section>
+			{#snippet footer()}
+				<Button variant="secondary" type="button" onclick={() => (schemaOpen = false)}>{$t("Cancel")}</Button>
+				<Button type="submit" form="tracker-schema-form" disabled={savingSchema}>{$t(savingSchema ? 'Saving revision…' : 'Save schema revision')}</Button>
+			{/snippet}
 		</Modal>
 
 		{#if canCreate}

@@ -281,55 +281,48 @@
 			</div>
 		</section>
 
-		<Modal bind:open={editorOpen} title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')}>
-			<section class="rounded-2xl border border-emerald-200/20 bg-slate-900/90 p-5 shadow-xl shadow-black/10 sm:p-6" aria-labelledby="pantry-editor-title">
-				<div class="mb-5 flex items-start justify-between gap-4">
-					<div>
-						<p class="text-xs font-semibold text-emerald-300">{$t(editingItem ? 'Item details' : 'New stock line')}</p>
-						<h2 id="pantry-editor-title" class="mt-1 text-xl font-semibold text-white">{editingItem ? `Edit ${editingItem.name}` : 'Add to pantry'}</h2>
-					</div>
-					<button type="button" onclick={closeEditor} class="rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-white">{$t("Close")}</button>
-				</div>
-				<form onsubmit={saveItem} class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					<label class="space-y-2 text-sm text-slate-300">
-						<span>{$t("Food or item name")}</span>
-						<input bind:value={name} required maxlength="180" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder={$t("Oat milk")} />
+		<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
+			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+			<form id="pantry-item-form" onsubmit={saveItem} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+				<label class="ui-field sm:col-span-2">
+					<span class="ui-field-label">{$t("Food or item name")}</span>
+					<input bind:value={name} required maxlength="180" class="ui-control" placeholder={$t("Oat milk")} />
+				</label>
+				{#if !editingItem}
+					<label class="ui-field">
+						<span class="ui-field-label">{$t("Starting quantity")}</span>
+						<input bind:value={quantity} required inputmode="decimal" class="ui-control" placeholder="1.000" />
 					</label>
-					{#if !editingItem}
-						<label class="space-y-2 text-sm text-slate-300">
-							<span>{$t("Starting quantity")}</span>
-							<input bind:value={quantity} required inputmode="decimal" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder="1.000" />
-						</label>
-						<label class="space-y-2 text-sm text-slate-300">
-							<span>{$t("Unit")}</span>
-							<input bind:value={unit} required maxlength="32" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder={$t("pcs, g, ml")} />
-						</label>
-					{:else}
-						<div class="flex items-end pb-3 text-sm text-slate-400">{$t("Quantity and unit:")} <span class="ml-1 text-white">{formatMeasurement(editingItem.quantity, editingItem.unit)} {editingItem.unit}</span></div>
-					{/if}
-					<label class="space-y-2 text-sm text-slate-300">
-						<span>{$t("Storage location")} <span class="text-slate-500">{$t("(optional)")}</span></span>
-						<input bind:value={location} maxlength="120" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50" placeholder={$t("Fridge, pantry shelf")} />
+					<label class="ui-field">
+						<span class="ui-field-label">{$t("Unit")}</span>
+						<input bind:value={unit} required maxlength="32" class="ui-control" placeholder={$t("pcs, g, ml")} />
 					</label>
-					<label class="space-y-2 text-sm text-slate-300">
-						<span>{$t("Best-before date")} <span class="text-slate-500">{$t("(optional)")}</span></span>
-						<input bind:value={bestBefore} type="date" class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none [color-scheme:dark] focus:border-emerald-300/50" />
+				{:else}
+					<p class="self-end pb-3 text-sm text-[var(--text-muted)] sm:col-span-2">{$t("Quantity and unit:")} <span class="ml-1 text-[var(--text-primary)]">{formatMeasurement(editingItem.quantity, editingItem.unit)} {editingItem.unit}</span></p>
+				{/if}
+				<label class="ui-field sm:col-span-2">
+					<span class="ui-field-label">{$t("Storage location")} <span class="font-normal text-[var(--text-muted)]">{$t("(optional)")}</span></span>
+					<input bind:value={location} maxlength="120" class="ui-control" placeholder={$t("Fridge, pantry shelf")} />
+				</label>
+				<label class="ui-field">
+					<span class="ui-field-label">{$t("Best-before date")} <span class="font-normal text-[var(--text-muted)]">{$t("(optional)")}</span></span>
+					<input bind:value={bestBefore} type="date" class="ui-control" />
+				</label>
+				{#if !editingItem && canManageShared}
+					<label class="ui-field">
+						<span class="ui-field-label">{$t("Visibility")}</span>
+						<select bind:value={visibility} class="ui-control">
+							<option value="private">{$t("Private to me")}</option>
+							<option value="household">{$t("Shared with household")}</option>
+						</select>
 					</label>
-					{#if !editingItem && canManageShared}
-						<label class="space-y-2 text-sm text-slate-300">
-							<span>{$t("Visibility")}</span>
-							<select bind:value={visibility} class="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-white outline-none focus:border-emerald-300/50">
-								<option value="private">{$t("Private to me")}</option>
-								<option value="household">{$t("Shared with household")}</option>
-							</select>
-						</label>
-					{/if}
-					<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-						<button disabled={saving} class="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 disabled:opacity-50">{saving ? 'Saving…' : editingItem ? 'Save details' : 'Add item'}</button>
-						<p class="text-xs leading-5 text-slate-500">{$t("Units stay explicit and are never converted automatically.")}</p>
-					</div>
-				</form>
-			</section>
+				{/if}
+			</form>
+			<p class="mt-6 text-xs leading-5 text-[var(--text-muted)]">{$t("Units stay explicit and are never converted automatically.")}</p>
+			{#snippet footer()}
+				<Button variant="secondary" type="button" disabled={saving} onclick={closeEditor}>{$t('Cancel')}</Button>
+				<Button type="submit" form="pantry-item-form" disabled={saving}>{$t(saving ? 'Saving…' : editingItem ? 'Save details' : 'Add item')}</Button>
+			{/snippet}
 		</Modal>
 
 		<section class="space-y-4" aria-labelledby="stock-list-title">

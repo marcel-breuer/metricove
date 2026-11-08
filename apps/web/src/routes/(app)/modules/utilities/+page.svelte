@@ -8,6 +8,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import { canonicalizeDecimalInput, formatMeasurement } from '#lib/number-format';
 	import { numberLocale } from '#lib/i18n';
 	import { utilityMeterTypes, type UtilityMeter, type UtilitiesResponse, type UtilityVisibility } from '#lib/utilities';
@@ -123,18 +124,22 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Create meter')}</button></div>
-		<Modal bind:open={createOpen} title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>
-		<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-8" aria-labelledby="new-meter-heading">
-			<p class="text-sm font-medium text-cyan-200">{$t("Meter setup")}</p><h2 id="new-meter-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Add a meter.")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
-			<form class="mt-7 grid gap-4 sm:grid-cols-2" onsubmit={createMeter}>
+		<Modal bind:open={createOpen} size="fullscreen" title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+		<div>
+			<p class="mb-6 max-w-2xl text-sm leading-6 text-slate-400">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
+			<form id="meter-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createMeter}>
 				<label class="block text-sm font-medium text-slate-200">{$t("Meter name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Main electricity")} /></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Meter type")}<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#each utilityMeterTypes as type}<option value={type.value}>{$t(type.label)} · {type.unit}</option>{/each}</select></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household meter")}</option>{/if}</select></label>
 				<label class="block text-sm font-medium text-slate-200">{$t("Alert threshold")} <span class="font-normal text-slate-500">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("No alert")} /></label>
 				<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Location or meter details")}></textarea></label>
-				<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between"><p class="text-xs leading-5 text-slate-500">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p><button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create meter')}</button></div>
+				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-slate-500">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p></div>
 			</form>
-		</section>
+		</div>
+			{#snippet footer()}
+				<Button variant="secondary" type="button" onclick={() => (createOpen = false)}>{$t('Cancel')}</Button>
+				<Button type="submit" form="meter-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create meter')}</Button>
+			{/snippet}
 		</Modal>
 	{:else}
 		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a meter. Ask an administrator for Utilities Create access.")}</p>
