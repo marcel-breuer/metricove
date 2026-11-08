@@ -225,6 +225,8 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,edit')->whereNumber('record')->name('maintenance.destroy');
             Route::delete('/insurance/{policy}', [VehiclesController::class, 'destroyInsurance'])
                 ->middleware('module.access:vehicles,edit')->whereNumber('policy')->name('insurance.destroy');
+            Route::patch('/costs/{cost}', [VehiclesController::class, 'updateCost'])
+                ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.update');
             Route::delete('/costs/{cost}', [VehiclesController::class, 'destroyCost'])
                 ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.destroy');
         });

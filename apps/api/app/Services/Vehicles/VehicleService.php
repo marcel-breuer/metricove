@@ -502,6 +502,54 @@ class VehicleService
     public function addCost(User $actor, int $vehicleId, array $data): array
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::Create);
+        $attributes = $this->costAttributes($data);
+        $cost = DB::transaction(function () use ($actor, $vehicleId, $attributes): VehicleCost {
+            $vehicle = Vehicle::query()->whereKey($vehicleId)->lockForUpdate()->firstOrFail();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $vehicle);
+            $cost = $vehicle->costs()->create([
+                'owner_user_id' => $vehicle->owner_user_id,
+                'created_by_user_id' => $actor->id,
+                'is_private' => $vehicle->is_private,
+                ...$attributes,
+            ]);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $cost);
+
+            return $cost;
+        }, 3);
+
+        return $this->presentCost($actor, $cost, $vehicle);
+    }
+
+    /** @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public function updateCost(User $actor, int $costId, array $data): array
+    {
+        /** @var VehicleCost $candidate */
+        $candidate = $this->visibleResources($actor, VehicleCost::class, 'vehicle_costs', ModuleCapability::Edit, VehicleCost::query())
+            ->whereKey($costId)
+            ->firstOrFail();
+        $attributes = $this->costAttributes($data);
+
+        [$cost, $vehicle] = DB::transaction(function () use ($actor, $candidate, $costId, $attributes): array {
+            $vehicle = Vehicle::query()->whereKey($candidate->vehicle_id)->lockForUpdate()->firstOrFail();
+            $cost = VehicleCost::query()->whereKey($costId)->lockForUpdate()->firstOrFail();
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $cost);
+            $cost->fill($attributes);
+            $cost->save();
+
+            return [$cost, $vehicle];
+        }, 3);
+
+        return $this->presentCost($actor, $cost, $vehicle);
+    }
+
+    /** @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function costAttributes(array $data): array
+    {
         $amount = VehicleDecimalValue::money($data['amount']);
         $rawFuelLiters = $data['fuel_liters'] ?? null;
         $rawFuelUnitPrice = $data['fuel_unit_price'] ?? null;
@@ -529,30 +577,18 @@ class VehicleService
             throw ValidationException::withMessages(['category' => 'Fuel details are only available for fuel costs.']);
         }
 
-        $cost = DB::transaction(function () use ($actor, $vehicleId, $data, $amount, $fuelLiters, $fuelUnitPrice, $fuelOdometerValue): VehicleCost {
-            $vehicle = Vehicle::query()->whereKey($vehicleId)->lockForUpdate()->firstOrFail();
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $vehicle);
-            $cost = $vehicle->costs()->create([
-                'owner_user_id' => $vehicle->owner_user_id,
-                'created_by_user_id' => $actor->id,
-                'is_private' => $vehicle->is_private,
-                'category' => $data['category'],
-                'amount' => $amount,
-                'currency' => strtoupper($data['currency']),
-                'period_start' => $data['period_start'],
-                'period_end' => $data['period_end'] ?? null,
-                'period' => $data['period'],
-                'description' => $this->nullableTrim($data['description'] ?? null),
-                'fuel_liters' => $fuelLiters,
-                'fuel_unit_price' => $fuelUnitPrice,
-                'fuel_odometer_value' => $fuelOdometerValue,
-            ]);
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $cost);
-
-            return $cost;
-        }, 3);
-
-        return $this->presentCost($actor, $cost, $vehicle);
+        return [
+            'category' => $data['category'],
+            'amount' => $amount,
+            'currency' => strtoupper($data['currency']),
+            'period_start' => $data['period_start'],
+            'period_end' => $data['period_end'] ?? null,
+            'period' => $data['period'],
+            'description' => $this->nullableTrim($data['description'] ?? null),
+            'fuel_liters' => $fuelLiters,
+            'fuel_unit_price' => $fuelUnitPrice,
+            'fuel_odometer_value' => $fuelOdometerValue,
+        ];
     }
 
     public function deleteRecord(User $actor, string $type, int $recordId): void

@@ -311,6 +311,52 @@ class VehiclesModuleTest extends TestCase
         $this->assertSame('monthly', $monthlyCost['period']);
     }
 
+    public function test_vehicle_costs_can_be_updated_and_deleted_only_with_edit_access(): void
+    {
+        $admin = $this->admin();
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $vehicleId = $this->createVehicle($admin, 'household');
+        $costId = (int) $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel', 'amount' => '80.00', 'currency' => 'EUR',
+            'period_start' => '2026-10-02', 'period' => 'once', 'description' => 'Old fill-up',
+            'fuel_liters' => '40', 'fuel_unit_price' => '2', 'fuel_odometer_value' => '12000',
+        ])->assertCreated()->json('cost.id');
+
+        $this->actingAs($admin, 'web')->patchJson("/api/vehicles/costs/{$costId}", [
+            'category' => 'fuel', 'amount' => '75.60', 'currency' => 'eur',
+            'period_start' => '2026-10-03', 'period_end' => null, 'period' => 'once', 'description' => 'Corrected fill-up',
+            'fuel_liters' => '40', 'fuel_unit_price' => '1.89', 'fuel_odometer_value' => '12020.5',
+        ])->assertOk()->assertJsonPath('cost.amount', '75.60')
+            ->assertJsonPath('cost.currency', 'EUR')
+            ->assertJsonPath('cost.period_start', '2026-10-03')
+            ->assertJsonPath('cost.description', 'Corrected fill-up')
+            ->assertJsonPath('cost.fuel_liters', '40.000')
+            ->assertJsonPath('cost.fuel_unit_price', '1.8900')
+            ->assertJsonPath('cost.fuel_odometer_value', '12020.500');
+
+        $this->assertDatabaseHas('vehicle_costs', [
+            'id' => $costId, 'vehicle_id' => $vehicleId, 'amount' => '75.60', 'currency' => 'EUR',
+            'description' => 'Corrected fill-up', 'fuel_unit_price' => '1.8900', 'fuel_odometer_value' => '12020.500',
+        ]);
+
+        $this->actingAs($admin, 'web')->patchJson("/api/vehicles/costs/{$costId}", [
+            'category' => 'fuel', 'amount' => '75.601', 'currency' => 'EUR',
+            'period_start' => '2026-10-03', 'period' => 'once',
+        ])->assertUnprocessable()->assertJsonValidationErrors('amount');
+
+        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($viewer, ['view' => true]);
+        $this->actingAs($viewer, 'web')->patchJson("/api/vehicles/costs/{$costId}", [
+            'category' => 'other', 'amount' => '1.00', 'currency' => 'EUR',
+            'period_start' => '2026-10-03', 'period' => 'once',
+        ])->assertForbidden();
+
+        $this->actingAs($admin, 'web')->deleteJson("/api/vehicles/costs/{$costId}")
+            ->assertOk()->assertJsonPath('message', 'Vehicle cost deleted.');
+        $this->assertDatabaseMissing('vehicle_costs', ['id' => $costId]);
+    }
+
     public function test_private_vehicle_and_related_records_require_exact_grants_and_disable_preserves_data(): void
     {
         $admin = $this->admin();
