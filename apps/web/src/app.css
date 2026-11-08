@@ -301,6 +301,19 @@ a {
 }
 .ui-icon-button:hover { border-color: var(--border-strong); background: var(--surface-subtle); color: var(--text-primary); }
 .ui-icon-button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.ui-back-link {
+	display: inline-flex;
+	min-height: 2.5rem;
+	align-items: center;
+	gap: 0.5rem;
+	border-radius: 0.25rem;
+	color: var(--text-muted);
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: color 150ms ease;
+}
+.ui-back-link:hover { color: var(--accent-text); }
+.ui-back-link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 .ui-disclosure { border: 1px solid var(--border-default); border-radius: 0.75rem; background: var(--surface-subtle); }
 .ui-disclosure > summary {
@@ -365,6 +378,38 @@ a {
 .ui-modal-title { margin: 0; color: var(--text-primary); font-size: 1.25rem; font-weight: 600; line-height: 1.75rem; }
 .ui-modal-description { margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.875rem; line-height: 1.5rem; }
 .ui-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+.ui-modal-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+
+/* Near-fullscreen dialogs for create/edit forms: fixed header, scrolling body, sticky footer. */
+.ui-modal--fullscreen {
+	width: calc(100% - 3rem);
+	max-width: 96rem;
+	height: calc(100dvh - 3rem);
+	max-height: none;
+	overflow: hidden;
+}
+.ui-modal--fullscreen .ui-modal-body { display: flex; height: 100%; flex-direction: column; padding: 0; }
+.ui-modal--fullscreen .ui-modal-header {
+	flex-shrink: 0;
+	align-items: center;
+	margin: 0;
+	border-bottom: 1px solid var(--border-default);
+	padding: 1rem 1.5rem;
+}
+.ui-modal--fullscreen .ui-modal-content {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 1.5rem;
+}
+.ui-modal--fullscreen .ui-modal-footer {
+	flex-shrink: 0;
+	margin: 0;
+	border-top: 1px solid var(--border-default);
+	background: var(--surface-raised);
+	padding: 0.875rem 1.5rem;
+}
 
 /* Native file pickers follow the button tokens instead of browser defaults. */
 input[type="file"] { color: var(--text-muted); font-size: 0.875rem; }
@@ -467,6 +512,19 @@ main [class~="shadow-lg"], main [class~="shadow-xl"], main [class~="shadow-2xl"]
 	}
 	.ui-modal-body { padding: 1.25rem 1rem 1.5rem; }
 	.ui-modal-actions > .ui-button { flex: 1 1 auto; }
+	.ui-modal-footer > .ui-button { flex: 1 1 auto; }
+	.ui-modal--fullscreen {
+		width: 100%;
+		height: 100dvh;
+		max-height: none;
+		border-width: 0;
+		border-radius: 0;
+		padding-bottom: 0;
+	}
+	.ui-modal--fullscreen .ui-modal-body { padding: 0; }
+	.ui-modal--fullscreen .ui-modal-header { padding: 0.75rem 1rem; }
+	.ui-modal--fullscreen .ui-modal-content { padding: 1.25rem 1rem; }
+	.ui-modal--fullscreen .ui-modal-footer { padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); }
 }
 }
 
@@ -474,6 +532,10 @@ main [class~="shadow-lg"], main [class~="shadow-xl"], main [class~="shadow-2xl"]
 dialog.ui-modal { margin: auto; }
 @media (max-width: 640px) {
 	dialog.ui-modal { margin: auto 0 0; }
+}
+dialog.ui-modal--fullscreen { margin: auto; }
+@media (max-width: 640px) {
+	dialog.ui-modal--fullscreen { margin: 0; }
 }
 
 .mobile-drawer {
