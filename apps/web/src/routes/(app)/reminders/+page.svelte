@@ -95,7 +95,7 @@
 	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
-	<section class="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="inbox-heading">
+	<section class="mt-8 rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="inbox-heading">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div><h2 id="inbox-heading" class="text-xl font-semibold text-ink">{$t('Upcoming')}</h2><p class="mt-1 text-sm text-ink-muted">{reminders.filter((reminder) => !reminder.is_read).length} {$t('unread reminders')}</p></div>
 			<button type="button" onclick={() => void load()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t('Refresh')}</button>
@@ -119,7 +119,7 @@
 		{/if}
 	</section>
 
-	<section class="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="settings-heading">
+	<section class="mt-8 rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="settings-heading">
 		<div><h2 id="settings-heading" class="text-xl font-semibold text-ink">{$t('Reminder settings')}</h2><p class="mt-1 text-sm text-ink-muted">{$t('Email is optional and uses the SMTP settings configured for this installation.')}</p></div>
 		<form class="mt-5 space-y-5" onsubmit={savePreferences}>
 			<label class="flex items-start gap-3 text-sm text-ink-secondary"><input bind:checked={emailEnabled} type="checkbox" class="mt-0.5 size-4 rounded border-line-strong bg-page accent-accent" /><span><span class="font-medium">{$t('Send reminder emails')}</span><span class="mt-1 block text-ink-muted">{$t('Email details are sent only while you retain permission to view the source record.')}</span></span></label>

@@ -417,12 +417,12 @@
 	{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 
 	{#if shell.loading}
-		<p role="status" class="mt-6 rounded-xl border border-line bg-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading module access…")}</p>
+		<p role="status" class="mt-6 rounded-xl border border-line glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading module access…")}</p>
 	{:else if !hasImportView}
 		<div class="mt-6 rounded-2xl border border-warning/20 bg-warning/5 p-5 text-sm leading-6 text-warning"><p class="font-semibold">{$t("Import View access is required.")}</p><p class="mt-1 text-warning/75">{$t("Grant access to an enabled source module before importing or exporting its records.")}</p></div>
 	{:else}
 		{#if importTargets.length > 0}
-			<section class="mt-6 max-w-2xl rounded-2xl border border-accent-ink/20 bg-surface p-5 sm:p-6" aria-labelledby="import-destination-heading">
+			<section class="mt-6 max-w-2xl rounded-2xl border border-accent-ink/20 glass-surface p-5 sm:p-6" aria-labelledby="import-destination-heading">
 				<h2 id="import-destination-heading" class="text-base font-semibold text-ink">{$t("Choose an import destination")}</h2>
 				<label class="mt-3 block text-sm font-medium text-ink-secondary" for="import-destination">{$t("What kind of records are in this file?")}
 					<select id="import-destination" value={importTarget} onchange={(event) => changeImportTarget(event.currentTarget.value as ImportTarget)} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
@@ -434,7 +434,7 @@
 		{/if}
 		{#if importTarget === 'utilities' && canView}
 		<div class="mt-6 grid gap-5 xl:grid-cols-[minmax(18rem,0.75fr)_minmax(0,1.25fr)]">
-			<section class="h-fit rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="csv-import-heading">
+			<section class="h-fit rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="csv-import-heading">
 				<h2 id="csv-import-heading" class="text-lg font-semibold text-ink">{$t("Utility reading CSV")}</h2>
 				<p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Upload a UTF-8 CSV with a header row, then choose which columns contain the date, value and optional note. Dates use YYYY-MM-DD and values use a decimal point.")}</p>
 				<label class="mt-5 block text-sm font-medium text-ink-secondary">{$t("Meter")}
@@ -475,7 +475,7 @@
 				<p class="mt-4 text-xs leading-5 text-ink-subtle">{$t("Exports contain only readings visible to your account. Notes that could be interpreted as spreadsheet formulas are escaped.")}</p>
 			</section>
 
-			<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="preview-heading">
+			<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="preview-heading">
 				<div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="preview-heading" class="text-lg font-semibold text-ink">{$t("Review before saving")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Nothing is written until you confirm this preview.")}</p></div>
 					{#if preview}<span class="rounded-full border border-line-strong px-3 py-1 text-xs text-ink-secondary">{preview.ready_count ?? 0} {$t("new ·")} {preview.skipped_count ?? 0} unchanged</span>{/if}
 				</div>
@@ -497,7 +497,7 @@
 		{/if}
 
 		{#if importTarget === 'finance' && canViewFinance}
-			<section class="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="finance-import-heading">
+			<section class="mt-6 rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="finance-import-heading">
 				<div class="max-w-3xl">
 					<p class="text-sm font-medium tracking-wide text-accent-ink">{$t("Finance import")}</p>
 					<h2 id="finance-import-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Bring bank transactions into Finance")}</h2>

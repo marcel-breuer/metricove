@@ -53,3 +53,86 @@
 		--color-overlay: rgb(0 0 0 / 68%);
 	}
 }
+
+/* Opaque by default: transparency is a progressive enhancement, never a
+ * prerequisite for reading content or using a control. Palette tokens above
+ * remain the source of truth for both themes. */
+:root {
+	--glass-panel: var(--color-surface);
+	--glass-chrome: var(--color-surface);
+	--glass-blur: none;
+	--glass-highlight: color-mix(in srgb, var(--color-surface) 70%, transparent);
+	--glass-shadow: color-mix(in srgb, var(--color-ink) 6%, transparent);
+	--atmosphere: none;
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	:root {
+		--glass-panel: color-mix(in srgb, var(--color-surface) 90%, transparent);
+		--glass-chrome: color-mix(in srgb, var(--color-surface) 94%, transparent);
+		--glass-blur: blur(12px);
+		--atmosphere: radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 55%),
+			 radial-gradient(ellipse at 100% 100%, color-mix(in srgb, var(--color-line-strong) 24%, transparent), transparent 65%);
+	}
+}
+
+@utility atmospheric-page {
+	background-color: var(--color-page);
+	background-image: var(--atmosphere);
+	background-attachment: fixed;
+}
+
+@utility glass-surface {
+	background-color: var(--glass-panel);
+	box-shadow: inset 0 1px 0 var(--glass-highlight), 0 4px 20px var(--glass-shadow);
+}
+
+/* Blur is restricted to large boundary surfaces. Cards carry a translucent
+ * fill without stacking dozens of expensive backdrop filters per screen. */
+@utility glass-chrome {
+	background-color: var(--glass-chrome);
+	-webkit-backdrop-filter: var(--glass-blur);
+	backdrop-filter: var(--glass-blur);
+	box-shadow: inset 0 1px 0 var(--glass-highlight), 0 4px 20px var(--glass-shadow);
+}
+
+@utility glass-control {
+	box-shadow: inset 0 1px 2px var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+
+@layer base {
+	body {
+		margin: 0;
+		background: var(--color-page);
+		color: var(--color-ink);
+	}
+
+	/* Native menus, form values and chart labels retain an opaque canvas. */
+	select, option, textarea, input {
+		accent-color: var(--color-accent);
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-accent-ink);
+		outline-offset: 3px;
+	}
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active), print {
+	:root {
+		--glass-panel: var(--color-surface);
+		--glass-chrome: var(--color-surface);
+		--glass-blur: none;
+		--glass-highlight: transparent;
+		--glass-shadow: transparent;
+		--atmosphere: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation: none !important;
+		transition: none !important;
+		scroll-behavior: auto !important;
+	}
+}

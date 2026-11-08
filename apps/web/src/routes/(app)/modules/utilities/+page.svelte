@@ -104,13 +104,13 @@
 		<section class="mt-8" aria-labelledby="meters-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-ink">{$t("Meters")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.")}</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button></div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border border-line bg-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading meters…")}</p>
+				<p role="status" class="mt-5 rounded-xl border border-line glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading meters…")}</p>
 			{:else if meters.length === 0}
-				<div class="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No meters yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Add a private meter for your own records, or ask an active administrator to create one shared across the household.")}</p></div>
+				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No meters yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Add a private meter for your own records, or ask an active administrator to create one shared across the household.")}</p></div>
 			{:else}
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
-						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-line bg-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-line glass-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-ink">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-ink-muted">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-ink-subtle">{meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))}</span></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open readings")} <span aria-hidden="true">→</span></span>
 						</a></li>
@@ -142,6 +142,6 @@
 			{/snippet}
 		</Modal>
 	{:else}
-		<p class="mt-8 rounded-xl border border-line bg-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a meter. Ask an administrator for Utilities Create access.")}</p>
+		<p class="mt-8 rounded-xl border border-line glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a meter. Ask an administrator for Utilities Create access.")}</p>
 	{/if}
 </section>

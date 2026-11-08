@@ -592,7 +592,7 @@
 	{#if statusMessage}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 p-4 text-sm text-positive">{statusMessage}</p>{/if}
 
 	{#if canCreate}
-		<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
+		<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
 			<div class="mb-5">
 				<h2 id="receipt-upload-heading" class="text-xl font-semibold text-ink">{$t('Scan a new receipt')}</h2>
 				<p class="mt-1 text-sm leading-6 text-ink-muted">{$t('Local OCR suggests invoice fields. Nothing is saved until you confirm the preview.')}</p>
@@ -756,7 +756,7 @@
 	{/if}
 
 	{#if canView}
-		<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
+		<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h2 id="saved-receipts-heading" class="text-xl font-semibold text-ink">{$t('Receipt archive')}</h2>
@@ -847,7 +847,7 @@
 							</div>
 						{/if}
 						{#if targetLinkReceiptId === receipt.id}
-							<form class="mt-3 space-y-3 rounded-xl border border-line bg-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
+							<form class="mt-3 space-y-3 rounded-xl border border-line glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
 								<div class="flex flex-wrap items-end gap-3">
 									<label class="block min-w-48 flex-1 text-sm font-medium text-ink-secondary">{$t('Target type')}
 										<select bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink"><option value="finance">{$t('Finance expense')}</option><option value="vehicle">{$t('Vehicle cost')}</option></select>

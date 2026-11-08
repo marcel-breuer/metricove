@@ -75,7 +75,7 @@
 	data-size={size}
 	aria-labelledby={titleId}
 	aria-describedby={description ? descriptionId : undefined}
-	class="m-auto! max-w-none rounded-2xl border border-line-strong bg-surface p-0 text-ink shadow-[0_12px_32px_rgb(28_41_37/14%)] backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
+	class="m-auto! max-w-none rounded-2xl border border-line-strong glass-chrome p-0 text-ink shadow-[0_12px_32px_rgb(28_41_37/14%)] backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
 	onclose={restoreFocus}
 	onclick={handleBackdropClick}
 >

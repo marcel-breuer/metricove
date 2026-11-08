@@ -193,14 +193,14 @@
 				<button type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border border-line bg-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</p>
+				<p role="status" class="mt-5 rounded-xl border border-line glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</p>
 			{:else if trackers.length === 0}
-				<div class="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8">
+				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8">
 					<h3 class="text-lg font-semibold text-ink">{$t("No trackers yet.")}</h3>
 					<p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Create a private tracker for yourself, or ask an administrator to create a household template. Existing measurements are never visible to administrators unless their owner shares them.")}</p>
 				</div>
 			{:else}
-				<ul class="mt-5 divide-y divide-line rounded-2xl border border-line bg-surface">
+				<ul class="mt-5 divide-y divide-line rounded-2xl border border-line glass-surface">
 					{#each trackers as tracker (tracker.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 							<a href={'/modules/tracking/' + tracker.id} class="group flex min-h-16 min-w-0 flex-1 flex-col gap-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:flex-row sm:items-center sm:justify-between">
@@ -299,6 +299,6 @@
 		</Modal>
 		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}
-		<p class="mt-8 rounded-xl border border-line bg-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
+		<p class="mt-8 rounded-xl border border-line glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
 	{/if}
 </section>
