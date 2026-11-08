@@ -2,6 +2,23 @@
 
 Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH`: features and breaking changes increment MINOR; compatible fixes increment PATCH. Release Please opens reviewable release pull requests from Conventional Commit titles and commit subjects, including the dated changelog section and version updates. The first stable release will use `1.0.0` once the public API and installation behavior are considered stable. See [the release guide](docs/releases.md) for release and image procedures.
 
+## [0.21.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.20.0...metricove-v0.21.0) (2026-11-08)
+
+
+### Features
+
+* **mcp:** import Notion recipes ([5bcbd07](https://github.com/marcel-breuer/metricove/commit/5bcbd07f7a9e56214138edee1e8eba9b57dc8780)), closes [#208](https://github.com/marcel-breuer/metricove/issues/208)
+* **mcp:** import Notion recipes ([bced568](https://github.com/marcel-breuer/metricove/commit/bced5686770fa2e35a900a0316c738db95a719d9))
+* **web:** unify mobile UI and shared components ([95a1b6a](https://github.com/marcel-breuer/metricove/commit/95a1b6a359401260c43a5fd1ddca0049dbd4b70e))
+* **web:** unify mobile UI and shared components ([8660e70](https://github.com/marcel-breuer/metricove/commit/8660e7049d319d975d57a91129692692405980bf)), closes [#212](https://github.com/marcel-breuer/metricove/issues/212)
+
+
+### Bug Fixes
+
+* preserve incomplete Notion recipes for review ([a8e28d3](https://github.com/marcel-breuer/metricove/commit/a8e28d3d8c6a453a6157d82a4442f9fe24f77184))
+* **recipes:** import incomplete source recipes ([99f0ad5](https://github.com/marcel-breuer/metricove/commit/99f0ad5b6163255aaeffe96c97f4df87bbcdd35d))
+* **recipes:** preserve missing servings for review ([72a37b7](https://github.com/marcel-breuer/metricove/commit/72a37b7709f0cf70f6fa03b7249239f84138524e))
+
 ## [0.20.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.19.0...metricove-v0.20.0) (2026-11-06)
 
 
