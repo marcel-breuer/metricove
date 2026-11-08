@@ -28,7 +28,6 @@ use App\Models\VehicleOdometerReading;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Finance\FinanceDecimalValue;
 use App\Services\Finance\FinanceService;
-use App\Services\Import\NotionFoodImportService;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
 use App\Services\Notes\NoteService;
@@ -146,56 +145,6 @@ class McpWriteWorkflowRegistry
                 ], 'required' => ['title', 'instructions', 'servings', 'visibility', 'ingredients'], 'additionalProperties' => false],
                 'rules' => ['title' => ['required', 'string', 'max:180'], 'category' => ['nullable', 'string', 'max:80'], 'instructions' => ['required', 'string', 'max:20000'], 'servings' => ['required', 'integer', 'between:1,1000'], 'preparation_minutes' => ['nullable', 'integer', 'between:1,1440'], 'visibility' => ['required', 'in:private,household'], 'ingredients' => ['required', 'array', 'min:1', 'max:100'], 'ingredients.*' => ['required', 'array:name,quantity,unit,note'], 'ingredients.*.name' => ['required', 'string', 'max:120'], 'ingredients.*.quantity' => ['required', 'string', 'max:32'], 'ingredients.*.unit' => ['required', 'string', 'max:40'], 'ingredients.*.note' => ['nullable', 'string', 'max:160']],
                 'execute' => fn (User $actor, array $data): array => $this->container->make(RecipeService::class)->create($actor, $data),
-            ],
-            'import_notion_recipes' => [
-                'module' => 'recipes', 'capability' => 'create', 'required_scopes' => ['import:create'],
-                'title' => 'Import Notion recipes',
-                'description' => 'Review up to 50 Notion recipe pages. Incomplete source data is imported unchanged and visibly flagged for editing; unsupported fields are held for review and existing source IDs are skipped. Both Import Create and Recipes Create access plus member approval in Metricove are required.',
-                'schema' => ['type' => 'object', 'properties' => [
-                    'recipes' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 50, 'items' => ['type' => 'object', 'properties' => [
-                        'source_id' => ['type' => 'string', 'maxLength' => 180], 'title' => ['type' => 'string', 'maxLength' => 180],
-                        'category' => ['type' => 'string', 'maxLength' => 80], 'instructions' => ['type' => 'string', 'maxLength' => 20000],
-                        'servings' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 1000], 'preparation_minutes' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 1440],
-                        'ingredients' => ['type' => 'array', 'maxItems' => 100, 'items' => ['type' => 'object', 'properties' => [
-                            'name' => ['type' => 'string', 'maxLength' => 120], 'quantity' => ['type' => 'string', 'maxLength' => 32],
-                            'unit' => ['type' => 'string', 'maxLength' => 40], 'note' => ['type' => 'string', 'maxLength' => 160],
-                        ], 'additionalProperties' => false]],
-                    ], 'required' => ['source_id', 'title'], 'additionalProperties' => false]],
-                ], 'required' => ['recipes'], 'additionalProperties' => false],
-                'rules' => ['recipes' => ['required', 'array', 'min:1', 'max:50'], 'recipes.*' => ['required', 'array:source_id,title,category,instructions,servings,preparation_minutes,ingredients'],
-                    'recipes.*.source_id' => ['required', 'string', 'max:180'], 'recipes.*.title' => ['required', 'string', 'max:180'],
-                    'recipes.*.category' => ['nullable', 'string', 'max:80'], 'recipes.*.instructions' => ['sometimes', 'nullable', 'string', 'max:20000'],
-                    'recipes.*.servings' => ['sometimes', 'nullable', 'integer', 'between:1,1000'], 'recipes.*.preparation_minutes' => ['sometimes', 'nullable', 'integer', 'between:1,1440'],
-                    'recipes.*.ingredients' => ['sometimes', 'array', 'max:100'], 'recipes.*.ingredients.*' => ['required', 'array:name,quantity,unit,note'],
-                    'recipes.*.ingredients.*.name' => ['sometimes', 'nullable', 'string', 'max:120'], 'recipes.*.ingredients.*.quantity' => ['sometimes', 'nullable', 'string', 'max:32'],
-                    'recipes.*.ingredients.*.unit' => ['sometimes', 'nullable', 'string', 'max:40'], 'recipes.*.ingredients.*.note' => ['sometimes', 'nullable', 'string', 'max:160']],
-                'preview' => function (User $actor, array $data): array {
-                    $result = $this->container->make(NotionFoodImportService::class)->preview($actor, ['recipes' => $data['recipes']]);
-
-                    return [
-                        'recipe_count' => count($result['items']), 'ready_count' => $result['ready_count'],
-                        'duplicate_count' => $result['duplicate_count'], 'review_count' => $result['review_count'],
-                        'items' => array_map(static fn (array $item): array => [
-                            'source_id' => $item['source_id'], 'title' => $item['label'], 'ready' => $item['ready'],
-                            'duplicate' => $item['duplicate'], 'warnings' => array_values(array_unique($item['warnings'])),
-                        ], $result['items']),
-                    ];
-                },
-                'execute' => function (User $actor, array $data): array {
-                    $importer = $this->container->make(NotionFoodImportService::class);
-                    $preview = $importer->preview($actor, ['recipes' => $data['recipes']]);
-                    $eligible = array_values(array_filter($preview['items'], static fn (array $item): bool => ($item['importable'] ?? false) || $item['duplicate']));
-                    $result = $eligible === []
-                        ? ['imported_count' => 0, 'duplicate_count' => 0]
-                        : $importer->import($actor, [
-                            'recipes' => $data['recipes'], 'selected_source_ids' => array_column($eligible, 'source_id'),
-                        ]);
-
-                    return [
-                        'imported_count' => $result['imported_count'], 'duplicate_count' => $result['duplicate_count'],
-                        'review_count' => $preview['review_count'],
-                    ];
-                },
             ],
             'favorite_recipe' => [
                 'module' => 'recipes', 'capability' => 'edit', 'title' => 'Favorite a recipe', 'description' => 'Prepare a personal recipe favorite for member approval.',
@@ -805,12 +754,6 @@ class McpWriteWorkflowRegistry
                 if (RecipeQuantity::normalize($ingredient['quantity'] ?? null) === null) {
                     throw ValidationException::withMessages(["ingredients.{$index}.quantity" => 'Enter a positive recipe quantity.']);
                 }
-            }
-        }
-        if ($name === 'import_notion_recipes') {
-            $sourceIds = array_column($validated['recipes'], 'source_id');
-            if (count($sourceIds) !== count(array_unique($sourceIds))) {
-                throw ValidationException::withMessages(['recipes' => 'Each Notion recipe page must appear only once in a batch.']);
             }
         }
         if ($name === 'create_financial_transaction' && FinanceDecimalValue::money($validated['amount'] ?? null) === null) {

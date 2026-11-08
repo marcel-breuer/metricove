@@ -5,30 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmFinanceTransactionsImportRequest;
 use App\Http\Requests\ConfirmUtilityReadingsImportRequest;
-use App\Http\Requests\NotionFoodImportRequest;
 use App\Http\Requests\PreviewFinanceTransactionsImportRequest;
 use App\Http\Requests\PreviewUtilityReadingsImportRequest;
 use App\Http\Requests\SuggestUtilityReadingRequest;
 use App\Models\User;
 use App\Services\Import\FinanceTransactionImportService;
 use App\Services\Import\ImportService;
-use App\Services\Import\NotionFoodImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportController extends Controller
 {
-    public function previewNotionFood(NotionFoodImportRequest $request, NotionFoodImportService $imports): JsonResponse
-    {
-        return response()->json($imports->preview($this->actor($request), $request->validated()));
-    }
-
-    public function importNotionFood(NotionFoodImportRequest $request, NotionFoodImportService $imports): JsonResponse
-    {
-        return response()->json($imports->import($this->actor($request), $request->validated()));
-    }
-
     public function previewFinanceTransactions(
         PreviewFinanceTransactionsImportRequest $request,
         FinanceTransactionImportService $imports,
