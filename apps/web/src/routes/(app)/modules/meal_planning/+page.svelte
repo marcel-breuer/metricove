@@ -288,67 +288,59 @@
 	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message, messageParams)}</p>{/if}
 	{#if error}<Notice tone="error" message={error} />{/if}
 
-	<Modal bind:open={editorOpen} title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
-		<section id="meal-editor" aria-labelledby="meal-editor-title" class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-5 shadow-xl shadow-cyan-950/10 sm:p-7">
-			<div class="mb-5 flex items-start justify-between gap-4">
-				<div>
-					<p class="text-xs font-semibold text-cyan-300">{$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')}</p>
-					<h2 id="meal-editor-title" class="mt-2 text-xl font-semibold text-white">{formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' })} · {$t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '')}</h2>
+	<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
+		{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+		<form id="meal-slot-form" onsubmit={saveSlot} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+			<label class="text-xs font-medium text-slate-400">{$t("Day")}
+				<input bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			</label>
+			<label class="text-xs font-medium text-slate-400">{$t("Meal")}
+				<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+					{#each mealTypes as entry}<option value={entry.key}>{$t(entry.label)}</option>{/each}
+				</select>
+			</label>
+			{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
+				<div class="sm:col-span-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-400">
+					{$t("The linked recipe is not available to your account right now. You can update servings or notes, or convert this slot to a dish name.")}
+					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-cyan-200 hover:text-cyan-100">{$t("Convert to a dish name")}</button>
 				</div>
-				<button type="button" onclick={closeEditor} class="min-h-11 rounded-lg px-3 text-sm text-slate-300 hover:bg-slate-800">{$t("Close")}</button>
-			</div>
-			<form onsubmit={saveSlot} class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				<label class="text-xs font-medium text-slate-400">{$t("Day")}
-					<input bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
-				</label>
-				<label class="text-xs font-medium text-slate-400">{$t("Meal")}
-					<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-						{#each mealTypes as entry}<option value={entry.key}>{$t(entry.label)}</option>{/each}
+			{:else}<label class="text-xs font-medium text-slate-400">{$t("Dish source")}
+				<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+					<option value="free_text">{$t("Write a dish name")}</option>
+					{#if canViewRecipes}<option value="recipe">{$t("Link a recipe")}</option>{/if}
+				</select>
+			</label>{/if}
+			<label class="text-xs font-medium text-slate-400">{$t("Servings")}
+				<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			</label>
+			{#if dishType === 'recipe' && (canViewRecipes || editingSlotId === null)}
+				<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Recipe you can view")}
+					<select bind:value={recipeId} required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+						<option value="">{$t("Choose a recipe")}</option>
+						{#each recipeChoices as recipe}<option value={recipe.id}>{recipe.title}</option>{/each}
 					</select>
 				</label>
-				{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
-					<div class="sm:col-span-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-400">
-						{$t("The linked recipe is not available to your account right now. You can update servings or notes, or convert this slot to a dish name.")}
-						<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-cyan-200 hover:text-cyan-100">{$t("Convert to a dish name")}</button>
-					</div>
-				{:else}<label class="text-xs font-medium text-slate-400">{$t("Dish source")}
-					<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-						<option value="free_text">{$t("Write a dish name")}</option>
-						{#if canViewRecipes}<option value="recipe">{$t("Link a recipe")}</option>{/if}
+			{:else if dishType === 'free_text'}
+				<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Dish name")}
+					<input bind:value={dishName} maxlength="180" required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+				</label>
+			{/if}
+			<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span>
+				<input bind:value={notes} maxlength="2000" placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			</label>
+			{#if editingSlotId === null && canManageShared && canCreate}
+				<label class="text-xs font-medium text-slate-400">{$t("Who can see it?")}
+					<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+						<option value="private">{$t("Only me")}</option>
+						<option value="household">{$t("Household plan")}</option>
 					</select>
-				</label>{/if}
-				<label class="text-xs font-medium text-slate-400">{$t("Servings")}
-					<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
 				</label>
-				{#if dishType === 'recipe' && (canViewRecipes || editingSlotId === null)}
-					<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Recipe you can view")}
-						<select bind:value={recipeId} required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-							<option value="">{$t("Choose a recipe")}</option>
-							{#each recipeChoices as recipe}<option value={recipe.id}>{recipe.title}</option>{/each}
-						</select>
-					</label>
-				{:else if dishType === 'free_text'}
-					<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Dish name")}
-						<input bind:value={dishName} maxlength="180" required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
-					</label>
-				{/if}
-				<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span>
-					<input bind:value={notes} maxlength="2000" placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
-				</label>
-				{#if editingSlotId === null && canManageShared && canCreate}
-					<label class="text-xs font-medium text-slate-400">{$t("Who can see it?")}
-						<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
-							<option value="private">{$t("Only me")}</option>
-							<option value="household">{$t("Household plan")}</option>
-						</select>
-					</label>
-				{/if}
-				<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-4">
-					<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Saving…' : editingSlotId === null ? 'Add meal' : 'Save changes')}</button>
-					<button type="button" onclick={closeEditor} class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm text-slate-200 hover:border-slate-500">{$t("Cancel")}</button>
-				</div>
-			</form>
-		</section>
+			{/if}
+		</form>
+		{#snippet footer()}
+			<Button variant="secondary" type="button" disabled={saving} onclick={closeEditor}>{$t("Cancel")}</Button>
+			<Button type="submit" form="meal-slot-form" disabled={saving}>{$t(saving ? 'Saving…' : editingSlotId === null ? 'Add meal' : 'Save changes')}</Button>
+		{/snippet}
 	</Modal>
 
 	{#if shell.loading || loading}

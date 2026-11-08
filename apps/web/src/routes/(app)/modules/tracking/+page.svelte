@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Badge from '#lib/ui/Badge.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { numberLocale, t, visibilityLabel } from '#lib/i18n';
 	import { goto } from '$app/navigation';
@@ -228,15 +229,10 @@
 
 	{#if canCreatePrivate || canCreateShared}
 		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t("Create tracker")}</button></div>
-		<Modal bind:open={createOpen} title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
-			<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-7" aria-labelledby="new-tracker-heading">
-			<div class="max-w-2xl">
-				<p class="text-sm font-medium text-cyan-200">{$t("Schema builder")}</p>
-				<h2 id="new-tracker-heading" class="mt-2 text-2xl font-semibold tracking-tight text-white">{$t("Start with a tracker.")}</h2>
-				<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Number fields require a unit and are stored as exact decimals. Field type and unit are preserved after the first saved value.")}</p>
-			</div>
-			<form class="mt-7 space-y-6" onsubmit={createTracker}>
-				<div class="grid gap-4 sm:grid-cols-2">
+		<Modal bind:open={createOpen} size="fullscreen" title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
+			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+			<form id="tracker-create-form" class="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={createTracker}>
+				<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
 					<label class="block text-sm font-medium text-slate-200">{$t("Tracker name")}
 						<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Daily steps")} />
 					</label>
@@ -246,12 +242,12 @@
 							{#if canCreateShared}<option value="household">{$t("Household template")}</option>{/if}
 						</select>
 					</label>
-					<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")} <span class="font-normal text-slate-500">{$t("(optional)")}</span>
-						<textarea bind:value={description} maxlength="500" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("What does this tracker help you follow?")}></textarea>
+					<label class="block text-sm font-medium text-slate-200 sm:col-span-2 lg:col-span-1">{$t("Description")} <span class="font-normal text-slate-500">{$t("(optional)")}</span>
+						<textarea bind:value={description} maxlength="500" rows="4" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("What does this tracker help you follow?")}></textarea>
 					</label>
 				</div>
 
-				<div class="border-t border-slate-800 pt-6">
+				<div class="border-t border-slate-800 pt-6 lg:border-t-0 lg:pt-0">
 					<div class="flex flex-wrap items-end justify-between gap-3">
 						<div><h3 class="text-base font-semibold text-slate-100">{$t("Fields")}</h3><p class="mt-1 text-sm text-slate-400">{$t("Add numeric, text, date or yes/no fields.")}</p></div>
 						<button type="button" onclick={addField} class="min-h-10 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Add field")}</button>
@@ -291,12 +287,15 @@
 					</ol>
 				</div>
 
-				<div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
-					<p class="text-xs leading-5 text-slate-500">{$t("Private trackers and entries remain hidden from administrators unless explicitly shared by their owner.")}</p>
-					<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create tracker')}</button>
+				<div class="space-y-2 text-xs leading-5 text-slate-500 lg:col-span-2">
+					<p>{$t("Number fields require a unit and are stored as exact decimals. Field type and unit are preserved after the first saved value.")}</p>
+					<p>{$t("Private trackers and entries remain hidden from administrators unless explicitly shared by their owner.")}</p>
 				</div>
 			</form>
-			</div>
+			{#snippet footer()}
+				<Button variant="secondary" type="button" disabled={saving} onclick={() => (createOpen = false)}>{$t('Cancel')}</Button>
+				<Button type="submit" form="tracker-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create tracker')}</Button>
+			{/snippet}
 		</Modal>
 		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}

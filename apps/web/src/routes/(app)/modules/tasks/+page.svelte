@@ -119,6 +119,7 @@
 
 	function resetForm(): void {
 		formOpen = false;
+		error = '';
 		editing = null;
 		title = '';
 		description = '';
@@ -364,64 +365,57 @@
 	{:else}
 		{#if canCreate || canCreateShared || editing}
 			<div class="flex justify-end"><Button onclick={() => { resetForm(); formOpen = true; }}>{$t('Add task')}</Button></div>
-			<Modal bind:open={formOpen} title={$t(editing ? 'Edit task' : 'New task')}>
-			<Panel>
-				<div class="flex flex-wrap items-start justify-between gap-3">
-					<div>
-					<p class="text-xs font-semibold text-cyan-300">{$t(editing ? 'Edit task' : 'New task')}</p>
-					<h2 class="mt-2 text-xl font-semibold text-white">{$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}</h2>
-					</div>
-					{#if editing}<Button variant="ghost" size="small" onclick={resetForm}>{$t('Cancel')}</Button>{/if}
-				</div>
-				<form class="mt-5 grid gap-4 md:grid-cols-2" onsubmit={saveTask}>
-					<label class="block md:col-span-2">
-						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Task title')}</span>
-						<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="ui-control" />
-					</label>
-					<label class="block md:col-span-2">
-						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Details')}</span>
-						<textarea maxlength="4000" bind:value={description} rows="2" placeholder={$t('Add the context someone needs to get it done.')} class="ui-control resize-y"></textarea>
-					</label>
+			<Modal bind:open={formOpen} size="fullscreen" title={$t(editing ? 'Edit task' : 'New task')} description={$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}>
+				{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+				<form id="task-form" class="grid gap-x-6 gap-y-5 md:grid-cols-2 lg:grid-cols-4" onsubmit={saveTask}>
+				<label class="block md:col-span-2 lg:col-span-4">
+					<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Task title')}</span>
+					<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="ui-control" />
+				</label>
+				<label class="block md:col-span-2 lg:col-span-4">
+					<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Details')}</span>
+					<textarea maxlength="4000" bind:value={description} rows="6" placeholder={$t('Add the context someone needs to get it done.')} class="ui-control resize-y"></textarea>
+				</label>
+				<label class="block">
+					<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Due date')}</span>
+					<input type="datetime-local" bind:value={dueInput} oninput={() => (taskTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')} class="ui-control" />
+				</label>
+				<label class="block">
+					<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Priority')}</span>
+					<select bind:value={priority} class="ui-control">
+						<option value="low">{$t('Low')}</option><option value="medium">{$t('Medium')}</option><option value="high">{$t('High')}</option>
+					</select>
+				</label>
+				{#if canAssign}
 					<label class="block">
-						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Due date')}</span>
-						<input type="datetime-local" bind:value={dueInput} oninput={() => (taskTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')} class="ui-field w-full" />
+						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Assignee')}</span>
+						<select bind:value={assigneeId} class="ui-control"><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select>
 					</label>
+				{/if}
+				<label class="block">
+					<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Repeats')}</span>
+					<select bind:value={frequency} class="ui-control">
+						<option value="none">{$t('Does not repeat')}</option><option value="daily">{$t('Daily')}</option><option value="weekly">{$t('Weekly')}</option><option value="monthly">{$t('Monthly')}</option><option value="yearly">{$t('Yearly')}</option>
+					</select>
+				</label>
+				{#if frequency !== 'none'}
 					<label class="block">
-						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Priority')}</span>
-						<select bind:value={priority} class="ui-control">
-							<option value="low">{$t('Low')}</option><option value="medium">{$t('Medium')}</option><option value="high">{$t('High')}</option>
-						</select>
+						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Every')}</span>
+						<input type="number" min="1" max="99" bind:value={interval} required class="ui-control" />
 					</label>
-					{#if canAssign}
-						<label class="block">
-							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Assignee')}</span>
-							<select bind:value={assigneeId} class="ui-control"><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select>
-						</label>
-					{/if}
+				{/if}
+				{#if canCreateShared && !editing}
 					<label class="block">
-						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Repeats')}</span>
-						<select bind:value={frequency} class="ui-control">
-							<option value="none">{$t('Does not repeat')}</option><option value="daily">{$t('Daily')}</option><option value="weekly">{$t('Weekly')}</option><option value="monthly">{$t('Monthly')}</option><option value="yearly">{$t('Yearly')}</option>
-						</select>
+						<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Visibility')}</span>
+						<select bind:value={visibility} class="ui-control"><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></select>
 					</label>
-					{#if frequency !== 'none'}
-						<label class="block">
-							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Every')}</span>
-							<input type="number" min="1" max="99" bind:value={interval} required class="ui-control" />
-						</label>
-					{/if}
-					{#if canCreateShared && !editing}
-						<label class="block">
-							<span class="mb-1.5 block text-sm font-medium text-slate-300">{$t('Visibility')}</span>
-							<select bind:value={visibility} class="ui-control"><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></select>
-						</label>
-					{/if}
-					<div class="flex flex-wrap items-center gap-3 md:col-span-2">
-						<Button type="submit" disabled={saving || (!editing && !canCreate && !canCreateShared)}>{saving ? $t('Saving…') : $t(editing ? 'Save task' : 'Add task')}</Button>
-						{#if !editing}<p class="text-xs leading-5 text-slate-400">{$t('Tasks are private by default. Household tasks are visible to members with access.')}</p>{/if}
-					</div>
+				{/if}
 				</form>
-			</Panel>
+				{#if !editing}<p class="mt-6 text-xs leading-5 text-[var(--text-muted)]">{$t('Tasks are private by default. Household tasks are visible to members with access.')}</p>{/if}
+				{#snippet footer()}
+					<Button variant="secondary" type="button" disabled={saving} onclick={resetForm}>{$t('Cancel')}</Button>
+					<Button type="submit" form="task-form" disabled={saving || (!editing && !canCreate && !canCreateShared)}>{saving ? $t('Saving…') : $t(editing ? 'Save task' : 'Add task')}</Button>
+				{/snippet}
 			</Modal>
 		{/if}
 

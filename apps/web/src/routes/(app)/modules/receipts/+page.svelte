@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Button from '#lib/ui/Button.svelte';
+	import Modal from '#lib/ui/Modal.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { goto } from '$app/navigation';
@@ -52,6 +54,7 @@
 	let preparingScan = $state(false);
 	let filePreviewUrl = $state('');
 	let preview = $state<ReceiptPreview | null>(null);
+	let reviewOpen = $state(false);
 	let fieldStatus = $state<Record<string, ReceiptFieldStatus>>({});
 	let reviewRequired = $state<ReceiptField[]>([]);
 	let reviewedFields = $state<ReceiptField[]>([]);
@@ -442,6 +445,7 @@
 		try {
 			const result = await request<ReceiptPreview & ReceiptResponse>('/api/receipts/preview', 'POST', form);
 			preview = result;
+			reviewOpen = true;
 			fieldStatus = result.field_status ?? {};
 			reviewRequired = (result.review_required ?? []) as ReceiptField[];
 			reviewedFields = [];
@@ -511,6 +515,7 @@
 		try {
 			const result = await request<ReceiptResponse>('/api/receipts/confirm', 'POST', form, idempotencyKey);
 			statusMessage = get(t)(result.message ?? (targetType === 'archive' ? 'Receipt saved to archive.' : 'Receipt saved.'));
+			reviewOpen = false;
 			preview = null;
 			selectedFile = null;
 			photoPages = [];
@@ -625,110 +630,121 @@
 				</button>
 			</form>
 
+			{#if preview && !reviewOpen}
+				<div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-6">
+					<p class="text-sm text-slate-400">{$t('Check every suggestion. The original file stays private and is stored only after confirmation.')}</p>
+					<Button onclick={() => (reviewOpen = true)}>{$t('Review invoice details')}</Button>
+				</div>
+			{/if}
 			{#if preview}
-				<form class="mt-6 space-y-5 border-t border-slate-800 pt-6" onsubmit={confirmReceipt} aria-labelledby="receipt-review-heading">
-					<div>
-						<h3 id="receipt-review-heading" class="text-lg font-semibold text-slate-100">{$t('Review invoice details')}</h3>
-						<p class="mt-1 text-sm leading-6 text-slate-400">{$t('Check every suggestion. The original file stays private and is stored only after confirmation.')}</p>
-					</div>
-					<div class="grid gap-4 sm:grid-cols-2">
-						<label class="block text-sm font-medium text-slate-200">{$t('Entry type')}
-							<select bind:value={targetType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
-								{#each availableTargetOptions as option}
-									<option value={option.value}>{$t(option.label)}</option>
-								{/each}
-							</select>
-						</label>
-						{#if targetType === 'finance'}
-							<label class="block text-sm font-medium text-slate-200">{$t('Finance category')}
-								<select bind:value={financeCategoryId} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
-									{#each expenseCategories as category (category.id)}
-										<option value={category.id}>{category.name}</option>
-									{/each}
-								</select>
-							</label>
-						{:else if targetType === 'vehicle'}
-							<label class="block text-sm font-medium text-slate-200">{$t('Vehicle')}
-								<select bind:value={vehicleId} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
-									{#each options.vehicles as vehicle (vehicle.id)}
-										<option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</option>
-									{/each}
-								</select>
-							</label>
-							<label class="block text-sm font-medium text-slate-200">{$t('Vehicle cost category')}
-								<select bind:value={vehicleCategory} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
-									{#each vehicleCostCategories as category (category.value)}
-										<option value={category.value}>{$t(category.label)}</option>
-									{/each}
-								</select>
-							</label>
+				<Modal bind:open={reviewOpen} size="fullscreen" title={$t('Review invoice details')} description={$t('Check every suggestion. The original file stays private and is stored only after confirmation.')}>
+					{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
+					<div class="grid gap-x-8 gap-y-6 {filePreviewUrl ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : ''}">
+						{#if filePreviewUrl}
+							<div class="rounded-xl border border-slate-800 bg-slate-950 p-3 lg:sticky lg:top-0 lg:self-start">
+								<iframe title={$t('Invoice preview')} src={filePreviewUrl} class="h-[24rem] w-full rounded-lg bg-white lg:h-[calc(100dvh-16rem)]"></iframe>
+							</div>
 						{/if}
-						<label class="block text-sm font-medium text-slate-200">{$t('Description')}
-							<input bind:value={description} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Merchant')}
-							<input bind:value={merchant} oninput={() => clearFieldReview('merchant')} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-							{#if needsReview('merchant')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('merchant'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('merchant')} onchange={(event) => setFieldReview('merchant', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(merchant))}</span></label></div>{/if}
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Invoice number')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-							<input bind:value={invoiceNumber} oninput={() => clearFieldReview('invoice_number')} maxlength="100" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-							{#if needsReview('invoice_number')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('invoice_number'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_number')} onchange={(event) => setFieldReview('invoice_number', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(invoiceNumber))}</span></label></div>{/if}
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Invoice date')}
-							<input bind:value={invoiceDate} oninput={() => clearFieldReview('invoice_date')} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-							{#if needsReview('invoice_date')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('invoice_date'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_date')} onchange={(event) => setFieldReview('invoice_date', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(invoiceDate))}</span></label></div>{/if}
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Total amount')}
-							<input bind:value={amount} oninput={() => clearFieldReview('amount')} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('125.00', $numberLocale)} />
-							{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
-							<input bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength="3" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="EUR" />
-							{#if needsReview('currency')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('currency'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('currency')} onchange={(event) => setFieldReview('currency', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(currency))}</span></label></div>{/if}
-						</label>
-						<label class="block text-sm font-medium text-slate-200">{$t('Tax amount')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-							<input bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('19.00', $numberLocale)} />
-							{#if needsReview('tax_amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('tax_amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('tax_amount')} onchange={(event) => setFieldReview('tax_amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(taxAmount))}</span></label></div>{/if}
-						</label>
-					</div>
-					{#if showFuelFields}
-						<fieldset class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-							<legend class="px-2 text-sm font-semibold text-slate-200">{$t('Fuel details')}</legend>
-							<p class="mb-3 text-xs leading-5 text-slate-400">{$t('Review liters and unit price before saving. Odometer is optional.')}</p>
-							<div class="grid gap-4 sm:grid-cols-3">
-								<label class="block text-sm font-medium text-slate-200">{$t('Fuel quantity (liters)')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelLiters} oninput={() => clearFieldReview('fuel_liters')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-								{#if needsReview('fuel_liters')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_liters'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_liters')} onchange={(event) => setFieldReview('fuel_liters', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelLiters))}</span></label></div>{/if}
+						<form id="receipt-review-form" class="min-w-0 space-y-5" onsubmit={confirmReceipt}>
+							<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+								<label class="block text-sm font-medium text-slate-200">{$t('Entry type')}
+									<select bind:value={targetType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
+										{#each availableTargetOptions as option}
+											<option value={option.value}>{$t(option.label)}</option>
+										{/each}
+									</select>
 								</label>
-								<label class="block text-sm font-medium text-slate-200">{$t('Price per liter')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelUnitPrice} oninput={() => clearFieldReview('fuel_unit_price')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-								{#if needsReview('fuel_unit_price')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_unit_price'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_unit_price')} onchange={(event) => setFieldReview('fuel_unit_price', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelUnitPrice))}</span></label></div>{/if}
+								{#if targetType === 'finance'}
+									<label class="block text-sm font-medium text-slate-200">{$t('Finance category')}
+										<select bind:value={financeCategoryId} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
+											{#each expenseCategories as category (category.id)}
+												<option value={category.id}>{category.name}</option>
+											{/each}
+										</select>
+									</label>
+								{:else if targetType === 'vehicle'}
+									<label class="block text-sm font-medium text-slate-200">{$t('Vehicle')}
+										<select bind:value={vehicleId} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
+											{#each options.vehicles as vehicle (vehicle.id)}
+												<option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</option>
+											{/each}
+										</select>
+									</label>
+									<label class="block text-sm font-medium text-slate-200">{$t('Vehicle cost category')}
+										<select bind:value={vehicleCategory} required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white">
+											{#each vehicleCostCategories as category (category.value)}
+												<option value={category.value}>{$t(category.label)}</option>
+											{/each}
+										</select>
+									</label>
+								{/if}
+								<label class="block text-sm font-medium text-slate-200">{$t('Description')}
+									<input bind:value={description} required maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
 								</label>
-								<label class="block text-sm font-medium text-slate-200">{$t('Odometer reading')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
-								<input bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
-								{#if needsReview('fuel_odometer_value')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_odometer_value'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_odometer_value')} onchange={(event) => setFieldReview('fuel_odometer_value', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelOdometerValue))}</span></label></div>{/if}
+								<label class="block text-sm font-medium text-slate-200">{$t('Merchant')}
+									<input bind:value={merchant} oninput={() => clearFieldReview('merchant')} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+									{#if needsReview('merchant')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('merchant'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('merchant')} onchange={(event) => setFieldReview('merchant', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(merchant))}</span></label></div>{/if}
+								</label>
+								<label class="block text-sm font-medium text-slate-200">{$t('Invoice number')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
+									<input bind:value={invoiceNumber} oninput={() => clearFieldReview('invoice_number')} maxlength="100" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+									{#if needsReview('invoice_number')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('invoice_number'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_number')} onchange={(event) => setFieldReview('invoice_number', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(invoiceNumber))}</span></label></div>{/if}
+								</label>
+								<label class="block text-sm font-medium text-slate-200">{$t('Invoice date')}
+									<input bind:value={invoiceDate} oninput={() => clearFieldReview('invoice_date')} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+									{#if needsReview('invoice_date')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('invoice_date'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_date')} onchange={(event) => setFieldReview('invoice_date', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(invoiceDate))}</span></label></div>{/if}
+								</label>
+								<label class="block text-sm font-medium text-slate-200">{$t('Total amount')}
+									<input bind:value={amount} oninput={() => clearFieldReview('amount')} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('125.00', $numberLocale)} />
+									{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
+								</label>
+								<label class="block text-sm font-medium text-slate-200">{$t('Currency')}
+									<input bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength="3" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder="EUR" />
+									{#if needsReview('currency')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('currency'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('currency')} onchange={(event) => setFieldReview('currency', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(currency))}</span></label></div>{/if}
+								</label>
+								<label class="block text-sm font-medium text-slate-200">{$t('Tax amount')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
+									<input bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" placeholder={formatDecimalInput('19.00', $numberLocale)} />
+									{#if needsReview('tax_amount')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('tax_amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('tax_amount')} onchange={(event) => setFieldReview('tax_amount', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(taxAmount))}</span></label></div>{/if}
 								</label>
 							</div>
-							{#if fuelCalculatedTotal !== null && currency.length === 3}
-								<p class="mt-3 text-sm text-slate-300">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal.toFixed(2), currency)}</p>
-								{#if amount && Math.abs(fuelCalculatedTotal - Number(amount)) > 0.01}<p role="status" class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-3 text-xs text-amber-100">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</p>{/if}
+							{#if showFuelFields}
+								<fieldset class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+									<legend class="px-2 text-sm font-semibold text-slate-200">{$t('Fuel details')}</legend>
+									<p class="mb-3 text-xs leading-5 text-slate-400">{$t('Review liters and unit price before saving. Odometer is optional.')}</p>
+									<div class="grid gap-4 sm:grid-cols-3">
+										<label class="block text-sm font-medium text-slate-200">{$t('Fuel quantity (liters)')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
+										<input bind:value={fuelLiters} oninput={() => clearFieldReview('fuel_liters')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+										{#if needsReview('fuel_liters')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_liters'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_liters')} onchange={(event) => setFieldReview('fuel_liters', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelLiters))}</span></label></div>{/if}
+										</label>
+										<label class="block text-sm font-medium text-slate-200">{$t('Price per liter')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
+										<input bind:value={fuelUnitPrice} oninput={() => clearFieldReview('fuel_unit_price')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+										{#if needsReview('fuel_unit_price')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_unit_price'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_unit_price')} onchange={(event) => setFieldReview('fuel_unit_price', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelUnitPrice))}</span></label></div>{/if}
+										</label>
+										<label class="block text-sm font-medium text-slate-200">{$t('Odometer reading')} <span class="font-normal text-slate-500">{$t('Optional')}</span>
+										<input bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+										{#if needsReview('fuel_odometer_value')}<div class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-2 text-xs text-amber-100"><span>{$t(fieldStatusLabel('fuel_odometer_value'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_odometer_value')} onchange={(event) => setFieldReview('fuel_odometer_value', event)} class="mt-0.5 accent-cyan-300" /><span>{$t(fieldReviewPrompt(fuelOdometerValue))}</span></label></div>{/if}
+										</label>
+									</div>
+									{#if fuelCalculatedTotal !== null && currency.length === 3}
+										<p class="mt-3 text-sm text-slate-300">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal.toFixed(2), currency)}</p>
+										{#if amount && Math.abs(fuelCalculatedTotal - Number(amount)) > 0.01}<p role="status" class="mt-2 rounded-lg border border-amber-300/30 bg-amber-300/5 p-3 text-xs text-amber-100">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</p>{/if}
+									{/if}
+								</fieldset>
 							{/if}
-						</fieldset>
-					{/if}
-					{#if duplicateMatches.length > 0}
-						<div class="rounded-xl border border-amber-300/40 bg-amber-300/10 p-4" role="status">
-							<h4 class="font-semibold text-amber-100">{$t('Possible duplicate receipts')}</h4>
-							<ul class="mt-2 space-y-1 text-sm text-amber-100/90">{#each duplicateMatches as duplicate (duplicate.id)}<li>{duplicate.merchant ?? $t('Invoice')} · {formatDate(duplicate.invoice_date)} · {formatCurrency(duplicate.amount, duplicate.currency)} ({$t(duplicate.reasons.includes('identical_file') ? 'Identical file' : duplicate.reasons.includes('merchant_invoice_number') ? 'Same merchant and invoice number' : 'Same merchant, date and total')})</li>{/each}</ul>
-							<label class="mt-3 flex items-start gap-2 text-sm text-amber-50"><input type="checkbox" bind:checked={duplicateAcknowledged} class="mt-0.5 accent-cyan-300" /><span>{$t('I reviewed the warning and want to save this receipt anyway.')}</span></label>
-						</div>
-					{/if}
-					<div class="flex flex-col gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
-						<p class="text-xs leading-5 text-slate-500">{$t('OCR runs locally. Nothing is sent to an external provider.')}</p>
-						<button type="submit" disabled={!canConfirm} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-wait disabled:opacity-60">
-							{$t(confirming ? 'Saving receipt…' : targetType === 'archive' ? 'Confirm and save receipt' : 'Confirm and create entry')}
-						</button>
+							{#if duplicateMatches.length > 0}
+								<div class="rounded-xl border border-amber-300/40 bg-amber-300/10 p-4" role="status">
+									<h4 class="font-semibold text-amber-100">{$t('Possible duplicate receipts')}</h4>
+									<ul class="mt-2 space-y-1 text-sm text-amber-100/90">{#each duplicateMatches as duplicate (duplicate.id)}<li>{duplicate.merchant ?? $t('Invoice')} · {formatDate(duplicate.invoice_date)} · {formatCurrency(duplicate.amount, duplicate.currency)} ({$t(duplicate.reasons.includes('identical_file') ? 'Identical file' : duplicate.reasons.includes('merchant_invoice_number') ? 'Same merchant and invoice number' : 'Same merchant, date and total')})</li>{/each}</ul>
+									<label class="mt-3 flex items-start gap-2 text-sm text-amber-50"><input type="checkbox" bind:checked={duplicateAcknowledged} class="mt-0.5 accent-cyan-300" /><span>{$t('I reviewed the warning and want to save this receipt anyway.')}</span></label>
+								</div>
+							{/if}
+						</form>
 					</div>
-				</form>
+					{#snippet footer()}
+						<p class="mr-auto hidden text-xs leading-5 text-slate-500 md:block">{$t('OCR runs locally. Nothing is sent to an external provider.')}</p>
+						<Button variant="secondary" type="button" onclick={() => (reviewOpen = false)}>{$t('Cancel')}</Button>
+						<Button type="submit" form="receipt-review-form" disabled={!canConfirm}>{$t(confirming ? 'Saving receipt…' : targetType === 'archive' ? 'Confirm and save receipt' : 'Confirm and create entry')}</Button>
+					{/snippet}
+				</Modal>
 			{/if}
 		</section>
 	{:else}
