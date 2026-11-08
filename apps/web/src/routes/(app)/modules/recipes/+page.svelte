@@ -10,7 +10,6 @@
 	import { getContext } from 'svelte';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
-	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { emptyRecipeIngredient, parseImportedIngredient, type Recipe, type RecipeDraft, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
 	import RecipeEditor from './RecipeEditor.svelte';
 	import { recipeRequest as api } from '#lib/api-client';
@@ -23,7 +22,6 @@
 	const canAddRecipe = $derived(canCreate || canManageShared);
 
 	let recipes = $state<Recipe[]>([]);
-	const hasEditableRecipe = $derived(recipes.some((recipe) => recipe.can_edit));
 	let loading = $state(true);
 	let error = $state('');
 	let message = $state('');
@@ -31,11 +29,8 @@
 	let categoryFilter = $state('all');
 	let favoriteOnly = $state(false);
 	let editorOpen = $state(false);
-	let editingRecipe = $state<Recipe | null>(null);
 	let editorDraft = $state<RecipeDraft | null>(null);
 	let importNotices = $state<string[]>([]);
-	let deleteTarget = $state<number | null>(null);
-	let deleteOpen = $state(false);
 	let importOpen = $state(false);
 	let importType = $state<'url' | 'pdf'>('url');
 	let importUrl = $state('');
@@ -85,7 +80,6 @@
 		try {
 			const preview = await api<{ recipe: { title: string; category: string; servings: number; preparation_minutes: number | null; ingredients: string[]; instructions: string[] }; warnings: string[] }>('/api/recipes/import-preview', 'POST', body);
 			const parsedIngredients = preview.recipe.ingredients.slice(0, 100).map(parseImportedIngredient);
-			editingRecipe = null;
 			editorDraft = {
 				title: preview.recipe.title,
 				category: preview.recipe.category,
@@ -123,23 +117,9 @@
 
 	function createRecipe(): void {
 		message = '';
-		editingRecipe = null;
 		editorDraft = null;
 		importNotices = [];
 		editorOpen = true;
-	}
-
-	function editRecipe(recipe: Recipe): void {
-		message = '';
-		editingRecipe = recipe;
-		editorDraft = null;
-		importNotices = [];
-		editorOpen = true;
-	}
-
-	function confirmDelete(id: number): void {
-		deleteTarget = id;
-		deleteOpen = true;
 	}
 
 	async function recipeSaved(saved: Recipe | null, created: boolean): Promise<void> {
@@ -159,18 +139,6 @@
 		}
 	}
 
-	async function deleteRecipe(id: number): Promise<void> {
-		error = '';
-		try {
-			await api<RecipeResponse>(`/api/recipes/${id}`, 'DELETE');
-			deleteTarget = null;
-			deleteOpen = false;
-			message = 'Recipe deleted.';
-			await loadRecipes();
-		} catch (cause) {
-			error = cause instanceof Error ? cause.message : 'The recipe could not be deleted.';
-		}
-	}
 </script>
 
 <svelte:head>
@@ -253,10 +221,6 @@
 							</p>
 							<div class="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-3">
 								<Button href="/modules/recipes/{recipe.id}" variant="secondary" size="small">{$t('Show recipe')}</Button>
-								{#if recipe.can_edit}
-									<Button variant="ghost" size="small" onclick={() => editRecipe(recipe)}>{$t("Edit")}</Button>
-									<Button variant="ghost" size="small" class="ml-auto" onclick={() => confirmDelete(recipe.id)}>{$t("Delete")}</Button>
-								{/if}
 							</div>
 						</div>
 					</li>
@@ -283,11 +247,10 @@
 				</form>
 			</Modal>
 		{/if}
-		{#if canAddRecipe || hasEditableRecipe}
-			<RecipeEditor bind:open={editorOpen} recipe={editingRecipe} draft={editorDraft} notices={importNotices} visibilityOptions={formVisibilityOptions} {visibilityHint} onSaved={recipeSaved} />
-			{#if deleteTarget !== null}<ConfirmModal bind:open={deleteOpen} title={$t('Delete recipe?')} message={$t('Delete this recipe?')} onConfirm={() => void deleteRecipe(deleteTarget!)} />{/if}
+		{#if canAddRecipe}
+			<RecipeEditor bind:open={editorOpen} draft={editorDraft} notices={importNotices} visibilityOptions={formVisibilityOptions} {visibilityHint} onSaved={recipeSaved} />
 		{/if}
-		{#if canView && !canAddRecipe && !hasEditableRecipe}
+		{#if canView && !canAddRecipe}
 			<Notice tone="info" message="Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes." />
 		{/if}
 </div>
