@@ -26,28 +26,28 @@
 	} = $props();
 </script>
 
-<fieldset class="icon-choice-group {className}">
-	<legend class="icon-choice-legend">{$t(label)}</legend>
-	<div class="icon-choice-grid" class:icon-choice-grid--two={options.length === 2}>
+<fieldset class="m-0 grid min-w-0 gap-2 border-0 p-0 {className}">
+	<legend class="text-sm font-[550] text-ink-secondary">{$t(label)}</legend>
+	<div class="grid gap-2 {options.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}">
 		{#each options as option (option.value)}
-			<label class="icon-choice">
+			<label class="min-w-0 cursor-pointer">
 				<input
 					id={`${id}-${option.value}`}
-					class="icon-choice-input sr-only"
+					class="peer sr-only"
 					type="radio"
 					name={id}
 					value={option.value}
 					checked={value === option.value}
 					onchange={() => onchange(option.value)}
 				/>
-				<span class="icon-choice-card">
-					<span class="icon-choice-icon" aria-hidden="true">
+				<span class="flex min-h-18 flex-col items-center justify-center gap-1.5 rounded-xl border border-control-line bg-control px-1 py-2 text-center text-ink-secondary transition-colors hover:border-accent-ink peer-checked:border-accent-ink peer-checked:bg-accent-ink/12 peer-checked:text-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-ink">
+					<span class="flex h-[1.375rem] items-center justify-center gap-1 text-accent-ink [&_svg]:size-[1.375rem] [&_svg]:stroke-current [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round] [&_svg]:[stroke-width:1.6]" aria-hidden="true">
 						{#if option.icon === 'language'}
 							<svg viewBox="0 0 24 24" fill="none">
 								<circle cx="12" cy="12" r="9" />
 								<path d="M3 12h18M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18" />
 							</svg>
-							<span class="icon-choice-language-marker">{option.marker}</span>
+							<span class="rounded-md bg-accent-ink/15 px-[0.3rem] py-0.5 text-[0.6875rem] leading-4 font-[750] tracking-[0.04em]">{option.marker}</span>
 						{:else}
 						<svg viewBox="0 0 24 24" fill="none">
 							{#if option.icon === 'monitor'}
@@ -62,109 +62,9 @@
 						</svg>
 						{/if}
 					</span>
-					<span class="icon-choice-label">{$t(option.label)}</span>
+					<span class="max-w-full text-xs leading-[1.15] font-[550] [overflow-wrap:anywhere] text-ink">{$t(option.label)}</span>
 				</span>
 			</label>
 		{/each}
 	</div>
 </fieldset>
-
-<style>
-	.icon-choice-group {
-		display: grid;
-		min-width: 0;
-		gap: 0.5rem;
-		margin: 0;
-		padding: 0;
-		border: 0;
-	}
-
-	.icon-choice-legend {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		font-weight: 550;
-	}
-
-	.icon-choice-grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
-	}
-
-	.icon-choice-grid--two {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-
-	.icon-choice {
-		min-width: 0;
-		cursor: pointer;
-	}
-
-	.icon-choice-card {
-		display: flex;
-		min-height: 4.5rem;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.375rem;
-		border: 1px solid var(--control-border);
-		border-radius: 0.75rem;
-		background: var(--control-background);
-		padding: 0.5rem 0.25rem;
-		color: var(--text-secondary);
-		text-align: center;
-		transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
-	}
-
-	.icon-choice-input:checked + .icon-choice-card {
-		border-color: var(--accent-text);
-		background: color-mix(in srgb, var(--accent-text) 12%, var(--control-background));
-		color: var(--text-primary);
-	}
-
-	.icon-choice-input:focus-visible + .icon-choice-card {
-		outline: 2px solid var(--accent-text);
-		outline-offset: 2px;
-	}
-
-	.icon-choice-card:hover {
-		border-color: var(--accent-text);
-	}
-
-	.icon-choice-icon {
-		display: flex;
-		height: 1.375rem;
-		align-items: center;
-		justify-content: center;
-		gap: 0.25rem;
-		color: var(--accent-text);
-	}
-
-	.icon-choice-icon svg {
-		height: 1.375rem;
-		width: 1.375rem;
-		stroke: currentColor;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		stroke-width: 1.6;
-	}
-
-	.icon-choice-language-marker {
-		border-radius: 0.375rem;
-		background: color-mix(in srgb, var(--accent-text) 15%, transparent);
-		padding: 0.125rem 0.3rem;
-		font-size: 0.6875rem;
-		font-weight: 750;
-		letter-spacing: 0.04em;
-		line-height: 1rem;
-	}
-
-	.icon-choice-label {
-		max-width: 100%;
-		color: var(--text-primary);
-		font-size: 0.75rem;
-		font-weight: 550;
-		line-height: 1.15;
-		overflow-wrap: anywhere;
-	}
-</style>

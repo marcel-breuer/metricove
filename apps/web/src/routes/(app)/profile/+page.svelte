@@ -334,7 +334,7 @@
 
 			<Panel padding="large" class="sm:p-8">
 				{#if loading}
-					<p role="status" class="text-sm text-slate-300">{$t('Loading your profile…')}</p>
+					<p role="status" class="text-sm text-ink-secondary">{$t('Loading your profile…')}</p>
 				{:else if user}
 					<h2 class="text-xl font-semibold">{$t('Profile details')}</h2>
 					<form class="mt-6 space-y-5" onsubmit={saveProfile}>
@@ -342,18 +342,18 @@
 						<TextField id="email" name="email" label={$t('Email address')} type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 						<div class="grid gap-4 sm:grid-cols-2">
 						<IconChoiceGroup id="language" label="Language" value={$uiLanguage} options={languageOptions} onchange={(value) => changeLanguage(value as 'en' | 'de')} />
-							<label class="block text-sm font-medium text-slate-200" for="number-locale">{$t('Number and date format')}
-								<select id="number-locale" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" bind:value={$numberLocale}>
+							<label class="block text-sm font-medium text-ink-secondary" for="number-locale">{$t('Number and date format')}
+								<select id="number-locale" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$numberLocale}>
 									<option value="de-DE">{$t('German (Germany)')} · 1.234,56</option><option value="en-US">{$t('English (United States)')} · 1,234.56</option><option value="en-GB">{$t('English (United Kingdom)')} · 1,234.56</option>
 								</select>
 							</label>
-							<label class="block text-sm font-medium text-slate-200" for="default-currency">{$t('Currency')}
-								<select id="default-currency" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" bind:value={$defaultCurrency}>
+							<label class="block text-sm font-medium text-ink-secondary" for="default-currency">{$t('Currency')}
+								<select id="default-currency" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$defaultCurrency}>
 									<option>{$t("EUR")}</option><option>{$t("USD")}</option><option>{$t("GBP")}</option><option>{$t("CHF")}</option>
 								</select>
 							</label>
-							<label class="block text-sm font-medium text-slate-200" for="currency-display">{$t('Currency display')}
-								<select id="currency-display" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100" bind:value={$currencyDisplay}>
+							<label class="block text-sm font-medium text-ink-secondary" for="currency-display">{$t('Currency display')}
+								<select id="currency-display" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$currencyDisplay}>
 									<option value="code">{$t('Currency code (EUR)')}</option><option value="symbol">{$t('Currency symbol (€)')}</option>
 								</select>
 							</label>
@@ -365,8 +365,8 @@
 						</Button>
 					</form>
 				{:else}
-					<p role="alert" class="text-sm text-rose-200">{$t(error || 'Profile is unavailable.')}</p>
-					<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-cyan-200">{$t('Sign in')}</a>
+					<p role="alert" class="text-sm text-danger">{$t(error || 'Profile is unavailable.')}</p>
+					<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink">{$t('Sign in')}</a>
 				{/if}
 			</Panel>
 		</section>
@@ -374,21 +374,21 @@
 		<section class="mb-12 max-w-2xl">
 			<Panel padding="large" class="sm:p-8">
 				<h2 class="text-xl font-semibold">{$t('Change password')}</h2>
-				<p class="mt-2 text-sm leading-6 text-slate-400">{$t('Confirm your current password and choose a new password with at least 12 characters.')}</p>
+				<p class="mt-2 text-sm leading-6 text-ink-muted">{$t('Confirm your current password and choose a new password with at least 12 characters.')}</p>
 				{#if passwordMessage}<Notice class="mt-5" tone="success" message={passwordMessage} />{/if}
 				{#if passwordError}<Notice class="mt-5" tone="error" message={passwordError} />{/if}
 				<form class="mt-6 space-y-5" onsubmit={changePassword} aria-busy={passwordBusy}>
 					<div>
-						<label for="current-password" class="mb-2 block text-sm font-medium text-slate-200">{$t('Current password')}</label>
-						<input id="current-password" name="current_password" type="password" autocomplete="current-password" bind:value={currentPassword} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+						<label for="current-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('Current password')}</label>
+						<input id="current-password" name="current_password" type="password" autocomplete="current-password" bind:value={currentPassword} required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<div>
-						<label for="new-password" class="mb-2 block text-sm font-medium text-slate-200">{$t('New password')}</label>
-						<input id="new-password" name="password" type="password" autocomplete="new-password" bind:value={newPassword} required minlength="12" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+						<label for="new-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('New password')}</label>
+						<input id="new-password" name="password" type="password" autocomplete="new-password" bind:value={newPassword} required minlength="12" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<div>
-						<label for="confirm-password" class="mb-2 block text-sm font-medium text-slate-200">{$t('Confirm new password')}</label>
-						<input id="confirm-password" name="password_confirmation" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required minlength="12" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+						<label for="confirm-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('Confirm new password')}</label>
+						<input id="confirm-password" name="password_confirmation" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required minlength="12" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<Button type="submit" disabled={passwordBusy}>{passwordBusy ? $t('Changing…') : $t('Change password')}</Button>
 				</form>
@@ -396,64 +396,64 @@
 		</section>
 
 		<section class="mb-12 grid gap-8 lg:grid-cols-2">
-			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
-				<p class="text-sm font-medium text-slate-400">{$t('External access')}</p>
+			<div class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+				<p class="text-sm font-medium text-ink-muted">{$t('External access')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('MCP access tokens')}</h2>
-				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.')}</p>
-				<a href="/mcp-docs" class="mt-3 inline-flex text-sm font-semibold text-cyan-200 underline decoration-cyan-200/40 underline-offset-4">{$t('Read the MCP documentation')}</a>
+				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.')}</p>
+				<a href="/mcp-docs" class="mt-3 inline-flex text-sm font-semibold text-accent-ink underline decoration-accent-ink/40 underline-offset-4">{$t('Read the MCP documentation')}</a>
 				{#if mcpEndpoint}
-					<p class="mt-3 break-all rounded-lg bg-slate-950 px-3 py-2 font-mono text-xs text-cyan-200">{mcpEndpoint}</p>
+					<p class="mt-3 break-all rounded-lg bg-page px-3 py-2 font-mono text-xs text-accent-ink">{mcpEndpoint}</p>
 				{/if}
 				{#if allowedScopes.length > 0}
-					<button type="button" onclick={() => (mcpCreateOpen = true)} class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:opacity-50">{$t('Create MCP token')}</button>
+					<button type="button" onclick={() => (mcpCreateOpen = true)} class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:opacity-50">{$t('Create MCP token')}</button>
 					<Modal bind:open={mcpCreateOpen} title={$t('Create MCP token')}>
 					<form class="space-y-4" onsubmit={createMcpToken}>
 						<div>
-							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-slate-200">{$t("Token name")}</label>
-							<input id="mcp-token-name" bind:value={tokenName} required maxlength="100" autocomplete="off" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Token name")}</label>
+							<input id="mcp-token-name" bind:value={tokenName} required maxlength="100" autocomplete="off" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 						</div>
 						<fieldset class="space-y-2">
-							<legend class="mb-2 text-sm font-medium text-slate-200">{$t("Available scopes")}</legend>
+							<legend class="mb-2 text-sm font-medium text-ink-secondary">{$t("Available scopes")}</legend>
 							{#each allowedScopes as scope}
-								<label class="flex items-start gap-3 rounded-lg border border-slate-800 px-3 py-2.5 text-sm text-slate-300">
-					<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-cyan-300" />
-									<span>{scopeLabel(scope)}<span class="mt-0.5 block font-mono text-xs text-slate-500">{scope}</span></span>
+								<label class="flex items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm text-ink-secondary">
+					<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-accent" />
+									<span>{scopeLabel(scope)}<span class="mt-0.5 block font-mono text-xs text-ink-subtle">{scope}</span></span>
 								</label>
 							{/each}
 						</fieldset>
 						{#if !tokenNeverExpires}
 							<div>
-								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-slate-200">{$t("Expires in days")}</label>
-								<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Expires in days")}</label>
+								<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 							</div>
 						{/if}
-						<label class="flex items-start gap-3 text-sm text-slate-300">
-							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-cyan-300" />
+						<label class="flex items-start gap-3 text-sm text-ink-secondary">
+							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-accent" />
 							<span>{$t("Never expires")}</span>
 						</label>
 						{#if mcpError}<Notice tone="error" message={mcpError} />{/if}
-						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
+						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
 					</form>
 					</Modal>
 				{:else if !loading}
-					<p class="mt-5 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
+					<p class="mt-5 rounded-lg border border-line-strong bg-page px-3 py-3 text-sm text-ink-muted">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
 				{/if}
 				{#if newSecret}
-					<div class="mt-5 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4">
-						<p class="text-sm font-semibold text-amber-100">{$t('Copy this token now. It will not be shown again.')}</p>
-						<code class="mt-3 block break-all rounded-lg bg-slate-950 p-3 text-xs text-slate-100">{newSecret}</code>
+					<div class="mt-5 rounded-xl border border-warning/30 bg-warning/10 p-4">
+						<p class="text-sm font-semibold text-warning">{$t('Copy this token now. It will not be shown again.')}</p>
+						<code class="mt-3 block break-all rounded-lg bg-page p-3 text-xs text-ink">{newSecret}</code>
 					</div>
 				{/if}
 				{#if mcpMessage}<Notice tone="success" message={mcpMessage} class="mt-4" />{/if}
 				{#if mcpError}<Notice tone="error" message={mcpError} class="mt-4" />{/if}
 				<div class="mt-8 space-y-3">
 					<h3 class="text-base font-semibold">{$t('Your tokens')}</h3>
-					{#if mcpTokens.length === 0}<p class="text-sm text-slate-400">{$t('No tokens created yet.')}</p>{/if}
+					{#if mcpTokens.length === 0}<p class="text-sm text-ink-muted">{$t('No tokens created yet.')}</p>{/if}
 					{#each mcpTokens as token}
-						<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+						<div class="rounded-xl border border-line bg-page p-4">
 							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div><p class="font-medium text-slate-100">{token.name}</p><p class="mt-1 text-xs text-slate-400">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-slate-500">{token.expires_at ? `${$t('Expires')} ${formatDate(token.expires_at)}` : $t('Never expires')}{token.revoked_at ? ` · ${$t('revoked')}` : ''}</p></div>
-								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => { tokenToRevoke = token; mcpRevokeOpen = true; }} class="rounded-lg border border-rose-300/30 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-300/10">{$t('Revoke')}</button>{/if}
+								<div><p class="font-medium text-ink">{token.name}</p><p class="mt-1 text-xs text-ink-muted">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-ink-subtle">{token.expires_at ? `${$t('Expires')} ${formatDate(token.expires_at)}` : $t('Never expires')}{token.revoked_at ? ` · ${$t('revoked')}` : ''}</p></div>
+								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => { tokenToRevoke = token; mcpRevokeOpen = true; }} class="rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">{$t('Revoke')}</button>{/if}
 							</div>
 						</div>
 					{/each}
@@ -461,18 +461,18 @@
 			</div>
 			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token {name}?', { name: tokenToRevoke.name })} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
-			<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 sm:p-8">
-				<p class="text-sm font-medium text-slate-400">{$t('Human approval')}</p>
+			<div class="rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+				<p class="text-sm font-medium text-ink-muted">{$t('Human approval')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
-				<p class="mt-3 text-sm leading-6 text-slate-300">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
+				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
 				<div class="mt-6 space-y-4">
-					{#if mcpActions.length === 0}<p class="rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-3 text-sm text-slate-400">{$t('No pending actions.')}</p>{/if}
+					{#if mcpActions.length === 0}<p class="rounded-lg border border-line bg-page px-3 py-3 text-sm text-ink-muted">{$t('No pending actions.')}</p>{/if}
 					{#each mcpActions as action}
-						<article class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-slate-100">{action.meter ?? $t(action.action)}</h3><span class="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-200">{action.state}</span></div>
-							{#if action.meter}<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-slate-500">{$t('Date')}</dt><dd class="mt-1 text-slate-200">{formatDate(action.reading_date ?? '')}</dd></div><div><dt class="text-slate-500">{$t('Reading')}</dt><dd class="mt-1 text-slate-200">{formatMeasurement(action.value ?? '', action.unit ?? '')} {action.unit}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-slate-500">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-200">{action.note}</dd></div>{/if}</dl>{:else}<dl class="mt-4 space-y-2 text-sm">{#each Object.entries(action.details ?? {}) as [key, value]}<div class="grid grid-cols-[minmax(0,8rem)_1fr] gap-3"><dt class="break-words text-slate-500">{approvalFieldLabel(key)}</dt><dd class="break-words text-slate-200">{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>{/each}</dl>{/if}
-							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div class="col-span-2"><dt class="text-slate-500">{$t('Requested by')}</dt><dd class="mt-1 text-slate-200">{action.token_name}</dd></div><div class="col-span-2"><dt class="text-slate-500">{$t('Expires')}</dt><dd class="mt-1 text-slate-200">{formatDateTime(action.expires_at)}</dd></div></dl>
-							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-emerald-200">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800">{$t('Cancel approval')}</button>{/if}
+						<article class="rounded-xl border border-line bg-page p-4">
+							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-ink">{action.meter ?? $t(action.action)}</h3><span class="rounded-full border border-accent-ink/20 bg-accent/10 px-2.5 py-1 text-xs text-accent-ink">{action.state}</span></div>
+							{#if action.meter}<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-ink-subtle">{$t('Date')}</dt><dd class="mt-1 text-ink-secondary">{formatDate(action.reading_date ?? '')}</dd></div><div><dt class="text-ink-subtle">{$t('Reading')}</dt><dd class="mt-1 text-ink-secondary">{formatMeasurement(action.value ?? '', action.unit ?? '')} {action.unit}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-ink-subtle">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-ink-secondary">{action.note}</dd></div>{/if}</dl>{:else}<dl class="mt-4 space-y-2 text-sm">{#each Object.entries(action.details ?? {}) as [key, value]}<div class="grid grid-cols-[minmax(0,8rem)_1fr] gap-3"><dt class="break-words text-ink-subtle">{approvalFieldLabel(key)}</dt><dd class="break-words text-ink-secondary">{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>{/each}</dl>{/if}
+							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div class="col-span-2"><dt class="text-ink-subtle">{$t('Requested by')}</dt><dd class="mt-1 text-ink-secondary">{action.token_name}</dd></div><div class="col-span-2"><dt class="text-ink-subtle">{$t('Expires')}</dt><dd class="mt-1 text-ink-secondary">{formatDateTime(action.expires_at)}</dd></div></dl>
+							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-positive">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Cancel approval')}</button>{/if}
 						</article>
 					{/each}
 				</div>

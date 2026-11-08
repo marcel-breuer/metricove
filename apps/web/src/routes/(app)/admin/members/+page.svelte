@@ -212,36 +212,36 @@
 			<Notice tone="error" message={error} class="mt-8" />
 		{/if}
 
-		<section class="mt-10 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="members-heading">
+		<section class="mt-10 rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
-					<p class="mt-1 text-sm text-slate-400">{activeAdminCount} {$t(activeAdminCount === 1 ? "active administrator" : "active administrators")}</p>
+					<p class="mt-1 text-sm text-ink-muted">{activeAdminCount} {$t(activeAdminCount === 1 ? "active administrator" : "active administrators")}</p>
 				</div>
-				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t("Refresh")}</button>
+				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-slate-300">{$t("Loading members…")}</p>
+				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading members…")}</p>
 			{:else if members.length === 0}
-				<p class="mt-6 text-sm text-slate-400">{$t("There are no household members to show.")}</p>
+				<p class="mt-6 text-sm text-ink-muted">{$t("There are no household members to show.")}</p>
 			{:else}
-				<ul class="mt-5 divide-y divide-slate-800">
+				<ul class="mt-5 divide-y divide-line">
 					{#each members as member (member.id)}
 						<li class="flex flex-col gap-5 py-5 lg:flex-row lg:items-center lg:justify-between">
 							<div class="min-w-0">
-								<p class="break-words text-base font-semibold text-slate-100">{member.name}{$t(member.id === me?.id ? ' · You' : '')}</p>
-								<p class="mt-1 break-all text-sm text-slate-400">{member.email}</p>
+								<p class="break-words text-base font-semibold text-ink">{member.name}{$t(member.id === me?.id ? ' · You' : '')}</p>
+								<p class="mt-1 break-all text-sm text-ink-muted">{member.email}</p>
 								<div class="mt-3 flex flex-wrap gap-2">
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_admin ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200' : 'border-slate-700 text-slate-300'}">{$t(member.is_admin ? 'Administrator' : 'Member')}</span>
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_active ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200' : 'border-amber-300/30 bg-amber-300/10 text-amber-200'}">{$t(member.is_active ? 'Active' : 'Suspended')}</span>
+									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_admin ? 'border-accent-ink/30 bg-accent/10 text-accent-ink' : 'border-line-strong text-ink-secondary'}">{$t(member.is_admin ? 'Administrator' : 'Member')}</span>
+									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_active ? 'border-positive/30 bg-positive/10 text-positive' : 'border-warning/30 bg-warning/10 text-warning'}">{$t(member.is_active ? 'Active' : 'Suspended')}</span>
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-2 lg:justify-end">
-								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-cyan-300/30 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:border-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Module rights")}</a>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t(member.is_admin ? 'Demote' : 'Promote')}</button>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-50">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</button>
-				<button type="button" disabled={busy} onclick={() => { memberToRemove = member; removeModalOpen = true; }} class="rounded-lg border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition hover:border-rose-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300 disabled:opacity-50">{$t("Remove")}</button>
+								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-accent-ink/30 px-3 py-2 text-sm font-medium text-accent-ink transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Module rights")}</a>
+								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(member.is_admin ? 'Demote' : 'Promote')}</button>
+								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning disabled:opacity-50">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</button>
+				<button type="button" disabled={busy} onclick={() => { memberToRemove = member; removeModalOpen = true; }} class="rounded-lg border border-danger/30 px-3 py-2 text-sm font-medium text-danger transition hover:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t("Remove")}</button>
 							</div>
 						</li>
 					{/each}
@@ -250,24 +250,24 @@
 	</section>
 	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove {name} from this household? This cannot be undone.', { name: memberToRemove.name })} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
 
-		<section class="mt-8 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20 sm:p-8" aria-labelledby="audit-heading">
+		<section class="mt-8 rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-8" aria-labelledby="audit-heading">
 			<div>
 				<h2 id="audit-heading" class="text-xl font-semibold">{$t("Recent access history")}</h2>
-				<p class="mt-1 text-sm text-slate-400">{$t("The latest 100 role and account status changes.")}</p>
+				<p class="mt-1 text-sm text-ink-muted">{$t("The latest 100 role and account status changes.")}</p>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 text-sm text-slate-300">{$t("Loading access history…")}</p>
+				<p role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading access history…")}</p>
 			{:else if events.length === 0}
-				<p class="mt-5 text-sm text-slate-400">{$t("No member changes have been recorded.")}</p>
+				<p class="mt-5 text-sm text-ink-muted">{$t("No member changes have been recorded.")}</p>
 			{:else}
-				<ol class="mt-5 divide-y divide-slate-800">
+				<ol class="mt-5 divide-y divide-line">
 					{#each events as event (event.id)}
 						<li class="flex flex-col gap-1 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
 							<div class="min-w-0">
-								<p class="text-sm font-medium text-slate-100">{eventLabel(event.action)}</p>
-								<p class="mt-1 text-sm text-slate-400">{eventSummary(event)} · {event.actor_user_id === null ? 'System recovery' : `Administrator #${event.actor_user_id}`}</p>
+								<p class="text-sm font-medium text-ink">{eventLabel(event.action)}</p>
+								<p class="mt-1 text-sm text-ink-muted">{eventSummary(event)} · {event.actor_user_id === null ? 'System recovery' : `Administrator #${event.actor_user_id}`}</p>
 							</div>
-							<time datetime={event.created_at} class="shrink-0 text-xs text-slate-500">{formatDateTime(event.created_at)}</time>
+							<time datetime={event.created_at} class="shrink-0 text-xs text-ink-subtle">{formatDateTime(event.created_at)}</time>
 						</li>
 					{/each}
 				</ol>

@@ -464,139 +464,139 @@
 	{#if error}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">{$t("Loading your shopping lists…")}</div>
+		<div class="rounded-2xl border border-line bg-surface p-7 text-sm text-ink-muted">{$t("Loading your shopping lists…")}</div>
 	{:else if !canView}
-		<section class="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-6 sm:p-8">
-			<p class="text-sm font-medium text-amber-200">{$t("Shopping View access is required.")}</p>
-			<h2 class="mt-2 text-xl font-semibold text-white">{$t("Your lists stay private to the right members.")}</h2>
-			<p class="mt-3 text-sm leading-6 text-slate-400">{$t("Ask a household administrator to enable Shopping and grant your account View access.")}</p>
+		<section class="rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8">
+			<p class="text-sm font-medium text-warning">{$t("Shopping View access is required.")}</p>
+			<h2 class="mt-2 text-xl font-semibold text-ink">{$t("Your lists stay private to the right members.")}</h2>
+			<p class="mt-3 text-sm leading-6 text-ink-muted">{$t("Ask a household administrator to enable Shopping and grant your account View access.")}</p>
 		</section>
 	{:else}
 		<div class="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
 			<aside class="space-y-4">
-				<section class="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
+				<section class="rounded-2xl border border-line bg-surface p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
-						<h2 class="text-sm font-semibold text-white">{$t("Your lists")}</h2>
-						<span class="text-xs text-slate-500">{lists.length} / 100</span>
+						<h2 class="text-sm font-semibold text-ink">{$t("Your lists")}</h2>
+						<span class="text-xs text-ink-subtle">{lists.length} / 100</span>
 					</div>
 					{#if lists.length}
 						<nav aria-label={$t("Shopping lists")} class="space-y-2">
 							{#each lists as list (list.id)}
-								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 {activeListId === list.id ? 'border-cyan-300/50 bg-cyan-300/10' : 'border-slate-800 bg-slate-950/40 hover:border-slate-600'}">
+								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink {activeListId === list.id ? 'border-accent-ink/50 bg-accent/10' : 'border-line bg-page hover:border-line-strong'}">
 									<span class="flex items-center justify-between gap-2">
-										<span class="truncate text-sm font-medium text-white">{list.name}</span>
-										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] text-cyan-300">{$t("Shared")}</span>{/if}
+										<span class="truncate text-sm font-medium text-ink">{list.name}</span>
+										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] text-accent-ink">{$t("Shared")}</span>{/if}
 									</span>
-									<span class="mt-1 block text-xs text-slate-500">{list.open_item_count} {$t("open ·")} {list.item_count} total</span>
+									<span class="mt-1 block text-xs text-ink-subtle">{list.open_item_count} {$t("open ·")} {list.item_count} total</span>
 								</button>
 							{/each}
 						</nav>
 					{:else}
-						<p class="rounded-xl border border-dashed border-slate-700 px-3 py-4 text-xs leading-5 text-slate-400">{$t("No lists yet. Create one to start collecting what you need.")}</p>
+						<p class="rounded-xl border border-dashed border-line-strong px-3 py-4 text-xs leading-5 text-ink-muted">{$t("No lists yet. Create one to start collecting what you need.")}</p>
 					{/if}
 				</section>
 
 				{#if canCreateList}
-					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Create a list')}</button>
+					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Create a list')}</button>
 					<Modal bind:open={listModalOpen} title={$t('Create a list')}>
-					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-						<h2 class="text-sm font-semibold text-white">{$t("Create a list")}</h2>
-						<label class="block text-xs font-medium text-slate-400">{$t("List name")}
-							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+					<form onsubmit={createList} class="space-y-3 rounded-2xl border border-line bg-surface p-4">
+						<h2 class="text-sm font-semibold text-ink">{$t("Create a list")}</h2>
+						<label class="block text-xs font-medium text-ink-muted">{$t("List name")}
+							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 						</label>
 						{#if canManageShared}
-							<label class="block text-xs font-medium text-slate-400">{$t("Who can see it?")}
-								<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+							<label class="block text-xs font-medium text-ink-muted">{$t("Who can see it?")}
+								<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 									<option value="private">{$t("Only me")}</option>
 									<option value="household">{$t("Household")}</option>
 								</select>
 							</label>
 						{/if}
-						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
+						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
 					</form>
 					</Modal>
 				{/if}
 			</aside>
 
 			{#if !activeList}
-				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
-					<p class="text-xs font-semibold text-cyan-300">{$t("Ready when you are")}</p>
-					<h2 class="mt-3 text-2xl font-semibold text-white">{$t("Start with one thing.")}</h2>
-					<p class="mt-2 max-w-md text-sm leading-6 text-slate-400">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
+				<section class="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-line bg-surface px-6 py-10 text-center">
+					<p class="text-xs font-semibold text-accent-ink">{$t("Ready when you are")}</p>
+					<h2 class="mt-3 text-2xl font-semibold text-ink">{$t("Start with one thing.")}</h2>
+					<p class="mt-2 max-w-md text-sm leading-6 text-ink-muted">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
 				</section>
 			{:else}
 				<section class="min-w-0 space-y-4">
 					{#if activeList.can_add_items}
-						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Add item')}</button>
+						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add item')}</button>
 						<Modal bind:open={addItemModalOpen} title={$t('Add item')} description={activeList.name}>
-						<form onsubmit={addItem} class="rounded-2xl border border-cyan-300/30 bg-slate-900/80 p-4 shadow-lg shadow-cyan-950/10 sm:p-5">
+						<form onsubmit={addItem} class="rounded-2xl border border-accent-ink/30 bg-surface p-4 shadow-xs sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
-									<p class="text-xs font-semibold text-cyan-300">{$t("Quick add")}</p>
-									<h2 class="mt-1 text-lg font-semibold text-white">{$t("What do you need?")}</h2>
+									<p class="text-xs font-semibold text-accent-ink">{$t("Quick add")}</p>
+									<h2 class="mt-1 text-lg font-semibold text-ink">{$t("What do you need?")}</h2>
 								</div>
-								{#if activeList.visibility === 'household'}<span class="rounded-full border border-cyan-300/30 px-3 py-1.5 text-xs text-cyan-200">{$t("Shared list")}</span>{/if}
+								{#if activeList.visibility === 'household'}<span class="rounded-full border border-accent-ink/30 px-3 py-1.5 text-xs text-accent-ink">{$t("Shared list")}</span>{/if}
 							</div>
 							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]">
-								<label class="text-xs font-medium text-slate-400">{$t("Item")}
-									<input bind:value={quickName} maxlength="180" required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								<label class="text-xs font-medium text-ink-muted">{$t("Item")}
+									<input bind:value={quickName} maxlength="180" required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">{$t("Quantity")} <span class="font-normal text-slate-600">{$t('optional')}</span>
-									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								<label class="text-xs font-medium text-ink-muted">{$t("Quantity")} <span class="font-normal text-ink-subtle">{$t('optional')}</span>
+									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
-								<label class="text-xs font-medium text-slate-400">{$t("Unit")} <span class="font-normal text-slate-600">{$t('optional')}</span>
-									<input bind:value={quickUnit} maxlength="32" placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+								<label class="text-xs font-medium text-ink-muted">{$t("Unit")} <span class="font-normal text-ink-subtle">{$t('optional')}</span>
+									<input bind:value={quickUnit} maxlength="32" placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
-								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>
+								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>
 							</div>
-							<p class="mt-2 text-xs text-slate-500">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
+							<p class="mt-2 text-xs text-ink-subtle">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
 						</form>
 						</Modal>
 					{/if}
 
 					{#if activeList.can_add_items}
-						<section class="rounded-2xl border border-violet-300/25 bg-slate-900/65 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
+						<section class="rounded-2xl border border-accent-ink/25 bg-surface p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
-								<p class="text-xs font-semibold text-violet-300">{$t("Optional connection")}</p>
-								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-white">{$t("Add ingredients from the weekly plan")}</h2>
-								<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Preview recipe ingredients and combined quantities for a week, then choose only what you want to add to this list.")}</p>
+								<p class="text-xs font-semibold text-accent-ink">{$t("Optional connection")}</p>
+								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-ink">{$t("Add ingredients from the weekly plan")}</h2>
+								<p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Preview recipe ingredients and combined quantities for a week, then choose only what you want to add to this list.")}</p>
 							</div>
 							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-								<label class="block text-xs font-medium text-slate-400">{$t("Week starting Monday")}
-									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
+								<label class="block text-xs font-medium text-ink-muted">{$t("Week starting Monday")}
+									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 								</label>
-								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-violet-300/40 px-4 text-sm font-semibold text-violet-100 hover:bg-violet-300/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</button>
+								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-accent-ink/40 px-4 text-sm font-semibold text-accent-ink hover:bg-accent/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</button>
 							</form>
 
 							{#if suggestionPreview}
-								<div class="mt-4 space-y-3 border-t border-slate-800 pt-4" aria-live="polite">
+								<div class="mt-4 space-y-3 border-t border-line pt-4" aria-live="polite">
 									{#if !suggestionPreview.availability.meal_planning}
-										<p role="status" class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-3 py-3 text-sm text-amber-100">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</p>
+										<p role="status" class="rounded-xl border border-warning/20 bg-warning/5 px-3 py-3 text-sm text-warning">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</p>
 									{:else}
 										{#if suggestionPreview.suggestions.length === 0}
-											<p role="status" class="rounded-xl border border-slate-800 px-3 py-3 text-sm text-slate-400">{$t("No importable recipe ingredients were found for this week.")}</p>
+											<p role="status" class="rounded-xl border border-line px-3 py-3 text-sm text-ink-muted">{$t("No importable recipe ingredients were found for this week.")}</p>
 										{:else}
 											<div class="flex flex-wrap items-center justify-between gap-2">
-												<p class="text-xs text-slate-400">{$t("Select the ingredients you want and adjust each quantity for what you already have. Matching ingredients are combined across linked recipes.")}</p>
-												<button type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-slate-700 px-3 text-xs font-medium text-slate-200 hover:border-violet-300/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</button>
+												<p class="text-xs text-ink-muted">{$t("Select the ingredients you want and adjust each quantity for what you already have. Matching ingredients are combined across linked recipes.")}</p>
+												<button type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:border-accent-ink/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</button>
 											</div>
 											<div class="max-h-80 space-y-2 overflow-y-auto">
 												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
-													<div class="grid min-h-12 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/45 px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-														<input id={'meal-suggestion-' + suggestion.id} bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} aria-label={$t('Select {item}', { item: suggestion.name })} class="size-4 shrink-0 accent-violet-300" />
-														<label for={'meal-suggestion-' + suggestion.id} class="break-words text-sm font-medium text-white">{suggestion.name}</label>
+													<div class="grid min-h-12 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line bg-page px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+														<input id={'meal-suggestion-' + suggestion.id} bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} aria-label={$t('Select {item}', { item: suggestion.name })} class="size-4 shrink-0 accent-accent" />
+														<label for={'meal-suggestion-' + suggestion.id} class="break-words text-sm font-medium text-ink">{suggestion.name}</label>
 														<div class="flex items-center gap-2">
-															<input bind:value={suggestionQuantities[suggestion.id]} type="text" inputmode="decimal" autocomplete="off" aria-label={$t('Quantity to add for {item}', { item: suggestion.name })} class="min-h-10 w-24 rounded-lg border border-slate-700 bg-slate-950 px-2 text-right text-sm tabular-nums text-white focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300/20" />
-															<span class="min-w-8 text-sm text-violet-100">{suggestion.unit}</span>
+															<input bind:value={suggestionQuantities[suggestion.id]} type="text" inputmode="decimal" autocomplete="off" aria-label={$t('Quantity to add for {item}', { item: suggestion.name })} class="min-h-10 w-24 rounded-[10px] border border-line-strong bg-page px-2 text-right text-sm tabular-nums text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+															<span class="min-w-8 text-sm text-accent-ink">{suggestion.unit}</span>
 														</div>
 													</div>
 												{/each}
 											</div>
-											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-slate-500">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
-											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-slate-500">{$t("Some linked recipes are unavailable to your account and were skipped.")}</p>{/if}
-											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-amber-200">{$t("Some quantities cannot be represented exactly in Shopping and were skipped.")}</p>{/if}
-											<p class="text-xs leading-5 text-slate-500">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans or recipes.")}</p>
-											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-violet-300 px-4 text-sm font-semibold text-slate-950 hover:bg-violet-200 disabled:opacity-50">{$t(suggestionImporting ? 'Adding…' : 'Add selected ingredients')} · {selectedSuggestionIds.length}</button>
+											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-ink-subtle">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
+											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-ink-subtle">{$t("Some linked recipes are unavailable to your account and were skipped.")}</p>{/if}
+											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-warning">{$t("Some quantities cannot be represented exactly in Shopping and were skipped.")}</p>{/if}
+											<p class="text-xs leading-5 text-ink-subtle">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans or recipes.")}</p>
+											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(suggestionImporting ? 'Adding…' : 'Add selected ingredients')} · {selectedSuggestionIds.length}</button>
 										{/if}
 									{/if}
 								</div>
@@ -604,55 +604,55 @@
 						</section>
 					{/if}
 
-					<div class="rounded-2xl border border-slate-800 bg-slate-900/55">
-						<header class="flex flex-col gap-3 border-b border-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+					<div class="rounded-2xl border border-line bg-surface">
+						<header class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
 							<div class="min-w-0">
 								<div class="flex flex-wrap items-center gap-2">
-									<h2 class="truncate text-xl font-semibold text-white">{activeList.name}</h2>
+									<h2 class="truncate text-xl font-semibold text-ink">{activeList.name}</h2>
 									<Badge tone={activeList.visibility === 'household' ? 'accent' : 'neutral'}>{$t(visibilityLabel(activeList.visibility))}</Badge>
 								</div>
-								<p class="mt-1 text-xs text-slate-500">{activeList.open_item_count} {$t("left to buy ·")} {activeList.item_count} total</p>
+								<p class="mt-1 text-xs text-ink-subtle">{activeList.open_item_count} {$t("left to buy ·")} {activeList.item_count} total</p>
 							</div>
 							<div class="flex flex-wrap items-center gap-2">
 								<label class="sr-only" for="shopping-filter">{$t("Show items")}</label>
-								<select id="shopping-filter" bind:value={filter} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
+								<select id="shopping-filter" bind:value={filter} class="min-h-10 rounded-[10px] border border-line-strong bg-page px-3 text-xs text-ink-secondary focus:border-accent-ink focus:outline-none max-sm:text-base">
 									<option value="open">{$t("To buy")}</option>
 									<option value="checked">{$t("Checked")}</option>
 									<option value="all">{$t("All items")}</option>
 								</select>
 								<label class="sr-only" for="shopping-sort">{$t("Sort items")}</label>
-								<select id="shopping-sort" bind:value={sortMode} class="min-h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-cyan-300 focus:outline-none">
+								<select id="shopping-sort" bind:value={sortMode} class="min-h-10 rounded-[10px] border border-line-strong bg-page px-3 text-xs text-ink-secondary focus:border-accent-ink focus:outline-none max-sm:text-base">
 									<option value="manual">{$t("List order")}</option>
 									<option value="name">{$t("Name A–Z")}</option>
 								</select>
 								{#if activeList.can_edit}
-									<button type="button" onclick={() => (renameModalOpen = true)} class="min-h-10 rounded-lg border border-slate-700 px-3 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Rename list")}</button>
+									<button type="button" onclick={() => (renameModalOpen = true)} class="min-h-10 rounded-lg border border-line-strong px-3 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Rename list")}</button>
 								{/if}
 							</div>
 						</header>
-						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-slate-200" for="shopping-list-name">{$t('List name')}<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" /></label><button type="submit" disabled={saving} class="min-h-10 rounded-lg bg-cyan-300 px-4 text-sm font-semibold text-slate-950">{$t('Rename')}</button></form></Modal>{/if}
+						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-ink-secondary" for="shopping-list-name">{$t('List name')}<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" /></label><button type="submit" disabled={saving} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Rename')}</button></form></Modal>{/if}
 
 						{#if listLoading}
-							<p class="p-6 text-sm text-slate-400">{$t("Loading items…")}</p>
+							<p class="p-6 text-sm text-ink-muted">{$t("Loading items…")}</p>
 						{:else if visibleItems.length}
-							<ul aria-label={$t("Shopping items")} class="divide-y divide-slate-800/80">
+							<ul aria-label={$t("Shopping items")} class="divide-y divide-line">
 								{#each visibleItems as item (item.id)}
 									<li class="flex min-w-0 items-start gap-3 px-4 py-4 sm:items-center sm:px-5">
-										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-950 text-cyan-300 focus:ring-2 focus:ring-cyan-300/40 disabled:opacity-50 sm:mt-0" />
+										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-line-strong bg-page text-accent-ink focus:ring-2 focus:ring-accent-ink/40 disabled:opacity-50 sm:mt-0" />
 										<div class="min-w-0 flex-1">
-											<p class="break-words text-sm font-medium {item.is_checked ? 'text-slate-500 line-through' : 'text-white'}">{item.name}</p>
-											<p class="mt-1 text-xs text-slate-500">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}</p>
+											<p class="break-words text-sm font-medium {item.is_checked ? 'text-ink-subtle line-through' : 'text-ink'}">{item.name}</p>
+											<p class="mt-1 text-xs text-ink-subtle">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}</p>
 										</div>
 										{#if item.can_edit}
 											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
 												{#if item.is_checked}
-													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-cyan-300/30 px-2.5 text-xs font-medium text-cyan-200 hover:bg-cyan-300/10">{$t("Put back")}</button>
+													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-accent-ink/30 px-2.5 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t("Put back")}</button>
 												{:else}
-													<button type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={'Move ' + item.name + ' up'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↑</button>
-													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-cyan-300/60 disabled:opacity-30">↓</button>
+													<button type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={'Move ' + item.name + ' up'} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↑</button>
+													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↓</button>
 												{/if}
-												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Edit")}</button>
-											<button type="button" onclick={() => { itemToRemove = item; removeModalOpen = true; }} class="min-h-10 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
+												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>
+											<button type="button" onclick={() => { itemToRemove = item; removeModalOpen = true; }} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</button>
 											</div>
 										{/if}
 									</li>
@@ -660,17 +660,17 @@
 										<li>
 											<Modal bind:open={editItemModalOpen} title={$t('Edit shopping item')} description={item.name}>
 											<form onsubmit={(event) => saveItem(event, item)} class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto_auto]">
-												<label class="text-xs font-medium text-slate-400">{$t("Item name")}
-													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												<label class="text-xs font-medium text-ink-muted">{$t("Item name")}
+													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
-												<label class="text-xs font-medium text-slate-400">{$t("Quantity")}
-													<input bind:value={editQuantity} type="text" inputmode="decimal" maxlength="15" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												<label class="text-xs font-medium text-ink-muted">{$t("Quantity")}
+													<input bind:value={editQuantity} type="text" inputmode="decimal" maxlength="15" class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
-												<label class="text-xs font-medium text-slate-400">{$t("Unit")}
-													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white" />
+												<label class="text-xs font-medium text-ink-muted">{$t("Unit")}
+													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
-												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-cyan-300 px-4 text-xs font-semibold text-slate-950">{$t("Save")}</button>
-											<button type="button" onclick={() => { editingItemId = null; editItemModalOpen = false; }} class="min-h-11 self-end rounded-lg border border-slate-700 px-4 text-xs text-slate-300">{$t("Cancel")}</button>
+												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-accent px-4 text-xs font-semibold text-on-accent">{$t("Save")}</button>
+											<button type="button" onclick={() => { editingItemId = null; editItemModalOpen = false; }} class="min-h-11 self-end rounded-lg border border-line-strong px-4 text-xs text-ink-secondary">{$t("Cancel")}</button>
 											</form>
 										</Modal>
 										</li>
@@ -679,31 +679,31 @@
 							</ul>
 						{:else}
 							<div class="px-5 py-10 text-center">
-								<p class="text-sm font-medium text-white">{items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.'}</p>
-								<p class="mt-1 text-xs text-slate-500">{$t(filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.')}</p>
+								<p class="text-sm font-medium text-ink">{items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.'}</p>
+								<p class="mt-1 text-xs text-ink-subtle">{$t(filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.')}</p>
 							</div>
 						{/if}
 					</div>
 
-					<section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
-						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-slate-200 hover:bg-slate-900 sm:px-5">
-							<span>{$t("List activity")}</span><span class="text-xs text-slate-500">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
+					<section class="overflow-hidden rounded-2xl border border-line bg-surface">
+						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-ink-secondary hover:bg-surface sm:px-5">
+							<span>{$t("List activity")}</span><span class="text-xs text-ink-subtle">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
 						</button>
 						{#if historyOpen}
-							<div class="border-t border-slate-800 px-4 py-3 sm:px-5">
+							<div class="border-t border-line px-4 py-3 sm:px-5">
 								{#if historyLoading}
-									<p class="py-3 text-xs text-slate-500">{$t("Loading activity…")}</p>
+									<p class="py-3 text-xs text-ink-subtle">{$t("Loading activity…")}</p>
 								{:else if activity.length}
-									<ol class="divide-y divide-slate-800/70">
+									<ol class="divide-y divide-line">
 										{#each activity as entry (entry.id)}
 											<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
-												<span class="break-words text-xs text-slate-300">{eventLabel(entry)}</span>
-												<time class="shrink-0 text-[0.68rem] text-slate-500">{formatDate(entry.created_at)}</time>
+												<span class="break-words text-xs text-ink-secondary">{eventLabel(entry)}</span>
+												<time class="shrink-0 text-[0.68rem] text-ink-subtle">{formatDate(entry.created_at)}</time>
 											</li>
 										{/each}
 									</ol>
 								{:else}
-									<p class="py-3 text-xs text-slate-500">{$t("No list activity yet.")}</p>
+									<p class="py-3 text-xs text-ink-subtle">{$t("No list activity yet.")}</p>
 								{/if}
 							</div>
 						{/if}

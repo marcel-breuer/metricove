@@ -8,4 +8,4 @@
 	});
 </script>
 
-<p role="status" class="text-sm text-slate-300">{$t("Opening the household assistant…")}</p>
+<p role="status" class="text-sm text-ink-secondary">{$t("Opening the household assistant…")}</p>

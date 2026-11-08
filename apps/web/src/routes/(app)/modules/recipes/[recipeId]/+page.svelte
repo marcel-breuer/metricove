@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { iconButton, panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -102,29 +103,29 @@
 	{#if error && recipe}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<p class="ui-panel ui-panel--medium text-sm text-[var(--text-muted)]" role="status">{$t('Loading recipe…')}</p>
+		<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading recipe…')}</p>
 	{:else if !canView}
 		<Notice tone="info" message="Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission." />
 	{:else if !recipe}
 		<Panel>
 			<h1 class="text-xl font-semibold">{$t('Recipe unavailable')}</h1>
-			<p class="mt-2 text-sm leading-6 text-[var(--text-muted)]">{$t(error || 'This recipe is unavailable to your account.')}</p>
+			<p class="mt-2 text-sm leading-6 text-ink-muted">{$t(error || 'This recipe is unavailable to your account.')}</p>
 			<Button href="/modules/recipes" variant="secondary" class="mt-5">{$t('All recipes')}</Button>
 		</Panel>
 	{:else}
-		<header class="ui-page-heading">
+		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
 			<div class="min-w-0">
-				<p class="ui-eyebrow">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
-				<h1 class="break-words">{recipe.title}</h1>
-				<p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums text-[var(--text-muted)]">
-					{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-[var(--warning-text)]">{$t('Servings missing')}</span>{/if}
+				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
+				<h1 class="mt-2 break-words text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.16] font-[650] tracking-[-0.03em] text-ink">{recipe.title}</h1>
+				<p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums text-ink-muted">
+					{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('Servings missing')}</span>{/if}
 					{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}
 					<span>{$t(recipe.ingredients.length === 1 ? '{count} ingredient' : '{count} ingredients', { count: recipe.ingredients.length })}</span>
 					{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
 				</p>
 			</div>
-			<div class="ui-page-heading-actions">
-				<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="ui-icon-button recipe-favorite">{@render star(recipe.is_favorite)}</button>
+			<div class="flex items-center gap-3 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-auto">
+				<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="{iconButton} aria-pressed:text-warning max-sm:grow-0!">{@render star(recipe.is_favorite)}</button>
 				{#if recipe.can_edit}
 					<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
 					<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>
@@ -132,24 +133,24 @@
 			</div>
 		</header>
 
-		{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-[var(--border-default)] object-cover" />{/if}
+		{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}
 
 		<div class="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 			<Panel>
 				<h2 class="text-base font-semibold">{$t('Ingredients')}</h2>
-				<ul class="mt-3 divide-y divide-[var(--border-default)] text-sm">
+				<ul class="mt-3 divide-y divide-line text-sm">
 					{#each recipe.ingredients as ingredient (ingredient.id)}
 						<li class="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 py-2.5">
-							{#if ingredient.quantity && ingredient.unit}<span class="tabular-nums text-[var(--accent-text)]">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="text-xs leading-5 text-[var(--warning-text)]">{$t('Amount missing')}</span>{/if}
-							<span class="text-[var(--text-primary)]">{ingredient.name}{#if ingredient.note}<span class="text-[var(--text-muted)]"> · {ingredient.note}</span>{/if}</span>
+							{#if ingredient.quantity && ingredient.unit}<span class="tabular-nums text-accent-ink">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="text-xs leading-5 text-warning">{$t('Amount missing')}</span>{/if}
+							<span class="text-ink">{ingredient.name}{#if ingredient.note}<span class="text-ink-muted"> · {ingredient.note}</span>{/if}</span>
 						</li>
 					{/each}
-					{#if recipe.ingredients.length === 0}<li class="py-2.5 text-[var(--text-muted)]">{$t('No ingredients recorded.')}</li>{/if}
+					{#if recipe.ingredients.length === 0}<li class="py-2.5 text-ink-muted">{$t('No ingredients recorded.')}</li>{/if}
 				</ul>
 			</Panel>
 			<Panel>
 				<h2 class="text-base font-semibold">{$t('Preparation')}</h2>
-				<p class="mt-3 whitespace-pre-line text-sm leading-7 text-[var(--text-secondary)]">{recipe.instructions || $t('No preparation steps recorded.')}</p>
+				<p class="mt-3 whitespace-pre-line text-sm leading-7 text-ink-secondary">{recipe.instructions || $t('No preparation steps recorded.')}</p>
 			</Panel>
 		</div>
 
@@ -159,7 +160,3 @@
 		{/if}
 	{/if}
 </div>
-
-<style>
-	.recipe-favorite[aria-pressed='true'] { color: var(--warning-text); }
-</style>

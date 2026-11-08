@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
+	import { buttonClasses, type ButtonSize, type ButtonVariant } from './styles';
 
 	type Props = Omit<HTMLButtonAttributes, 'class'> & {
-		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-		size?: 'small' | 'medium';
+		variant?: ButtonVariant;
+		size?: ButtonSize;
 		fullWidth?: boolean;
+		align?: 'center' | 'start';
 		/** Renders a link styled as a button for navigation actions. */
 		href?: string;
 		class?: string;
@@ -17,6 +19,7 @@
 		variant = 'primary',
 		size = 'medium',
 		fullWidth = false,
+		align = 'center',
 		href,
 		class: className = '',
 		element = $bindable(null),
@@ -24,7 +27,7 @@
 		...attributes
 	}: Props = $props();
 
-	const classes = $derived(`ui-button ui-button--${variant} ui-button--${size} ${fullWidth ? 'ui-button--full' : ''} ${className}`);
+	const classes = $derived(`${buttonClasses({ variant, size, fullWidth, align })} ${className}`);
 </script>
 
 {#if href}

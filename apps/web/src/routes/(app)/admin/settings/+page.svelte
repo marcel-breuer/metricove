@@ -138,12 +138,12 @@
 		{#if error}<Notice class="mt-8" tone="error" message={$t(error)} />{/if}
 		<Panel padding="large" class="mt-8 sm:p-8">
 			{#if loading}
-				<p role="status" class="text-sm text-slate-300">{$t("Loading settings…")}</p>
+				<p role="status" class="text-sm text-ink-secondary">{$t("Loading settings…")}</p>
 			{:else if settings}
 				<form class="space-y-6" onsubmit={saveSettings} aria-busy={busy}>
 					<div>
-						<label for="ai-provider" class="block text-sm font-medium text-slate-200">{$t("AI provider")}</label>
-						<select id="ai-provider" bind:value={provider} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+						<label for="ai-provider" class="block text-sm font-medium text-ink-secondary">{$t("AI provider")}</label>
+						<select id="ai-provider" bind:value={provider} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 							<option value="disabled">{$t("Disabled")}</option>
 							<option value="openai-compatible">{$t("OpenAI-compatible")}</option>
 							<option value="claude">{$t("Claude")}</option>
@@ -153,27 +153,27 @@
 					</div>
 					{#if provider === 'openai-compatible'}
 					<div>
-						<label for="ai-base-url" class="block text-sm font-medium text-slate-200">{$t("Provider base URL")}</label>
-						<input id="ai-base-url" type="url" bind:value={baseUrl} maxlength="2048" placeholder={$t("https://provider.example/v1")} required class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 placeholder:text-slate-600" />
+						<label for="ai-base-url" class="block text-sm font-medium text-ink-secondary">{$t("Provider base URL")}</label>
+						<input id="ai-base-url" type="url" bind:value={baseUrl} maxlength="2048" placeholder={$t("https://provider.example/v1")} required class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink placeholder:text-ink-subtle max-sm:text-base" />
 					</div>
 					{/if}
 					<div>
-						<label for="ai-model" class="block text-sm font-medium text-slate-200">{$t("Model")}</label>
-						<input id="ai-model" bind:value={model} maxlength="120" placeholder={provider === 'openrouter' ? 'provider/model' : provider === 'gemini' ? 'gemini-2.5-flash' : provider === 'claude' ? 'claude-sonnet-4-5' : ''} disabled={!providerEnabled} required={providerEnabled} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 disabled:opacity-50" />
+						<label for="ai-model" class="block text-sm font-medium text-ink-secondary">{$t("Model")}</label>
+						<input id="ai-model" bind:value={model} maxlength="120" placeholder={provider === 'openrouter' ? 'provider/model' : provider === 'gemini' ? 'gemini-2.5-flash' : provider === 'claude' ? 'claude-sonnet-4-5' : ''} disabled={!providerEnabled} required={providerEnabled} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink disabled:opacity-50 max-sm:text-base" />
 					</div>
 					<div>
-						<label for="ai-api-key" class="block text-sm font-medium text-slate-200">{$t("API key")} <span class="font-normal text-slate-500">({$t(providerRequiresKey ? 'required' : 'optional for compatible endpoints')})</span></label>
-						<input id="ai-api-key" type="password" autocomplete="new-password" bind:value={apiKey} maxlength="4096" placeholder={settings.api_key_configured && provider === settings.provider ? $t('Key stored; leave blank to keep it') : $t('Enter a key for the selected provider')} required={providerRequiresKey && (!settings.api_key_configured || provider !== settings.provider)} disabled={!providerEnabled} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 placeholder:text-slate-600 disabled:opacity-50" />
+						<label for="ai-api-key" class="block text-sm font-medium text-ink-secondary">{$t("API key")} <span class="font-normal text-ink-subtle">({$t(providerRequiresKey ? 'required' : 'optional for compatible endpoints')})</span></label>
+						<input id="ai-api-key" type="password" autocomplete="new-password" bind:value={apiKey} maxlength="4096" placeholder={settings.api_key_configured && provider === settings.provider ? $t('Key stored; leave blank to keep it') : $t('Enter a key for the selected provider')} required={providerRequiresKey && (!settings.api_key_configured || provider !== settings.provider)} disabled={!providerEnabled} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink placeholder:text-ink-subtle disabled:opacity-50 max-sm:text-base" />
 						{#if settings.api_key_configured}
-							<label class="mt-3 inline-flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" bind:checked={clearApiKey} disabled={busy || providerEnabled} class="size-4 accent-cyan-300" />{$t("Remove stored API key (disable the provider first)")}</label>
+							<label class="mt-3 inline-flex items-center gap-2 text-sm text-ink-secondary"><input type="checkbox" bind:checked={clearApiKey} disabled={busy || providerEnabled} class="size-4 accent-accent" />{$t("Remove stored API key (disable the provider first)")}</label>
 						{/if}
 					</div>
 					{#if usesManagedEndpoint}
-						<p class="text-sm leading-6 text-slate-400">{$t("Metricove uses the official")} {provider === 'claude' ? 'Claude' : provider === 'gemini' ? 'Gemini' : 'OpenRouter'} {$t("endpoint. Each request sends your question and authorized tool data to this provider after you confirm.")}</p>
+						<p class="text-sm leading-6 text-ink-muted">{$t("Metricove uses the official")} {provider === 'claude' ? 'Claude' : provider === 'gemini' ? 'Gemini' : 'OpenRouter'} {$t("endpoint. Each request sends your question and authorized tool data to this provider after you confirm.")}</p>
 					{/if}
 					{#if provider === 'openai-compatible'}
-						<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-							<label class="inline-flex items-start gap-3 text-sm text-slate-200"><input type="checkbox" bind:checked={externalProvider} class="mt-0.5 size-4 accent-cyan-300" /><span><span class="block font-medium">{$t("External provider")}</span><span class="mt-1 block leading-6 text-slate-400">{$t("External providers must use HTTPS. Every request requires the member to confirm sending the question and requested data.")}</span></span></label>
+						<div class="rounded-xl border border-line bg-page p-4">
+							<label class="inline-flex items-start gap-3 text-sm text-ink-secondary"><input type="checkbox" bind:checked={externalProvider} class="mt-0.5 size-4 accent-accent" /><span><span class="block font-medium">{$t("External provider")}</span><span class="mt-1 block leading-6 text-ink-muted">{$t("External providers must use HTTPS. Every request requires the member to confirm sending the question and requested data.")}</span></span></label>
 						</div>
 					{/if}
 					<div class="flex flex-wrap gap-3"><Button type="submit" disabled={busy}>{$t(busy ? 'Saving…' : 'Save settings')}</Button><Button type="button" variant="secondary" disabled={busy} onclick={() => void loadSettings()}>{$t("Reload")}</Button></div>
@@ -182,27 +182,27 @@
 		</Panel>
 		<Panel padding="large" class="mt-8 sm:p-8">
 			<div class="mb-6">
-				<h2 class="text-xl font-semibold text-white">{$t('Network access')}</h2>
-				<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{$t('Leave the list empty to allow access from any IP address. When entries are saved, only matching addresses and networks can use the platform API, including sign-in and MCP.')}</p>
+				<h2 class="text-xl font-semibold text-ink">{$t('Network access')}</h2>
+				<p class="mt-2 max-w-3xl text-sm leading-6 text-ink-muted">{$t('Leave the list empty to allow access from any IP address. When entries are saved, only matching addresses and networks can use the platform API, including sign-in and MCP.')}</p>
 			</div>
 			{#if networkMessage}<Notice class="mb-6" tone="success" message={$t(networkMessage)} />{/if}
 			{#if networkError}<Notice class="mb-6" tone="error" message={$t(networkError)} />{/if}
 			{#if networkAccess}
 				<form class="space-y-5" onsubmit={saveNetworkAccess} aria-busy={networkBusy}>
 					<div>
-						<p class="text-sm font-medium text-slate-200">{$t('Observed client IP')}</p>
+						<p class="text-sm font-medium text-ink-secondary">{$t('Observed client IP')}</p>
 						{#if networkAccess.client_ip}
-							<code class="mt-2 inline-flex rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-cyan-200">{networkAccess.client_ip}</code>
+							<code class="mt-2 inline-flex rounded-lg border border-line-strong bg-page px-3 py-2 font-mono text-sm text-accent-ink">{networkAccess.client_ip}</code>
 						{:else}
-							<p class="mt-2 text-sm text-amber-200">{$t('The client IP could not be determined. Check the trusted proxy configuration before enabling this restriction.')}</p>
+							<p class="mt-2 text-sm text-warning">{$t('The client IP could not be determined. Check the trusted proxy configuration before enabling this restriction.')}</p>
 						{/if}
 					</div>
 					<div>
-						<label for="allowed-ip-ranges" class="block text-sm font-medium text-slate-200">{$t('Allowed IP addresses and networks')}</label>
-						<textarea id="allowed-ip-ranges" bind:value={allowedIpRanges} rows="6" maxlength="8192" spellcheck="false" autocomplete="off" placeholder={'192.0.2.25\n192.0.2.0/24\n2001:db8::/32'} class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"></textarea>
-						<p class="mt-2 text-sm leading-6 text-slate-400">{$t('Enter one IPv4 or IPv6 address or CIDR network per line. Commas are also accepted. Up to 100 entries are supported.')}</p>
+						<label for="allowed-ip-ranges" class="block text-sm font-medium text-ink-secondary">{$t('Allowed IP addresses and networks')}</label>
+						<textarea id="allowed-ip-ranges" bind:value={allowedIpRanges} rows="6" maxlength="8192" spellcheck="false" autocomplete="off" placeholder={'192.0.2.25\n192.0.2.0/24\n2001:db8::/32'} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 font-mono text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea>
+						<p class="mt-2 text-sm leading-6 text-ink-muted">{$t('Enter one IPv4 or IPv6 address or CIDR network per line. Commas are also accepted. Up to 100 entries are supported.')}</p>
 					</div>
-					<p class="rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100">{$t('Include the observed address above or a network containing it. Otherwise, connect from an allowed network before managing these settings again.')}</p>
+					<p class="rounded-xl border border-warning/20 bg-warning/5 p-4 text-sm leading-6 text-warning">{$t('Include the observed address above or a network containing it. Otherwise, connect from an allowed network before managing these settings again.')}</p>
 					<div class="flex flex-wrap gap-3"><Button type="submit" disabled={networkBusy}>{$t(networkBusy ? 'Saving…' : 'Save network access')}</Button></div>
 				</form>
 			{/if}

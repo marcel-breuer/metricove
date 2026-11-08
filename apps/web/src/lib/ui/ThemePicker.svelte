@@ -12,14 +12,13 @@
 	];
 </script>
 
-<fieldset class="theme-picker {className}">
-	<legend>{$t('Appearance')}</legend>
-	<div class="theme-picker-options">
+<fieldset class="m-0 min-w-0 border-0 p-0 {className}">
+	<legend class="mb-[0.35rem] p-0 text-xs font-[650] text-ink-secondary">{$t('Appearance')}</legend>
+	<div class="grid grid-cols-3 gap-1.5">
 		{#each options as option (option.value)}
 			<button
 				type="button"
-				class="theme-picker-option"
-				class:theme-picker-option--selected={theme.preference === option.value}
+				class="flex min-h-13 min-w-0 cursor-pointer items-center justify-center gap-[0.45rem] rounded-xl border px-2.5 py-2 text-xs leading-[1.1] font-semibold whitespace-nowrap hover:border-accent-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink max-[360px]:gap-[0.3rem] max-[360px]:px-[0.35rem] max-[360px]:text-[0.6875rem] [&_svg]:size-[1.125rem] [&_svg]:shrink-0 {theme.preference === option.value ? 'border-accent-ink bg-accent-ink/12 text-ink' : 'border-line bg-page text-ink-secondary'}"
 				aria-label={$t(option.accessibleLabel)}
 				aria-pressed={theme.preference === option.value}
 				onclick={() => theme.setPreference(option.value)}
@@ -44,76 +43,3 @@
 		{/each}
 	</div>
 </fieldset>
-
-<style>
-	.theme-picker {
-		min-width: 0;
-		margin: 0;
-		border: 0;
-		padding: 0;
-	}
-
-	.theme-picker legend {
-		margin-bottom: 0.35rem;
-		padding: 0;
-		color: var(--text-secondary);
-		font-size: 0.75rem;
-		font-weight: 650;
-	}
-
-	.theme-picker-options {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.375rem;
-	}
-
-	.theme-picker-option {
-		display: flex;
-		min-width: 0;
-		min-height: 3.25rem;
-		align-items: center;
-		justify-content: center;
-		gap: 0.45rem;
-		border: 1px solid var(--border-default);
-		border-radius: 0.75rem;
-		background: var(--surface-page);
-		padding: 0.5rem 0.625rem;
-		color: var(--text-secondary);
-		font: inherit;
-		font-size: 0.75rem;
-		font-weight: 600;
-		line-height: 1.1;
-		white-space: nowrap;
-		cursor: pointer;
-	}
-
-	.theme-picker-option:hover {
-		border-color: var(--accent-text);
-		color: var(--text-primary);
-	}
-
-	.theme-picker-option:focus-visible {
-		outline: 2px solid var(--accent-text);
-		outline-offset: 2px;
-	}
-
-	.theme-picker-option--selected {
-		border-color: var(--accent-text);
-		background: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
-		color: var(--text-primary);
-	}
-
-	.theme-picker-option svg {
-		width: 1.125rem;
-		height: 1.125rem;
-		flex: 0 0 auto;
-	}
-
-	@media (max-width: 360px) {
-		.theme-picker-option {
-			gap: 0.3rem;
-			padding-inline: 0.35rem;
-			font-size: 0.6875rem;
-		}
-	}
-</style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { iconButton } from '#lib/ui/styles';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { onMount, setContext, tick } from 'svelte';
@@ -247,16 +248,16 @@
 <svelte:window onkeydown={handleWindowKeydown} />
 
 {#snippet brand(onNavigate?: () => void)}
-	<a href="/" onclick={onNavigate} class="flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-[var(--text-primary)]" aria-label={$t('Metricove overview')}>
-		<span class="grid size-9 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] text-lg text-[var(--accent-text)]" aria-hidden="true">M</span>
-		<span>Metric<span class="text-[var(--accent-text)]">ove</span></span>
+	<a href="/" onclick={onNavigate} class="flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-ink" aria-label={$t('Metricove overview')}>
+		<span class="grid size-9 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-lg text-accent-ink" aria-hidden="true">M</span>
+		<span>Metric<span class="text-accent-ink">ove</span></span>
 	</a>
 {/snippet}
 
 {#snippet navLinks(links: NavLink[], onNavigate?: () => void)}
 	<div class="space-y-1">
 		{#each links as link (link.href)}
-			<a href={link.href} onclick={onNavigate} aria-current={isActive(link.href) ? 'page' : undefined} class="nav-item {isActive(link.href) ? 'nav-item-active' : ''}">
+			<a href={link.href} onclick={onNavigate} aria-current={isActive(link.href) ? 'page' : undefined} class="relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors {isActive(link.href) ? 'bg-accent-ink/10 text-accent-ink before:absolute before:left-0 before:h-[1.6rem] before:w-[3px] before:rounded-r-full before:bg-accent' : 'text-ink-secondary hover:bg-surface-subtle hover:text-ink'}">
 				<ModuleIcon name={link.icon} />
 				<span class="min-w-0 truncate">{$t(link.label)}</span>
 			</a>
@@ -269,13 +270,13 @@
 		{@render navLinks(generalLinks, onNavigate)}
 		{#if moduleLinks.length > 0}
 			<div>
-				<p class="nav-section-label">{$t('Your modules')}</p>
+				<p class="px-3 text-xs font-semibold tracking-[0.01em] text-ink-muted">{$t('Your modules')}</p>
 				<div class="mt-2">{@render navLinks(moduleLinks, onNavigate)}</div>
 			</div>
 		{/if}
 		{#if currentUser?.is_admin}
-			<div class="border-t border-[var(--border-default)] pt-5">
-				<p class="nav-section-label">{$t('Administration')}</p>
+			<div class="border-t border-line pt-5">
+				<p class="px-3 text-xs font-semibold tracking-[0.01em] text-ink-muted">{$t('Administration')}</p>
 				<div class="mt-2">{@render navLinks(adminLinks, onNavigate)}</div>
 			</div>
 		{/if}
@@ -283,32 +284,32 @@
 {/snippet}
 
 {#snippet account(onNavigate?: () => void)}
-	<div class="mt-6 border-t border-[var(--border-default)] pt-4">
-		<a href="/profile" onclick={onNavigate} aria-current={isActive('/profile') ? 'page' : undefined} class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-[var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)]">
-			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--surface-subtle)] text-sm font-semibold text-[var(--accent-text)]" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
-			<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-[var(--text-primary)]">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-[var(--text-muted)]">{$t('Profile & account')}</span></span>
+	<div class="mt-6 border-t border-line pt-4">
+		<a href="/profile" onclick={onNavigate} aria-current={isActive('/profile') ? 'page' : undefined} class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-subtle text-sm font-semibold text-accent-ink" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
+			<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-ink-muted">{$t('Profile & account')}</span></span>
 		</a>
 		<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">{$t('Sign out')}</Button>
 	</div>
 {/snippet}
 
-<div class="app-shell min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] lg:flex">
-	<aside class="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--border-default)] px-4 py-6 lg:flex lg:flex-col">
+<div class="app-shell min-h-screen bg-page text-ink lg:flex">
+	<aside class="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-line px-4 py-6 lg:flex lg:flex-col">
 		<div class="mb-8">{@render brand()}</div>
 		{@render navigation('Main navigation')}
 		{@render account()}
 	</aside>
 
 	<div class="min-w-0 flex-1">
-		<header class="sticky top-0 z-20 border-b border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-page)_95%,transparent)] px-4 backdrop-blur sm:px-7 lg:px-10">
+		<header class="sticky top-0 z-20 border-b border-line bg-[color-mix(in_srgb,var(--color-page)_95%,transparent)] px-4 backdrop-blur sm:px-7 lg:px-10">
 			<div class="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-3 py-3 sm:flex-nowrap">
 				<div class="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-					<button bind:this={drawerTrigger} type="button" aria-label={$t('Open navigation')} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="ui-icon-button lg:hidden">
+					<button bind:this={drawerTrigger} type="button" aria-label={$t('Open navigation')} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="{iconButton} lg:hidden">
 						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
 					</button>
 					<div class="min-w-0">
-						<p class="truncate text-base font-semibold tracking-tight text-[var(--text-primary)]">{pageTitle}</p>
-						<p class="hidden text-xs text-[var(--text-muted)] xl:block">{$t('Your household, in one private place')}</p>
+						<p class="truncate text-base font-semibold tracking-tight text-ink">{pageTitle}</p>
+						<p class="hidden text-xs text-ink-muted xl:block">{$t('Your household, in one private place')}</p>
 					</div>
 				</div>
 				{#if canCreateTracker}
@@ -321,10 +322,10 @@
 				<form
 					role="search"
 					onsubmit={submitAssistantSearch}
-					class="flex w-full min-w-0 items-center gap-2 rounded-xl border border-[var(--control-border)] bg-[var(--control-background)] py-1 pr-1 pl-3 focus-within:border-[var(--accent-text)] sm:mx-auto sm:w-auto sm:max-w-2xl sm:flex-1"
+					class="flex w-full min-w-0 items-center gap-2 rounded-xl border border-control-line bg-control py-1 pr-1 pl-3 focus-within:border-accent-ink sm:mx-auto sm:w-auto sm:max-w-2xl sm:flex-1"
 				>
 					<label for="header-assistant-search" class="sr-only">{$t('Search your household with AI')}</label>
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-[var(--text-muted)]">
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-ink-muted">
 						<circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7" />
 						<path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
 					</svg>
@@ -336,13 +337,13 @@
 						disabled={loading || currentUser === null}
 						aria-keyshortcuts="Meta+K Control+K"
 						placeholder={$t('Search your household with AI…')}
-						class="min-h-9 min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-subtle)] disabled:cursor-not-allowed"
+						class="min-h-9 min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle disabled:cursor-not-allowed max-sm:text-base"
 					/>
-					<kbd aria-hidden="true" class="hidden shrink-0 rounded border border-[var(--border-default)] px-1.5 py-0.5 text-[0.6875rem] text-[var(--text-muted)] md:inline">⌘ K</kbd>
+					<kbd aria-hidden="true" class="hidden shrink-0 rounded border border-line px-1.5 py-0.5 text-[0.6875rem] text-ink-muted md:inline">⌘ K</kbd>
 					<button
 						type="submit"
 						disabled={loading || currentUser === null}
-						class="grid size-9 shrink-0 place-items-center rounded-lg bg-[var(--accent)] text-[var(--accent-ink)] transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-50"
+						class="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-on-accent transition-[filter] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label={$t('Search with AI')}
 					>
 						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m5 12 14 0m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -352,16 +353,16 @@
 		</header>
 
 		<main id="main-content" class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10">
-			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--accent-ink)]">{$t('Skip to content')}</a>
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:mb-5 focus:inline-flex focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-on-accent">{$t('Skip to content')}</a>
 			{#if shellError}
-				<div role="alert" class="ui-notice ui-notice--error mb-6 flex flex-wrap items-center justify-between gap-3">
+				<div role="alert" class="rounded-xl border border-danger/30 bg-danger/9 px-4 py-3 text-sm leading-normal text-danger mb-6 flex flex-wrap items-center justify-between gap-3">
 					<p>{$t(shellError)}</p>
 					<Button variant="secondary" size="small" onclick={() => void loadShell()}>{$t('Try again')}</Button>
 				</div>
 			{/if}
 			{#if signOutError}<Notice tone="error" message={signOutError} class="mb-6" />{/if}
 			{#if loading}
-				<p role="status" class="text-sm text-[var(--text-muted)]">{$t('Loading account')}…</p>
+				<p role="status" class="text-sm text-ink-muted">{$t('Loading account')}…</p>
 			{:else if !shellError && currentUser}
 				{@render children()}
 			{/if}
@@ -371,11 +372,11 @@
 
 {#if drawerOpen}
 	<div class="fixed inset-0 z-40 lg:hidden">
-		<button type="button" aria-label={$t('Close navigation')} class="absolute inset-0 bg-[var(--overlay)]" onclick={() => void closeDrawer()}></button>
-		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="mobile-drawer absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--border-default)] bg-[var(--surface-page)] px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
+		<button type="button" aria-label={$t('Close navigation')} class="absolute inset-0 bg-overlay" onclick={() => void closeDrawer()}></button>
+		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="absolute animate-drawer-in inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-line bg-page px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
 			<div class="mb-6 flex items-center justify-between">
 				{@render brand(() => (drawerOpen = false))}
-				<button type="button" aria-label={$t('Close navigation')} onclick={() => void closeDrawer()} class="ui-icon-button">
+				<button type="button" aria-label={$t('Close navigation')} onclick={() => void closeDrawer()} class="{iconButton}">
 					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
 				</button>
 			</div>

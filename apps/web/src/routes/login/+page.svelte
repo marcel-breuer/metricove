@@ -76,7 +76,7 @@
 	description="Enter the email address and password registered for this installation."
 	note="Your account is tied to this Metricove installation."
 >
-	<form class="login-form" onsubmit={signIn} aria-busy={busy}>
+	<form class="mt-8 grid gap-5" onsubmit={signIn} aria-busy={busy}>
 		<TextField
 			id="email"
 			name="email"
@@ -89,7 +89,7 @@
 			required
 			maxlength={255}
 		/>
-		<div class="login-password-group">
+		<div>
 			<TextField
 				id="password"
 				name="password"
@@ -99,55 +99,13 @@
 				bind:value={password}
 				required
 			/>
-			<div class="login-forgot-row">
-		<a href="/password/forgot" class="login-forgot-link">{$t('Forgot password?')}</a>
+			<div class="mt-3 flex justify-end">
+		<a href="/password/forgot" class="text-[0.8125rem] font-[650] text-accent-ink decoration-1 underline-offset-[0.2em] hover:text-ink focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink">{$t('Forgot password?')}</a>
 			</div>
 		</div>
-		{#if error}<Notice class="login-error" tone="error" message={$t(error)} />{/if}
-		<Button type="submit" fullWidth disabled={busy} class="login-submit">
+		{#if error}<Notice class="-mt-0.5" tone="error" message={$t(error)} />{/if}
+		<Button type="submit" fullWidth disabled={busy} size="large">
 			{busy ? $t('Signing in…') : $t('Sign in')}
 		</Button>
 	</form>
 </AuthShell>
-
-<style>
-	.login-form {
-		display: grid;
-		gap: 1.25rem;
-		margin-top: 2rem;
-	}
-
-	.login-forgot-row {
-		display: flex;
-		justify-content: flex-end;
-		margin-top: 0.75rem;
-	}
-
-	.login-forgot-link {
-		color: var(--accent-text);
-		font-size: 0.8125rem;
-		font-weight: 650;
-		text-decoration-thickness: 1px;
-		text-underline-offset: 0.2em;
-	}
-
-	.login-forgot-link:focus-visible {
-		border-radius: 0.25rem;
-		outline: 2px solid var(--accent-text);
-		outline-offset: 4px;
-	}
-
-	.login-forgot-link:hover {
-		color: var(--text-primary);
-	}
-
-	:global(.login-error) {
-		margin-top: -0.125rem;
-	}
-
-	:global(.login-submit) {
-		min-height: 3rem;
-		border-radius: 0.8rem;
-		font-size: 0.9375rem;
-	}
-</style>

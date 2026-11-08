@@ -102,38 +102,38 @@
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="meters-heading">
-			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-slate-100">{$t("Meters")}</h2><p class="mt-1 text-sm text-slate-400">{$t("Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.")}</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:opacity-50">{$t("Refresh")}</button></div>
+			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-ink">{$t("Meters")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.")}</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button></div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-5 text-sm text-slate-300">{$t("Loading meters…")}</p>
+				<p role="status" class="mt-5 rounded-xl border border-line bg-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading meters…")}</p>
 			{:else if meters.length === 0}
-				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No meters yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{$t("Add a private meter for your own records, or ask an active administrator to create one shared across the household.")}</p></div>
+				<div class="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No meters yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Add a private meter for your own records, or ask an active administrator to create one shared across the household.")}</p></div>
 			{:else}
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
-						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/50 p-5 transition hover:border-cyan-300/50 hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">
-							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-slate-100">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-slate-400">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-slate-500">{meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))}</span></span>
-							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-200 group-hover:text-cyan-100">{$t("Open readings")} <span aria-hidden="true">→</span></span>
+						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-2xl border border-line bg-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-ink">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-ink-muted">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-ink-subtle">{meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))}</span></span>
+							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open readings")} <span aria-hidden="true">→</span></span>
 						</a></li>
 					{/each}
 				</ul>
 			{/if}
 		</section>
 	{:else}
-		<div class="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-5 text-sm leading-6 text-amber-100"><p class="font-semibold">{$t("View access is not enabled.")}</p><p class="mt-1 text-amber-100/75">{$t("You can create a private meter if you have Create access, but browsing readings requires an explicit View grant.")}</p></div>
+		<div class="mt-8 rounded-2xl border border-warning/20 bg-warning/5 p-5 text-sm leading-6 text-warning"><p class="font-semibold">{$t("View access is not enabled.")}</p><p class="mt-1 text-warning/75">{$t("You can create a private meter if you have Create access, but browsing readings requires an explicit View grant.")}</p></div>
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
-		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Create meter')}</button></div>
+		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Create meter')}</button></div>
 		<Modal bind:open={createOpen} size="fullscreen" title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<div>
-			<p class="mb-6 max-w-2xl text-sm leading-6 text-slate-400">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
+			<p class="mb-6 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
 			<form id="meter-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createMeter}>
-				<label class="block text-sm font-medium text-slate-200">{$t("Meter name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Main electricity")} /></label>
-				<label class="block text-sm font-medium text-slate-200">{$t("Meter type")}<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#each utilityMeterTypes as type}<option value={type.value}>{$t(type.label)} · {type.unit}</option>{/each}</select></label>
-				<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household meter")}</option>{/if}</select></label>
-				<label class="block text-sm font-medium text-slate-200">{$t("Alert threshold")} <span class="font-normal text-slate-500">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("No alert")} /></label>
-				<label class="block text-sm font-medium text-slate-200 sm:col-span-2">{$t("Description")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Location or meter details")}></textarea></label>
-				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-slate-500">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p></div>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Main electricity")} /></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter type")}<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#each utilityMeterTypes as type}<option value={type.value}>{$t(type.label)} · {type.unit}</option>{/each}</select></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household meter")}</option>{/if}</select></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Alert threshold")} <span class="font-normal text-ink-subtle">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
+				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Location or meter details")}></textarea></label>
+				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-ink-subtle">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p></div>
 			</form>
 		</div>
 			{#snippet footer()}
@@ -142,6 +142,6 @@
 			{/snippet}
 		</Modal>
 	{:else}
-		<p class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-5 text-sm leading-6 text-slate-400">{$t("Your account does not have permission to create a meter. Ask an administrator for Utilities Create access.")}</p>
+		<p class="mt-8 rounded-xl border border-line bg-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a meter. Ask an administrator for Utilities Create access.")}</p>
 	{/if}
 </section>

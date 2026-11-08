@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '#lib/i18n';
+	import { control, field, fieldLabel } from './styles';
 	let {
 		id,
 		label,
@@ -17,10 +18,10 @@
 	} = $props();
 </script>
 
-<label class="ui-field {className}" for={id}>
-	<span class="ui-field-label">{$t(label)}</span>
+<label class="{field} {className}" for={id}>
+	<span class={fieldLabel}>{$t(label)}</span>
 	<select
-		class="ui-control"
+		class={control}
 		{id}
 		value={value}
 		onchange={(event) => onchange?.(event.currentTarget.value)}
