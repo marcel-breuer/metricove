@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +77,7 @@ class RecipeService
                     'title' => trim($data['title']),
                     'category' => $this->nullableTrim($data['category'] ?? null),
                     'instructions' => trim($data['instructions'] ?? ''),
-                    'servings' => (int) $data['servings'],
+                    'servings' => $data['servings'] === null || $data['servings'] === '' ? null : (int) $data['servings'],
                     'preparation_minutes' => $data['preparation_minutes'] ?? null,
                     'photo_path' => $photoPath,
                 ]);
@@ -260,7 +261,7 @@ class RecipeService
     {
         $rows = [];
 
-        foreach (array_values($ingredients) as $position => $ingredient) {
+        foreach ($ingredients as $position => $ingredient) {
             $quantity = RecipeQuantity::normalize($ingredient['quantity'] ?? null);
 
             $unit = $this->nullableTrim($ingredient['unit'] ?? null);
@@ -283,8 +284,11 @@ class RecipeService
     private function refreshReviewStatus(Recipe $recipe): void
     {
         $recipe->load('ingredients');
-        $recipe->needs_review = trim($recipe->instructions) === '' || $recipe->ingredients->isEmpty()
-            || $recipe->ingredients->contains(fn (RecipeIngredient $ingredient): bool => trim($ingredient->name) === '' || $ingredient->quantity === null || $ingredient->unit === null);
+        /** @var Collection<int, RecipeIngredient> $ingredients */
+        $ingredients = $recipe->ingredients;
+        $recipe->needs_review = trim($recipe->instructions) === '' || $ingredients->isEmpty()
+            || $recipe->servings === null
+            || $ingredients->contains(fn (RecipeIngredient $ingredient): bool => trim($ingredient->name) === '' || $ingredient->quantity === null || $ingredient->unit === null);
         $recipe->save();
     }
 
@@ -309,6 +313,8 @@ class RecipeService
         if (! $recipe->relationLoaded('ingredients')) {
             $recipe->load('ingredients');
         }
+        /** @var Collection<int, RecipeIngredient> $ingredients */
+        $ingredients = $recipe->ingredients;
 
         return [
             'id' => (int) $recipe->id,
@@ -316,13 +322,13 @@ class RecipeService
             'category' => $recipe->category,
             'instructions' => $recipe->instructions,
             'needs_review' => (bool) $recipe->needs_review,
-            'servings' => (int) $recipe->servings,
+            'servings' => $recipe->servings === null ? null : (int) $recipe->servings,
             'preparation_minutes' => $recipe->preparation_minutes === null ? null : (int) $recipe->preparation_minutes,
             'visibility' => $recipe->is_private ? 'private' : 'household',
             'can_edit' => $this->canEdit($actor, $recipe),
             'is_favorite' => $isFavorite,
             'photo_url' => $recipe->photo_path === null ? null : '/api/recipes/'.$recipe->id.'/photo',
-            'ingredients' => $recipe->ingredients->map(fn (RecipeIngredient $ingredient): array => [
+            'ingredients' => $ingredients->map(fn (RecipeIngredient $ingredient): array => [
                 'id' => (int) $ingredient->id,
                 'position' => (int) $ingredient->position,
                 'name' => $ingredient->name,

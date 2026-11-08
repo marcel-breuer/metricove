@@ -82,7 +82,7 @@ class NotionFoodImportTest extends TestCase
         $this->grant($admin, 'import', ['view' => true, 'create' => true]);
         $this->grant($admin, 'recipes', ['view' => true, 'create' => true, 'edit' => true]);
         $payload = ['recipes' => [[
-            'source_id' => 'source-incomplete-1', 'title' => 'Soup from notes', 'instructions' => '', 'servings' => 3,
+            'source_id' => 'source-incomplete-1', 'title' => 'Soup from notes', 'instructions' => '',
             'ingredients' => [['name' => 'Salt', 'quantity' => null, 'unit' => null]],
         ]]];
 
@@ -92,11 +92,12 @@ class NotionFoodImportTest extends TestCase
             ->assertOk()->assertJsonPath('imported_count', 1);
         $recipe = Recipe::query()->where('source_id', 'source-incomplete-1')->firstOrFail();
         $this->assertTrue($recipe->needs_review);
+        $this->assertNull($recipe->servings);
         $this->assertSame('', $recipe->instructions);
         $this->assertDatabaseHas('recipe_ingredients', ['recipe_id' => $recipe->id, 'name' => 'Salt', 'quantity' => null, 'unit' => null]);
 
         $this->actingAs($admin, 'web')->patchJson('/api/recipes/'.$recipe->id, [
-            'instructions' => 'Season to taste.', 'ingredients' => [['name' => 'Salt', 'quantity' => '1', 'unit' => 'pinch']],
+            'instructions' => 'Season to taste.', 'servings' => 3, 'ingredients' => [['name' => 'Salt', 'quantity' => '1', 'unit' => 'pinch']],
         ])->assertOk()->assertJsonPath('recipe.needs_review', false)->assertJsonPath('recipe.ingredients.0.quantity', '1.0000');
     }
 

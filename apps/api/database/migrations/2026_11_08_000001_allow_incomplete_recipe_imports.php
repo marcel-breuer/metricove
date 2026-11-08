@@ -11,6 +11,7 @@ return new class extends Migration
     {
         Schema::table('recipes', function (Blueprint $table): void {
             $table->boolean('needs_review')->default(false);
+            $table->unsignedSmallInteger('servings')->nullable()->change();
         });
         Schema::table('recipe_ingredients', function (Blueprint $table): void {
             $table->decimal('quantity', 14, 4)->nullable()->change();
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->string('unit', 40)->nullable(false)->change();
         });
         Schema::table('recipes', function (Blueprint $table): void {
+            $table->unsignedSmallInteger('servings')->nullable(false)->change();
             $table->dropColumn('needs_review');
         });
     }

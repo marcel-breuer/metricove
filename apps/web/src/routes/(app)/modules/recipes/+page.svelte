@@ -190,7 +190,7 @@
 		recipeId = recipe.id;
 		title = recipe.title;
 		category = recipe.category ?? '';
-		servings = String(recipe.servings);
+		servings = recipe.servings === null ? '' : String(recipe.servings);
 		preparationMinutes = recipe.preparation_minutes === null ? '' : String(recipe.preparation_minutes);
 		instructions = recipe.instructions;
 		visibility = recipe.visibility;
@@ -215,7 +215,7 @@
 		const form = new FormData();
 		form.set('title', title);
 		form.set('category', category);
-		form.set('servings', servings);
+		form.set('servings', servings || '');
 		form.set('preparation_minutes', preparationMinutes);
 		form.set('instructions', instructions);
 		form.set('ingredients', JSON.stringify(ingredients.map((item) => ({
@@ -327,7 +327,7 @@
 								<div class="min-w-0"><p class="text-xs font-medium uppercase tracking-[0.18em] text-cyan-300">{recipe.category ?? 'Uncategorized'} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p><h3 class="mt-2 text-xl font-semibold leading-tight text-white">{recipe.title}</h3>{#if recipe.needs_review}<span class="mt-2 inline-flex rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs text-amber-100">{$t('Needs review')}</span>{/if}</div>
 									<button type="button" aria-label={recipe.is_favorite ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="min-h-11 min-w-11 rounded-xl border border-slate-700 text-xl transition hover:border-amber-200/50 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 {recipe.is_favorite ? 'text-amber-200' : 'text-slate-500'}">★</button>
 								</div>
-								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400"><span>{recipe.servings} servings</span>{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
+								<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">{#if recipe.servings}<span>{recipe.servings} servings</span>{:else}<span class="text-amber-200">{$t('Servings missing')}</span>{/if}{#if recipe.preparation_minutes}<span>{recipe.preparation_minutes} min</span>{/if}<span>{recipe.ingredients.length} ingredients</span></div>
 								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Ingredients")}</h4><ul class="mt-2 space-y-1.5 text-sm text-slate-200">{#each recipe.ingredients as ingredient (ingredient.id)}<li class="flex gap-2">{#if ingredient.quantity && ingredient.unit}<span class="shrink-0 text-cyan-300">{formatMeasurement(ingredient.quantity, ingredient.unit)} {ingredient.unit}</span>{:else}<span class="shrink-0 text-amber-200">{$t('Amount missing')}</span>{/if}<span>{ingredient.name}{#if ingredient.note}<span class="text-slate-500"> · {ingredient.note}</span>{/if}</span></li>{/each}{#if recipe.ingredients.length === 0}<li class="text-slate-500">{$t('No ingredients recorded.')}</li>{/if}</ul></div>
 								<div><h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">{$t("Preparation")}</h4><p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">{recipe.instructions || $t('No preparation steps recorded.')}</p></div>
 								{#if recipe.can_edit}
@@ -363,7 +363,7 @@
 				{#if importNotices.length}<ul role="status" class="mt-4 list-disc space-y-1 rounded-xl border border-amber-300/20 bg-amber-300/5 px-8 py-2.5 text-sm text-amber-100">{#each importNotices as notice}<li>{$t(notice)}</li>{/each}</ul>{/if}
 				<form onsubmit={saveRecipe} class="mt-5 space-y-4">
 					<label class="block text-sm font-medium text-slate-200">{$t("Title")}<input id="recipe-title" bind:value={title} required maxlength="180" class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
-					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Category")} <span class="text-xs font-normal text-slate-500">{$t('optional')}</span><input bind:value={category} maxlength="80" placeholder={$t("Dinner")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label><label class="block text-sm font-medium text-slate-200">{$t("Servings")}<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label></div>
+					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Category")} <span class="text-xs font-normal text-slate-500">{$t('optional')}</span><input bind:value={category} maxlength="80" placeholder={$t("Dinner")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label><label class="block text-sm font-medium text-slate-200">{$t("Servings")}<input bind:value={servings} type="number" min="1" max="1000" required={recipeId === null} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label></div>
 					<div class="grid grid-cols-2 gap-3"><label class="block text-sm font-medium text-slate-200">{$t("Prep time")} <span class="text-xs font-normal text-slate-500">{$t('minutes')}</span><input bind:value={preparationMinutes} type="number" min="1" max="1440" placeholder={$t("Optional")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" /></label>
 						{#if recipeId === null && formVisibilityOptions.length > 1}<label class="block text-sm font-medium text-slate-200">{$t("Visibility")}<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"><option value="private">{$t("Private")}</option><option value="household">{$t("Household")}</option></select></label>{:else}<div class="flex items-end pb-3 text-xs leading-5 text-slate-500">{recipeId !== null ? $t('Visibility: {visibility}', { visibility: $t(visibility === 'private' ? 'Private' : 'Household') }) : $t(canManageShared && !canCreate ? 'Shared recipes are managed by household admins.' : 'New recipes are private to you.')}</div>{/if}
 					</div>

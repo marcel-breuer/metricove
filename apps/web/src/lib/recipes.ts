@@ -14,7 +14,7 @@ export type Recipe = {
 	title: string;
 	category: string | null;
 	instructions: string;
-	servings: number;
+	servings: number | null;
 	preparation_minutes: number | null;
 	visibility: RecipeVisibility;
 	is_favorite: boolean;

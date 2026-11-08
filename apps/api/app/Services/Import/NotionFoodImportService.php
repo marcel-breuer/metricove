@@ -156,7 +156,8 @@ class NotionFoodImportService
             $warnings[] = 'Recipe ingredients are missing and need review.';
         }
         if (! isset($recipe['servings'])) {
-            $warnings[] = 'Serving count is missing; the import will use two servings.';
+            $ready = false;
+            $warnings[] = 'Serving count is missing and will remain blank for review.';
         }
         foreach ($ingredients as $ingredient) {
             if (array_diff(array_keys($ingredient), ['name', 'quantity', 'unit', 'note']) !== []) {
@@ -290,7 +291,7 @@ class NotionFoodImportService
             'title' => trim($source['title']),
             'category' => $source['category'] ?? null,
             'instructions' => $this->text($source['instructions'] ?? null),
-            'servings' => (int) ($source['servings'] ?? 2),
+            'servings' => $source['servings'] ?? null,
             'preparation_minutes' => $source['preparation_minutes'] ?? null,
             'visibility' => 'private',
             'ingredients' => $ingredients,

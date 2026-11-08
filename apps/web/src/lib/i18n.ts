@@ -38,7 +38,7 @@ const german: Record<string, string> = {
 	'Approved. The connected MCP client can complete this action until it expires.': 'Freigegeben. Der verbundene MCP-Client kann diese Aktion bis zum Ablauf ausführen.',
 	'A connected MCP client cannot approve its own writes. Review each change here before the client can save it.': 'Ein verbundener MCP-Client kann eigene Schreibvorgänge nicht freigeben. Prüfe hier jede Änderung, bevor der Client sie speichern kann.',
 	'Create a recipe': 'Rezept erstellen', 'Update a recipe': 'Rezept bearbeiten', 'Delete a recipe': 'Rezept löschen', 'Plan a meal': 'Mahlzeit planen',
-	'Needs review': 'Prüfung erforderlich', 'Amount missing': 'Menge fehlt', 'No ingredients recorded.': 'Keine Zutaten erfasst.',
+	'Needs review': 'Prüfung erforderlich', 'Amount missing': 'Menge fehlt', 'Servings missing': 'Portionszahl fehlt', 'No ingredients recorded.': 'Keine Zutaten erfasst.',
 	'No preparation steps recorded.': 'Keine Zubereitungsschritte erfasst.', 'This recipe has source details to review. Blank fields are kept as provided; fill in what you know.': 'Dieses Rezept enthält Angaben, die geprüft werden sollten. Leere Felder bleiben wie in der Quelle; ergänze, was du weißt.',
 	'Pantry': 'Vorrat', 'Track food stock, storage, quantities and best-before dates.': 'Verwalte Lebensmittelvorräte, Lagerorte, Mengen und Mindesthaltbarkeitsdaten.',
 	'Food · Stock': 'Lebensmittel · Vorrat', 'Keep quantities and best-before dates together. Each stock change is recorded with its own unit and history.': 'Behalte Mengen und Mindesthaltbarkeitsdaten im Blick. Jede Bestandsänderung wird mit Einheit und Verlauf erfasst.',

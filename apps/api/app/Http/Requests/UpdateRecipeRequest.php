@@ -36,7 +36,7 @@ class UpdateRecipeRequest extends FormRequest
             'title' => ['sometimes', 'required', 'string', 'max:180'],
             'category' => ['sometimes', 'nullable', 'string', 'max:80'],
             'instructions' => ['sometimes', 'nullable', 'string', 'max:20000'],
-            'servings' => ['sometimes', 'required', 'integer', 'between:1,1000'],
+            'servings' => ['sometimes', 'nullable', 'integer', 'between:1,1000'],
             'preparation_minutes' => ['sometimes', 'nullable', 'integer', 'between:1,1440'],
             'ingredients' => ['sometimes', 'present', 'array', 'max:100'],
             'ingredients.*' => ['required', 'array:name,quantity,unit,note'],

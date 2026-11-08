@@ -300,7 +300,7 @@ class McpAccessTest extends TestCase
         $result = $complete();
         $this->assertSame(['status' => 'completed', 'imported_count' => 2, 'duplicate_count' => 0, 'review_count' => 1], $result->json('result.structuredContent'));
         $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-1', 'is_private' => true]);
-        $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-2', 'needs_review' => true, 'instructions' => '']);
+        $this->assertDatabaseHas('recipes', ['source_system' => 'notion', 'source_id' => 'notion-recipe-2', 'needs_review' => true, 'instructions' => '', 'servings' => null]);
         $this->assertDatabaseHas('recipe_ingredients', ['name' => 'Salt', 'quantity' => null, 'unit' => null]);
         $this->assertSame($result->json('result.structuredContent'), $complete()->json('result.structuredContent'));
         $this->assertDatabaseCount('recipes', 2);
