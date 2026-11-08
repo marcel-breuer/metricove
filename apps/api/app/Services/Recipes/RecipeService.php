@@ -34,8 +34,14 @@ class RecipeService
         $favoriteIds = $recipes->isEmpty() ? [] : DB::table('recipe_favorites')
             ->where('user_id', $actor->id)->whereIn('recipe_id', $recipes->modelKeys())
             ->pluck('recipe_id')->map(fn ($id): int => (int) $id)->all();
+        $canManageHouseholdRecipes = $this->canManageHouseholdRecipes($actor);
 
-        return $recipes->map(fn (Recipe $recipe): array => $this->present($actor, $recipe, in_array($recipe->id, $favoriteIds, true)))->all();
+        return $recipes->map(fn (Recipe $recipe): array => $this->present(
+            $actor,
+            $recipe,
+            in_array($recipe->id, $favoriteIds, true),
+            $canManageHouseholdRecipes,
+        ))->all();
     }
 
     /** @return array<string, mixed> */
@@ -109,7 +115,10 @@ class RecipeService
         try {
             [$recipe, $oldPhotoPath] = DB::transaction(function () use ($actor, $recipeId, $data, $newPhotoPath): array {
                 $recipe = $this->findForMutation($actor, $recipeId);
-                $capability = $recipe->isPrivate() ? ModuleCapability::Edit : ModuleCapability::Manage;
+                $currentVisibility = $recipe->isPrivate() ? 'private' : 'household';
+                $targetVisibility = $data['visibility'] ?? $currentVisibility;
+                $visibilityChanges = $targetVisibility !== $currentVisibility;
+                $capability = $recipe->isPrivate() && ! $visibilityChanges ? ModuleCapability::Edit : ModuleCapability::Manage;
 
                 if ($capability === ModuleCapability::Manage) {
                     $this->authorizeSharedManagement($actor);
@@ -126,6 +135,11 @@ class RecipeService
 
                 if (array_key_exists('category', $data)) {
                     $recipe->category = $this->nullableTrim($data['category']);
+                }
+
+                if ($visibilityChanges) {
+                    $recipe->is_private = $targetVisibility === 'private';
+                    $recipe->owner_user_id = $recipe->is_private ? $actor->id : null;
                 }
 
                 if ($newPhotoPath !== null) {
@@ -308,7 +322,7 @@ class RecipeService
     }
 
     /** @return array<string, mixed> */
-    private function present(User $actor, Recipe $recipe, bool $isFavorite): array
+    private function present(User $actor, Recipe $recipe, bool $isFavorite, ?bool $canManageHouseholdRecipes = null): array
     {
         if (! $recipe->relationLoaded('ingredients')) {
             $recipe->load('ingredients');
@@ -326,6 +340,11 @@ class RecipeService
             'preparation_minutes' => $recipe->preparation_minutes === null ? null : (int) $recipe->preparation_minutes,
             'visibility' => $recipe->is_private ? 'private' : 'household',
             'can_edit' => $this->canEdit($actor, $recipe),
+            'can_change_visibility' => $this->canChangeVisibility(
+                $actor,
+                $recipe,
+                $canManageHouseholdRecipes ?? $this->canManageHouseholdRecipes($actor),
+            ),
             'is_favorite' => $isFavorite,
             'photo_url' => $recipe->photo_path === null ? null : '/api/recipes/'.$recipe->id.'/photo',
             'ingredients' => $ingredients->map(fn (RecipeIngredient $ingredient): array => [
@@ -355,6 +374,39 @@ class RecipeService
         } catch (AuthorizationException) {
             return false;
         }
+    }
+
+    private function canManageHouseholdRecipes(User $actor): bool
+    {
+        if (! $actor->is_admin || ! $actor->is_active) {
+            return false;
+        }
+
+        try {
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Manage);
+
+            return true;
+        } catch (AuthorizationException) {
+            return false;
+        }
+    }
+
+    private function canChangeVisibility(User $actor, Recipe $recipe, bool $canManageHouseholdRecipes): bool
+    {
+        if (! $canManageHouseholdRecipes) {
+            return false;
+        }
+
+        if (! $recipe->isPrivate() || $recipe->ownerUserId() === $actor->id) {
+            return true;
+        }
+
+        return ResourceUserPermission::query()
+            ->where('resource_type', $recipe->getMorphClass())
+            ->where('resource_id', $recipe->id)
+            ->where('user_id', $actor->id)
+            ->where('capability', ModuleCapability::Manage->value)
+            ->exists();
     }
 
     private function nullableTrim(mixed $value): ?string

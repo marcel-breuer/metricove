@@ -31,6 +31,7 @@
 	} = $props();
 
 	const formId = $props.id();
+	const allVisibilityOptions: RecipeVisibility[] = ['private', 'household'];
 	let form = $state<RecipeDraft>(emptyRecipeDraft('private'));
 	let photoFile = $state<File | null>(null);
 	let removePhoto = $state(false);
@@ -77,7 +78,7 @@
 			unit: item.unit.trim() || null,
 			note: item.note
 		}))));
-		if (!recipe) body.set('visibility', form.visibility);
+		if (!recipe || recipe.can_change_visibility) body.set('visibility', form.visibility);
 		if (photoFile) body.set('photo', photoFile);
 		if (removePhoto) body.set('remove_photo', '1');
 		if (recipe) body.set('_method', 'PATCH');
@@ -120,11 +121,11 @@
 					<span class="{fieldLabel}">{$t('Prep time')} <span class="text-xs font-normal text-ink-muted">{$t('minutes')}</span></span>
 					<input bind:value={form.preparationMinutes} type="number" min="1" max="1440" placeholder={$t('Optional')} class="{control}" />
 				</label>
-				{#if !editing && visibilityOptions.length > 1}
+				{#if (!editing && visibilityOptions.length > 1) || (editing && recipe?.can_change_visibility)}
 					<label class="{field}">
 						<span class="{fieldLabel}">{$t('Visibility')}</span>
 						<select bind:value={form.visibility} class="{control}">
-							{#each visibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}
+							{#each (editing ? allVisibilityOptions : visibilityOptions) as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}
 						</select>
 					</label>
 				{:else}
