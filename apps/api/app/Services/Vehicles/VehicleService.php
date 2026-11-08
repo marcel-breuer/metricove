@@ -15,6 +15,7 @@ use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
@@ -807,8 +808,62 @@ class VehicleService
             'fuel_liters' => $cost->fuel_liters === null ? null : (string) $cost->fuel_liters,
             'fuel_unit_price' => $cost->fuel_unit_price === null ? null : (string) $cost->fuel_unit_price,
             'fuel_odometer_value' => $cost->fuel_odometer_value === null ? null : (string) $cost->fuel_odometer_value,
+            'fuel_full_tank' => (bool) $cost->fuel_full_tank,
+            ...$this->fuelConsumptionForCost($actor, $cost, $vehicle),
             'can_edit' => $this->canEditRecord($actor, $cost, $vehicle),
         ];
+    }
+
+    /** @return array{fuel_consumption_l_per_100km: ?string, fuel_consumption_unavailable_reason: ?string} */
+    private function fuelConsumptionForCost(User $actor, VehicleCost $cost, Vehicle $vehicle): array
+    {
+        if ($cost->category !== 'fuel' || ! $cost->fuel_full_tank) {
+            return ['fuel_consumption_l_per_100km' => null, 'fuel_consumption_unavailable_reason' => 'not_full_to_full'];
+        }
+
+        /** @var Collection<int, VehicleCost> $records */
+        $records = $this->visibleResources($actor, VehicleCost::class, 'vehicle_costs', ModuleCapability::View, VehicleCost::query()->where('vehicle_id', $vehicle->id))
+            ->where('category', 'fuel')
+            ->reorder('period_start')
+            ->orderBy('id')
+            ->get();
+        $previousFull = null;
+        $seenCurrent = false;
+        foreach ($records as $record) {
+            if ((int) $record->getKey() === (int) $cost->getKey()) {
+                $seenCurrent = true;
+                break;
+            }
+            if (! $record->fuel_full_tank) {
+                $previousFull = null;
+            } else {
+                $previousFull = $record;
+            }
+        }
+
+        if (! $seenCurrent || $previousFull === null) {
+            return ['fuel_consumption_l_per_100km' => null, 'fuel_consumption_unavailable_reason' => 'missing_previous_full_tank'];
+        }
+        if ($previousFull->fuel_odometer_value === null || $cost->fuel_odometer_value === null
+            || $previousFull->fuel_liters === null || $cost->fuel_liters === null) {
+            return ['fuel_consumption_l_per_100km' => null, 'fuel_consumption_unavailable_reason' => 'missing_odometer'];
+        }
+
+        $distance = BigDecimal::of((string) $cost->fuel_odometer_value)->minus((string) $previousFull->fuel_odometer_value);
+        if ($distance->isLessThanOrEqualTo(BigDecimal::zero())) {
+            return ['fuel_consumption_l_per_100km' => null, 'fuel_consumption_unavailable_reason' => 'non_comparable'];
+        }
+
+        $distanceInKilometers = $vehicle->odometer_unit === 'mi'
+            ? $distance->multipliedBy('1.609344')
+            : $distance;
+        $consumption = BigDecimal::of((string) $cost->fuel_liters)
+            ->dividedBy($distanceInKilometers, 3, RoundingMode::HalfUp)
+            ->multipliedBy('100')
+            ->toScale(3, RoundingMode::HalfUp)
+            ->__toString();
+
+        return ['fuel_consumption_l_per_100km' => $consumption, 'fuel_consumption_unavailable_reason' => null];
     }
 
     private function canEditRecord(User $actor, Model $record, Vehicle $vehicle): bool

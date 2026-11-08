@@ -288,7 +288,7 @@ class VehiclesModuleTest extends TestCase
         $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
             'category' => 'fuel', 'amount' => '123.45', 'currency' => 'EUR',
             'period_start' => '2026-10-02', 'period' => 'once', 'fuel_liters' => '40',
-        ])->assertUnprocessable()->assertJsonValidationErrors('fuel_liters');
+        ])->assertCreated()->assertJsonPath('cost.fuel_unit_price', '3.0863');
 
         $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
             'category' => 'insurance', 'amount' => '12.345', 'currency' => 'EUR',
@@ -320,24 +320,27 @@ class VehiclesModuleTest extends TestCase
         $costId = (int) $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$vehicleId}/costs", [
             'category' => 'fuel', 'amount' => '80.00', 'currency' => 'EUR',
             'period_start' => '2026-10-02', 'period' => 'once', 'description' => 'Old fill-up',
-            'fuel_liters' => '40', 'fuel_unit_price' => '2', 'fuel_odometer_value' => '12000',
+            'fuel_liters' => '40', 'fuel_unit_price' => '2', 'fuel_odometer_value' => '12000', 'fuel_full_tank' => true,
         ])->assertCreated()->json('cost.id');
 
         $this->actingAs($admin, 'web')->patchJson("/api/vehicles/costs/{$costId}", [
             'category' => 'fuel', 'amount' => '75.60', 'currency' => 'eur',
             'period_start' => '2026-10-03', 'period_end' => null, 'period' => 'once', 'description' => 'Corrected fill-up',
-            'fuel_liters' => '40', 'fuel_unit_price' => '1.89', 'fuel_odometer_value' => '12020.5',
+            'fuel_liters' => '40', 'fuel_unit_price' => '1.89', 'fuel_odometer_value' => '12020.5', 'fuel_full_tank' => true,
         ])->assertOk()->assertJsonPath('cost.amount', '75.60')
             ->assertJsonPath('cost.currency', 'EUR')
             ->assertJsonPath('cost.period_start', '2026-10-03')
             ->assertJsonPath('cost.description', 'Corrected fill-up')
             ->assertJsonPath('cost.fuel_liters', '40.000')
             ->assertJsonPath('cost.fuel_unit_price', '1.8900')
-            ->assertJsonPath('cost.fuel_odometer_value', '12020.500');
+            ->assertJsonPath('cost.fuel_odometer_value', '12020.500')
+            ->assertJsonPath('cost.fuel_full_tank', true)
+            ->assertJsonPath('cost.fuel_consumption_unavailable_reason', 'missing_previous_full_tank');
 
         $this->assertDatabaseHas('vehicle_costs', [
             'id' => $costId, 'vehicle_id' => $vehicleId, 'amount' => '75.60', 'currency' => 'EUR',
             'description' => 'Corrected fill-up', 'fuel_unit_price' => '1.8900', 'fuel_odometer_value' => '12020.500',
+            'fuel_full_tank' => true,
         ]);
 
         $this->actingAs($admin, 'web')->patchJson("/api/vehicles/costs/{$costId}", [
