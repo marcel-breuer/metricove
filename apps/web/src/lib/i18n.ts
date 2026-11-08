@@ -1177,6 +1177,21 @@ Object.assign(routeGerman, {
 	'requires': 'erfordert',
 });
 
+// Detail subpages for recipes and notes.
+Object.assign(routeGerman, {
+	'All recipes': 'Alle Rezepte',
+	'Loading recipe…': 'Rezept wird geladen…',
+	'Recipe unavailable': 'Rezept nicht verfügbar',
+	'This recipe is unavailable to your account.': 'Dieses Rezept ist für dein Konto nicht verfügbar.',
+	'The recipe could not be loaded.': 'Das Rezept konnte nicht geladen werden.',
+	'All notes': 'Alle Notizen',
+	'Loading note…': 'Notiz wird geladen…',
+	'Note unavailable': 'Notiz nicht verfügbar',
+	'This note is unavailable to your account.': 'Diese Notiz ist für dein Konto nicht verfügbar.',
+	'Archived': 'Archiviert',
+	'The request could not be completed.': 'Die Anfrage konnte nicht abgeschlossen werden.',
+});
+
 export const uiLanguage = writable<UiLanguage>('en');
 export const numberLocale = writable<NumberLocale>('en-US');
 export const defaultCurrency = writable('EUR');
