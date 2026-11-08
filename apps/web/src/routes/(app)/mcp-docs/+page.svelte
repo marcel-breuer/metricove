@@ -47,32 +47,32 @@
 	<Panel padding="large" class="space-y-4">
 		<h2 class="text-xl font-semibold">{$t('Connection')}</h2>
 		<dl class="grid gap-4 sm:grid-cols-2">
-			<div><dt class="text-sm text-slate-400">{$t('Transport')}</dt><dd class="mt-1 font-mono text-cyan-200">{$t("Streamable HTTP · stateless")}</dd></div>
-			<div><dt class="text-sm text-slate-400">{$t('Endpoint')}</dt><dd class="mt-1 break-all font-mono text-cyan-200">/api/mcp</dd></div>
+			<div><dt class="text-sm text-ink-muted">{$t('Transport')}</dt><dd class="mt-1 font-mono text-accent-ink">{$t("Streamable HTTP · stateless")}</dd></div>
+			<div><dt class="text-sm text-ink-muted">{$t('Endpoint')}</dt><dd class="mt-1 break-all font-mono text-accent-ink">/api/mcp</dd></div>
 		</dl>
-		<p class="text-sm leading-6 text-slate-300">{$t('Create a Metricove MCP token in Profile → MCP access tokens. Configure the client to send it as an HTTP bearer token. The token is shown only once. Metricove does not currently provide OAuth discovery or an OAuth authorization flow.')}</p>
-		<pre class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-200"><code>Authorization: Bearer &lt;your-metricove-token&gt;
+		<p class="text-sm leading-6 text-ink-secondary">{$t('Create a Metricove MCP token in Profile → MCP access tokens. Configure the client to send it as an HTTP bearer token. The token is shown only once. Metricove does not currently provide OAuth discovery or an OAuth authorization flow.')}</p>
+		<pre class="overflow-x-auto rounded-xl border border-line bg-page p-4 text-xs leading-6 text-ink-secondary"><code>Authorization: Bearer &lt;your-metricove-token&gt;
 POST /api/mcp
 Content-Type: application/json
 Accept: application/json, text/event-stream</code></pre>
-		<p class="text-sm font-medium text-slate-300">{$t("Discover the tools exposed to this token:")}</p>
-		<pre class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-200"><code>{`{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`}</code></pre>
-		<p class="text-sm font-medium text-slate-300">{$t("Example call:")}</p>
-		<pre class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-200"><code>{`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"summarize_finance_month","arguments":{"month":"2026-10"}}}`}</code></pre>
+		<p class="text-sm font-medium text-ink-secondary">{$t("Discover the tools exposed to this token:")}</p>
+		<pre class="overflow-x-auto rounded-xl border border-line bg-page p-4 text-xs leading-6 text-ink-secondary"><code>{`{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}`}</code></pre>
+		<p class="text-sm font-medium text-ink-secondary">{$t("Example call:")}</p>
+		<pre class="overflow-x-auto rounded-xl border border-line bg-page p-4 text-xs leading-6 text-ink-secondary"><code>{`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"summarize_finance_month","arguments":{"month":"2026-10"}}}`}</code></pre>
 	</Panel>
 
 	<Panel padding="large" class="space-y-4">
 		<h2 class="text-xl font-semibold">{$t('Available MCP tools')}</h2>
-		<p class="text-sm leading-6 text-slate-300">{$t('The server exposes tools based on the token scopes and your current module permissions. It checks permissions again on every call. A token alone never grants access.')}</p>
+		<p class="text-sm leading-6 text-ink-secondary">{$t('The server exposes tools based on the token scopes and your current module permissions. It checks permissions again on every call. A token alone never grants access.')}</p>
 		<div class="space-y-3">
 			{#each [...readTools, ...domainReads] as module (`${module.module}-${module.tools[0]?.name}`)}
-				<article class="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-									<h3 class="font-semibold text-cyan-100">{$t(module.module)}</h3>
+				<article class="rounded-xl border border-line bg-page p-4">
+									<h3 class="font-semibold text-accent-ink">{$t(module.module)}</h3>
 									{#each module.tools as tool (tool.name)}
-										<div class="mt-3 border-t border-slate-800 pt-3">
-											<div class="flex flex-wrap items-center justify-between gap-2"><h4 class="font-mono text-sm font-semibold text-cyan-200">{tool.name}</h4><span class="rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-300">{tool.scope}</span></div>
-											<p class="mt-2 text-sm leading-6 text-slate-300">{$t(tool.note)}</p>
-											<p class="mt-2 text-xs text-slate-500">{$t('Arguments:')} <code>{tool.args}</code></p>
+										<div class="mt-3 border-t border-line pt-3">
+											<div class="flex flex-wrap items-center justify-between gap-2"><h4 class="font-mono text-sm font-semibold text-accent-ink">{tool.name}</h4><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-secondary">{tool.scope}</span></div>
+											<p class="mt-2 text-sm leading-6 text-ink-secondary">{$t(tool.note)}</p>
+											<p class="mt-2 text-xs text-ink-subtle">{$t('Arguments:')} <code>{tool.args}</code></p>
 										</div>
 									{/each}
 				</article>
@@ -82,14 +82,14 @@ Accept: application/json, text/event-stream</code></pre>
 
 	<Panel padding="large" class="space-y-3">
 		<h2 class="text-xl font-semibold">{$t('MCP coverage matrix')}</h2>
-		<p class="text-sm leading-6 text-slate-300">{$t('Each listed tool uses the existing domain service. The service checks module state, member capability and resource-level privacy for every call. Writes require a preview, approval in Metricove and a replay-safe completion.')}</p>
-		<p class="text-sm leading-6 text-slate-300">{$t('Current coverage includes a token-owner-only Core read, permission-scoped reads and approved writes for Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Analytics, Notes and Tasks. Import offers a bounded utility export and a review-first Notion recipe import; other file uploads stay on the HTTP API. Receipts offers a bounded read.')}</p>
+		<p class="text-sm leading-6 text-ink-secondary">{$t('Each listed tool uses the existing domain service. The service checks module state, member capability and resource-level privacy for every call. Writes require a preview, approval in Metricove and a replay-safe completion.')}</p>
+		<p class="text-sm leading-6 text-ink-secondary">{$t('Current coverage includes a token-owner-only Core read, permission-scoped reads and approved writes for Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Analytics, Notes and Tasks. Import offers a bounded utility export and a review-first Notion recipe import; other file uploads stay on the HTTP API. Receipts offers a bounded read.')}</p>
 	</Panel>
 
 	<Panel padding="large" class="space-y-4">
 		<h2 class="text-xl font-semibold">{$t('Approved MCP writes')}</h2>
-		<p class="text-sm leading-6 text-slate-300">{$t('A connected MCP client cannot approve its own writes. The account owner must approve each preview in the profile before it can be completed.')} {$t('Preview tools only create an encrypted, expiring review record.')} {$t('Use')} <code>complete_approved_mcp_change</code> {$t('with its')} <code>preview_id</code> {$t('and a UUID')} <code>idempotency_key</code> {$t('for the tools above.')} {$t('The utility reading flow also supports its original')} <code>complete_approved_utility_reading</code> {$t('tool.')}</p>
-		<ul class="list-disc space-y-2 pl-5 text-sm leading-6 text-slate-300">
+		<p class="text-sm leading-6 text-ink-secondary">{$t('A connected MCP client cannot approve its own writes. The account owner must approve each preview in the profile before it can be completed.')} {$t('Preview tools only create an encrypted, expiring review record.')} {$t('Use')} <code>complete_approved_mcp_change</code> {$t('with its')} <code>preview_id</code> {$t('and a UUID')} <code>idempotency_key</code> {$t('for the tools above.')} {$t('The utility reading flow also supports its original')} <code>complete_approved_utility_reading</code> {$t('tool.')}</p>
+		<ul class="list-disc space-y-2 pl-5 text-sm leading-6 text-ink-secondary">
 			<li><code>preview_utility_reading</code> {$t("requires")} <code>utilities:create</code>{$t("; fields are")} <code>meter_id</code> {$t("(integer),")} <code>reading_date</code> {$t("(YYYY-MM-DD),")} <code>value</code> {$t("(decimal string, up to 14 whole and 6 fractional digits), and optional")} <code>note</code> {$t("(up to 2,000 characters).")}</li>
 			<li>{$t('Preview expires after 10 minutes. Review all proposed fields under Profile → Pending MCP actions.')}</li>
 			<li>{$t('Reuse the same idempotency key when retrying the same completion. Results contain only a generic completion status.')}</li>
@@ -99,7 +99,7 @@ Accept: application/json, text/event-stream</code></pre>
 
 	<Panel padding="large" class="space-y-3">
 		<h2 class="text-xl font-semibold">{$t('OpenAPI reference')}</h2>
-		<p class="text-sm leading-6 text-slate-300">{$t('OpenAPI generates the HTTP API reference from Laravel routes and validation. It requires an active Metricove session. MCP tool schemas are negotiated through MCP and are listed above because OpenAPI does not describe that JSON-RPC tool catalogue.')}</p>
-		<a href="/docs/api" class="inline-flex min-h-10 items-center rounded-lg border border-cyan-300/40 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-300/10">{$t('Open API reference')}</a>
+		<p class="text-sm leading-6 text-ink-secondary">{$t('OpenAPI generates the HTTP API reference from Laravel routes and validation. It requires an active Metricove session. MCP tool schemas are negotiated through MCP and are listed above because OpenAPI does not describe that JSON-RPC tool catalogue.')}</p>
+		<a href="/docs/api" class="inline-flex min-h-10 items-center rounded-lg border border-accent-ink/40 px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent/10">{$t('Open API reference')}</a>
 	</Panel>
 </div>

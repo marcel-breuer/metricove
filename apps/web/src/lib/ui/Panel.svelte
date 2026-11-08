@@ -1,5 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { panel } from './styles';
+
+	const paddings = { none: 'p-0', medium: 'p-5 max-sm:p-4', large: 'p-6 max-sm:p-5' };
 
 	let {
 		padding = 'medium',
@@ -12,6 +15,6 @@
 	} = $props();
 </script>
 
-<section class="ui-panel ui-panel--{padding} {className}">
+<section class="{panel} {paddings[padding]} {className}">
 	{@render children()}
 </section>

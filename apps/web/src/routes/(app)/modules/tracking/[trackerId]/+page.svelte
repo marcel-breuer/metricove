@@ -416,28 +416,28 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-300">{$t("Loading tracker and history…")}</div>
+	<div role="status" class="rounded-2xl border border-line bg-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
 {:else if error && !tracker}
-	<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
-		<p class="text-sm font-medium text-amber-200">{$t("Tracker unavailable")}</p>
-		<h1 class="mt-2 text-2xl font-semibold text-white">{$t("You cannot open this tracker.")}</h1>
-		<p role="alert" class="mt-3 text-sm leading-6 text-slate-400">{$t(error)}</p>
-		<a href="/modules/tracking" class="mt-6 inline-flex min-h-11 items-center rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Back to trackers")}</a>
+	<section class="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+		<p class="text-sm font-medium text-warning">{$t("Tracker unavailable")}</p>
+		<h1 class="mt-2 text-2xl font-semibold text-ink">{$t("You cannot open this tracker.")}</h1>
+		<p role="alert" class="mt-3 text-sm leading-6 text-ink-muted">{$t(error)}</p>
+		<a href="/modules/tracking" class="mt-6 inline-flex min-h-11 items-center rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Back to trackers")}</a>
 	</section>
 {:else if tracker}
 	<section class="mx-auto max-w-screen-xl">
-		<div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 pb-6">
+		<div class="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
 			<div class="min-w-0">
-				<a href="/modules/tracking" class="text-sm font-medium text-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("← All trackers")}</a>
+				<a href="/modules/tracking" class="text-sm font-medium text-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("← All trackers")}</a>
 				<div class="mt-4 flex flex-wrap items-center gap-2">
-					<p class="text-sm font-medium text-cyan-200">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
-					<span class="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">{$t("Schema v")}{tracker.schema_version}</span>
+					<p class="text-sm font-medium text-accent-ink">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
+					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
 				</div>
-				<h1 class="mt-2 break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">{tracker.name}</h1>
-				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{tracker.description}</p>{/if}
+				<h1 class="mt-2 break-words text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{tracker.name}</h1>
+				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{tracker.description}</p>{/if}
 			</div>
 			{#if tracker.can_manage_schema}
-				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => (deleteTrackerModalOpen = true)} class="min-h-11 rounded-xl border border-rose-300/20 px-4 text-sm font-semibold text-rose-200 transition hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
+				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => (deleteTrackerModalOpen = true)} class="min-h-11 rounded-xl border border-danger/20 px-4 text-sm font-semibold text-danger transition hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
 			{/if}
 		</div>
 
@@ -448,23 +448,23 @@
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="tracker-schema-form" class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={saveSchema}>
 					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
-						<p class="text-sm leading-6 text-slate-400 sm:col-span-2 lg:col-span-1">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
-						<label class="block text-sm font-medium text-slate-200">{$t("Tracker name")}<input bind:value={schemaName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-						<label class="block text-sm font-medium text-slate-200 sm:col-span-2 lg:col-span-1">{$t("Description")}<textarea bind:value={schemaDescription} maxlength="500" rows="4" class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"></textarea></label>
+						<p class="text-sm leading-6 text-ink-muted sm:col-span-2 lg:col-span-1">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Tracker name")}<input bind:value={schemaName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+						<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1">{$t("Description")}<textarea bind:value={schemaDescription} maxlength="500" rows="4" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea></label>
 					</div>
 					<div class="space-y-4">
-					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-5 lg:border-t-0 lg:pt-0">
-						<div><h3 class="font-semibold text-slate-100">{$t("Current fields")}</h3><p class="mt-1 text-sm text-slate-400">{$t("Leave a field out to retire it while retaining its history.")}</p></div>
-						<button type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm font-medium text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Add field")}</button>
+					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 lg:border-t-0 lg:pt-0">
+						<div><h3 class="font-semibold text-ink">{$t("Current fields")}</h3><p class="mt-1 text-sm text-ink-muted">{$t("Leave a field out to retire it while retaining its history.")}</p></div>
+						<button type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Add field")}</button>
 					</div>
 					<ol class="space-y-3">
 						{#each schemaFields as field, index (field.local_key)}
-							<li class="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_auto]">
-								<label class="block text-sm font-medium text-slate-200">{$t("Field name")}<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-								<label class="block text-sm font-medium text-slate-200">{$t("Type")}<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"><option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option></select></label>
-								{#if field.type === 'number'}<label class="block text-sm font-medium text-slate-200">{$t("Unit")}<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>{/if}
-								<div class="flex flex-wrap items-center gap-3 lg:justify-end"><label class="inline-flex min-h-11 items-center gap-2 text-sm text-slate-300"><input bind:checked={field.required} type="checkbox" class="size-4 rounded border-slate-600 bg-slate-900 text-cyan-300 focus:ring-cyan-300" />{$t("Required")}</label><button type="button" disabled={schemaFields.length <= 1} onclick={() => removeSchemaField(index)} class="min-h-10 rounded-lg px-3 text-sm text-rose-200 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-40">{$t("Retire")}</button></div>
-								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-slate-400">{$t("Minimum")}<input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-slate-400">{$t("Maximum")}<input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("No maximum")} /></label></div>{/if}
+							<li class="grid gap-3 rounded-xl border border-line bg-page p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_auto]">
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option></select></label>
+								{#if field.type === 'number'}<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>{/if}
+								<div class="flex flex-wrap items-center gap-3 lg:justify-end"><label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><input bind:checked={field.required} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{$t("Required")}</label><button type="button" disabled={schemaFields.length <= 1} onclick={() => removeSchemaField(index)} class="min-h-10 rounded-lg px-3 text-sm text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Retire")}</button></div>
+								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-ink-muted">{$t("Minimum")}<input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-ink-muted">{$t("Maximum")}<input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label></div>{/if}
 							</li>
 						{/each}
 					</ol>
@@ -477,54 +477,54 @@
 		</Modal>
 
 		{#if canCreate}
-			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">{$t('Record a measurement')}</button></div>
+			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</button></div>
 			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
-			<section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/10 sm:p-7" aria-labelledby="new-entry-heading">
+			<section class="rounded-2xl border border-line bg-surface p-5 shadow-xs sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
-					<div><p class="text-sm font-medium text-cyan-200">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-slate-100">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-slate-400">{$t("Your entries are private to your account by default.")}</p></div>
-					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-slate-700 px-3 text-sm text-slate-300 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Cancel edit")}</button>{/if}
+					<div><p class="text-sm font-medium text-accent-ink">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-ink">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Your entries are private to your account by default.")}</p></div>
+					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</button>{/if}
 				</div>
 				<form class="mt-5 space-y-5" onsubmit={saveEntry}>
 					<div class="grid gap-4 sm:grid-cols-2">
-						<label class="block text-sm font-medium text-slate-200">{$t("Recorded at")}<input bind:value={recordedAt} type="datetime-local" required class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" /></label>
-						<label class="block text-sm font-medium text-slate-200">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span><input bind:value={note} maxlength="1000" class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Add context")} /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Recorded at")}<input bind:value={recordedAt} type="datetime-local" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={note} maxlength="1000" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Add context")} /></label>
 					</div>
 					<div class="grid gap-4 sm:grid-cols-2">
 						{#each activeFields as field (field.key)}
 							<div class="min-w-0">
 								{#if field.type === 'boolean'}
-									<label class="flex min-h-14 items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 text-sm font-medium text-slate-200"><input bind:checked={booleanValues[field.key]} type="checkbox" class="size-4 rounded border-slate-600 bg-slate-900 text-cyan-300 focus:ring-cyan-300" />{field.label}{$t(field.required ? ' · required' : '')}</label>
+									<label class="flex min-h-14 items-center gap-3 rounded-xl border border-line bg-page px-4 text-sm font-medium text-ink-secondary"><input bind:checked={booleanValues[field.key]} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{field.label}{$t(field.required ? ' · required' : '')}</label>
 								{:else}
-									<label class="block text-sm font-medium text-slate-200">{field.label}{$t(field.required ? ' · required' : '')}
+									<label class="block text-sm font-medium text-ink-secondary">{field.label}{$t(field.required ? ' · required' : '')}
 										{#if field.type === 'number'}
-										<span class="ml-1 text-xs font-normal text-slate-400">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' ' + $t('to') + ' ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
-											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" placeholder={$t("Enter a decimal value")} />
+										<span class="ml-1 text-xs font-normal text-ink-muted">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' ' + $t('to') + ' ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
+											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Enter a decimal value")} />
 										{:else if field.type === 'date'}
-											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 										{:else}
-											<input bind:value={entryValues[field.key]} type="text" maxlength="5000" required={field.required} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+											<input bind:value={entryValues[field.key]} type="text" maxlength="5000" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 										{/if}
 									</label>
 								{/if}
 							</div>
 						{/each}
 					</div>
-					<div class="flex justify-end border-t border-slate-800 pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100 disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
+					<div class="flex justify-end border-t border-line pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
 				</form>
 			</section>
 			</Modal>
 		{/if}
 
 		<section class="mt-8" aria-labelledby="history-heading">
-			<div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="history-heading" class="text-xl font-semibold text-white">{$t("Measurement history")}</h2><p class="mt-1 text-sm text-slate-400">{$t("The latest")} {entries.length} {$t("entries you can view, newest first.")}</p></div></div>
+			<div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="history-heading" class="text-xl font-semibold text-ink">{$t("Measurement history")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("The latest")} {entries.length} {$t("entries you can view, newest first.")}</p></div></div>
 			{#if numericColumns.length > 0}
 				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each numericColumns as field (field.key)}
 						{@const series = numericSeries(field)}
-						<article class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-5">
-							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-slate-100">{field.label}</h3><p class="mt-1 text-xs text-slate-400">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><span class="rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-400">{field.unit ?? '—'}</span></div>
+						<article class="rounded-2xl border border-line bg-surface p-4 sm:p-5">
+							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-muted">{field.unit ?? '—'}</span></div>
 							{#if series.length > 0}
-								<div class="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-slate-950/70 p-2" role="img" aria-label={field.label + ' measurement history'}>
+								<div class="mt-4 overflow-hidden rounded-xl border border-line bg-page p-2" role="img" aria-label={field.label + ' measurement history'}>
 									<svg viewBox="0 0 1000 200" preserveAspectRatio="none" class="h-40 w-full">
 										<path d="M0 30H1000M0 105H1000M0 180H1000" stroke="#1e293b" stroke-width="2" />
 										{#if series.length > 1}<polyline points={chartPoints(field)} fill="none" stroke="#67e8f9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />{/if}
@@ -533,48 +533,48 @@
 										{/each}
 									</svg>
 								</div>
-								<div class="mt-2 flex justify-between text-xs text-slate-500"><span>{formatDate(series[0].at)}</span><span>{formatDate(series[series.length - 1].at)}</span></div>
-							{:else}<p class="mt-4 rounded-lg bg-slate-950/60 p-4 text-sm text-slate-400">{$t("No numeric values are available for this field yet.")}</p>{/if}
+								<div class="mt-2 flex justify-between text-xs text-ink-subtle"><span>{formatDate(series[0].at)}</span><span>{formatDate(series[series.length - 1].at)}</span></div>
+							{:else}<p class="mt-4 rounded-lg bg-page p-4 text-sm text-ink-muted">{$t("No numeric values are available for this field yet.")}</p>{/if}
 						</article>
 					{/each}
 				</div>
 			{/if}
 
 			{#if entries.length === 0}
-				<div class="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8"><h3 class="text-lg font-semibold text-slate-100">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-slate-400">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
+				<div class="mt-5 rounded-2xl border border-line bg-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
 			{:else}
-				<div class="mt-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
-					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-slate-400 sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
+				<div class="mt-5 overflow-hidden rounded-2xl border border-line bg-surface">
+					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-ink-muted sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
+					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
 						<table class="min-w-full border-collapse text-left text-sm">
-							<thead class="bg-slate-950/80 text-xs text-slate-400"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
-							<tbody class="divide-y divide-slate-800">
+							<thead class="bg-page text-xs text-ink-muted"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
+							<tbody class="divide-y divide-line">
 								{#each entries as entry (entry.id)}
 									<tr class="align-top">
-										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-slate-200 sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-slate-500">{$t("Schema v")}{entry.schema_version}</span></th>
-										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-slate-300 sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
-										<td class="max-w-xs px-4 py-4 text-slate-400 sm:px-5">{entry.note ?? '—'}</td>
-										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-cyan-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-rose-300/20 px-3 py-2 text-xs font-semibold text-rose-200 hover:border-rose-300/50 hover:bg-rose-300/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-200 disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
+										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-ink-secondary sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-ink-subtle">{$t("Schema v")}{entry.schema_version}</span></th>
+										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-ink-secondary sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
+										<td class="max-w-xs px-4 py-4 text-ink-muted sm:px-5">{entry.note ?? '—'}</td>
+										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
 									</tr>
 								{/each}
 							</tbody>
 						</table>
 					</div>
-					<p class="border-t border-slate-800 px-4 py-3 text-xs leading-5 text-slate-500">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
+					<p class="border-t border-line px-4 py-3 text-xs leading-5 text-ink-subtle">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
 				</div>
-				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-slate-700 px-5 text-sm font-semibold text-slate-200 transition hover:border-cyan-300 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
+				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-line-strong px-5 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
 			{/if}
 		</section>
 		{#if deleteTargetEntry}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete measurement?')} message={$t('Delete this measurement?')} busy={deletingEntryId === deleteTargetEntry.id} onConfirm={() => void deleteEntry(deleteTargetEntry!)} />{/if}
 		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: tracker.name })} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
-			<details class="mt-7 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-				<summary class="cursor-pointer font-semibold text-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-slate-400">({revisions.length})</span></summary>
-				<ol class="mt-4 divide-y divide-slate-800">
+			<details class="mt-7 rounded-2xl border border-line bg-surface p-5">
+				<summary class="cursor-pointer font-semibold text-ink-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-ink-muted">({revisions.length})</span></summary>
+				<ol class="mt-4 divide-y divide-line">
 					{#each revisions as revision (revision.version)}
-						<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"><span class="text-sm text-slate-200">{$t("Version")} {revision.version} · {revision.schema.name} · {revision.schema.fields.length} {$t(revision.schema.fields.length === 1 ? 'field' : 'fields')}</span><time datetime={revision.created_at} class="text-xs text-slate-500">{formatDate(revision.created_at)}</time></li>
+						<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"><span class="text-sm text-ink-secondary">{$t("Version")} {revision.version} · {revision.schema.name} · {revision.schema.fields.length} {$t(revision.schema.fields.length === 1 ? 'field' : 'fields')}</span><time datetime={revision.created_at} class="text-xs text-ink-subtle">{formatDate(revision.created_at)}</time></li>
 					{/each}
 				</ol>
 			</details>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { t } from '#lib/i18n';
+	import { control, field, fieldLabel } from './styles';
 
 	type Props = Omit<HTMLInputAttributes, 'class' | 'value'> & {
 		id: string;
@@ -19,7 +20,7 @@
 	}: Props = $props();
 </script>
 
-<label class="ui-field {className}" for={id}>
-	<span class="ui-field-label">{$t(label)}</span>
-		<input class="ui-control" {id} bind:value placeholder={placeholder ? $t(placeholder) : undefined} {...attributes} />
+<label class="{field} {className}" for={id}>
+	<span class={fieldLabel}>{$t(label)}</span>
+		<input class={control} {id} bind:value placeholder={placeholder ? $t(placeholder) : undefined} {...attributes} />
 </label>

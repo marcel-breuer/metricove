@@ -59,22 +59,22 @@
 	<meta name="description" content={$t("Request a password reset for your Metricove account.")} />
 </svelte:head>
 
-<main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100 sm:px-10 sm:py-16">
+<main class="min-h-screen bg-page px-6 py-10 text-ink sm:px-10 sm:py-16">
 	<div class="mx-auto flex min-h-[calc(100vh-5rem)] max-w-xl flex-col">
-		<a href="/" class="flex items-center gap-3 text-sm font-semibold text-cyan-300">
-			<span class="grid size-9 place-items-center rounded-xl bg-cyan-300/10 text-lg">M</span>
+		<a href="/" class="flex items-center gap-3 text-sm font-semibold text-accent-ink">
+			<span class="grid size-9 place-items-center rounded-xl bg-accent/10 text-lg">M</span>
 			Metricove
 		</a>
 
-		<section class="my-auto rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
-			<p class="text-sm font-medium text-slate-400">{$t("Account recovery")}</p>
+		<section class="my-auto rounded-2xl border border-line bg-surface p-6 shadow-xs sm:p-8">
+			<p class="text-sm font-medium text-ink-muted">{$t("Account recovery")}</p>
 			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Reset your password")}</h1>
-			<p class="mt-3 text-sm leading-6 text-slate-300">{$t("Enter your account email. If it matches an account, we will send a reset link.")}</p>
+			<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t("Enter your account email. If it matches an account, we will send a reset link.")}</p>
 
 			<form class="mt-8 space-y-5" onsubmit={requestReset}>
 				<div>
-					<label for="email" class="mb-2 block text-sm font-medium text-slate-200">{$t("Email address")}</label>
-					<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-slate-100 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20" />
+					<label for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Email address")}</label>
+					<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 				</div>
 				{#if message}
 					<Notice tone="success" message={message} />
@@ -82,14 +82,14 @@
 				{#if error}
 					<Notice tone="error" message={error} />
 				{/if}
-				<button type="submit" disabled={busy} class="inline-flex w-full items-center justify-center rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60">
+				<button type="submit" disabled={busy} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">
 					{$t(busy ? 'Sending…' : 'Send reset link')}
 				</button>
 			</form>
 
-			<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-cyan-200 hover:text-cyan-100">{$t("Return to sign in")}</a>
+			<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink hover:text-accent-ink">{$t("Return to sign in")}</a>
 		</section>
 
-		<footer class="border-t border-slate-800 pt-5 text-sm text-slate-500">{$t("Reset links are short-lived and can only be used once.")}</footer>
+		<footer class="border-t border-line pt-5 text-sm text-ink-subtle">{$t("Reset links are short-lived and can only be used once.")}</footer>
 	</div>
 </main>

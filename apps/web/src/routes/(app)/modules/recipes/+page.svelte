@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClasses, control, field, fieldLabel, fileInput, iconButton, panel } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import EmptyState from '#lib/ui/EmptyState.svelte';
@@ -182,7 +183,7 @@
 {/snippet}
 
 {#snippet favoriteButton(recipe: Recipe)}
-	<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="ui-icon-button recipe-favorite">{@render star(recipe.is_favorite)}</button>
+	<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</button>
 {/snippet}
 
 <div class="mx-auto max-w-7xl space-y-8">
@@ -198,23 +199,23 @@
 
 	<section aria-labelledby="recipe-list-title" class="space-y-6">
 		<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
-			<label class="ui-field-label block">{$t("Search recipes and ingredients")}
-				<input bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="ui-control mt-1.5" />
+			<label class="{fieldLabel} block">{$t("Search recipes and ingredients")}
+				<input bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="{control} mt-1.5" />
 			</label>
-			<label class="ui-field-label block">{$t("Category")}
-				<select bind:value={categoryFilter} class="ui-control mt-1.5">
+			<label class="{fieldLabel} block">{$t("Category")}
+				<select bind:value={categoryFilter} class="{control} mt-1.5">
 					<option value="all">{$t("All categories")}</option>
 					{#each categories as recipeCategory}<option value={recipeCategory}>{recipeCategory}</option>{/each}
 				</select>
 			</label>
-			<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="recipe-filter-toggle ui-button ui-button--secondary ui-button--medium">
+			<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-warning aria-pressed:text-warning">
 				{@render star(favoriteOnly)}{$t("Favorites")}
 			</button>
 		</div>
 
 		<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
 		{#if loading}
-			<p class="ui-panel ui-panel--medium text-sm text-[var(--text-muted)]">{$t("Loading recipes…")}</p>
+			<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted">{$t("Loading recipes…")}</p>
 		{:else if !canView}
 			<Notice tone="info" message="Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission." />
 		{:else if visibleRecipes.length === 0}
@@ -229,28 +230,28 @@
 		{:else}
 			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{#each visibleRecipes as recipe (recipe.id)}
-					<li class="ui-panel flex min-w-0 flex-col overflow-hidden">
-						{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-[var(--border-default)] object-cover" />{/if}
+					<li class="{panel} flex min-w-0 flex-col overflow-hidden">
+						{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}
 						<div class="flex flex-1 flex-col gap-3 p-5">
 							<div class="flex items-start justify-between gap-3">
 								<div class="min-w-0">
-									<p class="text-xs text-[var(--text-muted)]">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
-									<h3 class="mt-1 text-lg font-semibold leading-snug text-[var(--text-primary)]">
-										<a href="/modules/recipes/{recipe.id}" class="recipe-title-link">{recipe.title}</a>
+									<p class="text-xs text-ink-muted">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
+									<h3 class="mt-1 text-lg font-semibold leading-snug text-ink">
+										<a href="/modules/recipes/{recipe.id}" class="rounded transition-colors hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{recipe.title}</a>
 									</h3>
 								</div>
 								{@render favoriteButton(recipe)}
 							</div>
-							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-[var(--text-muted)]">
-								{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-[var(--warning-text)]">{$t('Servings missing')}</span>{/if}
+							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-ink-muted">
+								{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('Servings missing')}</span>{/if}
 								{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}
 								<span>{$t(recipe.ingredients.length === 1 ? '{count} ingredient' : '{count} ingredients', { count: recipe.ingredients.length })}</span>
 								{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
 							</p>
-							<p class="line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
+							<p class="line-clamp-2 text-sm leading-6 text-ink-secondary">
 								{recipe.ingredients.length > 0 ? recipe.ingredients.map((item) => item.name).join(', ') : $t('No ingredients recorded.')}
 							</p>
-							<div class="mt-auto flex flex-wrap items-center gap-2 border-t border-[var(--border-default)] pt-3">
+							<div class="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-3">
 								<Button href="/modules/recipes/{recipe.id}" variant="secondary" size="small">{$t('Show recipe')}</Button>
 								{#if recipe.can_edit}
 									<Button variant="ghost" size="small" onclick={() => editRecipe(recipe)}>{$t("Edit")}</Button>
@@ -267,16 +268,16 @@
 		{#if canAddRecipe}
 			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
 				<div class="mb-4 grid grid-cols-2 gap-2" role="group" aria-label={$t('Import a recipe')}>
-					<button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="recipe-import-type ui-button ui-button--secondary ui-button--medium">{$t('Web link')}</button>
-					<button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="recipe-import-type ui-button ui-button--secondary ui-button--medium">{$t('PDF file')}</button>
+					<button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('Web link')}</button>
+					<button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('PDF file')}</button>
 				</div>
 				<form onsubmit={importRecipe} class="space-y-4">
 					{#if importType === 'url'}
-						<label class="ui-field"><span class="ui-field-label">{$t('Recipe page URL')}</span><input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="ui-control" /></label>
+						<label class="{field}"><span class="{fieldLabel}">{$t('Recipe page URL')}</span><input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="{control}" /></label>
 					{:else}
-						<label class="ui-field"><span class="ui-field-label">{$t('Recipe PDF')}</span><input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="ui-file-input" /><span class="text-xs text-[var(--text-muted)]">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>
+						<label class="{field}"><span class="{fieldLabel}">{$t('Recipe PDF')}</span><input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="{fileInput}" /><span class="text-xs text-ink-muted">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>
 					{/if}
-					<label class="ui-field"><span class="ui-field-label">{$t('Save as')}</span><select bind:value={importVisibility} class="ui-control">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
+					<label class="{field}"><span class="{fieldLabel}">{$t('Save as')}</span><select bind:value={importVisibility} class="{control}">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
 					{#if importError}<Notice tone="error" message={importError} />{/if}
 					<Button type="submit" fullWidth disabled={importBusy || (importType === 'pdf' && !importFile)}>{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</Button>
 				</form>
@@ -290,17 +291,3 @@
 			<Notice tone="info" message="Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes." />
 		{/if}
 </div>
-
-<style>
-	.recipe-title-link {
-		border-radius: 0.25rem;
-		color: inherit;
-		transition: color 150ms ease;
-	}
-	.recipe-title-link:hover { color: var(--accent-text); }
-	.recipe-title-link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-	.recipe-favorite[aria-pressed='true'] { color: var(--warning-text); }
-	.recipe-filter-toggle { gap: 0.5rem; }
-	.recipe-filter-toggle[aria-pressed='true'] { border-color: var(--warning-text); color: var(--warning-text); }
-	.recipe-import-type[aria-pressed='true'] { border-color: var(--accent-text); color: var(--accent-text); }
-</style>

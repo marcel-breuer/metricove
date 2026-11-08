@@ -213,7 +213,7 @@
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h2 id="module-list-heading" class="text-xl font-semibold">{$t("Available modules")}</h2>
-					<p class="mt-1 text-sm text-slate-400">{modules.filter((module) => module.enabled && !module.always_enabled).length} {$t("optional module(s) enabled")}</p>
+					<p class="mt-1 text-sm text-ink-muted">{modules.filter((module) => module.enabled && !module.always_enabled).length} {$t("optional module(s) enabled")}</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
 					{#if modules.some((module) => !module.always_enabled)}
@@ -227,33 +227,33 @@
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-slate-300">{$t("Loading modules…")}</p>
+				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading modules…")}</p>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5 text-sm text-slate-400">{$t("No modules are registered.")}</p>
+				<p class="mt-6 rounded-xl border border-line bg-surface p-5 text-sm text-ink-muted">{$t("No modules are registered.")}</p>
 			{:else}
 					<Panel padding="none" class="mt-5 overflow-hidden">
-					<ul class="divide-y divide-slate-800 px-4 sm:px-6">
+					<ul class="divide-y divide-line px-4 sm:px-6">
 					{#each modules as module (module.key)}
 							<li class="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-8">
 								<div class="min-w-0">
 									<div class="flex flex-wrap items-center gap-3">
-										<h3 class="text-base font-semibold text-slate-100">{$t(module.label)}</h3>
+										<h3 class="text-base font-semibold text-ink">{$t(module.label)}</h3>
 									</div>
-									<p class="mt-1.5 text-sm leading-6 text-slate-400">{$t(module.description)}</p>
+									<p class="mt-1.5 text-sm leading-6 text-ink-muted">{$t(module.description)}</p>
 								{#if requiredModuleLabels(module).length > 0}
-									<p class="mt-2 text-xs text-slate-500">{$t("Requires:")} {requiredModuleLabels(module).join(', ')}</p>
+									<p class="mt-2 text-xs text-ink-subtle">{$t("Requires:")} {requiredModuleLabels(module).join(', ')}</p>
 							{/if}
 							{#if module.missing_dependencies.length > 0}
-									<p class="mt-2 text-xs text-amber-200">{$t("Enable first:")} {module.missing_dependencies.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
+									<p class="mt-2 text-xs text-warning">{$t("Enable first:")} {module.missing_dependencies.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
 							{/if}
 							{#if module.active_dependents.length > 0}
-									<p class="mt-2 text-xs text-amber-200">{$t("Used by enabled modules:")} {module.active_dependents.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
+									<p class="mt-2 text-xs text-warning">{$t("Used by enabled modules:")} {module.active_dependents.map((key) => modules.find((entry) => entry.key === key)?.label ?? key).join(', ')}</p>
 							{/if}
 								</div>
 
 								<div class="flex items-center justify-between gap-3 sm:justify-end">
 								{#if module.always_enabled}
-										<span class="text-sm font-medium text-cyan-200">{$t("Always on")}</span>
+										<span class="text-sm font-medium text-accent-ink">{$t("Always on")}</span>
 								{:else}
 									<Switch
 										checked={module.enabled}

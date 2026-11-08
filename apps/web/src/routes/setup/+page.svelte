@@ -113,117 +113,50 @@
 	wide
 >
 	{#if state === 'loading'}
-		<p class="setup-status" role="status">{$t("Checking household setup…")}</p>
+		<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted" role="status">{$t("Checking household setup…")}</p>
 	{:else if state === 'available'}
-		<h2 id="setup-form-heading" class="setup-state-title">{$t("Create your administrator account")}</h2>
-		<form class="setup-form" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
+		<h2 id="setup-form-heading" class="mt-4 text-lg leading-[1.35] font-[650] tracking-[-0.02em] text-ink max-[760px]:mt-3.5">{$t("Create your administrator account")}</h2>
+		<form class="mt-3.5 grid gap-3.5 max-[760px]:mt-3 max-[760px]:gap-3" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
 			<TextField id="name" name="name" label="Your name" autocomplete="name" bind:value={name} required maxlength={255} />
 			<TextField id="email" name="email" label="Email address" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
-			<div class="setup-password-field">
+			<div>
 				<TextField id="password" name="password" label="Password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={password} minlength={12} required />
-				<p id="setup-password-guidance">{$t("Use at least 12 characters.")}</p>
+				<p id="setup-password-guidance" class="mt-2 text-xs text-ink-subtle">{$t("Use at least 12 characters.")}</p>
 			</div>
 			<TextField id="password_confirmation" name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" aria-describedby="setup-password-guidance" bind:value={passwordConfirmation} required />
 			{#if formError}
 				<Notice tone="error" message={$t(formError)} />
 			{/if}
-			<Button type="submit" fullWidth disabled={busy} class="setup-submit">
+			<Button type="submit" fullWidth disabled={busy} size="large" class="mt-1">
 				{$t(busy ? 'Creating account…' : 'Create administrator account')}
 			</Button>
 		</form>
 	{:else if state === 'created'}
-		<div class="setup-state" role="status" aria-live="polite">
-			<p class="setup-state-kicker">{$t("Household ready")}</p>
-			<h2 class="setup-state-title">{$t("Welcome,")} {createdName}.</h2>
-			<p class="setup-state-description">
+		<div role="status" aria-live="polite">
+			<p class="mt-7 text-xs font-semibold text-positive">{$t("Household ready")}</p>
+			<h2 class="mt-3 text-[1.75rem] leading-[1.35] font-[650] tracking-[-0.02em] text-ink">{$t("Welcome,")} {createdName}.</h2>
+			<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted">
 				{$t("Your administrator account is active. Choose the features your household wants to use; you can change them later.")}
 			</p>
-			<a href="/" class="ui-button ui-button--primary ui-button--medium setup-action">
+			<Button href="/" class="mt-5">
 				{$t("Open dashboard")}
-			</a>
+			</Button>
 		</div>
 	{:else if state === 'complete'}
-		<div class="setup-state" role="status">
-			<p class="setup-state-kicker">{$t("Setup is complete")}</p>
-			<h2 class="setup-state-title">{$t("This household is already set up.")}</h2>
-			<p class="setup-state-description">{$t("Initial registration is closed for this installation.")}</p>
-			<a href="/login" class="ui-button ui-button--secondary ui-button--medium setup-action">
+		<div role="status">
+			<p class="mt-7 text-xs font-semibold text-positive">{$t("Setup is complete")}</p>
+			<h2 class="mt-3 text-[1.75rem] leading-[1.35] font-[650] tracking-[-0.02em] text-ink">{$t("This household is already set up.")}</h2>
+			<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted">{$t("Initial registration is closed for this installation.")}</p>
+			<Button href="/login" variant="secondary" class="mt-5">
 				{$t("Go to sign in")}
-			</a>
+			</Button>
 		</div>
 	{:else}
-		<div class="setup-state">
-			<p class="setup-state-title" role="alert">{$t("Setup status could not be loaded.")}</p>
-			<Button variant="secondary" class="setup-action" onclick={loadStatus}>
+		<div>
+			<p class="mt-4 text-lg leading-[1.35] font-[650] tracking-[-0.02em] text-ink max-[760px]:mt-3.5" role="alert">{$t("Setup status could not be loaded.")}</p>
+			<Button variant="secondary" class="mt-5" onclick={loadStatus}>
 				{$t("Try again")}
 			</Button>
 		</div>
 	{/if}
 </AuthShell>
-
-<style>
-	.setup-status,
-	.setup-state-description {
-		margin: 1.25rem 0 0;
-		color: var(--text-muted);
-		font-size: 0.9375rem;
-		line-height: 1.7;
-	}
-
-	.setup-state-title {
-		margin: 1rem 0 0;
-		color: var(--text-primary);
-		font-size: 1.125rem;
-		font-weight: 650;
-		letter-spacing: -0.02em;
-		line-height: 1.35;
-	}
-
-	.setup-form {
-		display: grid;
-		gap: 0.875rem;
-		margin-top: 0.875rem;
-	}
-
-	.setup-password-field p {
-		margin: 0.5rem 0 0;
-		color: var(--text-subtle);
-		font-size: 0.75rem;
-	}
-
-	:global(.setup-submit) {
-		min-height: 3rem;
-		margin-top: 0.25rem;
-		border-radius: 0.8rem;
-		font-size: 0.9375rem;
-	}
-
-	.setup-state-kicker {
-		margin: 1.75rem 0 0;
-		color: var(--positive-text);
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-	}
-
-	.setup-state-kicker + .setup-state-title {
-		margin-top: 0.75rem;
-		font-size: 1.75rem;
-	}
-
-	.setup-action {
-		margin-top: 1.25rem;
-	}
-
-	@media (max-width: 760px) {
-		.setup-state-title {
-			margin-top: 0.875rem;
-		}
-
-		.setup-form {
-			gap: 0.75rem;
-			margin-top: 0.75rem;
-		}
-	}
-</style>

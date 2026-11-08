@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { segmented, segmentedButton } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -275,62 +276,62 @@
 <div class="mx-auto max-w-[90rem] space-y-8">
 	<PageHeading eyebrow="Food · Meal planning" title="A week that works" description="Plan breakfast, lunch and dinner with a saved recipe or a simple dish name. Your plan works on its own.">
 		{#snippet actions()}
-			<div class="ui-segmented" role="group" aria-label={$t("Week")}>
-				<button type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class="ui-segmented-button"><span aria-hidden="true">‹</span></button>
-				<div class="min-w-0 flex-1 px-2 text-center text-sm font-medium text-[var(--text-primary)] tabular-nums" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-				<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="ui-segmented-button"><span aria-hidden="true">›</span></button>
+			<div class="{segmented}" role="group" aria-label={$t("Week")}>
+				<button type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class="{segmentedButton}"><span aria-hidden="true">‹</span></button>
+				<div class="min-w-0 flex-1 px-2 text-center text-sm font-medium text-ink tabular-nums" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+				<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="{segmentedButton}"><span aria-hidden="true">›</span></button>
 			</div>
 			<Button variant="secondary" disabled={isCurrentWeek} onclick={() => (weekStart = mondayOf(new Date()))}>{$t("This week")}</Button>
 			{#if canCreate && isCurrentWeek}<Button variant="secondary" onclick={() => (copyPreviousWeekOpen = true)} disabled={copyingWeek}>{$t("Copy previous week")}</Button>{/if}
 		{/snippet}
 	</PageHeading>
 
-	{#if message}<p role="status" class="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{$t(message, messageParams)}</p>{/if}
+	{#if message}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm text-positive">{$t(message, messageParams)}</p>{/if}
 	{#if error}<Notice tone="error" message={error} />{/if}
 
 	<Modal bind:open={editorOpen} size="fullscreen" title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
 		{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<form id="meal-slot-form" onsubmit={saveSlot} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-			<label class="text-xs font-medium text-slate-400">{$t("Day")}
-				<input bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			<label class="text-xs font-medium text-ink-muted">{$t("Day")}
+				<input bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
-			<label class="text-xs font-medium text-slate-400">{$t("Meal")}
-				<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+			<label class="text-xs font-medium text-ink-muted">{$t("Meal")}
+				<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 					{#each mealTypes as entry}<option value={entry.key}>{$t(entry.label)}</option>{/each}
 				</select>
 			</label>
 			{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
-				<div class="sm:col-span-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-400">
+				<div class="sm:col-span-2 rounded-xl border border-line bg-page px-4 py-3 text-sm leading-6 text-ink-muted">
 					{$t("The linked recipe is not available to your account right now. You can update servings or notes, or convert this slot to a dish name.")}
-					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-cyan-200 hover:text-cyan-100">{$t("Convert to a dish name")}</button>
+					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-accent-ink hover:text-accent-ink">{$t("Convert to a dish name")}</button>
 				</div>
-			{:else}<label class="text-xs font-medium text-slate-400">{$t("Dish source")}
-				<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+			{:else}<label class="text-xs font-medium text-ink-muted">{$t("Dish source")}
+				<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 					<option value="free_text">{$t("Write a dish name")}</option>
 					{#if canViewRecipes}<option value="recipe">{$t("Link a recipe")}</option>{/if}
 				</select>
 			</label>{/if}
-			<label class="text-xs font-medium text-slate-400">{$t("Servings")}
-				<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			<label class="text-xs font-medium text-ink-muted">{$t("Servings")}
+				<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			{#if dishType === 'recipe' && (canViewRecipes || editingSlotId === null)}
-				<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Recipe you can view")}
-					<select bind:value={recipeId} required class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+				<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Recipe you can view")}
+					<select bind:value={recipeId} required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 						<option value="">{$t("Choose a recipe")}</option>
 						{#each recipeChoices as recipe}<option value={recipe.id}>{recipe.title}</option>{/each}
 					</select>
 				</label>
 			{:else if dishType === 'free_text'}
-				<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Dish name")}
-					<input bind:value={dishName} maxlength="180" required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+				<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Dish name")}
+					<input bind:value={dishName} maxlength="180" required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 				</label>
 			{/if}
-			<label class="text-xs font-medium text-slate-400 sm:col-span-2">{$t("Note")} <span class="font-normal text-slate-500">{$t("(optional)")}</span>
-				<input bind:value={notes} maxlength="2000" placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20" />
+			<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span>
+				<input bind:value={notes} maxlength="2000" placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			{#if editingSlotId === null && canManageShared && canCreate}
-				<label class="text-xs font-medium text-slate-400">{$t("Who can see it?")}
-					<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+				<label class="text-xs font-medium text-ink-muted">{$t("Who can see it?")}
+					<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 						<option value="private">{$t("Only me")}</option>
 						<option value="household">{$t("Household plan")}</option>
 					</select>
@@ -344,38 +345,38 @@
 	</Modal>
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm text-slate-400">{$t("Loading your week…")}</div>
+		<div class="rounded-2xl border border-line bg-surface p-7 text-sm text-ink-muted">{$t("Loading your week…")}</div>
 	{:else if !canView}
-		<div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-7 text-sm leading-6 text-slate-400">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
+		<div class="rounded-2xl border border-line bg-surface p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
 			{#each days as day (day)}
-				<article class="min-w-0 rounded-2xl border border-slate-800 bg-slate-900/55 p-3 sm:p-4">
-					<header class="mb-3 border-b border-slate-800 pb-3">
-						<p class="text-xs font-semibold text-cyan-300">{formatDay(day, { weekday: 'short' })}</p>
-						<h2 class="mt-1 text-lg font-semibold text-white">{formatDay(day, { month: 'short', day: 'numeric' })}</h2>
+				<article class="min-w-0 rounded-2xl border border-line bg-surface p-3 sm:p-4">
+					<header class="mb-3 border-b border-line pb-3">
+						<p class="text-xs font-semibold text-accent-ink">{formatDay(day, { weekday: 'short' })}</p>
+						<h2 class="mt-1 text-lg font-semibold text-ink">{formatDay(day, { month: 'short', day: 'numeric' })}</h2>
 					</header>
 					<div class="space-y-3">
 						{#each mealTypes as entry (entry.key)}
 							{@const slot = slotFor(day, entry.key)}
-							<section aria-label={$t(entry.label)} class="min-h-24 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+							<section aria-label={$t(entry.label)} class="min-h-24 rounded-xl border border-line bg-page p-3">
 								<div class="flex items-center justify-between gap-2">
-									<h3 class="text-[0.68rem] font-semibold text-slate-500">{$t(entry.label)}</h3>
-									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-cyan-300">{$t("Household")}</span>{/if}
+									<h3 class="text-[0.68rem] font-semibold text-ink-subtle">{$t(entry.label)}</h3>
+									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-accent-ink">{$t("Household")}</span>{/if}
 								</div>
 								{#if slot}
-									<p class="mt-2 break-words text-sm font-medium leading-5 text-white">{slot.dish_label}</p>
-									<p class="mt-1 text-xs text-slate-500">{slot.servings} {$t(slot.servings === 1 ? 'serving' : 'servings')}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
+									<p class="mt-2 break-words text-sm font-medium leading-5 text-ink">{slot.dish_label}</p>
+									<p class="mt-1 text-xs text-ink-subtle">{slot.servings} {$t(slot.servings === 1 ? 'serving' : 'servings')}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
 									{#if slot.can_edit}
 										<div class="mt-3 flex gap-2">
-											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-300 hover:border-cyan-300/60">{$t("Edit")}</button>
-											<button type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-slate-700 px-2.5 text-xs text-slate-400 hover:border-rose-300/60 hover:text-rose-200">{$t("Remove")}</button>
+											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>
+											<button type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</button>
 										</div>
 									{/if}
 								{:else if canAdd}
-									<button type="button" onclick={() => openNewSlot(day, entry.key)} class="mt-3 min-h-9 w-full rounded-lg border border-dashed border-slate-700 px-2 text-xs font-medium text-slate-400 hover:border-cyan-300/60 hover:text-cyan-200">+ Plan meal</button>
+									<button type="button" onclick={() => openNewSlot(day, entry.key)} class="mt-3 min-h-9 w-full rounded-lg border border-dashed border-line-strong px-2 text-xs font-medium text-ink-muted hover:border-accent-ink/60 hover:text-accent-ink">+ Plan meal</button>
 								{:else}
-									<p class="mt-3 text-xs text-slate-600">{$t("Not planned")}</p>
+									<p class="mt-3 text-xs text-ink-subtle">{$t("Not planned")}</p>
 								{/if}
 							</section>
 						{/each}
@@ -385,7 +386,7 @@
 		</div>
 	{/if}
 
-	<footer class="rounded-2xl border border-slate-800 bg-slate-900/40 px-5 py-4 text-xs leading-5 text-slate-500">
+	<footer class="rounded-2xl border border-line bg-surface px-5 py-4 text-xs leading-5 text-ink-subtle">
 		{$t("Meal plans do not change shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
 	</footer>
 	{#if slotToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove planned meal?')} message={$t('Remove this meal from the plan?')} onConfirm={() => void removeSlot(slotToRemove!)} />{/if}

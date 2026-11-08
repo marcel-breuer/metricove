@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fileInput } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -496,56 +497,56 @@
 	{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 
 	{#if shell.loading}
-		<p role="status" class="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-5 text-sm text-slate-300">{$t("Loading module access…")}</p>
+		<p role="status" class="mt-6 rounded-xl border border-line bg-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading module access…")}</p>
 	{:else if !hasImportView}
-		<div class="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-5 text-sm leading-6 text-amber-100"><p class="font-semibold">{$t("Import View access is required.")}</p><p class="mt-1 text-amber-100/75">{$t("Grant access to an enabled source module before importing or exporting its records.")}</p></div>
+		<div class="mt-6 rounded-2xl border border-warning/20 bg-warning/5 p-5 text-sm leading-6 text-warning"><p class="font-semibold">{$t("Import View access is required.")}</p><p class="mt-1 text-warning/75">{$t("Grant access to an enabled source module before importing or exporting its records.")}</p></div>
 	{:else}
 		{#if importTargets.length > 0}
-			<section class="mt-6 max-w-2xl rounded-2xl border border-cyan-300/20 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="import-destination-heading">
-				<h2 id="import-destination-heading" class="text-base font-semibold text-white">{$t("Choose an import destination")}</h2>
-				<label class="mt-3 block text-sm font-medium text-slate-200" for="import-destination">{$t("What kind of records are in this file?")}
-					<select id="import-destination" value={importTarget} onchange={(event) => changeImportTarget(event.currentTarget.value as ImportTarget)} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+			<section class="mt-6 max-w-2xl rounded-2xl border border-accent-ink/20 bg-surface p-5 sm:p-6" aria-labelledby="import-destination-heading">
+				<h2 id="import-destination-heading" class="text-base font-semibold text-ink">{$t("Choose an import destination")}</h2>
+				<label class="mt-3 block text-sm font-medium text-ink-secondary" for="import-destination">{$t("What kind of records are in this file?")}
+					<select id="import-destination" value={importTarget} onchange={(event) => changeImportTarget(event.currentTarget.value as ImportTarget)} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 						{#each importTargets as target (target.value)}<option value={target.value}>{$t(target.label)}</option>{/each}
 					</select>
 				</label>
-				<p class="mt-2 text-xs leading-5 text-slate-500">{$t("Only destinations you can access are listed. The preview validates the selected mapping before anything is saved.")}</p>
+				<p class="mt-2 text-xs leading-5 text-ink-subtle">{$t("Only destinations you can access are listed. The preview validates the selected mapping before anything is saved.")}</p>
 			</section>
 		{/if}
 		{#if canImportNotion}
-			<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="notion-food-import-heading">
+			<section class="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="notion-food-import-heading">
 				<div class="max-w-3xl">
-					<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Notion import")}</p>
-					<h2 id="notion-food-import-heading" class="mt-1 text-xl font-semibold text-white">{$t("Bring recipes and old meal plans into Metricove")}</h2>
-					<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Upload a JSON export prepared from Notion MCP. Review every recipe and meal before importing; new entries stay private to your account.")}</p>
+					<p class="text-sm font-medium tracking-wide text-accent-ink">{$t("Notion import")}</p>
+					<h2 id="notion-food-import-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Bring recipes and old meal plans into Metricove")}</h2>
+					<p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Upload a JSON export prepared from Notion MCP. Review every recipe and meal before importing; new entries stay private to your account.")}</p>
 				</div>
 				{#if notionError}<Notice tone="error" message={notionError} class="mt-4" />{/if}
-				{#if notionImported}<p role="status" class="mt-4 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100">{$t('Notion import result: {imported} imported; {duplicates} duplicates skipped.', { imported: notionImported.imported, duplicates: notionImported.duplicates })}</p>{/if}
+				{#if notionImported}<p role="status" class="mt-4 rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm text-positive">{$t('Notion import result: {imported} imported; {duplicates} duplicates skipped.', { imported: notionImported.imported, duplicates: notionImported.duplicates })}</p>{/if}
 				<div class="mt-5 grid gap-5 lg:grid-cols-[minmax(18rem,0.7fr)_minmax(0,1.3fr)]">
 					<form class="space-y-3" onsubmit={previewNotionFile}>
-						<label class="block text-sm font-medium text-slate-200">{$t("Notion export JSON")} <span class="font-normal text-slate-500">{$t("(max 5 MB)")}</span>
-							<input type="file" accept=".json,application/json" onchange={(event) => { notionFile = event.currentTarget.files?.[0] ?? null; resetNotionPreview(); }} class="ui-file-input mt-2" />
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Notion export JSON")} <span class="font-normal text-ink-subtle">{$t("(max 5 MB)")}</span>
+							<input type="file" accept=".json,application/json" onchange={(event) => { notionFile = event.currentTarget.files?.[0] ?? null; resetNotionPreview(); }} class="{fileInput} mt-2" />
 						</label>
-						<button type="submit" disabled={notionLoading || !notionFile} class="min-h-11 w-full rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-100 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{$t(notionLoading ? 'Checking export…' : 'Preview Notion import')}</button>
-						<p class="text-xs leading-5 text-slate-500">{$t("Recipes need a title, instructions and ingredients with exact quantities and units. Plans need a date, meal and dish name. Unsupported or incomplete entries are flagged for review.")}</p>
+						<button type="submit" disabled={notionLoading || !notionFile} class="min-h-11 w-full rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink transition hover:border-accent-ink disabled:cursor-not-allowed disabled:opacity-50">{$t(notionLoading ? 'Checking export…' : 'Preview Notion import')}</button>
+						<p class="text-xs leading-5 text-ink-subtle">{$t("Recipes need a title, instructions and ingredients with exact quantities and units. Plans need a date, meal and dish name. Unsupported or incomplete entries are flagged for review.")}</p>
 					</form>
-					<div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4" aria-live="polite">
+					<div class="rounded-xl border border-line bg-page p-4" aria-live="polite">
 						{#if !notionPreview}
-							<p class="text-sm leading-6 text-slate-400">{$t("Choose an export file to see which entries can be added and which need review.")}</p>
+							<p class="text-sm leading-6 text-ink-muted">{$t("Choose an export file to see which entries can be added and which need review.")}</p>
 						{:else}
-							<div class="flex flex-wrap items-center gap-2 text-xs text-slate-300"><span class="rounded-full border border-cyan-300/30 px-3 py-1">{notionPreview.ready_count} {$t("ready")}</span><span class="rounded-full border border-slate-700 px-3 py-1">{notionPreview.duplicate_count} {$t("duplicates")}</span><span class="rounded-full border border-amber-300/30 px-3 py-1">{notionPreview.review_count} {$t("need review")}</span></div>
-							<ul class="mt-4 max-h-[28rem] divide-y divide-slate-800 overflow-auto rounded-lg border border-slate-800">
+							<div class="flex flex-wrap items-center gap-2 text-xs text-ink-secondary"><span class="rounded-full border border-accent-ink/30 px-3 py-1">{notionPreview.ready_count} {$t("ready")}</span><span class="rounded-full border border-line-strong px-3 py-1">{notionPreview.duplicate_count} {$t("duplicates")}</span><span class="rounded-full border border-warning/30 px-3 py-1">{notionPreview.review_count} {$t("need review")}</span></div>
+							<ul class="mt-4 max-h-[28rem] divide-y divide-line overflow-auto rounded-lg border border-line">
 								{#each notionPreview.items as item (item.type + ':' + item.source_id)}
 									<li class="flex gap-3 px-3 py-3 text-sm">
-										<input type="checkbox" checked={notionSelected.includes(item.source_id)} disabled={!item.ready || item.duplicate || notionConfirming} onchange={(event) => toggleNotionItem(item.source_id, event.currentTarget.checked)} aria-label={$t('Select {item}', { item: item.label })} class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-300 focus:ring-cyan-300 disabled:opacity-40" />
-										<div class="min-w-0 flex-1"><div class="flex flex-wrap items-baseline gap-x-2"><span class="font-medium text-slate-100">{item.label}</span><span class="text-xs text-slate-500">{$t(item.type === 'recipe' ? 'Recipe' : 'Meal plan')}{item.planned_for ? ` · ${item.planned_for}` : ''}{item.meal_type ? ` · ${$t(item.meal_type)}` : ''}{item.servings ? ` · ${item.servings} ${$t(item.servings === 1 ? 'serving' : 'servings')}` : ''}</span><span class="text-xs {item.duplicate ? 'text-slate-500' : item.ready ? 'text-cyan-200' : 'text-amber-200'}">{$t(item.duplicate ? 'Already imported' : item.ready ? 'Ready to import' : 'Review needed')}</span></div>
-											{#if item.ingredients?.length}<ul class="mt-1 space-y-0.5 text-xs text-slate-300">{#each item.ingredients as ingredient, index (`${index}-${ingredient.name}`)}<li>{ingredient.quantity || '—'} {ingredient.unit} {ingredient.name}{ingredient.note ? ` · ${ingredient.note}` : ''}</li>{/each}</ul>{/if}
-											{#if item.notes}<p class="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-300">{$t('Notes')}: {item.notes}</p>{/if}
-											{#if item.unsupported_fields?.length}<p class="mt-1 text-xs text-amber-100/80">{$t('Unsupported fields')}: {item.unsupported_fields.join(', ')}</p>{/if}
-											{#if item.warnings.length}<ul class="mt-1 list-inside list-disc text-xs leading-5 text-amber-100/80">{#each item.warnings as warning}<li>{$t(warning)}</li>{/each}</ul>{/if}</div>
+										<input type="checkbox" checked={notionSelected.includes(item.source_id)} disabled={!item.ready || item.duplicate || notionConfirming} onchange={(event) => toggleNotionItem(item.source_id, event.currentTarget.checked)} aria-label={$t('Select {item}', { item: item.label })} class="mt-0.5 h-4 w-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink disabled:opacity-40" />
+										<div class="min-w-0 flex-1"><div class="flex flex-wrap items-baseline gap-x-2"><span class="font-medium text-ink">{item.label}</span><span class="text-xs text-ink-subtle">{$t(item.type === 'recipe' ? 'Recipe' : 'Meal plan')}{item.planned_for ? ` · ${item.planned_for}` : ''}{item.meal_type ? ` · ${$t(item.meal_type)}` : ''}{item.servings ? ` · ${item.servings} ${$t(item.servings === 1 ? 'serving' : 'servings')}` : ''}</span><span class="text-xs {item.duplicate ? 'text-ink-subtle' : item.ready ? 'text-accent-ink' : 'text-warning'}">{$t(item.duplicate ? 'Already imported' : item.ready ? 'Ready to import' : 'Review needed')}</span></div>
+											{#if item.ingredients?.length}<ul class="mt-1 space-y-0.5 text-xs text-ink-secondary">{#each item.ingredients as ingredient, index (`${index}-${ingredient.name}`)}<li>{ingredient.quantity || '—'} {ingredient.unit} {ingredient.name}{ingredient.note ? ` · ${ingredient.note}` : ''}</li>{/each}</ul>{/if}
+											{#if item.notes}<p class="mt-1 whitespace-pre-wrap text-xs leading-5 text-ink-secondary">{$t('Notes')}: {item.notes}</p>{/if}
+											{#if item.unsupported_fields?.length}<p class="mt-1 text-xs text-warning/80">{$t('Unsupported fields')}: {item.unsupported_fields.join(', ')}</p>{/if}
+											{#if item.warnings.length}<ul class="mt-1 list-inside list-disc text-xs leading-5 text-warning/80">{#each item.warnings as warning}<li>{$t(warning)}</li>{/each}</ul>{/if}</div>
 										</li>
 								{/each}
 							</ul>
-							<button type="button" onclick={importNotionSelection} disabled={notionConfirming || notionSelected.length === 0} class="mt-4 min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{$t(notionConfirming ? 'Importing…' : 'Import selected entries · {count}', { count: notionSelected.length })}</button>
+							<button type="button" onclick={importNotionSelection} disabled={notionConfirming || notionSelected.length === 0} class="mt-4 min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50">{$t(notionConfirming ? 'Importing…' : 'Import selected entries · {count}', { count: notionSelected.length })}</button>
 						{/if}
 					</div>
 				</div>
@@ -553,74 +554,74 @@
 		{/if}
 		{#if importTarget === 'utilities' && canView}
 		<div class="mt-6 grid gap-5 xl:grid-cols-[minmax(18rem,0.75fr)_minmax(0,1.25fr)]">
-			<section class="h-fit rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="csv-import-heading">
-				<h2 id="csv-import-heading" class="text-lg font-semibold text-white">{$t("Utility reading CSV")}</h2>
-				<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Upload a UTF-8 CSV with a header row, then choose which columns contain the date, value and optional note. Dates use YYYY-MM-DD and values use a decimal point.")}</p>
-				<label class="mt-5 block text-sm font-medium text-slate-200">{$t("Meter")}
-					<select bind:value={meterId} onchange={resetPreview} class="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+			<section class="h-fit rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="csv-import-heading">
+				<h2 id="csv-import-heading" class="text-lg font-semibold text-ink">{$t("Utility reading CSV")}</h2>
+				<p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Upload a UTF-8 CSV with a header row, then choose which columns contain the date, value and optional note. Dates use YYYY-MM-DD and values use a decimal point.")}</p>
+				<label class="mt-5 block text-sm font-medium text-ink-secondary">{$t("Meter")}
+					<select bind:value={meterId} onchange={resetPreview} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 						{#each meters as meter (meter.id)}<option value={String(meter.id)}>{meter.name} · {meter.unit}</option>{/each}
 					</select>
 				</label>
 				{#if canImport}
 					<form class="mt-4 space-y-3" onsubmit={previewFile}>
-						<label class="block text-sm font-medium text-slate-200">{$t("CSV file")} <span class="font-normal text-slate-500">{$t("(max 10 MB, 1,000 rows)")}</span>
-							<input type="file" accept=".csv,text/csv,text/plain" onchange={(event) => { file = event.currentTarget.files?.[0] ?? null; columns = []; columnMapping = { reading_date: '', value: '', note: '' }; resetPreview(); }} class="ui-file-input mt-2" />
+						<label class="block text-sm font-medium text-ink-secondary">{$t("CSV file")} <span class="font-normal text-ink-subtle">{$t("(max 10 MB, 1,000 rows)")}</span>
+							<input type="file" accept=".csv,text/csv,text/plain" onchange={(event) => { file = event.currentTarget.files?.[0] ?? null; columns = []; columnMapping = { reading_date: '', value: '', note: '' }; resetPreview(); }} class="{fileInput} mt-2" />
 						</label>
-						<button type="submit" disabled={loading || !file} class="min-h-11 w-full rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-100 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{$t(loading ? 'Validating…' : 'Preview CSV')}</button>
+						<button type="submit" disabled={loading || !file} class="min-h-11 w-full rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink transition hover:border-accent-ink disabled:cursor-not-allowed disabled:opacity-50">{$t(loading ? 'Validating…' : 'Preview CSV')}</button>
 					</form>
 					{#if columns.length > 0}
-						<section class="mt-5 border-t border-slate-800 pt-4" aria-labelledby="column-mapping-heading">
-							<h3 id="column-mapping-heading" class="text-sm font-semibold text-slate-100">{$t("Map CSV columns")}</h3>
-							<p class="mt-1 text-xs leading-5 text-slate-400">{$t("Check the suggested columns. A note column is optional.")}</p>
+						<section class="mt-5 border-t border-line pt-4" aria-labelledby="column-mapping-heading">
+							<h3 id="column-mapping-heading" class="text-sm font-semibold text-ink">{$t("Map CSV columns")}</h3>
+							<p class="mt-1 text-xs leading-5 text-ink-muted">{$t("Check the suggested columns. A note column is optional.")}</p>
 							<div class="mt-3 space-y-3">
 								{#each [{ key: 'reading_date', label: 'Reading date' }, { key: 'value', label: 'Cumulative value' }, { key: 'note', label: 'Note (optional)' }] as field (field.key)}
-									<label class="block text-sm font-medium text-slate-200">{field.label}
-										<select bind:value={columnMapping[field.key as keyof ImportColumnMapping]} onchange={resetPreview} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20">
+									<label class="block text-sm font-medium text-ink-secondary">{field.label}
+										<select bind:value={columnMapping[field.key as keyof ImportColumnMapping]} onchange={resetPreview} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 											<option value="">{$t("Do not map")}</option>
 											{#each columns as column, index (index)}<option value={String(index)}>{column || `Column ${index + 1}`} · {index + 1}</option>{/each}
 										</select>
 									</label>
 								{/each}
-								<button type="button" onclick={previewMappedFile} disabled={loading || !mappingReady} class="min-h-11 w-full rounded-xl border border-cyan-300/40 px-4 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(loading ? 'Validating…' : 'Preview mapped rows')}</button>
+								<button type="button" onclick={previewMappedFile} disabled={loading || !mappingReady} class="min-h-11 w-full rounded-xl border border-accent-ink/40 px-4 text-sm font-semibold text-accent-ink transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(loading ? 'Validating…' : 'Preview mapped rows')}</button>
 							</div>
 						</section>
 					{/if}
 				{:else}
-					<p class="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm leading-6 text-slate-400">{$t("Import Create and Utilities Create access are required to upload readings.")}</p>
+					<p class="mt-4 rounded-xl border border-line bg-page p-3 text-sm leading-6 text-ink-muted">{$t("Import Create and Utilities Create access are required to upload readings.")}</p>
 				{/if}
 				{#if canView}
-					<a href={`/api/import/utilities/meters/${meterId}/readings.csv`} class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300">{$t("Export accessible readings")}</a>
+					<a href={`/api/import/utilities/meters/${meterId}/readings.csv`} class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Export accessible readings")}</a>
 				{/if}
-				<p class="mt-4 text-xs leading-5 text-slate-500">{$t("Exports contain only readings visible to your account. Notes that could be interpreted as spreadsheet formulas are escaped.")}</p>
+				<p class="mt-4 text-xs leading-5 text-ink-subtle">{$t("Exports contain only readings visible to your account. Notes that could be interpreted as spreadsheet formulas are escaped.")}</p>
 			</section>
 
-			<section class="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="preview-heading">
-				<div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="preview-heading" class="text-lg font-semibold text-white">{$t("Review before saving")}</h2><p class="mt-1 text-sm text-slate-400">{$t("Nothing is written until you confirm this preview.")}</p></div>
-					{#if preview}<span class="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">{preview.ready_count ?? 0} {$t("new ·")} {preview.skipped_count ?? 0} unchanged</span>{/if}
+			<section class="rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="preview-heading">
+				<div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="preview-heading" class="text-lg font-semibold text-ink">{$t("Review before saving")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Nothing is written until you confirm this preview.")}</p></div>
+					{#if preview}<span class="rounded-full border border-line-strong px-3 py-1 text-xs text-ink-secondary">{preview.ready_count ?? 0} {$t("new ·")} {preview.skipped_count ?? 0} unchanged</span>{/if}
 				</div>
 				{#if !preview}
-					<p class="mt-5 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-5 text-sm leading-6 text-slate-400">{$t("Choose a meter and CSV file, then preview the rows and validation results here.")}</p>
+					<p class="mt-5 rounded-xl border border-dashed border-line-strong bg-page p-5 text-sm leading-6 text-ink-muted">{$t("Choose a meter and CSV file, then preview the rows and validation results here.")}</p>
 				{:else}
-						<p class="mt-4 text-sm text-slate-300">{preview.total_rows ?? 0} {$t("rows checked for")} {preview.meter?.name ?? 'the selected meter'}.</p>
+						<p class="mt-4 text-sm text-ink-secondary">{preview.total_rows ?? 0} {$t("rows checked for")} {preview.meter?.name ?? 'the selected meter'}.</p>
 						{#if (preview.errors?.length ?? 0) > 0}
-							<div class="mt-4 rounded-xl border border-rose-300/25 bg-rose-300/5 p-4"><h3 class="text-sm font-semibold text-rose-100">{$t("Fix these rows and preview again")}</h3><ul class="mt-2 space-y-1 text-sm text-rose-100/80">{#each preview.errors ?? [] as rowError, index (`${rowError.row}-${index}`)}<li>{$t("Row")} {rowError.row}: {rowError.message}</li>{/each}</ul></div>
+							<div class="mt-4 rounded-xl border border-danger/25 bg-danger/5 p-4"><h3 class="text-sm font-semibold text-danger">{$t("Fix these rows and preview again")}</h3><ul class="mt-2 space-y-1 text-sm text-danger/80">{#each preview.errors ?? [] as rowError, index (`${rowError.row}-${index}`)}<li>{$t("Row")} {rowError.row}: {rowError.message}</li>{/each}</ul></div>
 					{/if}
 						{#if (preview.rows?.length ?? 0) > 0}
-							<div class="mt-4 overflow-x-auto rounded-xl border border-slate-800"><table class="w-full min-w-[35rem] text-left text-sm"><thead class="bg-slate-950/70 text-xs text-slate-400"><tr><th class="px-3 py-2.5">{$t("Row")}</th><th class="px-3 py-2.5">{$t("Date")}</th><th class="px-3 py-2.5">{$t("Value")}</th><th class="px-3 py-2.5">{$t("Note")}</th><th class="px-3 py-2.5">{$t("Result")}</th></tr></thead><tbody>{#each preview.rows?.slice(0, 25) ?? [] as row (row.row)}<tr class="border-t border-slate-800 text-slate-200"><td class="px-3 py-2.5 tabular-nums">{row.row}</td><td class="px-3 py-2.5 tabular-nums">{row.reading_date}</td><td class="px-3 py-2.5 tabular-nums">{formatMeasurement(row.value, preview.meter?.unit)} {preview.meter?.unit}</td><td class="max-w-48 truncate px-3 py-2.5">{row.note || '—'}</td><td class="px-3 py-2.5 text-xs {row.action === 'import' ? 'text-cyan-200' : row.action === 'skip' ? 'text-slate-400' : 'text-rose-200'}">{row.action === 'import' ? 'New' : row.action === 'skip' ? 'Skip' : 'Invalid'}</td></tr>{/each}</tbody></table></div>
-							{#if (preview.rows?.length ?? 0) > 25}<p class="mt-2 text-xs text-slate-500">{$t("Showing the first 25 rows of")} {preview.rows?.length}.</p>{/if}
+							<div class="mt-4 overflow-x-auto rounded-xl border border-line"><table class="w-full min-w-[35rem] text-left text-sm"><thead class="bg-page text-xs text-ink-muted"><tr><th class="px-3 py-2.5">{$t("Row")}</th><th class="px-3 py-2.5">{$t("Date")}</th><th class="px-3 py-2.5">{$t("Value")}</th><th class="px-3 py-2.5">{$t("Note")}</th><th class="px-3 py-2.5">{$t("Result")}</th></tr></thead><tbody>{#each preview.rows?.slice(0, 25) ?? [] as row (row.row)}<tr class="border-t border-line text-ink-secondary"><td class="px-3 py-2.5 tabular-nums">{row.row}</td><td class="px-3 py-2.5 tabular-nums">{row.reading_date}</td><td class="px-3 py-2.5 tabular-nums">{formatMeasurement(row.value, preview.meter?.unit)} {preview.meter?.unit}</td><td class="max-w-48 truncate px-3 py-2.5">{row.note || '—'}</td><td class="px-3 py-2.5 text-xs {row.action === 'import' ? 'text-accent-ink' : row.action === 'skip' ? 'text-ink-muted' : 'text-danger'}">{row.action === 'import' ? 'New' : row.action === 'skip' ? 'Skip' : 'Invalid'}</td></tr>{/each}</tbody></table></div>
+							{#if (preview.rows?.length ?? 0) > 25}<p class="mt-2 text-xs text-ink-subtle">{$t("Showing the first 25 rows of")} {preview.rows?.length}.</p>{/if}
 					{/if}
-						{#if canImport && preview.preview_token && (preview.errors?.length ?? 0) === 0}<button type="button" onclick={confirmImport} disabled={confirming || loading} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{confirming ? 'Importing…' : `Confirm import · ${preview.ready_count ?? 0} new readings`}</button>{/if}
+						{#if canImport && preview.preview_token && (preview.errors?.length ?? 0) === 0}<button type="button" onclick={confirmImport} disabled={confirming || loading} class="mt-5 min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50">{confirming ? 'Importing…' : `Confirm import · ${preview.ready_count ?? 0} new readings`}</button>{/if}
 				{/if}
 			</section>
 		</div>
 		{/if}
 
 		{#if importTarget === 'finance' && canViewFinance}
-			<section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:p-6" aria-labelledby="finance-import-heading">
+			<section class="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-6" aria-labelledby="finance-import-heading">
 				<div class="max-w-3xl">
-					<p class="text-sm font-medium tracking-wide text-cyan-200">{$t("Finance import")}</p>
-					<h2 id="finance-import-heading" class="mt-1 text-xl font-semibold text-white">{$t("Bring bank transactions into Finance")}</h2>
-					<p class="mt-2 text-sm leading-6 text-slate-400">{$t("Preview CSV or CAMT.053 statements before saving. CSV amounts use a decimal point or comma without thousands separators: positive values are expenses and negative values are income. New transactions remain private to your account.")}</p>
+					<p class="text-sm font-medium tracking-wide text-accent-ink">{$t("Finance import")}</p>
+					<h2 id="finance-import-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Bring bank transactions into Finance")}</h2>
+					<p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Preview CSV or CAMT.053 statements before saving. CSV amounts use a decimal point or comma without thousands separators: positive values are expenses and negative values are income. New transactions remain private to your account.")}</p>
 				</div>
 				{#if financeError}<Notice tone="error" message={financeError} class="mt-4" />{/if}
 				{#if financeMessage}<Notice tone="success" message={financeMessage} class="mt-4" />{/if}
@@ -628,51 +629,51 @@
 					<div class="mt-5 grid gap-5 lg:grid-cols-[minmax(18rem,0.75fr)_minmax(0,1.25fr)]">
 						<div class="space-y-4">
 							<form class="space-y-3" onsubmit={previewFinanceFile}>
-								<label class="block text-sm font-medium text-slate-200">{$t("Finance statement file")} <span class="font-normal text-slate-500">{$t("(CSV or CAMT.053 XML · max 10 MB / 1,000 transactions)")}</span>
-									<input type="file" accept=".csv,.xml,.camt,.053,text/csv,text/plain,application/xml,text/xml" onchange={(event) => { financeFile = event.currentTarget.files?.[0] ?? null; financeColumns = []; financeMapping = { occurred_on: '', description: '', amount: '', currency: '', payee: '', category: '' }; resetFinancePreview(); }} class="ui-file-input mt-2" />
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Finance statement file")} <span class="font-normal text-ink-subtle">{$t("(CSV or CAMT.053 XML · max 10 MB / 1,000 transactions)")}</span>
+									<input type="file" accept=".csv,.xml,.camt,.053,text/csv,text/plain,application/xml,text/xml" onchange={(event) => { financeFile = event.currentTarget.files?.[0] ?? null; financeColumns = []; financeMapping = { occurred_on: '', description: '', amount: '', currency: '', payee: '', category: '' }; resetFinancePreview(); }} class="{fileInput} mt-2" />
 								</label>
-								<button type="submit" disabled={financeLoading || !financeFile} class="min-h-11 w-full rounded-xl border border-slate-700 px-4 text-sm font-semibold text-slate-100 transition hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Validating…' : 'Inspect or preview statement')}</button>
+								<button type="submit" disabled={financeLoading || !financeFile} class="min-h-11 w-full rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink transition hover:border-accent-ink disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Validating…' : 'Inspect or preview statement')}</button>
 							</form>
 							{#if financeCategories.length > 0}
-								<div class="space-y-3 border-t border-slate-800 pt-4">
-									<p class="text-sm font-semibold text-slate-100">{$t("Default categories when a row has no category")}</p>
-									<label class="block text-sm font-medium text-slate-200">{$t("Expense category")}
-										<select bind:value={expenseCategoryId} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose an expense category")}</option>{#each financeCategories.filter((category) => category.type === 'expense') as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select>
+								<div class="space-y-3 border-t border-line pt-4">
+									<p class="text-sm font-semibold text-ink">{$t("Default categories when a row has no category")}</p>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Expense category")}
+										<select bind:value={expenseCategoryId} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="">{$t("Choose an expense category")}</option>{#each financeCategories.filter((category) => category.type === 'expense') as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select>
 									</label>
-									<label class="block text-sm font-medium text-slate-200">{$t("Income category")}
-										<select bind:value={incomeCategoryId} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t("Choose an income category")}</option>{#each financeCategories.filter((category) => category.type === 'income') as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Income category")}
+										<select bind:value={incomeCategoryId} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="">{$t("Choose an income category")}</option>{#each financeCategories.filter((category) => category.type === 'income') as category (category.id)}<option value={String(category.id)}>{category.name}</option>{/each}</select>
 									</label>
 								</div>
 							{/if}
 							{#if financeColumns.length > 0}
-								<section class="border-t border-slate-800 pt-4" aria-labelledby="finance-column-mapping-heading">
-									<h3 id="finance-column-mapping-heading" class="text-sm font-semibold text-slate-100">{$t("Map CSV columns")}</h3>
-									<p class="mt-1 text-xs leading-5 text-slate-400">{$t("Required: date, description, amount and currency. Payee and category are optional.")}</p>
+								<section class="border-t border-line pt-4" aria-labelledby="finance-column-mapping-heading">
+									<h3 id="finance-column-mapping-heading" class="text-sm font-semibold text-ink">{$t("Map CSV columns")}</h3>
+									<p class="mt-1 text-xs leading-5 text-ink-muted">{$t("Required: date, description, amount and currency. Payee and category are optional.")}</p>
 									<div class="mt-3 space-y-3">
 										{#each [{ key: 'occurred_on', label: 'Transaction date', required: true }, { key: 'description', label: 'Description', required: true }, { key: 'amount', label: 'Signed amount', required: true }, { key: 'currency', label: 'Currency', required: true }, { key: 'payee', label: 'Payee (optional)', required: false }, { key: 'category', label: 'Category (optional)', required: false }] as field (field.key)}
-											<label class="block text-sm font-medium text-slate-200">{$t(field.label)}
-												<select bind:value={financeMapping[field.key as keyof FinanceImportColumnMapping]} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-white focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"><option value="">{$t(field.required ? 'Choose a column' : 'Do not map')}</option>{#each financeColumns as column, index (index)}<option value={String(index)}>{column || `Column ${index + 1}`} · {index + 1}</option>{/each}</select>
+											<label class="block text-sm font-medium text-ink-secondary">{$t(field.label)}
+												<select bind:value={financeMapping[field.key as keyof FinanceImportColumnMapping]} onchange={resetFinancePreview} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="">{$t(field.required ? 'Choose a column' : 'Do not map')}</option>{#each financeColumns as column, index (index)}<option value={String(index)}>{column || `Column ${index + 1}`} · {index + 1}</option>{/each}</select>
 											</label>
 										{/each}
-										<button type="button" onclick={previewMappedFinanceFile} disabled={financeLoading || !financeMappingReady} class="min-h-11 w-full rounded-xl border border-cyan-300/40 px-4 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Validating…' : 'Preview mapped transactions')}</button>
+										<button type="button" onclick={previewMappedFinanceFile} disabled={financeLoading || !financeMappingReady} class="min-h-11 w-full rounded-xl border border-accent-ink/40 px-4 text-sm font-semibold text-accent-ink transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Validating…' : 'Preview mapped transactions')}</button>
 									</div>
 								</section>
 							{/if}
 						</div>
-						<div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4" aria-live="polite">
+						<div class="rounded-xl border border-line bg-page p-4" aria-live="polite">
 							{#if !financePreview}
-								<p class="text-sm leading-6 text-slate-400">{$t("Choose a statement file, inspect its columns if it is CSV, then review the rows here before saving.")}</p>
+								<p class="text-sm leading-6 text-ink-muted">{$t("Choose a statement file, inspect its columns if it is CSV, then review the rows here before saving.")}</p>
 							{:else}
-								<div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-base font-semibold text-white">{$t("Review before saving")}</h3><p class="mt-1 text-sm text-slate-400">{financePreview.total_rows ?? 0} {$t("transactions checked")} · {financePreview.format === 'camt.053' ? 'CAMT.053' : 'CSV'}</p></div><span class="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">{financePreview.ready_count ?? 0} {$t("new ·")} {financePreview.skipped_count ?? 0} {$t("duplicates")}</span></div>
-								{#if (financePreview.errors?.length ?? 0) > 0}<div class="mt-4 rounded-xl border border-rose-300/25 bg-rose-300/5 p-4"><h4 class="text-sm font-semibold text-rose-100">{$t("Review these rows before importing")}</h4><ul class="mt-2 space-y-1 text-sm text-rose-100/80">{#each financePreview.errors ?? [] as rowError, index (`${rowError.row}-${index}`)}<li>{$t("Row")} {rowError.row}: {rowError.message}</li>{/each}</ul></div>{/if}
-								{#if (financePreview.rows?.length ?? 0) > 0}<div class="mt-4 max-h-[32rem] overflow-auto rounded-xl border border-slate-800"><table class="w-full min-w-[54rem] text-left text-sm"><thead class="bg-slate-950/70 text-xs text-slate-400"><tr><th class="px-3 py-2.5">{$t("Select")}</th><th class="px-3 py-2.5">{$t("Date")}</th><th class="px-3 py-2.5">{$t("Description")}</th><th class="px-3 py-2.5">{$t("Payee")}</th><th class="px-3 py-2.5">{$t("Type")}</th><th class="px-3 py-2.5">{$t("Amount")}</th><th class="px-3 py-2.5">{$t("Category")}</th><th class="px-3 py-2.5">{$t("Result")}</th></tr></thead><tbody>{#each financePreview.rows ?? [] as row (row.row)}<tr class="border-t border-slate-800 text-slate-200"><td class="px-3 py-2.5">{#if row.action === 'import' || row.action === 'omit'}<input type="checkbox" checked={financeSelectedRows.includes(row.row)} onchange={(event) => toggleFinanceRow(row, event.currentTarget.checked)} aria-label={$t('Select transaction row {row}', { row: row.row })} class="h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-300 focus:ring-cyan-300" />{:else}<span aria-label={$t('Not selectable')}>—</span>{/if}</td><td class="whitespace-nowrap px-3 py-2.5 tabular-nums">{row.occurred_on}</td><td class="max-w-56 truncate px-3 py-2.5" title={row.description}>{row.description}</td><td class="max-w-48 truncate px-3 py-2.5" title={row.payee ?? ''}>{row.payee ?? '—'}</td><td class="px-3 py-2.5">{$t(row.type === 'expense' ? 'Expense' : 'Income')}</td><td class="whitespace-nowrap px-3 py-2.5 tabular-nums">{row.amount} {row.currency}</td><td class="px-3 py-2.5">{row.category?.name ?? '—'}</td><td class="px-3 py-2.5 text-xs {row.action === 'import' ? 'text-cyan-200' : row.action === 'skip' || row.action === 'omit' ? 'text-slate-400' : 'text-rose-200'}">{$t(row.action === 'import' ? 'Selected' : row.action === 'omit' ? 'Not selected' : row.action === 'skip' ? 'Duplicate' : 'Invalid')}</td></tr>{/each}</tbody></table></div>{/if}
-								{#if !financePreview.preview_token && financeSelectionInitialized}<button type="button" onclick={updateFinanceSelection} disabled={financeLoading || financeConfirming} class="mt-5 min-h-11 rounded-xl border border-cyan-300/40 px-5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Updating preview…' : 'Update selected rows')}</button>{/if}
-								{#if financePreview.preview_token && (financePreview.ready_count ?? 0) > 0}<button type="button" onclick={confirmFinanceImport} disabled={financeConfirming || financeLoading} class="mt-5 min-h-11 rounded-xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{financeConfirming ? 'Importing…' : $t('Confirm import · {count} selected transactions', { count: financePreview.ready_count ?? 0 })}</button>{/if}
+								<div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="text-base font-semibold text-ink">{$t("Review before saving")}</h3><p class="mt-1 text-sm text-ink-muted">{financePreview.total_rows ?? 0} {$t("transactions checked")} · {financePreview.format === 'camt.053' ? 'CAMT.053' : 'CSV'}</p></div><span class="rounded-full border border-line-strong px-3 py-1 text-xs text-ink-secondary">{financePreview.ready_count ?? 0} {$t("new ·")} {financePreview.skipped_count ?? 0} {$t("duplicates")}</span></div>
+								{#if (financePreview.errors?.length ?? 0) > 0}<div class="mt-4 rounded-xl border border-danger/25 bg-danger/5 p-4"><h4 class="text-sm font-semibold text-danger">{$t("Review these rows before importing")}</h4><ul class="mt-2 space-y-1 text-sm text-danger/80">{#each financePreview.errors ?? [] as rowError, index (`${rowError.row}-${index}`)}<li>{$t("Row")} {rowError.row}: {rowError.message}</li>{/each}</ul></div>{/if}
+								{#if (financePreview.rows?.length ?? 0) > 0}<div class="mt-4 max-h-[32rem] overflow-auto rounded-xl border border-line"><table class="w-full min-w-[54rem] text-left text-sm"><thead class="bg-page text-xs text-ink-muted"><tr><th class="px-3 py-2.5">{$t("Select")}</th><th class="px-3 py-2.5">{$t("Date")}</th><th class="px-3 py-2.5">{$t("Description")}</th><th class="px-3 py-2.5">{$t("Payee")}</th><th class="px-3 py-2.5">{$t("Type")}</th><th class="px-3 py-2.5">{$t("Amount")}</th><th class="px-3 py-2.5">{$t("Category")}</th><th class="px-3 py-2.5">{$t("Result")}</th></tr></thead><tbody>{#each financePreview.rows ?? [] as row (row.row)}<tr class="border-t border-line text-ink-secondary"><td class="px-3 py-2.5">{#if row.action === 'import' || row.action === 'omit'}<input type="checkbox" checked={financeSelectedRows.includes(row.row)} onchange={(event) => toggleFinanceRow(row, event.currentTarget.checked)} aria-label={$t('Select transaction row {row}', { row: row.row })} class="h-4 w-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{:else}<span aria-label={$t('Not selectable')}>—</span>{/if}</td><td class="whitespace-nowrap px-3 py-2.5 tabular-nums">{row.occurred_on}</td><td class="max-w-56 truncate px-3 py-2.5" title={row.description}>{row.description}</td><td class="max-w-48 truncate px-3 py-2.5" title={row.payee ?? ''}>{row.payee ?? '—'}</td><td class="px-3 py-2.5">{$t(row.type === 'expense' ? 'Expense' : 'Income')}</td><td class="whitespace-nowrap px-3 py-2.5 tabular-nums">{row.amount} {row.currency}</td><td class="px-3 py-2.5">{row.category?.name ?? '—'}</td><td class="px-3 py-2.5 text-xs {row.action === 'import' ? 'text-accent-ink' : row.action === 'skip' || row.action === 'omit' ? 'text-ink-muted' : 'text-danger'}">{$t(row.action === 'import' ? 'Selected' : row.action === 'omit' ? 'Not selected' : row.action === 'skip' ? 'Duplicate' : 'Invalid')}</td></tr>{/each}</tbody></table></div>{/if}
+								{#if !financePreview.preview_token && financeSelectionInitialized}<button type="button" onclick={updateFinanceSelection} disabled={financeLoading || financeConfirming} class="mt-5 min-h-11 rounded-xl border border-accent-ink/40 px-5 text-sm font-semibold text-accent-ink transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(financeLoading ? 'Updating preview…' : 'Update selected rows')}</button>{/if}
+								{#if financePreview.preview_token && (financePreview.ready_count ?? 0) > 0}<button type="button" onclick={confirmFinanceImport} disabled={financeConfirming || financeLoading} class="mt-5 min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50">{financeConfirming ? 'Importing…' : $t('Confirm import · {count} selected transactions', { count: financePreview.ready_count ?? 0 })}</button>{/if}
 							{/if}
 						</div>
 					</div>
 				{:else}
-					<p class="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm leading-6 text-slate-400">{$t("Import Create and Finance View and Create access are required to upload bank statements.")}</p>
+					<p class="mt-4 rounded-xl border border-line bg-page p-3 text-sm leading-6 text-ink-muted">{$t("Import Create and Finance View and Create access are required to upload bank statements.")}</p>
 				{/if}
 			</section>
 		{/if}

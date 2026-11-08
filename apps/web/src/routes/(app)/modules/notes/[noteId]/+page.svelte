@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -111,27 +112,27 @@
 	{#if error && note}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<p class="ui-panel ui-panel--medium text-sm text-[var(--text-muted)]" role="status">{$t('Loading note…')}</p>
+		<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading note…')}</p>
 	{:else if !canView}
-		<Panel><h1 class="text-lg font-semibold">{$t('Notes are not available')}</h1><p class="mt-2 text-sm leading-6 text-[var(--text-muted)]">{$t('Ask a household administrator to enable Notes and grant your account View access.')}</p></Panel>
+		<Panel><h1 class="text-lg font-semibold">{$t('Notes are not available')}</h1><p class="mt-2 text-sm leading-6 text-ink-muted">{$t('Ask a household administrator to enable Notes and grant your account View access.')}</p></Panel>
 	{:else if !note}
 		<Panel>
 			<h1 class="text-xl font-semibold">{$t('Note unavailable')}</h1>
-			<p class="mt-2 text-sm leading-6 text-[var(--text-muted)]">{$t(error || 'This note is unavailable to your account.')}</p>
+			<p class="mt-2 text-sm leading-6 text-ink-muted">{$t(error || 'This note is unavailable to your account.')}</p>
 			<Button href="/modules/notes" variant="secondary" class="mt-5">{$t('All notes')}</Button>
 		</Panel>
 	{:else}
-		<header class="ui-page-heading">
+		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
 			<div class="min-w-0">
-				<p class="ui-eyebrow">{$t(note.shared_with_household ? 'Shared with household' : 'Private note')}{#if note.archived_at} · {$t('Archived')}{/if}</p>
-				<h1 class="break-words">{note.title}</h1>
-				<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
+				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{$t(note.shared_with_household ? 'Shared with household' : 'Private note')}{#if note.archived_at} · {$t('Archived')}{/if}</p>
+				<h1 class="mt-2 break-words text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.16] font-[650] tracking-[-0.03em] text-ink">{note.title}</h1>
+				<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-muted">
 					{#if note.folder}<span>{$t('Folder')}: {note.folder.name}</span>{/if}
 					{#if note.updated_at}<span>{$t('Updated')} {formatDateTime(note.updated_at)}</span>{/if}
 					{#each note.tags as tag (tag.id)}<Badge>{tag.name}</Badge>{/each}
 				</div>
 			</div>
-			<div class="ui-page-heading-actions">
+			<div class="flex items-center gap-3 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-auto">
 				{#if note.is_owner && note.can_edit}
 					<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
 					<Button variant="secondary" onclick={() => void archiveNote(note!, !note!.archived_at)}>{$t(note.archived_at ? 'Restore' : 'Archive')}</Button>
@@ -144,7 +145,7 @@
 		{#if !note.is_owner}<Notice tone="info" message="This note is shared for reading. Only its owner can edit it." />{/if}
 
 		<Panel padding="large">
-			{#if note.markdown_html}<article class="prose max-w-none overflow-x-auto text-sm leading-7">{@html note.markdown_html}</article>{:else}<p class="text-sm text-[var(--text-muted)]">{$t('No preview text.')}</p>{/if}
+			{#if note.markdown_html}<article class="prose max-w-none overflow-x-auto text-sm leading-7">{@html note.markdown_html}</article>{:else}<p class="text-sm text-ink-muted">{$t('No preview text.')}</p>{/if}
 		</Panel>
 
 		{#if note.can_edit}<NoteEditor bind:open={editorOpen} {note} {folders} onSaved={(saved) => noteSaved(saved)} />{/if}

@@ -25,26 +25,26 @@ afterEach(() => setUserPreferences({ language: 'en' }));
 describe('Modal', () => {
 	it('keeps the compact default size and names the dialog by its visible title', () => {
 		const { body } = render(Modal, { props: { title: 'Rename list', children: text('Body') } });
-		expect(body).toContain('ui-modal--default');
-		expect(body).not.toContain('ui-modal--fullscreen');
+		expect(body).toContain('data-size="default"');
+		expect(body).not.toContain('data-size="fullscreen"');
 		const labelledBy = body.match(/aria-labelledby="([^"]+)"/)?.[1];
 		expect(labelledBy).toBeTruthy();
 		expect(body).toContain(`id="${labelledBy}"`);
 		expect(body).not.toContain('aria-describedby');
-		expect(body).not.toContain('ui-modal-footer');
+		expect(body).not.toContain('<footer');
 	});
 
 	it('renders the fullscreen variant with a scrolling body, description and sticky footer', () => {
 		const { body } = render(Modal, {
 			props: { title: 'Edit recipe', description: 'Tomato soup', size: 'fullscreen', children: text('Fields'), footer: text('Save') }
 		});
-		expect(body).toContain('ui-modal--fullscreen');
-		expect(body).toContain('class="ui-modal-content"');
+		expect(body).toContain('data-size="fullscreen"');
+		expect(body).toContain('overflow-y-auto overscroll-contain');
 		const describedBy = body.match(/aria-describedby="([^"]+)"/)?.[1];
 		expect(describedBy).toBeTruthy();
 		expect(body).toContain(`id="${describedBy}"`);
-		const content = body.indexOf('ui-modal-content');
-		const footer = body.indexOf('ui-modal-footer');
+		const content = body.indexOf('overscroll-contain');
+		const footer = body.indexOf('<footer');
 		expect(footer).toBeGreaterThan(content);
 		expect(body.slice(footer)).toContain('<span>Save</span>');
 	});
