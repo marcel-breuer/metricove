@@ -145,6 +145,14 @@ class VehiclesController extends Controller
         ], 201);
     }
 
+    public function updateCost(StoreVehicleCostRequest $request, int $cost, VehicleService $vehicles): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Vehicle cost updated.',
+            'cost' => $vehicles->updateCost($this->actor($request), $cost, $request->validated()),
+        ]);
+    }
+
     public function destroyMaintenance(Request $request, int $record, VehicleService $vehicles): JsonResponse
     {
         $vehicles->deleteRecord($this->actor($request), 'maintenance', $record);

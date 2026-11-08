@@ -40,6 +40,7 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	let maintenanceModalOpen = $state(false);
 	let insuranceModalOpen = $state(false);
 	let costModalOpen = $state(false);
+	let editingCostId = $state<number | null>(null);
 	let error = $state('');
 	let message = $state('');
 	let deleteTarget = $state<{ id: number; type: 'odometer' | 'maintenance' | 'insurance' | 'costs' } | null>(null);
@@ -323,9 +324,53 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	}
 
 	async function saveCost(event: SubmitEvent): Promise<void> {
-		event.preventDefault(); if (!vehicle || !canCreate) return;
+		event.preventDefault(); if (!vehicle || (!editingCostId && !canCreate)) return;
 		const payload = { category: costCategory, amount: canonicalizeDecimalInput(costAmount, $numberLocale), currency: costCurrency, period_start: costPeriodStart, period_end: costPeriodEnd || null, period: costPeriod, description: costDescription, fuel_liters: costCategory === 'fuel' && costFuelLiters ? canonicalizeDecimalInput(costFuelLiters, $numberLocale) : null, fuel_unit_price: costCategory === 'fuel' && costFuelUnitPrice ? canonicalizeDecimalInput(costFuelUnitPrice, $numberLocale) : null, fuel_odometer_value: costCategory === 'fuel' && costFuelOdometer ? canonicalizeDecimalInput(costFuelOdometer, $numberLocale) : null };
-		await createRecord('costs', payload, () => { costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; });
+		const reset = () => { costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costCurrency = $defaultCurrency; costCategory = 'fuel'; };
+		if (!editingCostId) {
+			await createRecord('costs', payload, reset);
+			return;
+		}
+		if (!canEdit) return;
+		message = ''; error = '';
+		const token = tokenOrError(); if (!token) return;
+		saving = true;
+		try {
+			const response = await fetch(`/api/vehicles/costs/${editingCostId}`, {
+				method: 'PATCH', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+				body: JSON.stringify(payload)
+			});
+			const result = (await response.json()) as VehicleResponse & ApiResponse;
+			if (response.status === 401) { await goto('/login'); return; }
+			if (!response.ok) { error = firstError(result) || result.message || 'The vehicle cost could not be saved.'; return; }
+			reset(); editingCostId = null; costModalOpen = false; message = 'Vehicle cost updated.'; await loadVehicle();
+		} catch { error = 'The vehicle cost could not be saved. Check your connection and try again.'; }
+		finally { saving = false; }
+	}
+
+	function editCost(cost: VehicleCost): void {
+		if (!cost.can_edit) return;
+		editingCostId = cost.id;
+		costCategory = cost.category;
+		costAmount = formatDecimalInput(cost.amount, $numberLocale);
+		costCurrency = cost.currency;
+		costPeriodStart = cost.period_start;
+		costPeriodEnd = cost.period_end ?? '';
+		costPeriod = cost.period;
+		costDescription = cost.description ?? '';
+		costFuelLiters = cost.fuel_liters ? formatDecimalInput(cost.fuel_liters, $numberLocale) : '';
+		costFuelUnitPrice = cost.fuel_unit_price ? formatDecimalInput(cost.fuel_unit_price, $numberLocale) : '';
+		costFuelOdometer = cost.fuel_odometer_value ? formatDecimalInput(cost.fuel_odometer_value, $numberLocale) : '';
+		message = ''; error = ''; costModalOpen = true;
+	}
+
+	function beginCreateCost(): void {
+		editingCostId = null;
+		costCategory = 'fuel'; costAmount = ''; costCurrency = $defaultCurrency;
+		costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = '';
+		costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costDescription = '';
+		message = ''; error = ''; costModalOpen = true;
 	}
 
 	async function createRecord(kind: 'maintenance' | 'insurance' | 'costs', payload: Record<string, unknown>, reset: () => void): Promise<void> {
@@ -376,7 +421,7 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 						<Button type="button" onclick={() => (odometerModalOpen = true)} class="w-full text-center">{$t("Record mileage")}</Button>
 						<Button type="button" variant="secondary" onclick={() => (maintenanceModalOpen = true)} class="w-full text-center">{$t("Add service record")}</Button>
 						<Button type="button" variant="secondary" onclick={() => (insuranceModalOpen = true)} class="w-full text-center">{$t("Add insurance policy")}</Button>
-						<Button type="button" variant="secondary" onclick={() => (costModalOpen = true)} class="w-full text-center">{$t("Add vehicle cost")}</Button>
+						<Button type="button" variant="secondary" onclick={beginCreateCost} class="w-full text-center">{$t("Add vehicle cost")}</Button>
 					</div>
 				</nav>
 			{/if}
@@ -476,7 +521,7 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 				{/snippet}
 			</Modal>{/if}<ol class="mt-4 space-y-3">{#each insurancePolicies as policy (policy.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold text-ink">{policy.provider}</p><span class="rounded-full border border-line-strong px-2 py-0.5 text-xs capitalize text-ink-muted">{policy.status}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{policy.coverage_type} · {formatDate(policy.valid_from)} — {formatDate(policy.valid_until)}</p>{#if policy.note}<p class="mt-2 text-sm text-ink-muted">{policy.note}</p>{/if}{#if policy.can_edit}<button type="button" onclick={() => { deleteTarget = { id: policy.id, type: 'insurance' }; deleteOpen = true; }} class="mt-3 rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No insurance records yet.")}</li>{/each}</ol>{#if moreHistory.insurance}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('insurance')} disabled={loadingHistory.insurance}>{$t(loadingHistory.insurance ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>
 
-			<section aria-labelledby="costs-heading"><div><p class="text-sm font-medium text-accent-ink">{$t("Ownership")}</p><h2 id="costs-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Costs")}</h2></div>{#if canCreate}<Modal bind:open={costModalOpen} size="wide" title={$t("Add vehicle cost")}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}<form id="vehicle-cost-form" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6" onsubmit={saveCost}>
+			<section aria-labelledby="costs-heading"><div><p class="text-sm font-medium text-accent-ink">{$t("Ownership")}</p><h2 id="costs-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Costs")}</h2></div>{#if canCreate || editingCostId}<Modal bind:open={costModalOpen} size="wide" title={$t(editingCostId ? "Edit vehicle cost" : "Add vehicle cost")}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}<form id="vehicle-cost-form" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6" onsubmit={saveCost}>
 					<label class="block text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Category")}<select bind:value={costCategory} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-control px-3 text-sm text-ink max-sm:text-base">{#each vehicleCostCategories as category}<option value={category.value}>{$t(category.label)}</option>{/each}</select></label>
 					{#if costCategory === 'fuel'}<fieldset class="min-w-0 rounded-xl border border-line bg-surface-subtle p-4 sm:col-span-2 lg:col-span-4"><legend class="px-1 text-sm font-medium text-ink-secondary">{$t("Fuel details")}</legend><p class="mb-3 text-sm leading-5 text-ink-muted">{$t("Fuel quantity and price must be entered together, or left blank.")}</p><div class="grid gap-3 sm:grid-cols-3"><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Fuel quantity (liters)")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelLiters} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Price per liter")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional pair")}</span><input bind:value={costFuelUnitPrice} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label><label class="block min-w-0 text-sm font-medium text-ink-secondary">{$t("Odometer reading")}<span class="mt-1 block text-xs font-normal text-ink-muted">{$t("Optional")}</span><input bind:value={costFuelOdometer} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label></div></fieldset>{/if}
 					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-2">{$t("Amount")}<input bind:value={costAmount} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" placeholder={formatDecimalInput('125.00', $numberLocale)} /></label>
@@ -487,9 +532,9 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 					<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-6">{$t("Description")}<textarea bind:value={costDescription} maxlength="500" rows="3" class="mt-2 w-full rounded-[10px] border border-control-line bg-control px-3 py-2.5 text-sm text-ink max-sm:text-base" placeholder={$t("Service invoice, fuel stop…")}></textarea></label>
 				</form>				{#snippet footer()}
 					<Button variant="secondary" type="button" onclick={() => (costModalOpen = false)}>{$t('Cancel')}</Button>
-					<Button type="submit" form="vehicle-cost-form" disabled={saving}>{$t("Save cost")}</Button>
+					<Button type="submit" form="vehicle-cost-form" disabled={saving}>{$t(editingCostId ? "Update cost" : "Save cost")}</Button>
 				{/snippet}
-			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.can_edit}<button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="mt-3 rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
+			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.can_edit}<div class="mt-3 flex flex-wrap gap-2"><Button type="button" size="small" variant="secondary" onclick={() => editCost(cost)}>{$t("Edit")}</Button><button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
 	</section>
 	{#if deleteTarget}<ConfirmModal bind:open={deleteOpen} title={$t("Delete vehicle record?")} message={$t(deleteTarget.type === 'odometer' ? 'Delete this odometer reading and its correction history? The timeline will be recalculated.' : 'Delete this vehicle record?')} busy={deleting} onConfirm={() => void deleteRecord()} />{/if}
 {:else}
