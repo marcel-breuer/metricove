@@ -2,20 +2,17 @@
 
 namespace App\Services\Mcp;
 
-use Dedoc\Scramble\CacheableGenerator;
-use Dedoc\Scramble\Scramble;
+use Illuminate\Support\Facades\Storage;
 use Mcp\Schema\Content\TextResourceContents;
+use Symfony\Component\Yaml\Yaml;
 
 class McpApiReference
 {
     public const URI = 'metricove://api/http/openapi.json';
 
-    public function __construct(private readonly CacheableGenerator $generator) {}
-
     public function read(): TextResourceContents
     {
-        $config = Scramble::getGeneratorConfig('default');
-        $specification = $this->generator->generate($config)->spec($config->openApiVersion());
+        $specification = $this->document();
 
         return new TextResourceContents(
             uri: self::URI,
@@ -25,5 +22,18 @@ class McpApiReference
                 JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
             ),
         );
+    }
+
+    public function document(): array
+    {
+        $path = Storage::disk('local')->path('scribe/openapi.yaml');
+
+        abort_unless(is_file($path), 503, 'The HTTP API reference is not available yet.');
+
+        $document = Yaml::parseFile($path, Yaml::PARSE_EXCEPTION_ON_INVALID_TYPE);
+
+        abort_unless(is_array($document), 503, 'The HTTP API reference could not be read.');
+
+        return $document;
     }
 }
