@@ -10,13 +10,67 @@ use App\Models\TrackerEntry;
 use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
 use App\Services\Modules\ModuleManagementService;
+use App\Services\Receipts\LocalReceiptOcr;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TrackingModuleTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_tracker_entry_attachments_are_private_and_ocr_suggestions_require_member_review(): void
+    {
+        Storage::fake('local');
+        $owner = $this->admin();
+        $other = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($other, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        app(ModuleManagementService::class)->setEnabled($owner, 'tracking', true);
+        app()->instance(LocalReceiptOcr::class, new class extends LocalReceiptOcr
+        {
+            public function extract(UploadedFile $file): string
+            {
+                return "Rechnungsdatum: 10.11.2026\nGesamtbetrag: 42,50 EUR\nAnbieter Beispiel GmbH";
+            }
+        });
+
+        $tracker = $this->actingAs($owner, 'web')->postJson('/api/tracking/trackers', [
+            'name' => 'Monthly costs',
+            'visibility' => 'private',
+            'fields' => [
+                ['label' => 'Cost', 'type' => 'number', 'unit' => 'EUR', 'is_required' => true],
+                ['label' => 'Invoice date', 'type' => 'date', 'is_required' => false],
+                ['label' => 'Merchant', 'type' => 'text', 'is_required' => false],
+            ],
+        ])->assertCreated()->json('tracker');
+        $fields = collect($tracker['fields'])->keyBy('label');
+        $file = UploadedFile::fake()->create('invoice.pdf', 12, 'application/pdf');
+
+        $this->actingAs($owner, 'web')->post('/api/tracking/trackers/'.$tracker['id'].'/entries/attachment-preview', ['file' => $file], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('available', true)
+            ->assertJsonPath('suggestions.'.$fields['Cost']['key'], '42.50')
+            ->assertJsonPath('suggestions.'.$fields['Invoice date']['key'], '2026-11-10');
+
+        $entry = $this->actingAs($owner, 'web')->post('/api/tracking/trackers/'.$tracker['id'].'/entries', [
+            'schema_version' => 1,
+            'recorded_at' => '2026-11-10T09:00:00Z',
+            'values' => json_encode([$fields['Cost']['key'] => '42.50'], JSON_THROW_ON_ERROR),
+            'attachment' => UploadedFile::fake()->create('invoice.pdf', 12, 'application/pdf'),
+        ], ['Accept' => 'application/json'])->assertCreated()
+            ->assertJsonPath('entry.attachment.name', 'invoice.pdf')
+            ->assertJsonPath('entry.values.0.value', '42.500000');
+
+        $entryId = $entry->json('entry.id');
+        $this->actingAs($owner, 'web')->get('/api/tracking/entries/'.$entryId.'/attachment')->assertOk();
+        $this->actingAs($other, 'web')->getJson('/api/tracking/entries/'.$entryId.'/attachment')->assertNotFound();
+        $this->actingAs($owner, 'web')->deleteJson('/api/tracking/entries/'.$entryId)->assertOk();
+        $this->assertDatabaseMissing('tracker_entries', ['id' => $entryId]);
+        $this->assertSame([], Storage::disk('local')->allFiles('tracking-attachments'));
+    }
 
     public function test_tracker_schema_revisions_keep_decimal_measurement_history_compatible(): void
     {

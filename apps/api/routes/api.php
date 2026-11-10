@@ -122,6 +122,14 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:tracking,create')
                 ->whereNumber('tracker')
                 ->name('entries.store');
+            Route::post('/trackers/{tracker}/entries/attachment-preview', [TrackingController::class, 'previewEntryAttachment'])
+                ->middleware('module.access:tracking,create')
+                ->whereNumber('tracker')
+                ->name('entries.attachment-preview');
+            Route::get('/entries/{entry}/attachment', [TrackingController::class, 'entryAttachment'])
+                ->middleware('module.access:tracking,view')
+                ->whereNumber('entry')
+                ->name('entries.attachment');
             Route::patch('/entries/{entry}', [TrackingController::class, 'updateEntry'])
                 ->middleware('module.access:tracking,edit')
                 ->whereNumber('entry')

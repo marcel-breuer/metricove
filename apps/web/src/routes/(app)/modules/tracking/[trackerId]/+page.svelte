@@ -48,6 +48,9 @@
 	let message = $state('');
 	let recordedAt = $state(localDateTime());
 	let note = $state('');
+	let attachmentFile = $state<File | null>(null);
+	let previewingAttachment = $state(false);
+	let attachmentNotice = $state('');
 	let entryValues = $state<Record<string, string>>({});
 	let booleanValues = $state<Record<string, boolean>>({});
 	let schemaName = $state('');
@@ -152,6 +155,8 @@
 		editingEntryId = null;
 		recordedAt = localDateTime();
 		note = '';
+		attachmentFile = null;
+		attachmentNotice = '';
 		entryValues = {};
 		booleanValues = {};
 	}
@@ -197,18 +202,20 @@
 		savingEntry = true;
 		try {
 			const updating = editingEntryId !== null;
+			const formData = new FormData();
+			formData.set('schema_version', String(tracker.schema_version));
+			formData.set('recorded_at', new Date(recordedAt).toISOString());
+			formData.set('note', note);
+			formData.set('values', JSON.stringify(values));
+			if (attachmentFile) formData.set('attachment', attachmentFile);
+			if (updating) formData.set('_method', 'PATCH');
 			const response = await fetch(
 				updating ? '/api/tracking/entries/' + editingEntryId : '/api/tracking/trackers/' + tracker.id + '/entries',
 				{
-					method: updating ? 'PATCH' : 'POST',
+					method: 'POST',
 					credentials: 'same-origin',
-					headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-					body: JSON.stringify({
-						schema_version: tracker.schema_version,
-						recorded_at: new Date(recordedAt).toISOString(),
-						note,
-						values
-					})
+					headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token },
+					body: formData
 				}
 			);
 			const result = (await response.json()) as TrackerResponse & ApiResponse;
@@ -229,6 +236,35 @@
 			error = 'The measurement could not be saved. Check your connection and try again.';
 		} finally {
 			savingEntry = false;
+		}
+	}
+
+	async function previewAttachment(): Promise<void> {
+		if (!tracker || !attachmentFile) return;
+		const token = csrfToken();
+		if (!token) { error = 'Reload this page and try again.'; return; }
+		previewingAttachment = true;
+		attachmentNotice = '';
+		error = '';
+		try {
+			const formData = new FormData();
+			formData.set('file', attachmentFile);
+			const response = await fetch('/api/tracking/trackers/' + tracker.id + '/entries/attachment-preview', {
+				method: 'POST', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }, body: formData
+			});
+			const result = await response.json() as { available?: boolean; suggestions?: Record<string, string>; message?: string } & ApiResponse;
+			if (response.status === 401) { await goto('/login'); return; }
+			if (!response.ok) { error = firstError(result) || result.message || 'The file could not be analyzed.'; return; }
+			for (const field of activeFields) {
+				const suggestion = result.suggestions?.[field.key];
+				if (suggestion !== undefined) entryValues[field.key] = field.type === 'number' ? formatDecimalInput(suggestion, $numberLocale) : suggestion;
+			}
+			attachmentNotice = result.message ?? (result.available ? 'Recognized values were added as suggestions. Please review them before saving.' : 'Automatic text recognition is unavailable. You can still attach the file and enter values manually.');
+		} catch {
+			error = 'The file could not be analyzed. Check your connection and try again.';
+		} finally {
+			previewingAttachment = false;
 		}
 	}
 
@@ -509,6 +545,14 @@
 							</div>
 						{/each}
 					</div>
+					<div class="rounded-xl border border-line bg-page p-4">
+						<label class="block text-sm font-medium text-ink-secondary">{$t('Supporting file')} <span class="font-normal text-ink-subtle">{$t('(optional)')}</span>
+							<input type="file" accept="application/pdf,image/jpeg,image/png" onchange={(event) => { attachmentFile = event.currentTarget.files?.[0] ?? null; attachmentNotice = ''; }} class="mt-2 block min-h-11 w-full text-sm text-ink-secondary file:mr-3 file:min-h-10 file:rounded-lg file:border-0 file:bg-surface file:px-3 file:text-sm file:font-medium file:text-ink-secondary" />
+						</label>
+						<p class="mt-2 text-xs leading-5 text-ink-muted">{$t('Attach a PDF or image up to 10 MB. Extracted values are suggestions; check them before saving.')}</p>
+						{#if attachmentFile}<div class="mt-3 flex flex-wrap items-center gap-3"><span class="max-w-full truncate text-sm text-ink-secondary">{attachmentFile.name}</span><button type="button" disabled={previewingAttachment} onclick={() => void previewAttachment()} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink disabled:opacity-50">{$t(previewingAttachment ? 'Reading file…' : 'Read file and suggest values')}</button></div>{/if}
+						{#if attachmentNotice}<p class="mt-3 text-sm text-ink-muted" aria-live="polite">{$t(attachmentNotice)}</p>{/if}
+					</div>
 					<div class="flex justify-end border-t border-line pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
 				</form>
 			</section>
@@ -554,7 +598,7 @@
 									<tr class="align-top">
 										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-ink-secondary sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-ink-subtle">{$t("Schema v")}{entry.schema_version}</span></th>
 										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-ink-secondary sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
-										<td class="max-w-xs px-4 py-4 text-ink-muted sm:px-5">{entry.note ?? '—'}</td>
+										<td class="max-w-xs px-4 py-4 text-ink-muted sm:px-5">{entry.note ?? '—'}{#if entry.attachment}<a class="mt-2 block break-all text-xs font-medium text-accent-ink underline" href={entry.attachment.url}>{$t('View attached file')}: {entry.attachment.name}</a>{/if}</td>
 										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
 									</tr>
 								{/each}

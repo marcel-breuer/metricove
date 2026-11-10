@@ -3,19 +3,24 @@
 namespace App\Services\Tracking;
 
 use App\Enums\ModuleCapability;
+use App\Exceptions\LocalReceiptOcrUnavailable;
 use App\Models\TrackerDefinition;
 use App\Models\TrackerEntry;
 use App\Models\TrackerEntryValue;
 use App\Models\TrackerField;
 use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
+use App\Services\Receipts\InvoiceTextParser;
+use App\Services\Receipts\LocalReceiptOcr;
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class TrackerEntryService
@@ -23,6 +28,8 @@ class TrackerEntryService
     public function __construct(
         private readonly ModuleAccessService $access,
         private readonly TrackerSchemaService $schemas,
+        private readonly LocalReceiptOcr $ocr,
+        private readonly InvoiceTextParser $invoiceParser,
     ) {}
 
     /** @return array{entries: list<array<string, mixed>>, has_more: bool} */
@@ -96,6 +103,7 @@ class TrackerEntryService
             ]);
 
             $this->writeValues($entry, $values, $fields);
+            $this->saveAttachment($entry, $data['attachment'] ?? null);
 
             return $this->present($actor, $entry->fresh(['values']));
         }, 5);
@@ -106,7 +114,8 @@ class TrackerEntryService
      */
     public function update(User $actor, int $entryId, array $data): array
     {
-        return DB::transaction(function () use ($actor, $entryId, $data): array {
+        $oldAttachmentPath = null;
+        $result = DB::transaction(function () use ($actor, $entryId, $data, &$oldAttachmentPath): array {
             $entry = TrackerEntry::query()
                 ->whereKey($entryId)
                 ->lockForUpdate()
@@ -140,14 +149,23 @@ class TrackerEntryService
             }
 
             $this->writeValues($entry, $values, $fields);
+            if (($data['attachment'] ?? null) instanceof UploadedFile) {
+                $oldAttachmentPath = $this->saveAttachment($entry, $data['attachment']);
+            }
 
             return $this->present($actor, $entry->fresh(['values']));
         }, 5);
+        if (is_string($oldAttachmentPath)) {
+            Storage::disk('local')->delete($oldAttachmentPath);
+        }
+
+        return $result;
     }
 
     public function delete(User $actor, int $entryId): void
     {
-        DB::transaction(function () use ($actor, $entryId): void {
+        $attachmentPath = null;
+        DB::transaction(function () use ($actor, $entryId, &$attachmentPath): void {
             $entry = TrackerEntry::query()
                 ->whereKey($entryId)
                 ->lockForUpdate()
@@ -159,8 +177,73 @@ class TrackerEntryService
 
             $this->access->authorize($actor, 'tracking', ModuleCapability::Edit, $entry);
             $this->access->authorize($actor, 'tracking', ModuleCapability::Edit, $definition);
+            $attachmentPath = $entry->attachment_path;
             $entry->delete();
         }, 5);
+        if (is_string($attachmentPath)) {
+            Storage::disk('local')->delete($attachmentPath);
+        }
+    }
+
+    /** @return array{available: bool, suggestions: array<string, string>, message: ?string} */
+    public function previewAttachment(User $actor, int $trackerId, UploadedFile $file): array
+    {
+        $definition = $this->schemas->findVisible($actor, $trackerId, ModuleCapability::Create);
+        $this->access->authorize($actor, 'tracking', ModuleCapability::Create, $definition);
+        try {
+            $text = $this->ocr->extract($file);
+        } catch (LocalReceiptOcrUnavailable) {
+            return ['available' => false, 'suggestions' => [], 'message' => 'Automatic text recognition is unavailable. You can still attach the file and enter values manually.'];
+        }
+
+        $parsed = $this->invoiceParser->parse($text);
+        $suggestions = [];
+        foreach ($definition->fields()->whereNull('retired_version')->orderBy('sort_order')->get() as $field) {
+            $label = mb_strtolower($field->label);
+            $value = null;
+            if ($field->data_type === 'number' && preg_match('/amount|cost|price|fee|total|expense|kosten|preis|betrag|summe/u', $label) === 1) {
+                $value = $parsed['amount'];
+            } elseif ($field->data_type === 'date' && preg_match('/date|invoice|bill|datum|rechnung/u', $label) === 1) {
+                $value = $parsed['invoice_date'];
+            } elseif ($field->data_type === 'text' && preg_match('/merchant|vendor|provider|supplier|anbieter|händler|lieferant/u', $label) === 1) {
+                $value = $parsed['merchant'];
+            } elseif ($field->data_type === 'text' && preg_match('/invoice.*number|invoice.*no|rechnungsnummer|rechnungsnr/u', $label) === 1) {
+                $value = $parsed['invoice_number'];
+            }
+            if (is_string($value) && $value !== '') {
+                $suggestions[$field->field_key] = $value;
+            }
+        }
+
+        return ['available' => true, 'suggestions' => $suggestions, 'message' => null];
+    }
+
+    public function attachment(User $actor, int $entryId): TrackerEntry
+    {
+        $entry = TrackerEntry::query()->findOrFail($entryId);
+        $definition = $this->schemas->findVisible($actor, (int) $entry->tracker_definition_id, ModuleCapability::View);
+        $this->access->authorize($actor, 'tracking', ModuleCapability::View, $definition);
+        $this->access->authorize($actor, 'tracking', ModuleCapability::View, $entry);
+        abort_unless(is_string($entry->attachment_path) && Storage::disk('local')->exists($entry->attachment_path), 404);
+
+        return $entry;
+    }
+
+    private function saveAttachment(TrackerEntry $entry, mixed $file): ?string
+    {
+        if (! $file instanceof UploadedFile) {
+            return null;
+        }
+        $oldPath = $entry->attachment_path;
+        $path = $file->store('tracking-attachments', 'local');
+        $entry->forceFill([
+            'attachment_path' => $path,
+            'attachment_name' => mb_substr($file->getClientOriginalName(), 0, 255),
+            'attachment_mime' => $file->getMimeType(),
+            'attachment_size' => $file->getSize(),
+        ])->save();
+
+        return is_string($oldPath) ? $oldPath : null;
     }
 
     private function visibleEntries(User $actor, TrackerDefinition $definition): Builder
@@ -322,6 +405,12 @@ class TrackerEntryService
             'schema_version' => $entry->schema_version,
             'recorded_at' => $entry->recorded_at?->toISOString(),
             'note' => $entry->note,
+            'attachment' => $entry->attachment_path === null ? null : [
+                'name' => $entry->attachment_name,
+                'mime_type' => $entry->attachment_mime,
+                'size' => $entry->attachment_size,
+                'url' => '/api/tracking/entries/'.$entry->id.'/attachment',
+            ],
             'can_edit' => $this->canEdit($actor, $entry),
             'values' => $entry->values
                 ->map(function (TrackerEntryValue $value): array {

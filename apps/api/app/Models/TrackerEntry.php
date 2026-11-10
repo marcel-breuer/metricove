@@ -18,6 +18,10 @@ class TrackerEntry extends Model implements ModuleResource
         'schema_version',
         'recorded_at',
         'note',
+        'attachment_path',
+        'attachment_name',
+        'attachment_mime',
+        'attachment_size',
     ];
 
     protected function casts(): array
