@@ -42,8 +42,12 @@ RUN mkdir -p \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs \
+        public/vendor \
+    && rm -rf resources/views/scribe public/vendor/scribe \
     && chown -R www-data:www-data bootstrap/cache storage \
-    && chmod -R u+rwX,go-rwx bootstrap/cache storage
+    && chmod -R u+rwX,go-rwx bootstrap/cache storage \
+    && ln -s /var/www/html/storage/app/private/scribe/views resources/views/scribe \
+    && ln -s /var/www/html/storage/app/private/scribe/assets public/vendor/scribe
 
 USER www-data
 RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction --no-scripts \

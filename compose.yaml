@@ -115,7 +115,7 @@ services:
     command:
       - sh
       - -lc
-      - php artisan migrate --force --no-interaction && php artisan scramble:cache
+      - mkdir -p storage/app/private/scribe/views storage/app/private/scribe/assets && php artisan migrate --force --no-interaction && php artisan scribe:generate --no-interaction
     environment: *laravel-environment
     volumes:
       - app_storage:/var/www/html/storage/app

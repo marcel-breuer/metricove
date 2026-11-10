@@ -14,6 +14,7 @@ use App\Services\Mcp\McpAccessService;
 use App\Services\Modules\ModuleManagementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -25,11 +26,13 @@ class McpAccessTest extends TestCase
     public function test_mcp_clients_can_read_the_generated_http_api_contract(): void
     {
         $admin = $this->admin();
-        config(['scramble.cache.store' => 'array']);
+        if (! Storage::disk('local')->exists('scribe/openapi.yaml')) {
+            $this->artisan('scribe:generate')->assertExitCode(0);
+        }
 
         $this->actingAs($admin, 'web')->get('/docs/api')->assertOk();
         $openApi = $this->actingAs($admin, 'web')->getJson('/docs/api.json')->assertOk();
-        $this->assertArrayHasKey('/health', $openApi->json('paths'));
+        $this->assertArrayHasKey('/api/health', $openApi->json('paths'));
 
         $secret = $this->createToken($admin, ['core:profile:view']);
         $this->app['auth']->forgetGuards();
@@ -49,9 +52,10 @@ class McpAccessTest extends TestCase
         $specification = json_decode($reference['text'], true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertSame('application/json', $reference['mimeType']);
-        $this->assertStringStartsWith('3.1.', $specification['openapi']);
-        $this->assertArrayHasKey('/health', $specification['paths']);
-        $this->assertArrayNotHasKey('/mcp', $specification['paths']);
+        $this->assertSame('3.1.0', $specification['openapi']);
+        $this->assertArrayHasKey('/api/health', $specification['paths']);
+        $this->assertArrayNotHasKey('/api/mcp', $specification['paths']);
+        $this->assertSame('cookie', $specification['components']['securitySchemes']['sessionCookie']['in']);
     }
 
     public function test_tokens_are_hashed_scoped_revocable_and_modules_are_rechecked(): void
