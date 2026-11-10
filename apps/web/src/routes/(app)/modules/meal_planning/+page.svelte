@@ -345,13 +345,13 @@
 	</Modal>
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border border-line glass-surface p-7 text-sm text-ink-muted">{$t("Loading your week…")}</div>
+		<div class="rounded-2xl border glass-surface p-7 text-sm text-ink-muted">{$t("Loading your week…")}</div>
 	{:else if !canView}
-		<div class="rounded-2xl border border-line glass-surface p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
+		<div class="rounded-2xl border glass-surface p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
 			{#each days as day (day)}
-				<article class="min-w-0 rounded-2xl border border-line glass-surface p-3 sm:p-4">
+				<article class="min-w-0 rounded-[20px] border glass-surface p-3 sm:p-4">
 					<header class="mb-3 border-b border-line pb-3">
 						<p class="text-xs font-semibold text-accent-ink">{formatDay(day, { weekday: 'short' })}</p>
 						<h2 class="mt-1 text-lg font-semibold text-ink">{formatDay(day, { month: 'short', day: 'numeric' })}</h2>
@@ -386,7 +386,7 @@
 		</div>
 	{/if}
 
-	<footer class="rounded-2xl border border-line glass-surface px-5 py-4 text-xs leading-5 text-ink-subtle">
+	<footer class="rounded-2xl border glass-surface px-5 py-4 text-xs leading-5 text-ink-subtle">
 		{$t("Meal plans do not change shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
 	</footer>
 	{#if slotToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove planned meal?')} message={$t('Remove this meal from the plan?')} onConfirm={() => void removeSlot(slotToRemove!)} />{/if}

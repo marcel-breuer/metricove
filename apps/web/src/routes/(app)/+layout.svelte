@@ -294,14 +294,14 @@
 {/snippet}
 
 <div class="app-shell atmospheric-page min-h-screen text-ink lg:flex">
-	<aside class="glass-chrome sticky top-0 hidden h-screen w-64 shrink-0 border-r border-line px-4 py-6 lg:flex lg:flex-col">
+	<aside class="glass-chrome sticky top-0 hidden h-screen w-64 shrink-0 border-r px-4 py-6 lg:flex lg:flex-col">
 		<div class="mb-8">{@render brand()}</div>
 		{@render navigation('Main navigation')}
 		{@render account()}
 	</aside>
 
 	<div class="min-w-0 flex-1">
-		<header class="sticky top-0 z-20 border-b border-line glass-chrome px-4 sm:px-7 lg:px-10">
+		<header class="sticky top-0 z-20 border-b glass-chrome px-4 sm:px-7 lg:px-10">
 			<div class="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-3 py-3 sm:flex-nowrap">
 				<div class="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
 					<button bind:this={drawerTrigger} type="button" aria-label={$t('Open navigation')} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="{iconButton} lg:hidden">
@@ -373,7 +373,7 @@
 {#if drawerOpen}
 	<div class="fixed inset-0 z-40 lg:hidden">
 		<button type="button" aria-label={$t('Close navigation')} class="absolute inset-0 bg-overlay" onclick={() => void closeDrawer()}></button>
-		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="absolute animate-drawer-in inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-line glass-chrome px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
+		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="absolute animate-drawer-in inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r glass-chrome px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
 			<div class="mb-6 flex items-center justify-between">
 				{@render brand(() => (drawerOpen = false))}
 				<button type="button" aria-label={$t('Close navigation')} onclick={() => void closeDrawer()} class="{iconButton}">

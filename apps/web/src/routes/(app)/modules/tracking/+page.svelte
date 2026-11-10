@@ -193,14 +193,14 @@
 				<button type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border border-line glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</p>
+				<p role="status" class="mt-5 rounded-xl border glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</p>
 			{:else if trackers.length === 0}
-				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8">
+				<div class="mt-5 rounded-[20px] border glass-surface p-6 sm:p-8">
 					<h3 class="text-lg font-semibold text-ink">{$t("No trackers yet.")}</h3>
 					<p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Create a private tracker for yourself, or ask an administrator to create a household template. Existing measurements are never visible to administrators unless their owner shares them.")}</p>
 				</div>
 			{:else}
-				<ul class="mt-5 divide-y divide-line rounded-2xl border border-line glass-surface">
+				<ul class="mt-5 divide-y divide-line rounded-[20px] border glass-surface">
 					{#each trackers as tracker (tracker.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 							<a href={'/modules/tracking/' + tracker.id} class="group flex min-h-16 min-w-0 flex-1 flex-col gap-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:flex-row sm:items-center sm:justify-between">
@@ -257,16 +257,16 @@
 							<li class="rounded-xl border border-line bg-page p-4">
 								<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_auto]">
 									<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}
-										<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Steps")} />
+										<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Steps")} />
 									</label>
 									<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}
-										<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
+										<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 											<option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option>
 										</select>
 									</label>
 									{#if field.type === 'number'}
 										<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}
-											<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("kg, steps…")} />
+											<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("kg, steps…")} />
 										</label>
 									{:else}
 										<div class="hidden lg:block"></div>
@@ -278,8 +278,8 @@
 								</div>
 								{#if field.type === 'number'}
 									<div class="mt-4 grid gap-4 sm:grid-cols-2">
-										<label class="block text-xs font-medium text-ink-muted">{$t("Minimum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label>
-										<label class="block text-xs font-medium text-ink-muted">{$t("Maximum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label>
+										<label class="block text-xs font-medium text-ink-muted">{$t("Minimum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label>
+										<label class="block text-xs font-medium text-ink-muted">{$t("Maximum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label>
 									</div>
 								{/if}
 							</li>
@@ -299,6 +299,6 @@
 		</Modal>
 		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}
-		<p class="mt-8 rounded-xl border border-line glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
+		<p class="mt-8 rounded-xl border glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
 	{/if}
 </section>
