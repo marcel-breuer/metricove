@@ -22,6 +22,38 @@ class McpAccessTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_mcp_clients_can_read_the_generated_http_api_contract(): void
+    {
+        $admin = $this->admin();
+        config(['scramble.cache.store' => 'array']);
+
+        $this->actingAs($admin, 'web')->get('/docs/api')->assertOk();
+        $openApi = $this->actingAs($admin, 'web')->getJson('/docs/api.json')->assertOk();
+        $this->assertArrayHasKey('/health', $openApi->json('paths'));
+
+        $secret = $this->createToken($admin, ['core:profile:view']);
+        $this->app['auth']->forgetGuards();
+        $this->withToken($secret)->getJson('/api/profile')->assertUnauthorized();
+
+        $resources = $this->mcp($secret, 'resources/list')->assertOk();
+        $this->assertSame(
+            ['metricove://api/http/openapi.json'],
+            array_column($resources->json('result.resources'), 'uri'),
+        );
+
+        $resourceRead = $this->mcp($secret, 'resources/read', [
+            'uri' => 'metricove://api/http/openapi.json',
+        ]);
+        $this->assertSame(200, $resourceRead->getStatusCode(), $resourceRead->getContent());
+        $reference = $resourceRead->json('result.contents.0');
+        $specification = json_decode($reference['text'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('application/json', $reference['mimeType']);
+        $this->assertStringStartsWith('3.1.', $specification['openapi']);
+        $this->assertArrayHasKey('/health', $specification['paths']);
+        $this->assertArrayNotHasKey('/mcp', $specification['paths']);
+    }
+
     public function test_tokens_are_hashed_scoped_revocable_and_modules_are_rechecked(): void
     {
         $admin = $this->admin();
@@ -541,8 +573,9 @@ class McpAccessTest extends TestCase
             'MCP-Protocol-Version' => '2026-07-28',
             'Mcp-Method' => $method,
         ];
-        if (is_string($params['name'] ?? null)) {
-            $headers['Mcp-Name'] = $params['name'];
+        $principal = $params['name'] ?? ($method === 'resources/read' ? $params['uri'] ?? null : null);
+        if (is_string($principal)) {
+            $headers['Mcp-Name'] = $principal;
         }
 
         $response = $this->withHeaders($headers)->postJson('/api/mcp', [
