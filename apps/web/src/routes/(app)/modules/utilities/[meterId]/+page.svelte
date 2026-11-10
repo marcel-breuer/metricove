@@ -225,7 +225,7 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Loading meter…")}</div>
+	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading meter…")}</div>
 {:else if !canView}
 	<section class="mx-auto max-w-2xl rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8"><p class="text-sm font-medium text-warning">{$t("Utilities View access is required.")}</p><h1 class="mt-2 text-2xl font-semibold text-ink">{$t("This meter is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></section>
 {:else if meter}
@@ -233,7 +233,7 @@
 		<a href="/modules/utilities" class="inline-flex items-center gap-2 text-sm font-medium text-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink"><span aria-hidden="true">←</span> {$t("All meters")}</a>
 		<div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
 			<div><p class="text-xs font-semibold text-accent-ink">{meter.meter_label} {$t("meter ·")} {$t(visibilityLabel(meter.visibility))}</p><h1 class="page-title break-words">{meter.name}</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{meter.description ?? 'Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.'}</p></div>
-			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></div></div>
+			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></div></div>
 		</div>
 		{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
@@ -241,7 +241,7 @@
 		{#if canManage}
 			<button type="button" onclick={() => (meterModalOpen = true)} class="mt-6 min-h-10 rounded-lg border border-line-strong px-4 text-sm font-semibold text-ink-secondary">{$t('Edit meter settings')}</button>
 			<Modal bind:open={meterModalOpen} title={$t('Edit meter settings')}>
-			<form class="mt-6 grid gap-4 rounded-2xl border border-line glass-surface p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
+			<form class="mt-6 grid gap-4 rounded-[20px] border glass-surface p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<input bind:value={meterName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Interval alert threshold")} <span class="font-normal text-ink-subtle">({meter.unit})</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
 				<button type="submit" disabled={saving} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save settings')}</button>
@@ -249,7 +249,7 @@
 			</Modal>
 		{/if}
 
-		<section class="mt-8 rounded-2xl border border-line glass-surface p-5 sm:p-7" aria-labelledby="trend-heading">
+		<section class="mt-8 rounded-[20px] border glass-surface p-5 sm:p-7" aria-labelledby="trend-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Consumption trend")}</p><h2 id="trend-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Usage between readings")}</h2></div><p class="text-xs text-ink-subtle">{$t("Latest")} {chartData.length} {$t("intervals ·")} {meter.unit}</p></div>
 			{#if chartData.length === 0}
 				<p class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t("Add a second dated reading to see consumption.")}</p>
@@ -269,7 +269,7 @@
 
 		<div class="mt-8 grid gap-8 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
 			{#if canCreate}
-				<section class="h-fit rounded-2xl border border-line glass-surface p-5 shadow-xs sm:p-7" aria-labelledby="add-reading-heading">
+				<section class="h-fit rounded-[20px] border glass-surface p-5 sm:p-7" aria-labelledby="add-reading-heading">
 					<p class="text-sm font-medium text-accent-ink">{$t("New reading")}</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Record the register.")}</h2><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("A reading can be added out of order when its value fits between the neighboring readings.")}</p>
 					<button type="button" onclick={() => (readingModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Record reading')}</button>
 					<Modal bind:open={readingModalOpen} title={$t('Record the register.')}>
@@ -290,7 +290,7 @@
 			<section aria-labelledby="history-heading">
 				<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Reading history")}</p><h2 id="history-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Chronological record")}</h2></div><span class="text-xs text-ink-subtle">{readings.length} {$t("recent readings")}</span></div>
 				{#if readings.length === 0}
-					<div class="mt-4 rounded-2xl border border-line glass-surface p-6"><h3 class="font-semibold text-ink">{$t("No readings yet.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Save the current register value. The next reading will establish the first usage interval.")}</p></div>
+					<div class="mt-4 rounded-[20px] border glass-surface p-6"><h3 class="font-semibold text-ink">{$t("No readings yet.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Save the current register value. The next reading will establish the first usage interval.")}</p></div>
 				{:else}
 				<ol class="mt-4 space-y-3">
 					{#each [...readings].reverse() as reading (reading.id)}
@@ -308,10 +308,10 @@
 							{#if editingReadingId === reading.id}
 								<Modal bind:open={correctionModalOpen} title={$t('Correct meter reading')}>
 								<form class="mt-4 grid gap-3 rounded-xl border border-accent-ink/20 bg-page p-4 sm:grid-cols-2" onsubmit={saveCorrection}>
-									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Note")}<textarea bind:value={correctionNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-[10px] border border-line-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea></label>
-									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Explain why the original reading changed")} /></label>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Note")}<textarea bind:value={correctionNote} maxlength="2000" rows="2" class="mt-2 w-full rounded-[10px] border glass-control px-3 py-2 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea></label>
+									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Explain why the original reading changed")} /></label>
 									<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; correctionModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-4 text-sm font-medium text-ink-secondary hover:border-line-strong">{$t("Cancel")}</button></div>
 								</form>
 								</Modal>

@@ -83,7 +83,7 @@
 			Metricove
 		</a>
 
-		<section class="my-auto rounded-2xl border border-line glass-surface p-6 shadow-xs sm:p-8">
+		<section class="my-auto rounded-[20px] border glass-surface p-6 sm:p-8">
 			<p class="text-sm font-medium text-ink-muted">{$t("Household invitation")}</p>
 			<h1 id="invitation-form-heading" class="mt-3 text-3xl font-semibold tracking-tight">{$t("Create your account")}</h1>
 			<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t("Choose the name and password you want to use for your Metricove account.")}</p>

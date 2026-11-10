@@ -21,7 +21,7 @@
 </script>
 
 <main class="grid min-h-svh place-items-center atmospheric-page px-[clamp(0.75rem,3vw,2.5rem)] py-[clamp(1rem,4vh,2.5rem)] max-[760px]:items-start max-[760px]:p-3">
-	<div class="min-h-[min(46rem,calc(100svh-3rem))] w-full max-w-[70rem] overflow-hidden rounded-3xl border border-line/80 glass-chrome shadow-[0_1.5rem_4rem_rgb(15_23_42/9%)] max-[760px]:min-h-0 max-[760px]:max-w-[32rem] max-[760px]:rounded-[1.25rem]">
+	<div class="min-h-[min(46rem,calc(100svh-3rem))] w-full max-w-[70rem] overflow-hidden rounded-[24px] border glass-chrome max-[760px]:min-h-0 max-[760px]:max-w-[32rem] max-[760px]:rounded-[20px]">
 		<header class="flex items-center justify-between gap-6 border-b border-line px-[clamp(1.5rem,4vw,3rem)] py-5 max-[760px]:flex-wrap max-[760px]:gap-x-4 max-[760px]:gap-y-3.5 max-[760px]:px-5 max-[760px]:py-4 max-[360px]:px-4">
 			<a href="/" class="inline-flex items-center gap-3 text-base font-semibold text-ink no-underline focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink" aria-label={$t('Metricove home')}>
 				<span class="grid size-10 place-items-center rounded-xl bg-[#0f766e] text-[#f0fdfa]" aria-hidden="true">

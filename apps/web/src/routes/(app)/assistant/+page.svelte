@@ -228,9 +228,9 @@
 	<PageHeading eyebrow="Metricove Assistant" title="Ask your household assistant" description="Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools." />
 
 	{#if loading}
-		<div class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary" role="status">{$t("Loading assistant settings…")}</div>
+		<div class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary" role="status">{$t("Loading assistant settings…")}</div>
 	{:else if status}
-		<section aria-labelledby="provider-title" class="rounded-2xl border border-line glass-surface p-5 sm:p-6">
+		<section aria-labelledby="provider-title" class="rounded-2xl border glass-surface p-5 sm:p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div>
 					<h2 id="provider-title" class="text-base font-semibold text-ink">{$t("Provider")}</h2>
@@ -250,7 +250,7 @@
 			{/if}
 		</section>
 
-		<form onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-2xl border border-line bg-surface p-5 sm:p-7">
+		<form onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-[20px] border glass-surface p-5 sm:p-7">
 			<label for="assistant-question" class="block text-sm font-semibold text-ink">{$t("What would you like to know?")}</label>
 			<textarea id="assistant-question" bind:value={question} maxlength="4000" rows="4" placeholder={$t("For example: How did my visible utility readings change over the last few entries?")} class="mt-3 min-h-32 w-full resize-y rounded-[10px] border border-line-strong bg-page px-4 py-3 text-sm leading-6 text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" disabled={!status.available || submitting}></textarea>
 			<div class="mt-4 max-w-lg">
@@ -272,7 +272,7 @@
 			</div>
 		</form>
 
-		<section aria-labelledby="context-title" class="rounded-2xl border border-line glass-surface p-5 sm:p-7">
+		<section aria-labelledby="context-title" class="rounded-2xl border glass-surface p-5 sm:p-7">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div><h2 id="context-title" class="text-xl font-semibold text-ink">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.")}</p></div>
 				<label class="inline-flex items-center gap-3 text-sm text-ink-secondary"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-accent" />{$t("Use saved context")}</label>

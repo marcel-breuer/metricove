@@ -19,11 +19,11 @@
 </svelte:head>
 
 {#if shell.loading}
-	<div role="status" class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Loading module access…")}</div>
+	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading module access…")}</div>
 {:else if module}
 	<section class="mx-auto max-w-4xl">
 		<PageHeading eyebrow="Your module" title={module.label} description={module.description} />
-		<div class="mt-8 rounded-2xl border border-line glass-surface p-6 sm:p-8">
+		<div class="mt-8 rounded-[20px] border glass-surface p-6 sm:p-8">
 			<span class="grid size-11 place-items-center rounded-xl border border-line-strong text-accent-ink"><ModuleIcon name={module.key} /></span>
 			<h2 class="mt-5 text-xl font-semibold text-ink">{$t("This module is ready for its data tools.")}</h2>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("The module is enabled and you have access. Its records and entry forms are being delivered in the upcoming module work.")}</p>
@@ -32,7 +32,7 @@
 		<Button href="/" variant="secondary" class="mt-6">{$t("Back to overview")}</Button>
 	</section>
 {:else}
-	<section class="mx-auto max-w-2xl rounded-2xl border border-line glass-surface p-6 sm:p-8">
+	<section class="mx-auto max-w-2xl rounded-[20px] border glass-surface p-6 sm:p-8">
 		<p class="text-sm font-medium text-warning">{$t("Module unavailable")}</p>
 		<h1 class="mt-2 text-2xl font-semibold tracking-tight text-ink">{$t("You do not have access to this module.")}</h1>
 		<p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An active household administrator can enable modules and grant member capabilities.")}</p>

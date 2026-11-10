@@ -67,7 +67,7 @@
 		fullscreen: 'h-[calc(100dvh-3rem)] max-h-none w-[calc(100%-3rem)] max-w-[96rem] overflow-hidden max-sm:m-0! max-sm:h-dvh max-sm:w-full max-sm:rounded-none max-sm:border-0'
 	};
 	// Bottom sheet on phones for compact dialogs; fullscreen dialogs fill the viewport instead.
-	const sheet = 'max-sm:mx-0! max-sm:mb-0! max-sm:max-h-[92dvh] max-sm:w-full max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:pb-[env(safe-area-inset-bottom)]';
+	const sheet = 'max-sm:mx-0! max-sm:mb-0! max-sm:max-h-[92dvh] max-sm:w-full max-sm:rounded-t-[24px] max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0 max-sm:pb-[env(safe-area-inset-bottom)]';
 </script>
 
 <dialog
@@ -75,7 +75,7 @@
 	data-size={size}
 	aria-labelledby={titleId}
 	aria-describedby={description ? descriptionId : undefined}
-	class="m-auto! max-w-none rounded-2xl border border-line-strong glass-chrome p-0 text-ink shadow-[0_12px_32px_rgb(28_41_37/14%)] backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
+	class="m-auto! max-w-none rounded-[24px] border glass-chrome p-0 text-ink backdrop:bg-overlay {sizes[size]} {fullscreen ? '' : sheet} {className}"
 	onclose={restoreFocus}
 	onclick={handleBackdropClick}
 >

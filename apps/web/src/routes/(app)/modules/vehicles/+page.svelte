@@ -97,13 +97,13 @@
 		<section class="mt-8" aria-labelledby="vehicles-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="vehicles-heading" class="text-xl font-semibold text-ink">{$t("Your vehicles")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private records are visible to their owner and explicitly authorized members.")}</p></div><button type="button" onclick={() => void loadVehicles()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button></div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border border-line glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading vehicles…")}</p>
+				<p role="status" class="mt-5 rounded-xl border glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading vehicles…")}</p>
 			{:else if vehicles.length === 0}
-				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No vehicles yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Add a private vehicle for your own records, or ask an active administrator to create a shared household vehicle.")}</p></div>
+				<div class="mt-5 rounded-[20px] border glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No vehicles yet.")}</h3><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Add a private vehicle for your own records, or ask an active administrator to create a shared household vehicle.")}</p></div>
 			{:else}
 				<ul class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 					{#each vehicles as vehicle (vehicle.id)}
-						<li><a href={`/modules/vehicles/${vehicle.id}`} class="group flex min-h-40 flex-col justify-between rounded-2xl border border-line glass-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+						<li><a href={`/modules/vehicles/${vehicle.id}`} class="group flex min-h-40 flex-col justify-between rounded-[20px] border glass-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 							<span><span class="flex flex-wrap items-start justify-between gap-2"><span class="font-semibold text-ink">{vehicle.name}</span><Badge>{$t(visibilityLabel(vehicle.visibility))}</Badge></span><span class="mt-2 block text-sm text-ink-muted">{vehicle.make} {vehicle.model}{vehicle.model_year ? ` · ${vehicle.model_year}` : ''}</span><span class="mt-1 block text-xs capitalize text-ink-subtle">{vehicle.fuel_type} {$t("· odometer in")} {vehicle.odometer_unit}</span></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open vehicle record")} <span aria-hidden="true">→</span></span>
 						</a></li>
@@ -138,6 +138,6 @@
 			{/snippet}
 		</Modal>
 	{:else}
-		<p class="mt-8 rounded-xl border border-line glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a vehicle. Ask an administrator for Vehicles Create access.")}</p>
+		<p class="mt-8 rounded-xl border glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a vehicle. Ask an administrator for Vehicles Create access.")}</p>
 	{/if}
 </section>

@@ -452,9 +452,9 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border border-line glass-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
+	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
 {:else if error && !tracker}
-	<section class="rounded-2xl border border-line glass-surface p-6 sm:p-8">
+	<section class="rounded-2xl border glass-surface p-6 sm:p-8">
 		<p class="text-sm font-medium text-warning">{$t("Tracker unavailable")}</p>
 		<h1 class="mt-2 text-2xl font-semibold text-ink">{$t("You cannot open this tracker.")}</h1>
 		<p role="alert" class="mt-3 text-sm leading-6 text-ink-muted">{$t(error)}</p>
@@ -496,11 +496,11 @@
 					<ol class="space-y-3">
 						{#each schemaFields as field, index (field.local_key)}
 							<li class="grid gap-3 rounded-xl border border-line bg-page p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_auto]">
-								<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option></select></label>
-								{#if field.type === 'number'}<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>{/if}
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option></select></label>
+								{#if field.type === 'number'}<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>{/if}
 								<div class="flex flex-wrap items-center gap-3 lg:justify-end"><label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><input bind:checked={field.required} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{$t("Required")}</label><button type="button" disabled={schemaFields.length <= 1} onclick={() => removeSchemaField(index)} class="min-h-10 rounded-lg px-3 text-sm text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Retire")}</button></div>
-								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-ink-muted">{$t("Minimum")}<input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-ink-muted">{$t("Maximum")}<input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label></div>{/if}
+								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-ink-muted">{$t("Minimum")}<input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-ink-muted">{$t("Maximum")}<input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label></div>{/if}
 							</li>
 						{/each}
 					</ol>
@@ -515,7 +515,7 @@
 		{#if canCreate}
 			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</button></div>
 			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
-			<section class="rounded-2xl border border-line glass-surface p-5 shadow-xs sm:p-7" aria-labelledby="new-entry-heading">
+			<section class="rounded-2xl border glass-surface p-5 sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div><p class="text-sm font-medium text-accent-ink">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-ink">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Your entries are private to your account by default.")}</p></div>
 					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</button>{/if}
@@ -565,7 +565,7 @@
 				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each numericColumns as field (field.key)}
 						{@const series = numericSeries(field)}
-						<article class="rounded-2xl border border-line glass-surface p-4 sm:p-5">
+						<article class="rounded-2xl border glass-surface p-4 sm:p-5">
 							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-muted">{field.unit ?? '—'}</span></div>
 							{#if series.length > 0}
 								<div class="mt-4 overflow-hidden rounded-xl border border-line bg-page p-2" role="img" aria-label={field.label + ' measurement history'}>
@@ -585,9 +585,9 @@
 			{/if}
 
 			{#if entries.length === 0}
-				<div class="mt-5 rounded-2xl border border-line glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
+				<div class="mt-5 rounded-[20px] border glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
 			{:else}
-				<div class="mt-5 overflow-hidden rounded-2xl border border-line glass-surface">
+				<div class="mt-5 overflow-hidden rounded-[20px] border glass-surface">
 					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-ink-muted sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
@@ -614,7 +614,7 @@
 		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: tracker.name })} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
-			<details class="mt-7 rounded-2xl border border-line glass-surface p-5">
+			<details class="mt-7 rounded-[20px] border glass-surface p-5">
 				<summary class="cursor-pointer font-semibold text-ink-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-ink-muted">({revisions.length})</span></summary>
 				<ol class="mt-4 divide-y divide-line">
 					{#each revisions as revision (revision.version)}

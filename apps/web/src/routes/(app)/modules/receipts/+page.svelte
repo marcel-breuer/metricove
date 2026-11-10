@@ -614,7 +614,7 @@
 	{#if statusMessage}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 p-4 text-sm text-positive">{statusMessage}</p>{/if}
 
 	{#if canCreate}
-		<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
+		<section class="rounded-2xl border glass-surface p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
 			<div class="mb-5">
 				<h2 id="receipt-upload-heading" class="text-xl font-semibold text-ink">{$t('Scan a new receipt')}</h2>
 				<p class="mt-1 text-sm leading-6 text-ink-muted">{$t('Local OCR suggests invoice fields. Nothing is saved until you confirm the preview.')}</p>
@@ -780,7 +780,7 @@
 	{/if}
 
 	{#if canView}
-		<section class="rounded-2xl border border-line glass-surface p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
+		<section class="rounded-2xl border glass-surface p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h2 id="saved-receipts-heading" class="text-xl font-semibold text-ink">{$t('Receipt archive')}</h2>
@@ -792,22 +792,22 @@
 			<Disclosure summary="Filter receipts" hint={$t('Receipts found') + ': ' + pagination.total} class="mt-5">
 			<form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
 				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t('Search merchant or invoice number')}
-					<input bind:value={receiptSearch} type="search" maxlength="100" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base" />
+					<input bind:value={receiptSearch} type="search" maxlength="100" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice date from')}
-					<input bind:value={dateFrom} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base" />
+					<input bind:value={dateFrom} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice date to')}
-					<input bind:value={dateTo} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base" />
+					<input bind:value={dateTo} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Minimum amount')}
-					<input bind:value={minAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base" />
+					<input bind:value={minAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Maximum amount')}
-					<input bind:value={maxAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base" />
+					<input bind:value={maxAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Currency')}
-					<select bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base">
+					<select bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
 						<option value="">{$t('All currencies')}</option>
 						{#each currencies as receiptCurrency (receiptCurrency)}
 							<option value={receiptCurrency}>{receiptCurrency}</option>
@@ -815,7 +815,7 @@
 					</select>
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Target')}
-					<select bind:value={targetFilter} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base">
+					<select bind:value={targetFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
 						<option value="">{$t('All targets')}</option>
 						<option value="archive">{$t('Archived only')}</option>
 						<option value="finance">{$t('Finance expense')}</option>
@@ -823,13 +823,13 @@
 					</select>
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Category')}
-					<select bind:value={categoryFilter} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base">
+					<select bind:value={categoryFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
 						<option value="">{$t('All categories')}</option>
 						{#each categoryFilters as option (option.value)}<option value={option.value}>{categoryFilterLabel(option)}</option>{/each}
 					</select>
 				</label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t('Sharing status')}
-					<select bind:value={sharingStatusFilter} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink max-sm:text-base">
+					<select bind:value={sharingStatusFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
 						<option value="">{$t('All sharing states')}</option>
 						<option value="private">{$t('Private')}</option>
 						<option value="shared">{$t('Shared with household')}</option>
@@ -871,7 +871,7 @@
 							</div>
 						{/if}
 						{#if targetLinkReceiptId === receipt.id}
-							<form class="mt-3 space-y-3 rounded-xl border border-line glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
+							<form class="mt-3 space-y-3 rounded-xl border glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
 								<div class="flex flex-wrap items-end gap-3">
 									<label class="block min-w-48 flex-1 text-sm font-medium text-ink-secondary">{$t('Target type')}
 										<select bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink"><option value="finance">{$t('Finance expense')}</option><option value="vehicle">{$t('Vehicle cost')}</option></select>

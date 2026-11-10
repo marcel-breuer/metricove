@@ -467,7 +467,7 @@
 									{#if task.checklist_items.length === 0}<p class="mt-2 text-sm text-ink-muted">{$t('No checklist items yet.')}</p>{/if}
 									<ol class="mt-3 space-y-3">
 										{#each task.checklist_items as item, index (item.id)}
-											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border border-line glass-surface p-3">
+											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border glass-surface p-3">
 												{#if editingChecklistItemId === item.id}
 													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
 														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="{control}" /></label>

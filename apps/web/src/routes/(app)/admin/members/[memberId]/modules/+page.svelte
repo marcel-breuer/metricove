@@ -142,7 +142,7 @@
 			{#if loading}
 				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading module rights…")}</p>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border border-line glass-surface p-5 text-sm text-ink-muted">{$t("No optional modules are registered.")}</p>
+				<p class="mt-6 rounded-xl border glass-surface p-5 text-sm text-ink-muted">{$t("No optional modules are registered.")}</p>
 			{:else}
 				<ul class="mt-5 grid gap-4 md:grid-cols-2">
 					{#each modules as module (module.key)}
