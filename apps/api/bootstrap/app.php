@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prependToGroup('api', EnsureNetworkAccess::class);
+        $middleware->redirectGuestsTo('/login');
         $middleware->alias([
             'active-admin' => EnsureActiveAdmin::class,
             'active-member' => EnsureActiveMember::class,
