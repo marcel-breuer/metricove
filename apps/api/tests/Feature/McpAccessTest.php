@@ -24,6 +24,7 @@ class McpAccessTest extends TestCase
 
     public function test_mcp_clients_can_read_the_generated_http_api_contract(): void
     {
+        config(['scramble.cache.store' => 'array']);
         $admin = $this->admin();
         config(['scramble.cache.store' => 'array']);
 
@@ -571,8 +572,9 @@ class McpAccessTest extends TestCase
             'MCP-Protocol-Version' => '2026-07-28',
             'Mcp-Method' => $method,
         ];
-        if (is_string($params['name'] ?? null)) {
-            $headers['Mcp-Name'] = $params['name'];
+        $principal = $params['name'] ?? ($method === 'resources/read' ? $params['uri'] ?? null : null);
+        if (is_string($principal)) {
+            $headers['Mcp-Name'] = $principal;
         }
 
         $response = $this->withHeaders($headers)->postJson('/api/mcp', [
