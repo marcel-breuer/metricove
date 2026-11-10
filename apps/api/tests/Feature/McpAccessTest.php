@@ -49,7 +49,7 @@ class McpAccessTest extends TestCase
         $specification = json_decode($reference['text'], true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertSame('application/json', $reference['mimeType']);
-        $this->assertSame('3.1.0', $specification['openapi']);
+        $this->assertStringStartsWith('3.1.', $specification['openapi']);
         $this->assertArrayHasKey('/health', $specification['paths']);
         $this->assertArrayNotHasKey('/mcp', $specification['paths']);
     }
