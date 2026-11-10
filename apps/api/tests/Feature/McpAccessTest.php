@@ -24,7 +24,6 @@ class McpAccessTest extends TestCase
 
     public function test_mcp_clients_can_read_the_generated_http_api_contract(): void
     {
-        config(['scramble.cache.store' => 'array']);
         $admin = $this->admin();
         config(['scramble.cache.store' => 'array']);
 
@@ -42,9 +41,11 @@ class McpAccessTest extends TestCase
             array_column($resources->json('result.resources'), 'uri'),
         );
 
-        $reference = $this->mcp($secret, 'resources/read', [
+        $resourceRead = $this->mcp($secret, 'resources/read', [
             'uri' => 'metricove://api/http/openapi.json',
-        ])->assertOk()->json('result.contents.0');
+        ]);
+        $this->assertSame(200, $resourceRead->getStatusCode(), $resourceRead->getContent());
+        $reference = $resourceRead->json('result.contents.0');
         $specification = json_decode($reference['text'], true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertSame('application/json', $reference['mimeType']);
