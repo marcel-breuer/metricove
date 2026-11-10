@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Vehicles\VehicleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class VehiclesController extends Controller
 {
@@ -151,6 +152,21 @@ class VehiclesController extends Controller
             'message' => 'Vehicle cost updated.',
             'cost' => $vehicles->updateCost($this->actor($request), $cost, $request->validated()),
         ]);
+    }
+
+    public function costInvoice(Request $request, int $cost, VehicleService $vehicles): BinaryFileResponse
+    {
+        $invoice = $vehicles->invoice($this->actor($request), $cost);
+        $response = response()->file($invoice['path'], [
+            'Content-Type' => $invoice['mime'],
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+        $response->headers->set('Content-Disposition', $response->headers->makeDisposition('inline', $invoice['name'], 'invoice'));
+        $response->setPrivate();
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 
     public function destroyMaintenance(Request $request, int $record, VehicleService $vehicles): JsonResponse

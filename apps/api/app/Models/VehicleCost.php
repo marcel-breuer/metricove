@@ -7,6 +7,12 @@ use App\Models\Concerns\HasResourcePermissions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $vehicle_id
+ * @property string|null $invoice_path
+ * @property string|null $invoice_name
+ * @property string|null $invoice_mime
+ */
 class VehicleCost extends Model implements ModuleResource
 {
     use HasResourcePermissions;
@@ -27,6 +33,9 @@ class VehicleCost extends Model implements ModuleResource
         'fuel_unit_price',
         'fuel_odometer_value',
         'fuel_full_tank',
+        'invoice_path',
+        'invoice_name',
+        'invoice_mime',
     ];
 
     protected function casts(): array

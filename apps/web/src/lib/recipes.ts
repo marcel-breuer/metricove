@@ -22,6 +22,7 @@ export type Recipe = {
 	can_change_visibility: boolean;
 	needs_review: boolean;
 	photo_url: string | null;
+	photo_is_pdf: boolean;
 	ingredients: RecipeIngredient[];
 	updated_at: string | null;
 };

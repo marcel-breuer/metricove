@@ -35,6 +35,8 @@ class StoreVehicleCostRequest extends FormRequest
             'fuel_unit_price' => ['nullable', 'regex:/\A\d{1,10}(?:\.\d{1,4})?\z/'],
             'fuel_odometer_value' => ['nullable', 'regex:/\A\d{1,17}(?:\.\d{1,3})?\z/'],
             'fuel_full_tank' => ['sometimes', 'boolean'],
+            'invoice' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:10240'],
+            'remove_invoice' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -47,6 +49,10 @@ class StoreVehicleCostRequest extends FormRequest
 
             if ($this->input('category') !== 'fuel' && $hasFuelDetails) {
                 $validator->errors()->add('category', 'Fuel details are only available for fuel costs.');
+            }
+
+            if ($this->boolean('remove_invoice') && $this->hasFile('invoice')) {
+                $validator->errors()->add('invoice', 'Choose an invoice file or remove the existing one, not both.');
             }
 
             $amount = $this->input('amount');

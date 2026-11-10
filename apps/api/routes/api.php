@@ -235,6 +235,10 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,edit')->whereNumber('policy')->name('insurance.destroy');
             Route::patch('/costs/{cost}', [VehiclesController::class, 'updateCost'])
                 ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.update');
+            Route::post('/costs/{cost}', [VehiclesController::class, 'updateCost'])
+                ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.update-upload');
+            Route::get('/costs/{cost}/invoice', [VehiclesController::class, 'costInvoice'])
+                ->middleware('module.access:vehicles,view')->whereNumber('cost')->name('costs.invoice');
             Route::delete('/costs/{cost}', [VehiclesController::class, 'destroyCost'])
                 ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.destroy');
         });

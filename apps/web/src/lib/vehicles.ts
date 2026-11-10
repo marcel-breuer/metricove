@@ -121,6 +121,9 @@ export type VehicleCost = {
 	fuel_consumption_l_per_100km: string | null;
 	fuel_consumption_unavailable_reason: 'not_full_to_full' | 'missing_previous_full_tank' | 'missing_odometer' | 'non_comparable' | null;
 	can_edit: boolean;
+	invoice_url: string | null;
+	invoice_name: string | null;
+	invoice_mime: string | null;
 };
 
 export type VehicleResponse = {
