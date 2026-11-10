@@ -32,6 +32,7 @@ class McpAccessTest extends TestCase
         $this->assertArrayHasKey('/health', $openApi->json('paths'));
 
         $secret = $this->createToken($admin, ['core:profile:view']);
+        $this->app['auth']->forgetGuards();
         $this->withToken($secret)->getJson('/api/profile')->assertUnauthorized();
 
         $resources = $this->mcp($secret, 'resources/list')->assertOk();
