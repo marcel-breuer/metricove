@@ -8,6 +8,15 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.24.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.24.0...metricove-v0.24.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **mcp:** repair docs route and expose live schemas ([8c76bea](https://github.com/marcel-breuer/metricove/commit/8c76bea1a344c3d082366594f273807bb255f188))
+* **mcp:** repair docs route and expose live schemas ([8c76bea](https://github.com/marcel-breuer/metricove/commit/8c76bea1a344c3d082366594f273807bb255f188))
+* **mcp:** repair docs route and expose live schemas ([29b04be](https://github.com/marcel-breuer/metricove/commit/29b04be120e1f1226d02d553d1108507b190d497))
+
 ## [0.24.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.23.1...metricove-v0.24.0) (2026-11-10)
 
 
