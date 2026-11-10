@@ -81,6 +81,10 @@ services:
 
   api:
     <<: *api-image
+    command:
+      - sh
+      - -lc
+      - if php artisan list --raw | grep -q '^scribe:generate[[:space:]]'; then php artisan scribe:generate --no-interaction; fi && exec /usr/local/sbin/php-fpm
     environment:
       <<: *laravel-environment
       AI_PROVIDER: ${AI_PROVIDER:-disabled}
@@ -115,7 +119,7 @@ services:
     command:
       - sh
       - -lc
-      - mkdir -p storage/app/private/scribe/views storage/app/private/scribe/assets && php artisan migrate --force --no-interaction && if php artisan list --raw | grep -q '^scribe:generate[[:space:]]'; then php artisan scribe:generate --no-interaction; else php artisan scramble:cache; fi
+      - php artisan migrate --force --no-interaction && if php artisan list --raw | grep -q '^scribe:generate[[:space:]]'; then :; else php artisan scramble:cache; fi
     environment: *laravel-environment
     volumes:
       - app_storage:/var/www/html/storage/app
