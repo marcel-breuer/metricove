@@ -73,7 +73,11 @@ class McpController extends Controller
         $scopes = array_values(array_intersect($token->scopes ?? [], $access->allowedScopes($actor)));
 
         $server = Server::builder()
-            ->setServerInfo('Metricove', '0.1.0', 'Permission-scoped household data tools with human-approved writes.');
+            ->setServerInfo(
+                'Metricove',
+                (string) config('scramble.info.version', '0.1.0'),
+                'Permission-scoped household data tools with human-approved writes. Call tools/list to discover the current tool names, descriptions and input schemas available to this token. Tool availability follows current permissions and module settings.',
+            );
 
         foreach ($registry->definitionsFor($actor) as $definition) {
             $function = $definition['function'] ?? [];

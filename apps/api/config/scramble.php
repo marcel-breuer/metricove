@@ -58,7 +58,7 @@ return [
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => 'Metricove session-authenticated REST API. MCP tools use a separate JSON-RPC endpoint and are documented in the signed-in application.',
+        'description' => 'Metricove session-authenticated REST API. MCP tools use a separate JSON-RPC endpoint; call tools/list at /api/mcp with a Metricove bearer token to discover the current tool schemas available to that token.',
     ],
 
     'ui' => [
