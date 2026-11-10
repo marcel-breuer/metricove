@@ -42,6 +42,7 @@ Accept: application/json, text/event-stream</code></pre>
 	<Panel padding="large" class="space-y-3">
 		<h2 class="text-xl font-semibold">{$t('HTTP API reference')}</h2>
 		<p class="text-sm leading-6 text-ink-secondary">{$t('The OpenAPI reference is generated from the current Laravel routes and validation rules. It documents the session-authenticated HTTP API. The MCP tools/list response is the live source of truth for MCP tool names, permissions and input schemas.')}</p>
+		<p class="text-sm leading-6 text-ink-secondary">{$t('MCP clients can read the generated OpenAPI contract at metricove://api/http/openapi.json. It describes the session-authenticated HTTP API; the MCP bearer token authorizes only the registered tools returned by tools/list.')}</p>
 		<div class="flex flex-wrap gap-3">
 			<a href="/docs/api" class="inline-flex min-h-10 items-center rounded-lg border border-accent-ink/40 px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent/10">{$t('Open API reference')}</a>
 			<a href="/docs/api.json" class="inline-flex min-h-10 items-center rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-ink-secondary hover:bg-page">{$t('OpenAPI JSON')}</a>

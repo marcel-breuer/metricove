@@ -22,6 +22,35 @@ class McpAccessTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_mcp_clients_can_read_the_generated_http_api_contract(): void
+    {
+        $admin = $this->admin();
+        config(['scramble.cache.store' => 'array']);
+
+        $this->actingAs($admin, 'web')->get('/docs/api')->assertOk();
+        $openApi = $this->actingAs($admin, 'web')->getJson('/docs/api.json')->assertOk();
+        $this->assertArrayHasKey('/health', $openApi->json('paths'));
+
+        $secret = $this->createToken($admin, ['core:profile:view']);
+        $this->withToken($secret)->getJson('/api/profile')->assertUnauthorized();
+
+        $resources = $this->mcp($secret, 'resources/list')->assertOk();
+        $this->assertSame(
+            ['metricove://api/http/openapi.json'],
+            array_column($resources->json('result.resources'), 'uri'),
+        );
+
+        $reference = $this->mcp($secret, 'resources/read', [
+            'uri' => 'metricove://api/http/openapi.json',
+        ])->assertOk()->json('result.contents.0');
+        $specification = json_decode($reference['text'], true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('application/json', $reference['mimeType']);
+        $this->assertSame('3.1.0', $specification['openapi']);
+        $this->assertArrayHasKey('/health', $specification['paths']);
+        $this->assertArrayNotHasKey('/mcp', $specification['paths']);
+    }
+
     public function test_tokens_are_hashed_scoped_revocable_and_modules_are_rechecked(): void
     {
         $admin = $this->admin();

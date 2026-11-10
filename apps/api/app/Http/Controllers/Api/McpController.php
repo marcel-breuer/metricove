@@ -9,6 +9,7 @@ use App\Services\Import\ImportService;
 use App\Services\Mcp\AssistantReadToolHandler;
 use App\Services\Mcp\ImportUtilityReadingsToolHandler;
 use App\Services\Mcp\McpAccessService;
+use App\Services\Mcp\McpApiReference;
 use App\Services\Mcp\McpDomainReadToolHandler;
 use App\Services\Mcp\McpDomainReadWorkflowRegistry;
 use App\Services\Mcp\McpWriteCompleteToolHandler;
@@ -43,6 +44,7 @@ class McpController extends Controller
         McpWriteWorkflowService $writeWorkflows,
         ImportService $imports,
         McpDomainReadWorkflowRegistry $domainReadRegistry,
+        McpApiReference $apiReference,
     ): Response {
         $psrFactory = new Psr17Factory;
         $requestFactory = new PsrHttpFactory($psrFactory, $psrFactory, $psrFactory, $psrFactory);
@@ -78,6 +80,15 @@ class McpController extends Controller
                 (string) config('scramble.info.version', '0.1.0'),
                 'Permission-scoped household data tools with human-approved writes. Call tools/list to discover the current tool names, descriptions and input schemas available to this token. Tool availability follows current permissions and module settings.',
             );
+
+        $server->addResource(
+            fn () => $apiReference->read(),
+            McpApiReference::URI,
+            'metricove_http_api',
+            'Metricove HTTP API reference',
+            'Current OpenAPI contract generated from Laravel routes and validation. It documents the session-authenticated HTTP API; this MCP bearer token authorizes only the registered MCP tools exposed to it.',
+            'application/json',
+        );
 
         foreach ($registry->definitionsFor($actor) as $definition) {
             $function = $definition['function'] ?? [];
