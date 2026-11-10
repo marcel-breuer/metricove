@@ -15,6 +15,8 @@ use App\Services\Modules\ModuleAccessService;
 use App\Services\Modules\ModuleManagementService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -358,6 +360,62 @@ class VehiclesModuleTest extends TestCase
         $this->actingAs($admin, 'web')->deleteJson("/api/vehicles/costs/{$costId}")
             ->assertOk()->assertJsonPath('message', 'Vehicle cost deleted.');
         $this->assertDatabaseMissing('vehicle_costs', ['id' => $costId]);
+    }
+
+    public function test_vehicle_cost_invoices_are_private_and_follow_vehicle_access(): void
+    {
+        Storage::fake('local');
+        $admin = $this->admin();
+        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($admin, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true]);
+        $this->grant($viewer, ['view' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $vehicleId = $this->actingAs($owner, 'web')->postJson('/api/vehicles', [
+            'name' => 'Private car', 'make' => 'Volvo', 'model' => 'V60', 'model_year' => 2022,
+            'fuel_type' => 'diesel', 'odometer_unit' => 'km', 'visibility' => 'private',
+        ])->assertCreated()->json('vehicle.id');
+        $pdf = "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF";
+        $created = $this->actingAs($owner, 'web')->post("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'maintenance', 'amount' => '125.00', 'currency' => 'EUR',
+            'period_start' => '2026-11-10', 'period' => 'once', 'invoice' => UploadedFile::fake()->createWithContent('service.pdf', $pdf),
+        ], ['Accept' => 'application/json'])->assertCreated()->assertJsonPath('cost.invoice_name', 'service.pdf')
+            ->assertJsonPath('cost.invoice_mime', 'application/pdf');
+        $costId = (int) $created->json('cost.id');
+        $cost = VehicleCost::query()->findOrFail($costId);
+        $path = $cost->invoice_path;
+        $this->assertNotNull($path);
+        Storage::disk('local')->assertExists($path);
+        $this->actingAs($owner, 'web')->get("/api/vehicles/costs/{$costId}/invoice")
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('Cache-Control', 'no-store, private');
+        $this->actingAs($viewer, 'web')->get("/api/vehicles/costs/{$costId}/invoice")->assertNotFound();
+
+        $firstPath = $path;
+        $this->actingAs($owner, 'web')->post("/api/vehicles/costs/{$costId}", [
+            'category' => 'maintenance', 'amount' => '125.00', 'currency' => 'EUR',
+            'period_start' => '2026-11-10', 'period' => 'once', 'invoice' => UploadedFile::fake()->createWithContent('service-replaced.pdf', $pdf),
+        ], ['Accept' => 'application/json'])->assertOk();
+        $path = VehicleCost::query()->findOrFail($costId)->invoice_path;
+        $this->assertNotNull($path);
+        Storage::disk('local')->assertMissing($firstPath);
+        Storage::disk('local')->assertExists($path);
+
+        $this->actingAs($owner, 'web')->post("/api/vehicles/costs/{$costId}", [
+            'category' => 'maintenance', 'amount' => '125.00', 'currency' => 'EUR',
+            'period_start' => '2026-11-10', 'period' => 'once', 'remove_invoice' => '1',
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('cost.invoice_url', null);
+        Storage::disk('local')->assertMissing($path);
+
+        $this->actingAs($owner, 'web')->post("/api/vehicles/costs/{$costId}", [
+            'category' => 'maintenance', 'amount' => '125.00', 'currency' => 'EUR',
+            'period_start' => '2026-11-10', 'period' => 'once', 'invoice' => UploadedFile::fake()->createWithContent('service-copy.pdf', $pdf),
+        ], ['Accept' => 'application/json'])->assertOk();
+        $replacementPath = VehicleCost::query()->findOrFail($costId)->invoice_path;
+        $this->assertNotNull($replacementPath);
+        Storage::disk('local')->assertExists($replacementPath);
+        $this->actingAs($owner, 'web')->deleteJson("/api/vehicles/costs/{$costId}")->assertOk();
+        Storage::disk('local')->assertMissing($replacementPath);
     }
 
     public function test_fuel_cost_fields_are_calculated_exactly_and_consumption_requires_consecutive_full_tanks(): void

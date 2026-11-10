@@ -347,6 +347,7 @@ class RecipeService
             ),
             'is_favorite' => $isFavorite,
             'photo_url' => $recipe->photo_path === null ? null : '/api/recipes/'.$recipe->id.'/photo',
+            'photo_is_pdf' => $recipe->photo_path !== null && strtolower(pathinfo($recipe->photo_path, PATHINFO_EXTENSION)) === 'pdf',
             'ingredients' => $ingredients->map(fn (RecipeIngredient $ingredient): array => [
                 'id' => (int) $ingredient->id,
                 'position' => (int) $ingredient->position,

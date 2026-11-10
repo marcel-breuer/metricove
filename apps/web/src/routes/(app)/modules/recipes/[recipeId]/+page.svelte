@@ -133,7 +133,9 @@
 			</div>
 		</header>
 
-		{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}
+		{#if recipe.photo_url}
+			{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="inline-flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface-subtle px-4 text-sm font-medium text-ink-secondary hover:border-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}
+		{/if}
 
 		<div class="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 			<Panel>

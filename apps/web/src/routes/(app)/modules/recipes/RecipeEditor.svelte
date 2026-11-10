@@ -138,15 +138,15 @@
 			</label>
 			<div class="{field}">
 				<label class="{field}">
-					<span class="{fieldLabel}">{$t('Recipe photo')} <span class="text-xs font-normal text-ink-muted">{$t('optional · JPEG, PNG or WebP · 5 MB max')}</span></span>
-					<input type="file" accept="image/jpeg,image/png,image/webp" onchange={choosePhoto} class="{fileInput}" />
+					<span class="{fieldLabel}">{$t('Recipe photo or PDF')} <span class="text-xs font-normal text-ink-muted">{$t('optional · JPEG, PNG or WebP up to 5 MB; PDF up to 10 MB')}</span></span>
+					<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" onchange={choosePhoto} class="{fileInput}" />
 				</label>
 				{#if photoFile}
 					<p class="text-xs text-ink-muted">{$t('Selected:')} {photoFile.name}</p>
 				{:else if recipe?.photo_url && !removePhoto}
 					<div class="flex items-center gap-3">
-						<img src={recipe.photo_url} alt={$t('Current recipe')} class="h-14 w-20 rounded-lg object-cover" />
-						<Button variant="ghost" size="small" type="button" onclick={() => (removePhoto = true)}>{$t('Remove current photo')}</Button>
+						{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="rounded-lg border border-line px-3 py-2 text-sm text-ink-secondary hover:border-accent-ink">{$t('Open recipe PDF')}</a>{:else}<img src={recipe.photo_url} alt={$t('Current recipe')} class="h-14 w-20 rounded-lg object-cover" />{/if}
+						<Button variant="ghost" size="small" type="button" onclick={() => (removePhoto = true)}>{$t('Remove current file')}</Button>
 					</div>
 				{:else if removePhoto}
 					<p class="text-xs text-ink-muted">{$t('The current photo will be removed when you save.')}</p>

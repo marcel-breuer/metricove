@@ -18,7 +18,7 @@ describe('editableRecipeIngredients', () => {
 describe('recipe drafts', () => {
 	const recipe: Recipe = {
 		id: 7, title: 'Soup', category: null, instructions: 'Stir.', servings: null, preparation_minutes: 20, visibility: 'household',
-		is_favorite: false, can_edit: true, can_change_visibility: true, needs_review: true, photo_url: null, updated_at: null,
+		is_favorite: false, can_edit: true, can_change_visibility: true, needs_review: true, photo_url: null, photo_is_pdf: false, updated_at: null,
 		ingredients: [{ id: 1, position: 0, name: 'Water', quantity: '1.5000', unit: 'l', note: null }]
 	};
 

@@ -87,6 +87,9 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	let costPeriodEnd = $state('');
 	let costPeriod = $state<'once' | 'monthly' | 'quarterly' | 'yearly'>('once');
 	let costDescription = $state('');
+	let costInvoiceFile = $state<File | null>(null);
+	let removeCostInvoice = $state(false);
+	let costInvoiceInput = $state<HTMLInputElement | undefined>(undefined);
 
 	const chartPoints = $derived(distanceTrend ? vehicleDistanceChartPoints(distanceTrend, $numberLocale) : []);
 	const chartMaximum = $derived(Math.max(1, ...chartPoints.map((point) => Number(point.distance))));
@@ -329,27 +332,37 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	async function saveCost(event: SubmitEvent): Promise<void> {
 		event.preventDefault(); if (!vehicle || (!editingCostId && !canCreate)) return;
 		const payload = { category: costCategory, amount: costCategory === 'fuel' && costCalculatedFuelField === 'amount' ? null : canonicalizeDecimalInput(costAmount, $numberLocale), currency: costCurrency, period_start: costPeriodStart, period_end: costPeriodEnd || null, period: costPeriod, description: costDescription, fuel_liters: costCategory === 'fuel' && costCalculatedFuelField !== 'fuel_liters' && costFuelLiters ? canonicalizeDecimalInput(costFuelLiters, $numberLocale) : null, fuel_unit_price: costCategory === 'fuel' && costCalculatedFuelField !== 'fuel_unit_price' && costFuelUnitPrice ? canonicalizeDecimalInput(costFuelUnitPrice, $numberLocale) : null, fuel_odometer_value: costCategory === 'fuel' && costFuelOdometer ? canonicalizeDecimalInput(costFuelOdometer, $numberLocale) : null, fuel_full_tank: costCategory === 'fuel' && costFuelFullTank };
-		const reset = () => { costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costFuelFullTank = false; costCalculatedFuelField = null; costCurrency = $defaultCurrency; costCategory = 'fuel'; };
-		if (!editingCostId) {
-			await createRecord('costs', payload, reset);
-			return;
-		}
-		if (!canEdit) return;
+		if (editingCostId && !canEdit) return;
 		message = ''; error = '';
 		const token = tokenOrError(); if (!token) return;
+		const body = new FormData();
+		for (const [key, value] of Object.entries(payload)) body.set(key, value === null ? '' : String(value));
+		if (costInvoiceFile) body.set('invoice', costInvoiceFile);
+		if (removeCostInvoice) body.set('remove_invoice', '1');
 		saving = true;
 		try {
-			const response = await fetch(`/api/vehicles/costs/${editingCostId}`, {
-				method: 'PATCH', credentials: 'same-origin',
-				headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-				body: JSON.stringify(payload)
+			const response = await fetch(editingCostId ? `/api/vehicles/costs/${editingCostId}` : `/api/vehicles/${vehicle.id}/costs`, {
+				method: 'POST', credentials: 'same-origin',
+				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token },
+				body
 			});
 			const result = (await response.json()) as VehicleResponse & ApiResponse;
 			if (response.status === 401) { await goto('/login'); return; }
 			if (!response.ok) { error = firstError(result) || result.message || 'The vehicle cost could not be saved.'; return; }
-			reset(); editingCostId = null; costModalOpen = false; message = 'Vehicle cost updated.'; await loadVehicle();
+			const wasEditing = editingCostId !== null;
+			resetCost(); editingCostId = null; costModalOpen = false; message = wasEditing ? 'Vehicle cost updated.' : 'Vehicle cost saved.'; await loadVehicle();
 		} catch { error = 'The vehicle cost could not be saved. Check your connection and try again.'; }
 		finally { saving = false; }
+	}
+
+	function resetCost(): void {
+		costAmount = ''; costDescription = ''; costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costFuelFullTank = false; costCalculatedFuelField = null; costCurrency = $defaultCurrency; costCategory = 'fuel'; costInvoiceFile = null; removeCostInvoice = false;
+		if (costInvoiceInput) costInvoiceInput.value = '';
+	}
+
+	function chooseCostInvoice(event: Event): void {
+		costInvoiceFile = (event.currentTarget as HTMLInputElement).files?.[0] ?? null;
+		if (costInvoiceFile) removeCostInvoice = false;
 	}
 
 	function editCost(cost: VehicleCost): void {
@@ -366,6 +379,8 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 		costFuelUnitPrice = cost.fuel_unit_price ? formatDecimalInput(cost.fuel_unit_price, $numberLocale) : '';
 		costFuelOdometer = cost.fuel_odometer_value ? formatDecimalInput(cost.fuel_odometer_value, $numberLocale) : '';
 		costFuelFullTank = cost.fuel_full_tank;
+		costInvoiceFile = null; removeCostInvoice = false;
+		if (costInvoiceInput) costInvoiceInput.value = '';
 		costCalculatedFuelField = null;
 		message = ''; error = ''; costModalOpen = true;
 	}
@@ -374,7 +389,8 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 		editingCostId = null;
 		costCategory = 'fuel'; costAmount = ''; costCurrency = $defaultCurrency;
 		costFuelLiters = ''; costFuelUnitPrice = ''; costFuelOdometer = ''; costFuelFullTank = false; costCalculatedFuelField = null;
-		costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costDescription = '';
+		costPeriodStart = localDate(); costPeriodEnd = ''; costPeriod = 'once'; costDescription = ''; costInvoiceFile = null; removeCostInvoice = false;
+		if (costInvoiceInput) costInvoiceInput.value = '';
 		message = ''; error = ''; costModalOpen = true;
 	}
 
@@ -563,11 +579,12 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 					<label class="block min-w-0 text-sm font-medium text-ink-secondary sm:col-span-1 lg:col-span-1">{$t("Period")}<select bind:value={costPeriod} class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base">{#each vehiclePeriods as period}<option value={period.value}>{$t(period.label)}</option>{/each}</select></label>
 					{#if costPeriod !== 'once'}<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-4">{$t("Period ends")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={costPeriodEnd} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border border-control-line bg-control px-3 text-sm text-ink max-sm:text-base" /></label>{/if}
 					<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-6">{$t("Description")}<textarea bind:value={costDescription} maxlength="500" rows="3" class="mt-2 w-full rounded-[10px] border border-control-line bg-control px-3 py-2.5 text-sm text-ink max-sm:text-base" placeholder={$t("Service invoice, fuel stop…")}></textarea></label>
+					<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-6">{$t('Invoice file')} <span class="font-normal text-ink-muted">{$t('Optional · PDF, JPEG or PNG · 10 MB max')}</span><input bind:this={costInvoiceInput} type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onchange={chooseCostInvoice} class="mt-2 block w-full text-sm text-ink-muted file:mr-3 file:rounded-lg file:border file:border-line-strong file:bg-control file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink-secondary" />{#if costInvoiceFile}<span class="mt-2 block text-xs text-ink-muted">{$t('Selected:')} {costInvoiceFile.name}</span>{:else if editingCostId && costs.find((cost) => cost.id === editingCostId)?.invoice_url && !removeCostInvoice}<span class="mt-2 flex items-center gap-3 text-xs"><a href={costs.find((cost) => cost.id === editingCostId)?.invoice_url ?? ''} target="_blank" rel="noreferrer" class="text-accent-ink underline">{$t('Open current invoice')}</a><button type="button" class="text-danger underline" onclick={() => (removeCostInvoice = true)}>{$t('Remove current invoice')}</button></span>{:else if removeCostInvoice}<span class="mt-2 block text-xs text-ink-muted">{$t('The current invoice will be removed when you save.')}</span>{/if}</label>
 				</form>				{#snippet footer()}
 					<Button variant="secondary" type="button" onclick={() => (costModalOpen = false)}>{$t('Cancel')}</Button>
 					<Button type="submit" form="vehicle-cost-form" disabled={saving}>{$t(editingCostId ? "Update cost" : "Save cost")}</Button>
 				{/snippet}
-			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}{#if cost.fuel_full_tank} · {$t("Full tank")}{/if}</p>{/if}{#if cost.category === 'fuel' && cost.fuel_consumption_l_per_100km !== null}<p class="mt-2 text-sm font-medium text-accent-ink">{$t("Fuel consumption")}: {formatMeasurement(cost.fuel_consumption_l_per_100km, "L/100 km", $numberLocale)} L/100 km</p>{:else if cost.category === 'fuel' && cost.fuel_consumption_unavailable_reason}<p class="mt-2 text-xs leading-5 text-ink-muted">{$t(fuelConsumptionReason(cost.fuel_consumption_unavailable_reason))}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.can_edit}<div class="mt-3 flex flex-wrap gap-2"><Button type="button" size="small" variant="secondary" onclick={() => editCost(cost)}>{$t("Edit")}</Button><button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
+			</Modal>{/if}<ol class="mt-4 space-y-3">{#each costs as cost (cost.id)}<li class="rounded-xl border border-line glass-surface p-4"><div class="flex flex-wrap items-start justify-between gap-2"><p class="font-semibold capitalize text-ink">{cost.category}</p><span class="font-semibold text-accent-ink">{formatCurrency(cost.amount, cost.currency)}</span></div><p class="mt-1 text-xs capitalize text-ink-subtle">{$t(cost.period)} · {formatDate(cost.period_start)}{cost.period_end ? ` — ${formatDate(cost.period_end)}` : ''}</p>{#if cost.fuel_liters && cost.fuel_unit_price}<p class="mt-2 text-xs text-ink-muted">{formatMeasurement(cost.fuel_liters, "L")} {$t("liters")} × {formatCurrency(cost.fuel_unit_price, cost.currency)}/{$t("liter")}{#if cost.fuel_odometer_value} · {$t("Odometer reading")}: {formatMeasurement(cost.fuel_odometer_value, vehicle.odometer_unit)} {vehicle.odometer_unit}{/if}{#if cost.fuel_full_tank} · {$t("Full tank")}{/if}</p>{/if}{#if cost.category === 'fuel' && cost.fuel_consumption_l_per_100km !== null}<p class="mt-2 text-sm font-medium text-accent-ink">{$t("Fuel consumption")}: {formatMeasurement(cost.fuel_consumption_l_per_100km, "L/100 km", $numberLocale)} L/100 km</p>{:else if cost.category === 'fuel' && cost.fuel_consumption_unavailable_reason}<p class="mt-2 text-xs leading-5 text-ink-muted">{$t(fuelConsumptionReason(cost.fuel_consumption_unavailable_reason))}</p>{/if}{#if cost.description}<p class="mt-2 text-sm text-ink-muted">{cost.description}</p>{/if}{#if cost.invoice_url}<a href={cost.invoice_url} target="_blank" rel="noreferrer" class="mt-3 inline-flex text-sm font-medium text-accent-ink underline">{$t('View invoice')}{#if cost.invoice_name}<span class="ml-2 text-ink-muted">{cost.invoice_name}</span>{/if}</a>{/if}{#if cost.can_edit}<div class="mt-3 flex flex-wrap gap-2"><Button type="button" size="small" variant="secondary" onclick={() => editCost(cost)}>{$t("Edit")}</Button><button type="button" onclick={() => { deleteTarget = { id: cost.id, type: 'costs' }; deleteOpen = true; }} class="rounded-lg px-2 py-1 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>{/if}</li>{:else}<li class="rounded-xl border border-line glass-surface p-4 text-sm text-ink-muted">{$t("No vehicle costs yet.")}</li>{/each}</ol>{#if moreHistory.costs}<div class="mt-3 flex justify-center"><Button type="button" size="small" variant="secondary" onclick={() => void loadMoreHistory('costs')} disabled={loadingHistory.costs}>{$t(loadingHistory.costs ? 'Loading…' : 'Load older vehicle records')}</Button></div>{/if}</section>		</div>
 	</section>
 	{#if deleteTarget}<ConfirmModal bind:open={deleteOpen} title={$t("Delete vehicle record?")} message={$t(deleteTarget.type === 'odometer' ? 'Delete this odometer reading and its correction history? The timeline will be recalculated.' : 'Delete this vehicle record?')} busy={deleting} onConfirm={() => void deleteRecord()} />{/if}
 {:else}

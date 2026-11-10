@@ -199,7 +199,7 @@
 			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{#each visibleRecipes as recipe (recipe.id)}
 					<li class="{panel} flex min-w-0 flex-col overflow-hidden">
-						{#if recipe.photo_url}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}
+						{#if recipe.photo_url}{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="flex aspect-[16/9] items-center gap-3 border-b border-line bg-surface-subtle px-5 text-sm font-medium text-ink-secondary hover:text-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}{/if}
 						<div class="flex flex-1 flex-col gap-3 p-5">
 							<div class="flex items-start justify-between gap-3">
 								<div class="min-w-0">

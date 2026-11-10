@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Services\Recipes\RecipeQuantity;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Validator;
 use JsonException;
 
@@ -38,7 +39,7 @@ class StoreRecipeRequest extends FormRequest
             'ingredients.*.quantity' => ['nullable'],
             'ingredients.*.unit' => ['nullable', 'string', 'max:40'],
             'ingredients.*.note' => ['nullable', 'string', 'max:160'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photo' => $this->photoRules(),
         ];
     }
 
@@ -81,5 +82,17 @@ class StoreRecipeRequest extends FormRequest
         if (is_array($decoded)) {
             $this->merge(['ingredients' => $decoded]);
         }
+    }
+
+    /** @return list<string> */
+    private function photoRules(): array
+    {
+        $file = $this->file('photo');
+
+        if ($file instanceof UploadedFile && $file->getMimeType() === 'application/pdf') {
+            return ['nullable', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:10240'];
+        }
+
+        return ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
     }
 }

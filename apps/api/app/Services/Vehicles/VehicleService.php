@@ -18,8 +18,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class VehicleService
 {
@@ -504,19 +507,30 @@ class VehicleService
     {
         $vehicle = $this->findVisibleVehicle($actor, $vehicleId, ModuleCapability::Create);
         $attributes = $this->costAttributes($data);
-        $cost = DB::transaction(function () use ($actor, $vehicleId, $attributes): VehicleCost {
-            $vehicle = Vehicle::query()->whereKey($vehicleId)->lockForUpdate()->firstOrFail();
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $vehicle);
-            $cost = $vehicle->costs()->create([
-                'owner_user_id' => $vehicle->owner_user_id,
-                'created_by_user_id' => $actor->id,
-                'is_private' => $vehicle->is_private,
-                ...$attributes,
-            ]);
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $cost);
+        $invoicePath = $this->storeInvoice($data['invoice'] ?? null, $actor);
 
-            return $cost;
-        }, 3);
+        try {
+            $cost = DB::transaction(function () use ($actor, $vehicleId, $attributes, $data, $invoicePath): VehicleCost {
+                $vehicle = Vehicle::query()->whereKey($vehicleId)->lockForUpdate()->firstOrFail();
+                $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $vehicle);
+                $cost = $vehicle->costs()->create([
+                    'owner_user_id' => $vehicle->owner_user_id,
+                    'created_by_user_id' => $actor->id,
+                    'is_private' => $vehicle->is_private,
+                    ...$attributes,
+                    ...$this->invoiceAttributes($data['invoice'] ?? null, $invoicePath),
+                ]);
+                $this->access->authorize($actor, self::MODULE, ModuleCapability::Create, $cost);
+
+                return $cost;
+            }, 3);
+        } catch (Throwable $exception) {
+            if ($invoicePath !== null) {
+                Storage::disk('local')->delete($invoicePath);
+            }
+
+            throw $exception;
+        }
 
         return $this->presentCost($actor, $cost, $vehicle);
     }
@@ -531,17 +545,40 @@ class VehicleService
             ->whereKey($costId)
             ->firstOrFail();
         $attributes = $this->costAttributes($data);
+        $newInvoicePath = $this->storeInvoice($data['invoice'] ?? null, $actor);
+        $oldInvoicePath = null;
 
-        [$cost, $vehicle] = DB::transaction(function () use ($actor, $candidate, $costId, $attributes): array {
-            $vehicle = Vehicle::query()->whereKey($candidate->vehicle_id)->lockForUpdate()->firstOrFail();
-            $cost = VehicleCost::query()->whereKey($costId)->lockForUpdate()->firstOrFail();
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
-            $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $cost);
-            $cost->fill($attributes);
-            $cost->save();
+        try {
+            [$cost, $vehicle, $oldInvoicePath] = DB::transaction(function () use ($actor, $candidate, $costId, $attributes, $data, $newInvoicePath): array {
+                $vehicle = Vehicle::query()->whereKey($candidate->vehicle_id)->lockForUpdate()->firstOrFail();
+                $cost = VehicleCost::query()->whereKey($costId)->lockForUpdate()->firstOrFail();
+                $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
+                $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $cost);
+                if ($newInvoicePath !== null) {
+                    $oldPath = $cost->invoice_path;
+                    $cost->fill($this->invoiceAttributes($data['invoice'] ?? null, $newInvoicePath));
+                } elseif (($data['remove_invoice'] ?? false) === true || ($data['remove_invoice'] ?? false) === '1') {
+                    $oldPath = $cost->invoice_path;
+                    $cost->fill(['invoice_path' => null, 'invoice_name' => null, 'invoice_mime' => null]);
+                } else {
+                    $oldPath = null;
+                }
+                $cost->fill($attributes);
+                $cost->save();
 
-            return [$cost, $vehicle];
-        }, 3);
+                return [$cost, $vehicle, $oldPath];
+            }, 3);
+        } catch (Throwable $exception) {
+            if ($newInvoicePath !== null) {
+                Storage::disk('local')->delete($newInvoicePath);
+            }
+
+            throw $exception;
+        }
+
+        if ($oldInvoicePath !== null && $oldInvoicePath !== $newInvoicePath) {
+            Storage::disk('local')->delete($oldInvoicePath);
+        }
 
         return $this->presentCost($actor, $cost, $vehicle);
     }
@@ -613,13 +650,61 @@ class VehicleService
             ->whereKey($recordId)
             ->firstOrFail();
 
-        DB::transaction(function () use ($actor, $candidate, $modelClass, $recordId): void {
+        $invoicePath = DB::transaction(function () use ($actor, $candidate, $modelClass, $recordId, $type): ?string {
             $vehicle = Vehicle::query()->whereKey($candidate->vehicle_id)->lockForUpdate()->firstOrFail();
             $record = $modelClass::query()->whereKey($recordId)->lockForUpdate()->firstOrFail();
             $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $vehicle);
             $this->access->authorize($actor, self::MODULE, ModuleCapability::Edit, $record);
+            $invoicePath = $type === 'costs' ? $record->invoice_path : null;
             $record->delete();
+
+            return $invoicePath;
         }, 3);
+
+        if ($invoicePath !== null) {
+            Storage::disk('local')->delete($invoicePath);
+        }
+    }
+
+    /** @return array{path: string, mime: string, name: string} */
+    public function invoice(User $actor, int $costId): array
+    {
+        /** @var VehicleCost $cost */
+        $cost = $this->visibleResources($actor, VehicleCost::class, 'vehicle_costs', ModuleCapability::View, VehicleCost::query())
+            ->whereKey($costId)->firstOrFail();
+        $this->access->authorize($actor, self::MODULE, ModuleCapability::View, $cost);
+        $this->findVisibleVehicle($actor, (int) $cost->vehicle_id, ModuleCapability::View);
+        abort_if($cost->invoice_path === null || ! Storage::disk('local')->exists($cost->invoice_path), 404);
+
+        return ['path' => Storage::disk('local')->path($cost->invoice_path), 'mime' => $cost->invoice_mime ?? 'application/octet-stream', 'name' => $cost->invoice_name ?? 'invoice'];
+    }
+
+    private function storeInvoice(mixed $invoice, User $actor): ?string
+    {
+        if (! $invoice instanceof UploadedFile) {
+            return null;
+        }
+
+        $path = $invoice->store('vehicles/invoices/'.$actor->id, 'local');
+        if ($path === false) {
+            throw new \RuntimeException('The private vehicle invoice could not be stored.');
+        }
+
+        return $path;
+    }
+
+    /** @return array{invoice_path: ?string, invoice_name: ?string, invoice_mime: ?string} */
+    private function invoiceAttributes(mixed $invoice, ?string $path): array
+    {
+        if (! $invoice instanceof UploadedFile || $path === null) {
+            return ['invoice_path' => null, 'invoice_name' => null, 'invoice_mime' => null];
+        }
+
+        return [
+            'invoice_path' => $path,
+            'invoice_name' => mb_substr(basename($invoice->getClientOriginalName()), 0, 255),
+            'invoice_mime' => $invoice->getMimeType(),
+        ];
     }
 
     private function visibleVehicles(User $actor, ModuleCapability $capability): Builder
@@ -811,6 +896,9 @@ class VehicleService
             'fuel_full_tank' => (bool) $cost->fuel_full_tank,
             ...$this->fuelConsumptionForCost($actor, $cost, $vehicle),
             'can_edit' => $this->canEditRecord($actor, $cost, $vehicle),
+            'invoice_url' => $cost->invoice_path === null ? null : '/api/vehicles/costs/'.$cost->id.'/invoice',
+            'invoice_name' => $cost->invoice_name,
+            'invoice_mime' => $cost->invoice_mime,
         ];
     }
 

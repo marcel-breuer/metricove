@@ -222,6 +222,34 @@ class RecipesModuleTest extends TestCase
         $this->assertNull(Recipe::query()->findOrFail($recipeId)->photo_path);
     }
 
+    public function test_recipe_pdf_files_are_private_and_can_be_replaced_or_removed(): void
+    {
+        Storage::fake('local');
+        $owner = $this->member('PDF Recipe Owner');
+        $admin = $this->member('PDF Recipe Admin', true);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true]);
+        $this->grant($admin, ['view' => true, 'manage' => true]);
+        $this->enableRecipes($admin);
+        $pdf = "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF";
+        $payload = array_merge($this->payload(), ['photo' => UploadedFile::fake()->createWithContent('recipe.pdf', $pdf)]);
+        $payload['ingredients'] = json_encode($payload['ingredients'], JSON_THROW_ON_ERROR);
+
+        $created = $this->actingAs($owner, 'web')->post('/api/recipes', $payload, ['Accept' => 'application/json'])
+            ->assertCreated()->assertJsonPath('recipe.photo_is_pdf', true);
+        $recipeId = (int) $created->json('recipe.id');
+        $path = Recipe::query()->findOrFail($recipeId)->photo_path;
+        $this->assertNotNull($path);
+        Storage::disk('local')->assertExists($path);
+        $this->actingAs($owner, 'web')->get("/api/recipes/{$recipeId}/photo")
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->actingAs($admin, 'web')->get("/api/recipes/{$recipeId}/photo")->assertNotFound();
+
+        $this->actingAs($owner, 'web')->post("/api/recipes/{$recipeId}", [
+            '_method' => 'PATCH', 'remove_photo' => '1',
+        ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('recipe.photo_is_pdf', false);
+        Storage::disk('local')->assertMissing($path);
+    }
+
     public function test_recipes_work_when_other_food_modules_are_disabled_and_data_survives_disable(): void
     {
         Storage::fake('local');
