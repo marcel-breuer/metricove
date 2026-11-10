@@ -8,6 +8,17 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.26.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.25.0...metricove-v0.26.0) (2026-11-10)
+
+
+### Features
+
+* **mcp:** expose generated HTTP API reference ([d58826b](https://github.com/marcel-breuer/metricove/commit/d58826b18a4eebcfe3c656673a906746b599d47c))
+* **mcp:** expose generated HTTP API reference ([382ebab](https://github.com/marcel-breuer/metricove/commit/382ebabb4fd2d5fb0d33e9dab85a01f57f1aa018))
+* support recipe PDFs and vehicle invoices ([5e72c0f](https://github.com/marcel-breuer/metricove/commit/5e72c0f8b45c2aebeb42ad874f4ccc04a6ea07db))
+* support recipe PDFs and vehicle invoices ([5e72c0f](https://github.com/marcel-breuer/metricove/commit/5e72c0f8b45c2aebeb42ad874f4ccc04a6ea07db))
+* **vehicles:** support invoices and recipe PDFs ([a92d3b6](https://github.com/marcel-breuer/metricove/commit/a92d3b6a88a29c767802def087c362616b152bf8))
+
 ## [0.25.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.24.2...metricove-v0.25.0) (2026-11-10)
 
 
