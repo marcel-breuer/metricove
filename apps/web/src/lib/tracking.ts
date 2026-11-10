@@ -52,6 +52,7 @@ export type TrackerEntry = {
 	schema_version: number;
 	recorded_at: string;
 	note: string | null;
+	attachment: { name: string; mime_type: string; size: number; url: string } | null;
 	can_edit: boolean;
 	values: TrackerValue[];
 	created_at: string;

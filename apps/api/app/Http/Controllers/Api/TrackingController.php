@@ -11,6 +11,7 @@ use App\Services\Tracking\TrackerEntryService;
 use App\Services\Tracking\TrackerSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TrackingController extends Controller
 {
@@ -76,6 +77,26 @@ class TrackingController extends Controller
             'message' => 'Tracker entry saved.',
             'entry' => $entries->create($this->actor($request), $tracker, $request->validated()),
         ], 201);
+    }
+
+    public function previewEntryAttachment(Request $request, int $tracker, TrackerEntryService $entries): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ]);
+
+        return response()->json($entries->previewAttachment($this->actor($request), $tracker, $validated['file']));
+    }
+
+    public function entryAttachment(Request $request, int $entry, TrackerEntryService $entries)
+    {
+        $record = $entries->attachment($this->actor($request), $entry);
+
+        return Storage::disk('local')->download(
+            $record->attachment_path,
+            $record->attachment_name,
+            ['Content-Type' => $record->attachment_mime ?? 'application/octet-stream', 'X-Content-Type-Options' => 'nosniff'],
+        );
     }
 
     public function updateEntry(

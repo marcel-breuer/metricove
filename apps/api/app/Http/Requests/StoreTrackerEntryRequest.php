@@ -20,7 +20,18 @@ class StoreTrackerEntryRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:1000'],
             'values' => ['required', 'array'],
             'values.*' => ['nullable'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('values'))) {
+            $values = json_decode($this->input('values'), true);
+            if (is_array($values)) {
+                $this->merge(['values' => $values]);
+            }
+        }
     }
 
     protected function withValidator(Validator $validator): void

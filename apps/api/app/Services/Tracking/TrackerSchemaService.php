@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -181,21 +182,28 @@ class TrackerSchemaService
 
     public function delete(User $actor, int $trackerId): void
     {
-        DB::transaction(function () use ($actor, $trackerId): void {
+        $attachmentPaths = [];
+        DB::transaction(function () use ($actor, $trackerId, &$attachmentPaths): void {
             $definition = TrackerDefinition::query()
                 ->whereKey($trackerId)
                 ->lockForUpdate()
                 ->firstOrFail();
             $this->access->authorize($actor, 'tracking', ModuleCapability::Manage, $definition);
 
-            $definition->entries()->lockForUpdate()->chunkById(100, function ($entries): void {
+            $definition->entries()->lockForUpdate()->chunkById(100, function ($entries) use (&$attachmentPaths): void {
                 foreach ($entries as $entry) {
+                    if (is_string($entry->attachment_path)) {
+                        $attachmentPaths[] = $entry->attachment_path;
+                    }
                     $entry->delete();
                 }
             });
 
             $definition->delete();
         }, 5);
+        if ($attachmentPaths !== []) {
+            Storage::disk('local')->delete($attachmentPaths);
+        }
     }
 
     public function findVisible(User $actor, int $trackerId, ModuleCapability $capability): TrackerDefinition
