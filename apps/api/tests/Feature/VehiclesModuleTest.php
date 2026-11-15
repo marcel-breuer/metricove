@@ -478,6 +478,32 @@ class VehiclesModuleTest extends TestCase
         ])->assertCreated();
     }
 
+    public function test_fuel_cost_can_be_saved_with_only_the_total_amount_through_multipart_form_data(): void
+    {
+        $admin = $this->admin();
+        app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', true);
+        $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
+        $this->grant($member, ['view' => true, 'create' => true]);
+        $vehicleId = $this->createVehicle($member, 'private');
+
+        $this->actingAs($member, 'web')->post("/api/vehicles/{$vehicleId}/costs", [
+            'category' => 'fuel',
+            'amount' => '42.50',
+            'currency' => 'EUR',
+            'period_start' => '2026-11-15',
+            'period' => 'once',
+            'fuel_liters' => '',
+            'fuel_unit_price' => '',
+            'fuel_odometer_value' => '',
+            'fuel_full_tank' => '0',
+        ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('cost.amount', '42.50')
+            ->assertJsonPath('cost.fuel_liters', null)
+            ->assertJsonPath('cost.fuel_unit_price', null)
+            ->assertJsonPath('cost.fuel_odometer_value', null);
+    }
+
     public function test_private_vehicle_and_related_records_require_exact_grants_and_disable_preserves_data(): void
     {
         $admin = $this->admin();
