@@ -34,3 +34,28 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 ## UI analysis and design changes
 
 Metricove includes a SvelteKit UI. For new UI views, redesigns, and targeted UI reviews, use the repository skill `$unslop` at [.agents/skills/unslop/SKILL.md](.agents/skills/unslop/SKILL.md). Audit the rendered interface before proposing or making visual changes, then follow the skill's direction and review steps. Preserve Metricove's branding, design tokens, existing components, responsive behavior, accessibility, and localization rules in [Frontend components and i18n](.agent/skills/frontend-components-i18n/SKILL.md). Keep existing product behavior and agent rules; make only changes supported by the audit, and do not introduce a full redesign without the user's request.
+
+## CI/CD-Pipeline (Stand 2026-11-15)
+
+Ziel: Pipeline auf Unit-Tests, Releases und Tags minimieren. Überflüssige Prüfungen (Security, Lint/Format, Static Analysis, Build-Only, Commit-Titel-Validierung, Dependabot-Auto-Merge) laufen nicht mehr in GitHub Actions.
+
+**Behaltene Workflows**
+- `quality-gates.yml` (PR und push auf `main`): Backend-Unit-/Feature-Tests (`composer test`, PHP 8.4, SQLite) und Frontend-Unit-Tests (`bun test`, Bun 1.4.4). Required für Release-Automation.
+- `compose-build.yml` (nur push auf `main`): Compose-Konfiguration prüfen, Release-Images für AMD64/ARM64 validieren (ohne Veröffentlichung), Upgrade-/Rollback- und Backup-/Restore-Smoke-Tests. Nur noch Release-Gate, keine PR-Läufe mehr.
+- `release-please.yml` (push auf `main`, manuell): Release-PR erstellen/aktualisieren, Tags und GitHub-Releases erzeugen. Wartet auf erfolgreiche `quality-gates.yml`- und `compose-build.yml`-Läufe für denselben Commit.
+- `publish-images.yml` (Release `published`): Container-Images für API, Web und Gateway veröffentlichen. Prüft Tag-Format, CHANGELOG-Eintrag und erfolgreiche Main-CI für den Release-Commit.
+
+**Entfernte Workflows und Jobs**
+- `dependabot-auto-merge.yml`: Auto-Merge von Dependabot-PRs entfernt; Dependabot-PRs werden manuell gemergt.
+- `quality-gates.yml` Job "Backend quality": Commit-/PR-Titel-Prüfung (Conventional Commits), Pint-Formatierung, PHPStan-Analyse entfernt.
+- `quality-gates.yml` Job "Frontend quality": Svelte/TypeScript-Check und Build-Only entfernt.
+- `quality-gates.yml` Job "Security audit": `composer audit` und `bun audit` entfernt.
+- `quality-gates.yml` Job "PostgreSQL integration": entfernt, weil es kein Browser-/E2E-Test ist. Das Backend läuft in CI bereits mit SQLite.
+- `compose-build.yml` PR-Trigger: entfernt, da PR-Läufe nur Build-Validierung ohne Release-Bezug waren.
+
+**Regel: Vor jedem PR lokal alle Pipeline-Schritte ausführen**
+Vor dem PR die Befehle der behaltenen Jobs lokal ausführen und die Ergebnisse in die PR-Beschreibung schreiben:
+- `cd apps/api && composer install && composer test` (falls `composer test` lokal wegen Composer-Version oder `memory_limit` scheitert: `php -d memory_limit=-1 artisan test`)
+- `cd apps/web && bun install --frozen-lockfile && bun test`
+- Bei Änderungen an `compose.yaml` oder Dockerfiles: `docker compose --env-file .env.example config --quiet` und die Smoke-Skripte aus `compose-build.yml`
+- Release-Workflows nur syntaktisch prüfen. Keine echten Releases, Tags oder Images veröffentlichen.
