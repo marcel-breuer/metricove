@@ -7,7 +7,7 @@ export type CurrencyDisplay = 'code' | 'symbol';
 
 const german: Record<string, string> = {
 	'Full tank': 'Vollgetankt', 'Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.': 'Nur nach vollständigem Tanken markieren. Der Verbrauch wird zwischen aufeinanderfolgenden Volltankungen mit Kilometerständen berechnet.',
-	'Enter any two of amount, quantity and price to calculate the third.': 'Gib zwei der Werte Betrag, Kraftstoffmenge und Literpreis ein, um den dritten zu berechnen.',
+	'Enter the total amount; fuel quantity, price per liter and odometer are optional. Two values calculate the third.': 'Gib den Gesamtbetrag ein; Kraftstoffmenge, Literpreis und Kilometerstand sind optional. Zwei Werte berechnen den dritten.',
 	'Calculated from the other two values.': 'Aus den beiden anderen Werten berechnet.', 'Fuel consumption': 'Kraftstoffverbrauch',
 	'Fuel consumption: {value} L/100 km': 'Kraftstoffverbrauch: {value} l/100 km',
 	'Mark this and the previous refueling as full to see consumption.': 'Markiere diesen und den vorherigen Tankvorgang als Volltankung, um den Verbrauch zu sehen.',
@@ -972,7 +972,6 @@ Object.assign(routeGerman, {
 	'Review liters and unit price before saving. Odometer is optional.': 'Prüfe Liter und Literpreis vor dem Speichern. Der Kilometerstand ist optional.',
 	'Fuel quantity (liters)': 'Kraftstoffmenge (Liter)',
 	'Fuel quantity and price must be entered together, or left blank.': 'Kraftstoffmenge und Literpreis müssen gemeinsam ausgefüllt oder beide leer gelassen werden.',
-	'Optional pair': 'Optional – beide zusammen',
 	'Enter both fuel quantity and unit price, or leave both blank.': 'Kraftstoffmenge und Literpreis müssen gemeinsam ausgefüllt oder beide leer gelassen werden.',
 	'Price per liter': 'Preis pro Liter',
 	'Vehicle financing': 'Fahrzeugfinanzierung',
