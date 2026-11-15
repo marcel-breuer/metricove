@@ -8,6 +8,15 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.26.2](https://github.com/marcel-breuer/metricove/compare/metricove-v0.26.1...metricove-v0.26.2) (2026-11-15)
+
+
+### Bug Fixes
+
+* **vehicles:** clarify optional fuel details ([#260](https://github.com/marcel-breuer/metricove/issues/260)) ([0a2f0fa](https://github.com/marcel-breuer/metricove/commit/0a2f0fa978c9641db74c36f23dba072b6536af3d))
+* **vehicles:** restore cost dialog contrast ([#260](https://github.com/marcel-breuer/metricove/issues/260)) ([0e427c2](https://github.com/marcel-breuer/metricove/commit/0e427c266e7ac0b192c2e0e8f1c59d1304133ded))
+* **vehicles:** restore dialog contrast and clarify fuel details ([6b0e2a6](https://github.com/marcel-breuer/metricove/commit/6b0e2a6c0097266fffe92595aedcfbb5f0fa40ad))
+
 ## [0.26.1](https://github.com/marcel-breuer/metricove/compare/metricove-v0.26.0...metricove-v0.26.1) (2026-11-10)
 
 
