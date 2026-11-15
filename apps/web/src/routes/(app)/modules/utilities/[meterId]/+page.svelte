@@ -1,4 +1,6 @@
 <script lang="ts">
+	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BackLink from '#lib/ui/BackLink.svelte';
 	import { fileInput } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t, visibilityLabel } from '#lib/i18n';
@@ -230,11 +232,15 @@
 	<section class="mx-auto max-w-2xl rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8"><p class="text-sm font-medium text-warning">{$t("Utilities View access is required.")}</p><h1 class="mt-2 text-2xl font-semibold text-ink">{$t("This meter is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></section>
 {:else if meter}
 	<section class="mx-auto max-w-screen-xl">
-		<a href="/modules/utilities" class="inline-flex items-center gap-2 text-sm font-medium text-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink"><span aria-hidden="true">←</span> {$t("All meters")}</a>
-		<div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+		<BackLink href="/modules/utilities" label="All meters" />
+		<PageHeader class="mt-5 border-b border-line pb-6">
 			<div><p class="text-xs font-semibold text-accent-ink">{meter.meter_label} {$t("meter ·")} {$t(visibilityLabel(meter.visibility))}</p><h1 class="page-title break-words">{meter.name}</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{meter.description ?? 'Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.'}</p></div>
-			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></div></div>
-		</div>
+			{#snippet actions()}
+				{#if meter}
+				<div class="grid min-w-0 grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></div></div>
+				{/if}
+			{/snippet}
+		</PageHeader>
 		{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 

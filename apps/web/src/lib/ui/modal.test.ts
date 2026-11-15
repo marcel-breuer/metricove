@@ -49,6 +49,15 @@ describe('Modal', () => {
 		expect(body.slice(footer)).toContain('<span>Save</span>');
 	});
 
+	it.each(['default', 'wide'] as const)('keeps %s dialog actions outside the scrolling body', (size) => {
+		const { body } = render(Modal, { props: { title: 'Edit', size, children: text('Fields'), footer: text('Save') } });
+		const content = body.indexOf('overflow-y-auto overscroll-contain');
+		const footer = body.indexOf('<footer');
+		expect(content).toBeGreaterThan(-1);
+		expect(footer).toBeGreaterThan(content);
+		expect(body.slice(footer)).toContain('<span>Save</span>');
+	});
+
 	it('translates the close button in German', () => {
 		setUserPreferences({ language: 'de' });
 		const { body } = render(Modal, { props: { title: 'Test', size: 'fullscreen', children: text('x') } });

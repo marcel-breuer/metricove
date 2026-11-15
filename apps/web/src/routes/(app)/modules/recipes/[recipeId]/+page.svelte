@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import { iconButton, panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -113,7 +114,7 @@
 			<Button href="/modules/recipes" variant="secondary" class="mt-5">{$t('All recipes')}</Button>
 		</Panel>
 	{:else}
-		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
+		<PageHeader>
 			<div class="min-w-0">
 				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
 				<h1 class="page-title break-words">{recipe.title}</h1>
@@ -124,14 +125,16 @@
 					{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
 				</p>
 			</div>
-			<div class="flex items-center gap-3 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-auto">
-				<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="{iconButton} aria-pressed:text-warning max-sm:grow-0!">{@render star(recipe.is_favorite)}</button>
-				{#if recipe.can_edit}
-					<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
-					<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>
+			{#snippet actions()}
+				{#if recipe}
+					<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</button>
+					{#if recipe.can_edit}
+						<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
+						<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>
+					{/if}
 				{/if}
-			</div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		{#if recipe.photo_url}
 			{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="inline-flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface-subtle px-4 text-sm font-medium text-ink-secondary hover:border-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}

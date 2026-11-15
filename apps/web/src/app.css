@@ -183,7 +183,7 @@ html[data-theme="dark"] {
 	transition: background-color 180ms ease-out, border-color 180ms ease-out;
 	padding: 10px 12px;
 	color: var(--color-ink);
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 20px;
 }
 

@@ -363,7 +363,7 @@ const routeGerman: Record<string, string> = {
 	'(decimal string, up to 14 whole and 6 fractional digits), and optional': '(Dezimalzahl mit bis zu 14 Vorkommastellen und 6 Nachkommastellen), optional',
 	'(integer),': '(Ganzzahl),', '(max 10 MB, 1,000 rows)': '(max. 10 MB, 1.000 Zeilen)', '(optional,': '(optional,', '(optional, max 5 MB)': '(optional, max. 5 MB)',
 	'(optional)': '(optional)', '(up to 2,000 characters).': '(bis zu 2.000 Zeichen).', '(use minus to remove)': '(mit Minuszeichen zum Entfernen)', '(YYYY-MM-DD),': '(JJJJ-MM-TT),',
-	'← All trackers': '← Alle Tracker', '★ Favorites': '★ Favoriten',
+	'All trackers': 'Alle Tracker', '← All trackers': '← Alle Tracker', '★ Favorites': '★ Favoriten',
 	'A due occurrence is added to transactions only when you record it.': 'Ein fälliger Eintrag wird erst dann zu den Buchungen hinzugefügt, wenn du ihn erfasst.',
 	'A private collection for your household: clear quantities, useful notes and the way you like to make it.': 'Eine private Sammlung für deinen Haushalt: klare Mengenangaben, hilfreiche Notizen und deine bevorzugte Zubereitung.',
 	'A reading can be added out of order when its value fits between the neighboring readings.': 'Ein Messwert kann nachträglich eingefügt werden, wenn er zwischen die benachbarten Messwerte passt.',

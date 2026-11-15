@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import { panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -122,7 +123,7 @@
 			<Button href="/modules/notes" variant="secondary" class="mt-5">{$t('All notes')}</Button>
 		</Panel>
 	{:else}
-		<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start">
+		<PageHeader>
 			<div class="min-w-0">
 				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{$t(note.shared_with_household ? 'Shared with household' : 'Private note')}{#if note.archived_at} · {$t('Archived')}{/if}</p>
 				<h1 class="page-title break-words">{note.title}</h1>
@@ -132,15 +133,17 @@
 					{#each note.tags as tag (tag.id)}<Badge>{tag.name}</Badge>{/each}
 				</div>
 			</div>
-			<div class="flex items-center gap-3 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-auto">
-				{#if note.is_owner && note.can_edit}
-					<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
-					<Button variant="secondary" onclick={() => void archiveNote(note!, !note!.archived_at)}>{$t(note.archived_at ? 'Restore' : 'Archive')}</Button>
+			{#snippet actions()}
+				{#if note}
+					{#if note.is_owner && note.can_edit}
+						<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
+						<Button variant="secondary" onclick={() => void archiveNote(note!, !note!.archived_at)}>{$t(note.archived_at ? 'Restore' : 'Archive')}</Button>
+					{/if}
+					{#if note.can_share}<Button variant="secondary" onclick={() => void toggleSharing(note!)}>{$t(note.shared_with_household ? 'Make private' : 'Share with household')}</Button>{/if}
+					{#if note.can_edit}<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>{/if}
 				{/if}
-				{#if note.can_share}<Button variant="secondary" onclick={() => void toggleSharing(note!)}>{$t(note.shared_with_household ? 'Make private' : 'Share with household')}</Button>{/if}
-				{#if note.can_edit}<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>{/if}
-			</div>
-		</header>
+			{/snippet}
+		</PageHeader>
 
 		{#if !note.is_owner}<Notice tone="info" message="This note is shared for reading. Only its owner can edit it." />{/if}
 

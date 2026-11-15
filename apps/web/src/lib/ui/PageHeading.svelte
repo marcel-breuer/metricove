@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import PageHeader from './PageHeader.svelte';
 	import { t } from '#lib/i18n';
 
 	let {
@@ -17,11 +18,8 @@
 	} = $props();
 </script>
 
-<header class="flex flex-wrap items-end justify-between gap-4 max-sm:items-start {className}">
-	<div class="min-w-0">
-		{#if eyebrow}<p class="text-xs font-semibold text-accent-ink">{$t(eyebrow)}</p>{/if}
-		<h1 class="page-title">{$t(title)}</h1>
-		{#if description}<p class="mt-2.5 max-w-2xl text-[0.9375rem] leading-6 text-ink-secondary">{$t(description)}</p>{/if}
-	</div>
-	{#if actions}<div class="flex items-center gap-3 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-auto">{@render actions()}</div>{/if}
-</header>
+<PageHeader class={className} {actions}>
+	{#if eyebrow}<p class="text-xs font-semibold text-accent-ink">{$t(eyebrow)}</p>{/if}
+	<h1 class="page-title">{$t(title)}</h1>
+	{#if description}<p class="mt-2 max-w-2xl text-[0.9375rem] leading-6 text-ink-secondary">{$t(description)}</p>{/if}
+</PageHeader>
