@@ -336,7 +336,7 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 		message = ''; error = '';
 		const token = tokenOrError(); if (!token) return;
 		const body = new FormData();
-		for (const [key, value] of Object.entries(payload)) body.set(key, value === null ? '' : String(value));
+		for (const [key, value] of Object.entries(payload)) body.set(key, value === null ? '' : typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
 		if (costInvoiceFile) body.set('invoice', costInvoiceFile);
 		if (removeCostInvoice) body.set('remove_invoice', '1');
 		saving = true;
