@@ -52,8 +52,8 @@
 					<li>
 						<a href={`/modules/${module.key}`} class="group flex min-h-20 items-center gap-4 px-4 py-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:px-6">
 							<span class="grid size-11 shrink-0 place-items-center rounded-xl border border-line-strong bg-page text-accent-ink"><ModuleIcon name={module.key} class="size-5" /></span>
-							<span class="min-w-0 flex-1"><span class="block font-semibold text-ink">{$t(module.label)}</span><span class="mt-1 block text-sm leading-5 text-ink-muted">{$t(module.description)}</span></span>
-							<span class="hidden shrink-0 text-xs font-medium text-ink-subtle sm:inline">{$t(module.capabilities.view ? 'View access' : module.capabilities.create ? 'Create access' : module.capabilities.edit ? 'Edit access' : 'Manage access')}</span>
+							<span class="min-w-0 flex-1"><span class="block font-semibold text-ink">{$t(module.label)}</span><span class="mt-1 block text-sm leading-5 text-ink-muted">{$t(module.description)}</span><span class="mt-2 block text-xs font-medium text-ink-subtle">{$t(module.capabilities.view ? 'View access' : module.capabilities.create ? 'Create access' : module.capabilities.edit ? 'Edit access' : 'Manage access')}</span></span>
+
 							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5 shrink-0 text-ink-subtle transition-colors group-hover:text-accent-ink"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
 						</a>
 					</li>

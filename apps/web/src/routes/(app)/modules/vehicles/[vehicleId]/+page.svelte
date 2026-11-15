@@ -1,4 +1,6 @@
 <script lang="ts">
+	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BackLink from '#lib/ui/BackLink.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t, visibilityLabel } from '#lib/i18n';
 	import { page } from '$app/state';
@@ -457,11 +459,15 @@ import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	<section class="mx-auto max-w-2xl rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8"><p class="text-sm font-medium text-warning">{$t("Vehicles View access is required.")}</p><h1 class="mt-2 text-2xl font-semibold text-ink">{$t("This vehicle is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An administrator can enable Vehicles and grant the exact module capability. Private vehicle records still require an explicit record grant.")}</p><a href="/modules/vehicles" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Vehicles")}</a></section>
 {:else if vehicle}
 	<section class="mx-auto max-w-screen-xl">
-		<a href="/modules/vehicles" class="inline-flex items-center gap-2 text-sm font-medium text-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-ink"><span aria-hidden="true">←</span> {$t("All vehicles")}</a>
-		<div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+		<BackLink href="/modules/vehicles" label="All vehicles" />
+		<PageHeader class="mt-5 border-b border-line pb-6">
 			<div><p class="text-xs font-semibold text-accent-ink">{vehicle.make} {vehicle.model}{vehicle.model_year ? ` · ${vehicle.model_year}` : ''} · {$t(visibilityLabel(vehicle.visibility))}</p><h1 class="page-title break-words">{vehicle.name}</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{vehicle.description ?? `${vehicle.fuel_type} · ${vehicle.odometer_unit} odometer`}</p></div>
-			<div class="grid grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest odometer")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestReading?.value, vehicle.odometer_unit)} <span class="text-sm font-medium text-ink-muted">{vehicle.odometer_unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Active cover")}</span><span class="mt-1 block text-lg font-semibold text-ink">{activeInsuranceCount}</span></div></div>
-		</div>
+			{#snippet actions()}
+				{#if vehicle}
+				<div class="grid min-w-0 grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest odometer")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestReading?.value, vehicle.odometer_unit)} <span class="text-sm font-medium text-ink-muted">{vehicle.odometer_unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Active cover")}</span><span class="mt-1 block text-lg font-semibold text-ink">{activeInsuranceCount}</span></div></div>
+				{/if}
+			{/snippet}
+		</PageHeader>
 		{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 			{#if canCreate}

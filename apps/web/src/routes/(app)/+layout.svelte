@@ -313,10 +313,9 @@
 					</div>
 				</div>
 				{#if canCreateTracker}
-					<Button href="/modules/tracking?create=1" size="small" aria-label={$t('Create tracker')} class="shrink-0 sm:order-last">
+					<Button href="/modules/tracking?create=1" aria-label={$t('Create tracker')} class="shrink-0 sm:order-last">
 						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-						<span class="hidden md:inline">{$t('Create tracker')}</span>
-						<span class="md:hidden">{$t('Create')}</span>
+						<span>{$t('Create tracker')}</span>
 					</Button>
 				{/if}
 				<form

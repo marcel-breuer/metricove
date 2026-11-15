@@ -6,7 +6,7 @@
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink';
 
 /** Text inputs, selects and textareas. 16px on phones so iOS Safari does not zoom. */
-export const control = `box-border min-h-11 w-full rounded-[10px] border border-control-line bg-control glass-control px-3 py-2.5 text-[0.9375rem] text-ink placeholder:text-ink-subtle focus:border-accent-ink max-sm:text-base ${focusRing}`;
+export const control = `box-border min-h-11 w-full rounded-[10px] border border-control-line bg-control glass-control px-3 py-2.5 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink ${focusRing}`;
 
 export const fieldLabel = 'text-sm font-[550] text-ink-secondary';
 
@@ -22,7 +22,7 @@ export const segmented = 'inline-flex min-h-11 items-center gap-1 rounded-[10px]
 
 export const segmentedButton = 'grid min-h-10 min-w-10 cursor-pointer place-items-center rounded-lg text-lg text-ink-secondary transition-colors hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-ink';
 
-export const modalActions = 'mt-6 flex flex-wrap justify-end gap-3 max-sm:*:flex-auto';
+export const modalActions = 'mt-6 flex flex-wrap items-center justify-end gap-3';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'small' | 'medium' | 'large';
@@ -47,7 +47,7 @@ export function buttonClasses({
 	align = 'center'
 }: { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; align?: 'center' | 'start' } = {}): string {
 	return [
-		'inline-flex cursor-pointer items-center gap-2 border leading-5 font-semibold no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-55',
+		'inline-flex max-w-full cursor-pointer items-center gap-2 border leading-5 font-semibold no-underline transition-colors disabled:cursor-not-allowed disabled:opacity-55',
 		align === 'start' ? 'justify-start' : 'justify-center',
 		focusRing,
 		buttonVariants[variant],

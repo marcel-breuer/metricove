@@ -18,6 +18,7 @@ plugin({
 const { default: Button } = await import('./Button.svelte');
 const { default: EmptyState } = await import('./EmptyState.svelte');
 const { default: Disclosure } = await import('./Disclosure.svelte');
+const { default: PageHeader } = await import('./PageHeader.svelte');
 const { default: PageHeading } = await import('./PageHeading.svelte');
 
 const text = (value: string) => createRawSnippet(() => ({ render: () => `<span>${value}</span>` }));
@@ -49,4 +50,13 @@ describe('shared UI components', () => {
 		const { body } = render(PageHeading, { props: { eyebrow: 'Household access', title: 'Manage members' } });
 		expect(body).toContain('>Mitglieder verwalten</h1>');
 	});
+	it('keeps record content literal and renders optional actions after the heading', () => {
+		setUserPreferences({ language: 'de' });
+		const children = text('Overview');
+		const { body } = render(PageHeader, { props: { children, actions: text('Edit') } });
+		expect(body).toContain('<span>Overview</span>');
+		expect(body.indexOf('<span>Edit</span>')).toBeGreaterThan(body.indexOf('<span>Overview</span>'));
+		expect(render(PageHeader, { props: { children } }).body).not.toContain('<span>Edit</span>');
+	});
+
 });

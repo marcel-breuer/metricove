@@ -1,4 +1,6 @@
 <script lang="ts">
+	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BackLink from '#lib/ui/BackLink.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import { t } from '#lib/i18n';
@@ -462,20 +464,25 @@
 	</section>
 {:else if tracker}
 	<section class="mx-auto max-w-screen-xl">
-		<div class="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
+		<BackLink href="/modules/tracking" label="All trackers" />
+		<PageHeader class="mt-5 border-b border-line pb-6">
 			<div class="min-w-0">
-				<a href="/modules/tracking" class="text-sm font-medium text-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("← All trackers")}</a>
-				<div class="mt-4 flex flex-wrap items-center gap-2">
+				<div class="flex flex-wrap items-center gap-2">
 					<p class="text-sm font-medium text-accent-ink">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
 					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
 				</div>
 				<h1 class="page-title break-words">{tracker.name}</h1>
 				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{tracker.description}</p>{/if}
 			</div>
-			{#if tracker.can_manage_schema}
-				<div class="flex flex-wrap gap-2"><button type="button" onclick={beginSchemaEdit} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit schema")}</button><button type="button" disabled={deletingTracker} onclick={() => (deleteTrackerModalOpen = true)} class="min-h-11 rounded-xl border border-danger/20 px-4 text-sm font-semibold text-danger transition hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</button></div>
-			{/if}
-		</div>
+			{#snippet actions()}
+				{#if tracker}
+					{#if tracker.can_manage_schema}
+						<Button variant="secondary" onclick={beginSchemaEdit}>{$t('Edit schema')}</Button>
+						<Button variant="danger" disabled={deletingTracker} onclick={() => (deleteTrackerModalOpen = true)}>{$t(deletingTracker ? 'Deleting…' : 'Delete tracker')}</Button>
+					{/if}
+				{/if}
+			{/snippet}
+		</PageHeader>
 
 		{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 		{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}

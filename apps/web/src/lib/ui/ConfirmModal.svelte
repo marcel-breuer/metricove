@@ -2,7 +2,6 @@
 	import Modal from './Modal.svelte';
 	import { t } from '#lib/i18n';
 	import Button from './Button.svelte';
-	import { modalActions } from './styles';
 
 	let {
 		open = $bindable(false),
@@ -23,8 +22,8 @@
 
 <Modal bind:open {title}>
 	<p class="text-sm leading-6 text-ink-secondary">{message}</p>
-	<div class={modalActions}>
+	{#snippet footer()}
 		<Button variant="secondary" type="button" disabled={busy} onclick={() => (open = false)}>{$t('Cancel')}</Button>
 		<Button variant="danger" type="button" disabled={busy} onclick={() => void onConfirm()}>{busy ? $t('Working…') : $t(confirmLabel)}</Button>
-	</div>
+	{/snippet}
 </Modal>
