@@ -10,7 +10,7 @@
         "knuckleswtf/scribe": "^5.5",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "mcp/sdk": "^0.9",
+        "mcp/sdk": "^0.10",
         "nyholm/psr7": "^1.8",
         "symfony/psr-http-message-bridge": "^8.1",
         "symfony/yaml": "^8.0"
