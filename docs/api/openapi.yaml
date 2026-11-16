@@ -460,10 +460,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the reminder.'
         required: true
-        schema:
-          type: string
   /api/notes/preview:
     post:
       summary: 'Create notes preview'
@@ -736,10 +733,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the folder.'
         required: true
-        schema:
-          type: string
   '/api/notes/{id}':
     get:
       summary: 'Get notes'
@@ -851,10 +845,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the note.'
         required: true
-        schema:
-          type: string
   '/api/notes/{note}/archive':
     patch:
       summary: 'Update notes archive'
@@ -902,10 +893,7 @@ paths:
       -
         in: path
         name: note
-        description: 'The note.'
         required: true
-        schema:
-          type: string
   /api/ai/context:
     get:
       summary: 'Get ai context'
@@ -1030,10 +1018,7 @@ paths:
       -
         in: path
         name: entry
-        description: ''
         required: true
-        schema:
-          type: string
   /api/auth/logout:
     post:
       summary: 'Create auth logout'
@@ -1271,10 +1256,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the token.'
         required: true
-        schema:
-          type: string
   '/api/profile/mcp/actions/{preview}/approve':
     post:
       summary: 'Create profile mcp actions approve'
@@ -1303,10 +1285,7 @@ paths:
       -
         in: path
         name: preview
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/profile/mcp/actions/{preview}/reject':
     post:
       summary: 'Create profile mcp actions reject'
@@ -1335,10 +1314,7 @@ paths:
       -
         in: path
         name: preview
-        description: ''
         required: true
-        schema:
-          type: string
   /api/modules:
     get:
       summary: 'Get modules'
@@ -1613,10 +1589,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the tracker.'
         required: true
-        schema:
-          type: string
   '/api/tracking/trackers/{tracker}/entries':
     get:
       summary: 'Get tracking trackers entries'
@@ -1720,10 +1693,7 @@ paths:
       -
         in: path
         name: tracker
-        description: 'The tracker.'
         required: true
-        schema:
-          type: string
   '/api/tracking/trackers/{tracker}/entries/attachment-preview':
     post:
       summary: 'Create tracking trackers entries attachment preview'
@@ -1768,10 +1738,7 @@ paths:
       -
         in: path
         name: tracker
-        description: 'The tracker.'
         required: true
-        schema:
-          type: string
   '/api/tracking/entries/{entry}/attachment':
     get:
       summary: 'Get tracking entries attachment'
@@ -1799,10 +1766,7 @@ paths:
       -
         in: path
         name: entry
-        description: 'The entry.'
         required: true
-        schema:
-          type: string
   '/api/tracking/entries/{id}':
     patch:
       summary: 'Update tracking entries'
@@ -1894,10 +1858,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the entry.'
         required: true
-        schema:
-          type: string
   /api/utilities/meters:
     get:
       summary: 'Get utilities meters'
@@ -2052,10 +2013,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the meter.'
         required: true
-        schema:
-          type: string
   '/api/utilities/meters/{meter}/readings':
     post:
       summary: 'Create utilities meters readings'
@@ -2114,10 +2072,7 @@ paths:
       -
         in: path
         name: meter
-        description: 'The meter.'
         required: true
-        schema:
-          type: string
   '/api/utilities/readings/{id}':
     patch:
       summary: 'Update utilities readings'
@@ -2201,10 +2156,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the reading.'
         required: true
-        schema:
-          type: string
   '/api/utilities/readings/{reading}/revisions':
     get:
       summary: 'Get utilities readings revisions'
@@ -2232,10 +2184,7 @@ paths:
       -
         in: path
         name: reading
-        description: 'The reading.'
         required: true
-        schema:
-          type: string
   '/api/utilities/readings/{reading}/photo':
     get:
       summary: 'Get utilities readings photo'
@@ -2263,10 +2212,7 @@ paths:
       -
         in: path
         name: reading
-        description: 'The reading.'
         required: true
-        schema:
-          type: string
   /api/vehicles:
     get:
       summary: 'Get vehicles'
@@ -2461,10 +2407,7 @@ paths:
       -
         in: path
         name: vehicle_id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/{vehicle_id}/history/{type}':
     get:
       summary: 'Get vehicles history'
@@ -2508,17 +2451,11 @@ paths:
       -
         in: path
         name: vehicle_id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
       -
         in: path
         name: type
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/vehicles/{id}':
     get:
       summary: 'Get vehicles'
@@ -2614,10 +2551,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/{vehicle_id}/maintenance':
     post:
       summary: 'Create vehicles maintenance'
@@ -2691,10 +2625,7 @@ paths:
       -
         in: path
         name: vehicle_id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/{vehicle_id}/insurance':
     post:
       summary: 'Create vehicles insurance'
@@ -2760,10 +2691,7 @@ paths:
       -
         in: path
         name: vehicle_id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/{vehicle_id}/costs':
     post:
       summary: 'Create vehicles costs'
@@ -2874,10 +2802,7 @@ paths:
       -
         in: path
         name: vehicle_id
-        description: 'The ID of the vehicle.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/odometer-readings/{reading}':
     patch:
       summary: 'Update vehicles odometer readings'
@@ -2961,10 +2886,7 @@ paths:
       -
         in: path
         name: reading
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/vehicles/odometer-readings/{reading}/revisions':
     get:
       summary: 'Get vehicles odometer readings revisions'
@@ -2992,10 +2914,7 @@ paths:
       -
         in: path
         name: reading
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/vehicles/maintenance/{record}':
     delete:
       summary: 'Delete vehicles maintenance'
@@ -3027,10 +2946,7 @@ paths:
       -
         in: path
         name: record
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/vehicles/insurance/{policy}':
     delete:
       summary: 'Delete vehicles insurance'
@@ -3062,10 +2978,7 @@ paths:
       -
         in: path
         name: policy
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/vehicles/costs/{id}':
     patch:
       summary: 'Update vehicles costs'
@@ -3202,10 +3115,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the cost.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/costs/{cost}':
     post:
       summary: 'Create vehicles costs'
@@ -3316,10 +3226,7 @@ paths:
       -
         in: path
         name: cost
-        description: 'The cost.'
         required: true
-        schema:
-          type: string
   '/api/vehicles/costs/{cost}/invoice':
     get:
       summary: 'Get vehicles costs invoice'
@@ -3347,10 +3254,7 @@ paths:
       -
         in: path
         name: cost
-        description: 'The cost.'
         required: true
-        schema:
-          type: string
   /api/finance/overview:
     get:
       summary: 'Get finance overview'
@@ -3518,10 +3422,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the category.'
         required: true
-        schema:
-          type: string
   /api/finance/transactions:
     get:
       summary: 'Get finance transactions'
@@ -3708,10 +3609,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the transaction.'
         required: true
-        schema:
-          type: string
   /api/finance/recurring:
     get:
       summary: 'Get finance recurring'
@@ -3927,10 +3825,7 @@ paths:
       -
         in: path
         name: entry
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/finance/recurring/{entry}/record':
     post:
       summary: 'Create finance recurring record'
@@ -3977,10 +3872,7 @@ paths:
       -
         in: path
         name: entry
-        description: ''
         required: true
-        schema:
-          type: string
   /api/finance/budgets:
     get:
       summary: 'Get finance budgets'
@@ -4137,10 +4029,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the budget.'
         required: true
-        schema:
-          type: string
   /api/analytics/catalog:
     get:
       summary: 'Get analytics catalog'
@@ -4344,10 +4233,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the widget.'
         required: true
-        schema:
-          type: string
   /api/import/finance/transactions/preview:
     post:
       summary: 'Create import finance transactions preview'
@@ -4567,10 +4453,7 @@ paths:
       -
         in: path
         name: meter
-        description: 'The meter.'
         required: true
-        schema:
-          type: string
   '/api/import/utilities/meters/{meter}/readings/preview':
     post:
       summary: 'Create import utilities meters readings preview'
@@ -4632,10 +4515,7 @@ paths:
       -
         in: path
         name: meter
-        description: 'The meter.'
         required: true
-        schema:
-          type: string
   '/api/import/utilities/meters/{meter}/readings/confirm':
     post:
       summary: 'Create import utilities meters readings confirm'
@@ -4713,10 +4593,7 @@ paths:
       -
         in: path
         name: meter
-        description: 'The meter.'
         required: true
-        schema:
-          type: string
   '/api/import/utilities/meters/{meter}/reading-suggestions':
     post:
       summary: 'Create import utilities meters reading suggestions'
@@ -4763,10 +4640,7 @@ paths:
       -
         in: path
         name: meter
-        description: 'The meter.'
         required: true
-        schema:
-          type: string
   /api/receipts:
     get:
       summary: 'Get receipts'
@@ -5156,10 +5030,7 @@ paths:
       -
         in: path
         name: receipt_id
-        description: 'The ID of the receipt.'
         required: true
-        schema:
-          type: string
   '/api/receipts/{receipt}/target':
     patch:
       summary: 'Update receipts target'
@@ -5274,10 +5145,7 @@ paths:
       -
         in: path
         name: receipt
-        description: 'The receipt.'
         required: true
-        schema:
-          type: string
   '/api/receipts/{receipt}/preview':
     get:
       summary: 'Get receipts preview'
@@ -5305,10 +5173,7 @@ paths:
       -
         in: path
         name: receipt
-        description: 'The receipt.'
         required: true
-        schema:
-          type: string
   '/api/receipts/{receipt}/file':
     get:
       summary: 'Get receipts file'
@@ -5336,10 +5201,7 @@ paths:
       -
         in: path
         name: receipt
-        description: 'The receipt.'
         required: true
-        schema:
-          type: string
   '/api/receipts/{id}':
     delete:
       summary: 'Delete receipts'
@@ -5371,10 +5233,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the receipt.'
         required: true
-        schema:
-          type: string
   /api/ai/assistant:
     get:
       summary: 'Get ai assistant'
@@ -5763,10 +5622,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the recipe.'
         required: true
-        schema:
-          type: string
   '/api/recipes/{recipe}/favorite':
     put:
       summary: 'Replace recipes favorite'
@@ -5824,10 +5680,7 @@ paths:
       -
         in: path
         name: recipe
-        description: 'The recipe.'
         required: true
-        schema:
-          type: string
   '/api/recipes/{recipe}/photo':
     get:
       summary: 'Get recipes photo'
@@ -5855,10 +5708,7 @@ paths:
       -
         in: path
         name: recipe
-        description: 'The recipe.'
         required: true
-        schema:
-          type: string
   /api/meal-planning:
     get:
       summary: 'Get meal planning'
@@ -6111,10 +5961,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the slot.'
         required: true
-        schema:
-          type: string
   /api/pantry:
     get:
       summary: 'Get pantry'
@@ -6244,10 +6091,7 @@ paths:
       -
         in: path
         name: item
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/pantry/{item}':
     patch:
       summary: 'Update pantry'
@@ -6304,10 +6148,7 @@ paths:
       -
         in: path
         name: item
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/pantry/{item}/adjustments':
     post:
       summary: 'Create pantry adjustments'
@@ -6360,10 +6201,7 @@ paths:
       -
         in: path
         name: item
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/shopping/lists/{list}/meal-suggestions':
     post:
       summary: 'Create shopping lists meal suggestions'
@@ -6407,10 +6245,7 @@ paths:
       -
         in: path
         name: list
-        description: 'The list.'
         required: true
-        schema:
-          type: string
   '/api/shopping/lists/{list}/meal-suggestions/import':
     post:
       summary: 'Create shopping lists meal suggestions import'
@@ -6482,10 +6317,7 @@ paths:
       -
         in: path
         name: list
-        description: 'The list.'
         required: true
-        schema:
-          type: string
   /api/shopping/lists:
     get:
       summary: 'Get shopping lists'
@@ -6623,10 +6455,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the list.'
         required: true
-        schema:
-          type: string
   '/api/shopping/lists/{list}/history':
     get:
       summary: 'Get shopping lists history'
@@ -6654,10 +6483,7 @@ paths:
       -
         in: path
         name: list
-        description: 'The list.'
         required: true
-        schema:
-          type: string
   '/api/shopping/lists/{list}/items':
     post:
       summary: 'Create shopping lists items'
@@ -6711,10 +6537,7 @@ paths:
       -
         in: path
         name: list
-        description: 'The list.'
         required: true
-        schema:
-          type: string
   '/api/shopping/items/{id}':
     patch:
       summary: 'Update shopping items'
@@ -6800,10 +6623,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the item.'
         required: true
-        schema:
-          type: string
   '/api/shopping/items/{item}/checked':
     patch:
       summary: 'Update shopping items checked'
@@ -6851,10 +6671,7 @@ paths:
       -
         in: path
         name: item
-        description: 'The item.'
         required: true
-        schema:
-          type: string
   '/api/shopping/items/{item}/move':
     post:
       summary: 'Create shopping items move'
@@ -6905,10 +6722,7 @@ paths:
       -
         in: path
         name: item
-        description: 'The item.'
         required: true
-        schema:
-          type: string
   /api/tasks/assignees:
     get:
       summary: 'Get tasks assignees'
@@ -7115,10 +6929,7 @@ paths:
       -
         in: path
         name: task
-        description: 'The task.'
         required: true
-        schema:
-          type: string
   '/api/tasks/{id}':
     patch:
       summary: 'Update tasks'
@@ -7229,10 +7040,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the task.'
         required: true
-        schema:
-          type: string
   '/api/tasks/{task}/complete':
     post:
       summary: 'Create tasks complete'
@@ -7276,10 +7084,7 @@ paths:
       -
         in: path
         name: task
-        description: 'The task.'
         required: true
-        schema:
-          type: string
   '/api/tasks/{task_id}/checklist-items':
     post:
       summary: 'Create tasks checklist items'
@@ -7336,10 +7141,7 @@ paths:
       -
         in: path
         name: task_id
-        description: 'The ID of the task.'
         required: true
-        schema:
-          type: string
   '/api/tasks/{task}/checklist-items/order':
     patch:
       summary: 'Update tasks checklist items order'
@@ -7389,10 +7191,7 @@ paths:
       -
         in: path
         name: task
-        description: 'The task.'
         required: true
-        schema:
-          type: string
   '/api/tasks/{task}/checklist-items/{item}/completion':
     patch:
       summary: 'Update tasks checklist items completion'
@@ -7440,17 +7239,11 @@ paths:
       -
         in: path
         name: task
-        description: 'The task.'
         required: true
-        schema:
-          type: string
       -
         in: path
         name: item
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/tasks/{task_id}/checklist-items/{item}':
     patch:
       summary: 'Update tasks checklist items'
@@ -7543,17 +7336,11 @@ paths:
       -
         in: path
         name: task_id
-        description: 'The ID of the task.'
         required: true
-        schema:
-          type: string
       -
         in: path
         name: item
-        description: ''
         required: true
-        schema:
-          type: string
   /api/admin/settings:
     get:
       summary: 'Get admin settings'
@@ -7751,10 +7538,7 @@ paths:
       -
         in: path
         name: moduleKey
-        description: ''
         required: true
-        schema:
-          type: string
   /api/admin/members:
     get:
       summary: 'Get admin members'
@@ -7799,10 +7583,7 @@ paths:
       -
         in: path
         name: member_id
-        description: 'The ID of the member.'
         required: true
-        schema:
-          type: string
   '/api/admin/members/{member_id}/module-permissions/{moduleKey}':
     put:
       summary: 'Replace admin members module permissions'
@@ -7864,17 +7645,11 @@ paths:
       -
         in: path
         name: member_id
-        description: 'The ID of the member.'
         required: true
-        schema:
-          type: string
       -
         in: path
         name: moduleKey
-        description: ''
         required: true
-        schema:
-          type: string
   '/api/admin/members/{id}':
     patch:
       summary: 'Update admin members'
@@ -7954,10 +7729,7 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the member.'
         required: true
-        schema:
-          type: string
   /api/admin/member-audit:
     get:
       summary: 'Get admin member audit'
@@ -8072,10 +7844,7 @@ paths:
       -
         in: path
         name: invitation
-        description: 'The invitation.'
         required: true
-        schema:
-          type: string
   '/api/admin/invitations/{id}':
     delete:
       summary: 'Delete admin invitations'
@@ -8105,7 +7874,4 @@ paths:
       -
         in: path
         name: id
-        description: 'The ID of the invitation.'
         required: true
-        schema:
-          type: string

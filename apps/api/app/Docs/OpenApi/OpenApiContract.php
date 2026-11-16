@@ -55,6 +55,10 @@ class OpenApiContract
                 $node['components']['securitySchemes']['sessionCookie']['name'] = '{session cookie}';
             }
         }
+        if (($node['in'] ?? null) === 'path' && isset($node['name'])) {
+            // Scribe infers path parameter type and wording from whichever model rows exist; keep only the stable parts.
+            return ['in' => 'path', 'name' => $node['name'], 'required' => true];
+        }
         foreach ($node as $key => $value) {
             if ($key === 'example' || $key === 'examples') {
                 unset($node[$key]);
