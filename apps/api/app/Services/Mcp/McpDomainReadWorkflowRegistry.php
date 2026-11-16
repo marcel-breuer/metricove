@@ -9,8 +9,8 @@ use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Notes\NoteService;
 use App\Services\Pantry\PantryService;
 use App\Services\Receipts\ReceiptService;
-use App\Services\Reminders\ReminderService;
 use App\Services\Recipes\RecipeService;
+use App\Services\Reminders\ReminderService;
 use App\Services\Shopping\ShoppingService;
 use App\Services\Tasks\HouseholdTaskService;
 use App\Services\Tracking\TrackerEntryService;
@@ -273,7 +273,7 @@ class McpDomainReadWorkflowRegistry
     }
 
     /** @param array<mixed> $data
-     * @param list<string> $keys
+     * @param  list<string>  $keys
      * @return array<mixed>
      */
     private function withoutKeys(array $data, array $keys): array

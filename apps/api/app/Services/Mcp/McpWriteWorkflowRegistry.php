@@ -49,6 +49,7 @@ use App\Services\Vehicles\VehicleService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -743,7 +744,7 @@ class McpWriteWorkflowRegistry
                 'module' => 'meal_planning', 'capability' => 'create', 'title' => 'Copy the previous meal plan week', 'description' => 'Prepare copying last week’s planned meals into the week containing the given date for member approval. Existing slots are skipped.',
                 'schema' => ['type' => 'object', 'properties' => ['week_start' => ['type' => 'string', 'format' => 'date', 'description' => 'Monday of the target week (YYYY-MM-DD).']], 'required' => ['week_start'], 'additionalProperties' => false],
                 'rules' => ['week_start' => ['required', 'date_format:Y-m-d', static function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! \Illuminate\Support\Carbon::createFromFormat('Y-m-d', (string) $value)->isMonday()) {
+                    if (! Carbon::createFromFormat('Y-m-d', (string) $value)->isMonday()) {
                         $fail('The week must start on a Monday.');
                     }
                 }]],
