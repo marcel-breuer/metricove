@@ -256,7 +256,7 @@ Active members can open the MCP connection and tool reference at `/mcp-docs`. It
 
 Token scopes are offered only for registered MCP tools and only when the member currently has the matching enabled-module capability. Read scopes cover the token owner's basic Core profile plus Tracking, Utilities, Vehicles, Finance, Recipes, Meal Planning, Pantry, Shopping, Analytics, Tasks, Notes and Receipts. Write scopes cover the registered `create`, `edit` and `manage` operations, including Notes. Each MCP call recomputes grants and checks token revocation and member status; a token never grants access on its own. Domain services and the MCP workflow registry recheck resource-level visibility at preview, approval and execution. The MCP endpoint has a per-IP rate limit. Token secrets and action payloads are not written to logs or audit details.
 
-The MCP coverage matrix for operations currently exposed is:
+The full tool catalogue is in [docs/mcp/tools.md](../mcp/tools.md) and the client setup in [docs/mcp/README.md](../mcp/README.md). Tools added for REST parity (task checklists, record deletions, vehicle cost updates, meal plan week copy, vehicle/utility/finance discovery reads and `list_visible_reminders` with scope `core:reminders:view`) are listed there; the matrix below shows the original operations:
 
 | Module | MCP tool | Capability | Domain operation |
 | --- | --- | --- | --- |

@@ -40,7 +40,7 @@ class McpAccessTest extends TestCase
 
         $resources = $this->mcp($secret, 'resources/list')->assertOk();
         $this->assertSame(
-            ['metricove://api/http/openapi.json'],
+            ['metricove://api/http/openapi.json', 'metricove://mcp/approval-workflow'],
             array_column($resources->json('result.resources'), 'uri'),
         );
 

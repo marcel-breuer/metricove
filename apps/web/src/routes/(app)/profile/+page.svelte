@@ -53,6 +53,7 @@
 
 	const scopeLabels: Record<string, string> = {
 		'core:profile:view': 'View your basic profile preferences',
+		'core:reminders:view': 'View your open reminders',
 		'tracking:view': 'View permitted tracking summaries',
 		'finance:view': 'View permitted monthly finance totals',
 		'utilities:view': 'View permitted utility readings',
@@ -89,7 +90,9 @@
 		fields: 'Fields', label: 'Field name', type: 'Data type', unit: 'Unit', is_required: 'Required field', minimum: 'Minimum', maximum: 'Maximum', visibility: 'Visibility',
 		best_before_on: 'Best-before date', planned_for: 'Planned for', dish_type: 'Dish type', dish_name: 'Dish',
 		meal_type: 'Meal', metric_key: 'Metric', range_key: 'Time range', chart_type: 'Chart type', preparation_minutes: 'Preparation minutes',
-		recurrence_frequency: 'Recurrence', recurrence_interval: 'Recurrence interval', assignee_id: 'Assignee'
+		recurrence_frequency: 'Recurrence', recurrence_interval: 'Recurrence interval', assignee_id: 'Assignee',
+		record_id: 'Record', cost_id: 'Cost entry', completed: 'Completed', due_at: 'Due', item_ids: 'Item order', week_start: 'Week starting',
+		reminder_lead_minutes: 'Reminder lead time (minutes)'
 	};
 
 	function approvalFieldLabel(key: string): string {

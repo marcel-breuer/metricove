@@ -24,6 +24,9 @@ use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
 use App\Models\Vehicle;
+use App\Models\VehicleCost;
+use App\Models\VehicleInsurancePolicy;
+use App\Models\VehicleMaintenanceRecord;
 use App\Models\VehicleOdometerReading;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Finance\FinanceDecimalValue;
@@ -46,6 +49,7 @@ use App\Services\Vehicles\VehicleService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -664,6 +668,130 @@ class McpWriteWorkflowRegistry
                 },
             ],
         ];
+        $this->workflows += $this->operationalGapWorkflows();
+    }
+
+    /**
+     * Writes that mirror existing REST operations: task checklists, record deletion and corrections,
+     * and copying a meal plan week.
+     *
+     * @return array<string, WorkflowDefinition>
+     */
+    private function operationalGapWorkflows(): array
+    {
+        $positiveId = static fn (): array => ['type' => 'integer', 'minimum' => 1];
+        $version = ['type' => 'integer', 'minimum' => 1];
+        $tasks = fn (): HouseholdTaskService => $this->container->make(HouseholdTaskService::class);
+        $vehicles = fn (): VehicleService => $this->container->make(VehicleService::class);
+        $costSchema = $this->workflows['add_vehicle_cost']['schema'];
+        $costRules = $this->workflows['add_vehicle_cost']['rules'];
+        unset($costSchema['properties']['vehicle_id'], $costRules['vehicle_id']);
+        $costSchema['properties'] = ['cost_id' => $positiveId()] + $costSchema['properties'];
+        $costSchema['required'] = array_values(array_unique(['cost_id', ...array_diff($costSchema['required'], ['vehicle_id'])]));
+        $costRules = ['cost_id' => ['required', 'integer', 'min:1']] + $costRules;
+
+        return [
+            'add_task_checklist_item' => [
+                'module' => 'tasks', 'capability' => 'edit', 'title' => 'Add a task checklist item', 'description' => 'Prepare a checklist item on a visible task for member approval. Requires the task’s current version.',
+                'schema' => ['type' => 'object', 'properties' => ['task_id' => $positiveId(), 'expected_version' => $version, 'title' => ['type' => 'string', 'maxLength' => 180], 'due_at' => ['type' => 'string', 'format' => 'date-time'], 'reminder_lead_minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 43200]], 'required' => ['task_id', 'expected_version', 'title', 'reminder_lead_minutes'], 'additionalProperties' => false],
+                'rules' => ['task_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1'], 'title' => ['required', 'string', 'max:180'], 'due_at' => ['sometimes', 'nullable', 'date'], 'reminder_lead_minutes' => ['required', 'integer', 'min:0', 'max:43200']],
+                'execute' => function (User $actor, array $data) use ($tasks): array {
+                    $id = (int) $data['task_id'];
+                    unset($data['task_id']);
+
+                    return $tasks()->addChecklistItem($actor, $id, $data);
+                },
+            ],
+            'update_task_checklist_item' => [
+                'module' => 'tasks', 'capability' => 'edit', 'title' => 'Update a task checklist item', 'description' => 'Prepare a version-checked checklist item change for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['task_id' => $positiveId(), 'item_id' => $positiveId(), 'expected_version' => $version, 'title' => ['type' => 'string', 'maxLength' => 180], 'due_at' => ['type' => 'string', 'format' => 'date-time'], 'reminder_lead_minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 43200]], 'required' => ['task_id', 'item_id', 'expected_version'], 'additionalProperties' => false],
+                'rules' => ['task_id' => ['required', 'integer', 'min:1'], 'item_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1'], 'title' => ['sometimes', 'required', 'string', 'max:180'], 'due_at' => ['sometimes', 'nullable', 'date'], 'reminder_lead_minutes' => ['sometimes', 'integer', 'min:0', 'max:43200']],
+                'execute' => function (User $actor, array $data) use ($tasks): array {
+                    [$taskId, $itemId] = [(int) $data['task_id'], (int) $data['item_id']];
+                    unset($data['task_id'], $data['item_id']);
+
+                    return $tasks()->updateChecklistItem($actor, $taskId, $itemId, $data);
+                },
+            ],
+            'set_task_checklist_item_completed' => [
+                'module' => 'tasks', 'capability' => 'edit', 'title' => 'Complete or reopen a checklist item', 'description' => 'Prepare checking or unchecking one task checklist item for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['task_id' => $positiveId(), 'item_id' => $positiveId(), 'expected_version' => $version, 'completed' => ['type' => 'boolean']], 'required' => ['task_id', 'item_id', 'expected_version', 'completed'], 'additionalProperties' => false],
+                'rules' => ['task_id' => ['required', 'integer', 'min:1'], 'item_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1'], 'completed' => ['required', 'boolean']],
+                'execute' => fn (User $actor, array $data): array => $tasks()->completeChecklistItem($actor, (int) $data['task_id'], (int) $data['item_id'], ['completed' => $data['completed'], 'expected_version' => $data['expected_version']]),
+            ],
+            'reorder_task_checklist_items' => [
+                'module' => 'tasks', 'capability' => 'edit', 'title' => 'Reorder task checklist items', 'description' => 'Prepare a new checklist order for member approval. The list must contain every current item id exactly once.',
+                'schema' => ['type' => 'object', 'properties' => ['task_id' => $positiveId(), 'expected_version' => $version, 'item_ids' => ['type' => 'array', 'maxItems' => 100, 'items' => $positiveId()]], 'required' => ['task_id', 'expected_version', 'item_ids'], 'additionalProperties' => false],
+                'rules' => ['task_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1'], 'item_ids' => ['required', 'array', 'max:100'], 'item_ids.*' => ['required', 'integer', 'min:1', 'distinct']],
+                'execute' => function (User $actor, array $data) use ($tasks): array {
+                    $id = (int) $data['task_id'];
+                    unset($data['task_id']);
+
+                    return $tasks()->reorderChecklistItems($actor, $id, $data);
+                },
+            ],
+            'delete_task_checklist_item' => [
+                'module' => 'tasks', 'capability' => 'edit', 'title' => 'Delete a task checklist item', 'description' => 'Prepare deletion of one task checklist item for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['task_id' => $positiveId(), 'item_id' => $positiveId(), 'expected_version' => $version], 'required' => ['task_id', 'item_id', 'expected_version'], 'additionalProperties' => false],
+                'rules' => ['task_id' => ['required', 'integer', 'min:1'], 'item_id' => ['required', 'integer', 'min:1'], 'expected_version' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data) use ($tasks): array {
+                    $tasks()->deleteChecklistItem($actor, (int) $data['task_id'], (int) $data['item_id'], (int) $data['expected_version']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
+            'copy_previous_meal_plan_week' => [
+                'module' => 'meal_planning', 'capability' => 'create', 'title' => 'Copy the previous meal plan week', 'description' => 'Prepare copying last week’s planned meals into the week containing the given date for member approval. Existing slots are skipped.',
+                'schema' => ['type' => 'object', 'properties' => ['week_start' => ['type' => 'string', 'format' => 'date', 'description' => 'Monday of the target week (YYYY-MM-DD).']], 'required' => ['week_start'], 'additionalProperties' => false],
+                'rules' => ['week_start' => ['required', 'date_format:Y-m-d', static function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! Carbon::createFromFormat('Y-m-d', (string) $value)->isMonday()) {
+                        $fail('The week must start on a Monday.');
+                    }
+                }]],
+                'execute' => fn (User $actor, array $data): array => $this->container->make(MealPlanningService::class)->copyPreviousWeek($actor, $data['week_start']),
+            ],
+            'delete_utility_reading' => [
+                'module' => 'utilities', 'capability' => 'edit', 'title' => 'Delete a utility reading', 'description' => 'Prepare deletion of one authorized meter reading for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['reading_id' => $positiveId()], 'required' => ['reading_id'], 'additionalProperties' => false],
+                'rules' => ['reading_id' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data): array {
+                    $this->container->make(UtilityService::class)->deleteReading($actor, (int) $data['reading_id']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
+            'delete_vehicle_odometer_reading' => [
+                'module' => 'vehicles', 'capability' => 'edit', 'title' => 'Delete an odometer reading', 'description' => 'Prepare deletion of one authorized odometer reading for member approval.',
+                'schema' => ['type' => 'object', 'properties' => ['reading_id' => $positiveId()], 'required' => ['reading_id'], 'additionalProperties' => false],
+                'rules' => ['reading_id' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data) use ($vehicles): array {
+                    $vehicles()->deleteRecord($actor, 'odometer', (int) $data['reading_id']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
+            'delete_vehicle_record' => [
+                'module' => 'vehicles', 'capability' => 'edit', 'title' => 'Delete a vehicle record', 'description' => 'Prepare deletion of a maintenance record, insurance policy or cost entry for member approval. Attached invoice files are removed with a cost.',
+                'schema' => ['type' => 'object', 'properties' => ['type' => ['type' => 'string', 'enum' => ['maintenance', 'insurance', 'costs']], 'record_id' => $positiveId()], 'required' => ['type', 'record_id'], 'additionalProperties' => false],
+                'rules' => ['type' => ['required', 'in:maintenance,insurance,costs'], 'record_id' => ['required', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data) use ($vehicles): array {
+                    $vehicles()->deleteRecord($actor, $data['type'], (int) $data['record_id']);
+
+                    return ['status' => 'deleted'];
+                },
+            ],
+            'update_vehicle_cost' => [
+                'module' => 'vehicles', 'capability' => 'edit', 'title' => 'Update a vehicle cost', 'description' => 'Prepare a full replacement of a cost entry’s fields for member approval. Invoice files cannot be changed through MCP.',
+                'schema' => $costSchema,
+                'rules' => $costRules,
+                'execute' => function (User $actor, array $data) use ($vehicles): array {
+                    $id = (int) $data['cost_id'];
+                    unset($data['cost_id']);
+
+                    return $vehicles()->updateCost($actor, $id, $data);
+                },
+            ],
+        ];
     }
 
     /** @return list<array{name: string, title: string, description: string, module: string, capability: string, capabilities: list<string>, inputSchema: array<string, mixed>, required_scopes: list<string>}> */
@@ -779,6 +907,7 @@ class McpWriteWorkflowRegistry
             'update_pantry_item' => ['item_id', 'expected_version'],
             'update_shopping_item' => ['item_id', 'expected_version'],
             'update_household_task' => ['task_id', 'expected_version'],
+            'update_task_checklist_item' => ['task_id', 'item_id', 'expected_version'],
         ][$name] ?? null;
         if ($requiredOnly !== null && count(array_diff(array_keys($validated), $requiredOnly)) === 0) {
             throw ValidationException::withMessages(['arguments' => 'Provide at least one field to update.']);
@@ -832,6 +961,11 @@ class McpWriteWorkflowRegistry
             'update_utility_meter' => $this->authorizeResource($actor, 'utilities', 'manage', UtilityMeter::class, (int) $arguments['meter_id']),
             'update_analytics_widget', 'delete_analytics_widget' => $this->authorizeWidget($actor, (int) $arguments['widget_id']),
             'update_household_task', 'complete_household_task', 'delete_household_task' => $this->authorizeResource($actor, 'tasks', 'edit', HouseholdTask::class, (int) $arguments['task_id']),
+            'add_task_checklist_item', 'update_task_checklist_item', 'set_task_checklist_item_completed', 'reorder_task_checklist_items', 'delete_task_checklist_item' => $this->authorizeResource($actor, 'tasks', 'edit', HouseholdTask::class, (int) $arguments['task_id']),
+            'delete_utility_reading' => $this->authorizeUtilityReading($actor, (int) $arguments['reading_id']),
+            'delete_vehicle_odometer_reading' => $this->authorizeVehicleReading($actor, (int) $arguments['reading_id']),
+            'delete_vehicle_record' => $this->authorizeVehicleRecord($actor, (string) $arguments['type'], (int) $arguments['record_id']),
+            'update_vehicle_cost' => $this->authorizeVehicleRecord($actor, 'costs', (int) $arguments['cost_id']),
             'create_meal_plan_slot' => $this->authorizeMealRecipe($actor, $arguments),
             'create_analytics_widget' => $this->authorizeMetric($actor, (string) $arguments['metric_key']),
             default => null,
@@ -908,6 +1042,19 @@ class McpWriteWorkflowRegistry
         $reading = VehicleOdometerReading::query()->with('vehicle')->whereKey($readingId)->firstOrFail();
         $this->authorizeResource($actor, 'vehicles', 'edit', VehicleOdometerReading::class, $readingId);
         $this->authorizeResource($actor, 'vehicles', 'edit', Vehicle::class, (int) $reading->vehicle_id);
+    }
+
+    private function authorizeVehicleRecord(User $actor, string $type, int $recordId): void
+    {
+        $class = match ($type) {
+            'maintenance' => VehicleMaintenanceRecord::class,
+            'insurance' => VehicleInsurancePolicy::class,
+            'costs' => VehicleCost::class,
+            default => throw ValidationException::withMessages(['type' => 'Unsupported vehicle record type.']),
+        };
+        $record = $class::query()->whereKey($recordId)->firstOrFail();
+        $this->authorizeResource($actor, 'vehicles', 'edit', $class, $recordId);
+        $this->authorizeResource($actor, 'vehicles', 'edit', Vehicle::class, (int) $record->vehicle_id);
     }
 
     private function authorizeUtilityReading(User $actor, int $readingId): void

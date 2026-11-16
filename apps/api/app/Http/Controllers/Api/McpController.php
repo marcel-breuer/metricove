@@ -22,8 +22,8 @@ use App\Services\Mcp\UtilityReadingPreviewToolHandler;
 use Illuminate\Http\Request;
 use Mcp\Schema\Tool as McpToolSchema;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\Server;
 use Mcp\Server\Authorization\AccessToken;
+use Mcp\Server\Server;
 use Mcp\Server\Transport\Http\Middleware\CorsMiddleware;
 use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;
 use Mcp\Server\Transport\StatelessHttpTransport;
@@ -35,6 +35,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 class McpController extends Controller
 {
+    public const APPROVAL_GUIDE_URI = 'metricove://mcp/approval-workflow';
+
+    private const APPROVAL_GUIDE = <<<'MARKDOWN'
+        # Metricove MCP write workflow
+
+        1. Read the current record with a read tool. Use ids and version numbers from the result.
+        2. Call one `preview_*` tool. It validates the arguments, rechecks module access and record visibility, and stores an encrypted preview that expires after ten minutes. Nothing is changed yet.
+        3. The token owner reviews the complete proposed change in Metricove (Profile, MCP access) and approves or rejects it. An agent cannot approve its own preview.
+        4. After approval call `complete_approved_mcp_change` (or `complete_approved_utility_reading` for utility readings) with the `preview_id` and a fresh UUID `idempotency_key`. Reuse the same key only to retry the same call.
+        5. Access is checked again at every step. Revoked tokens, suspended members, disabled modules and changed permissions stop the operation.
+
+        Never put secrets in tool arguments. Private records stay private; tools return only what the token owner may see.
+        MARKDOWN;
+
     public function __invoke(
         Request $request,
         AssistantToolRegistry $registry,
@@ -88,6 +102,28 @@ class McpController extends Controller
             'Metricove HTTP API reference',
             'Current OpenAPI contract generated from Laravel routes and validation. It documents the session-authenticated HTTP API; this MCP bearer token authorizes only the registered MCP tools exposed to it.',
             'application/json',
+        );
+
+        $server->addResource(
+            fn (): string => self::APPROVAL_GUIDE,
+            self::APPROVAL_GUIDE_URI,
+            'metricove_approval_workflow',
+            'How Metricove MCP writes work',
+            'Plain-language guide to the preview, human approval and completion flow for write tools, with the rules an agent must follow.',
+            'text/markdown',
+        );
+
+        $server->addPrompt(
+            fn (): array => [['role' => 'user', 'content' => 'Review my household for the coming week using only the Metricove read tools available to this token. Check open reminders, due tasks, the meal plan week, shopping lists, pantry items that expire soon and finance budgets where those tools exist. Summarize what needs attention, grouped by module, and propose follow-ups. Do not make changes; if a change is useful, name the preview tool you would use and wait for my instruction.']],
+            'weekly_household_review',
+            'Weekly household review',
+            'Read-only review of reminders, tasks, meals, shopping, pantry and budgets across the modules this token can see.',
+        );
+        $server->addPrompt(
+            fn (): array => [['role' => 'user', 'content' => 'I want to change data in Metricove. Look up the current records with the read tools first, then call exactly one matching preview_* tool with typed arguments and the record version where required. Tell me the preview id and ask me to approve it in Metricove under Profile. Only after I confirm that I approved it, call complete_approved_mcp_change with the preview id and a fresh UUID idempotency key. Never retry with a new key after a success.']],
+            'propose_change_with_approval',
+            'Propose a change for approval',
+            'Guides an agent through the preview, human approval and completion flow for write tools.',
         );
 
         foreach ($registry->definitionsFor($actor) as $definition) {

@@ -44,7 +44,7 @@ Modules should integrate with each other **without unnecessary hard dependencies
 - **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, Mailpit, queue worker and scheduler. The gateway publishes the app port; Mailpit's UI is bound to localhost for local email inspection.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.
 
-See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Release versions and image operations are documented in [the release guide](docs/releases.md).
+See [architecture](docs/architecture/overview.md) and [module contract](docs/modules/README.md) for design decisions. Release versions and image operations are documented in [the release guide](docs/releases.md). Automation and AI agents: [REST API guide](docs/api/README.md) with the [OpenAPI contract](docs/api/openapi.yaml), and the [MCP server guide](docs/mcp/README.md) with its [tool catalogue](docs/mcp/tools.md). The full list is in the [documentation index](docs/README.md).
 
 ## Docker Compose
 

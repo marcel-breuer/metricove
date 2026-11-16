@@ -10,6 +10,7 @@ use App\Services\Notes\NoteService;
 use App\Services\Pantry\PantryService;
 use App\Services\Receipts\ReceiptService;
 use App\Services\Recipes\RecipeService;
+use App\Services\Reminders\ReminderService;
 use App\Services\Shopping\ShoppingService;
 use App\Services\Tasks\HouseholdTaskService;
 use App\Services\Tracking\TrackerEntryService;
@@ -40,6 +41,62 @@ class McpDomainReadWorkflowRegistry
                     'default_currency' => $actor->default_currency,
                     'currency_display' => $actor->currency_display,
                 ]],
+            ],
+            'list_visible_reminders' => [
+                'module' => 'core', 'scopes' => ['core:reminders:view'], 'title' => 'List your open reminders',
+                'description' => 'List the token owner’s open reminders for visible tasks and records, honoring their reminder preferences. It never returns other members’ reminders.',
+                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
+                'execute' => fn (User $actor): array => $this->container->make(ReminderService::class)->index($actor),
+            ],
+            'list_visible_vehicles' => [
+                'module' => 'vehicles', 'scopes' => ['vehicles:view'], 'title' => 'List visible vehicles',
+                'description' => 'List vehicles currently visible to the member, including the ids needed by other vehicle tools.',
+                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
+                'execute' => fn (User $actor): array => ['vehicles' => $this->container->make(VehicleService::class)->index($actor)],
+            ],
+            'list_visible_vehicle_odometer_readings' => [
+                'module' => 'vehicles', 'scopes' => ['vehicles:view'], 'title' => 'List visible odometer readings',
+                'description' => 'List a bounded, cursor-based page of odometer readings for one authorized vehicle, newest first.',
+                'schema' => ['type' => 'object', 'properties' => ['vehicle_id' => ['type' => 'integer', 'minimum' => 1], 'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50], 'before_reading_date' => ['type' => 'string', 'format' => 'date'], 'before_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['vehicle_id'], 'additionalProperties' => false],
+                'rules' => ['vehicle_id' => ['required', 'integer', 'min:1'], 'limit' => ['nullable', 'integer', 'between:1,50'], 'before_reading_date' => ['required_with:before_id', 'nullable', 'date_format:Y-m-d'], 'before_id' => ['required_with:before_reading_date', 'nullable', 'integer', 'min:1']],
+                'execute' => fn (User $actor, array $data): array => $this->container->make(VehicleService::class)->odometerHistory($actor, (int) $data['vehicle_id'], (int) ($data['limit'] ?? 30), $data['before_reading_date'] ?? null, isset($data['before_id']) ? (int) $data['before_id'] : null),
+            ],
+            'list_visible_vehicle_records' => [
+                'module' => 'vehicles', 'scopes' => ['vehicles:view'], 'title' => 'List visible vehicle records',
+                'description' => 'List a bounded, cursor-based page of maintenance records, insurance policies or costs for one authorized vehicle. Invoice files are not returned.',
+                'schema' => ['type' => 'object', 'properties' => ['vehicle_id' => ['type' => 'integer', 'minimum' => 1], 'type' => ['type' => 'string', 'enum' => ['maintenance', 'insurance', 'costs']], 'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50], 'before_date' => ['type' => 'string', 'format' => 'date'], 'before_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['vehicle_id', 'type'], 'additionalProperties' => false],
+                'rules' => ['vehicle_id' => ['required', 'integer', 'min:1'], 'type' => ['required', 'in:maintenance,insurance,costs'], 'limit' => ['nullable', 'integer', 'between:1,50'], 'before_date' => ['required_with:before_id', 'nullable', 'date_format:Y-m-d'], 'before_id' => ['required_with:before_date', 'nullable', 'integer', 'min:1']],
+                'execute' => function (User $actor, array $data): array {
+                    $result = $this->container->make(VehicleService::class)->recordHistory($actor, (int) $data['vehicle_id'], $data['type'], (int) ($data['limit'] ?? 5), $data['before_date'] ?? null, isset($data['before_id']) ? (int) $data['before_id'] : null);
+
+                    return $this->withoutKeys($result, ['invoice_url', 'invoice_file_url']);
+                },
+            ],
+            'list_visible_utility_meters' => [
+                'module' => 'utilities', 'scopes' => ['utilities:view'], 'title' => 'List visible utility meters',
+                'description' => 'List utility meters currently visible to the member, including the ids needed by other utility tools.',
+                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
+                'execute' => fn (User $actor): array => ['meters' => $this->container->make(UtilityService::class)->index($actor)],
+            ],
+            'show_visible_finance_overview' => [
+                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'Show a finance month overview',
+                'description' => 'Show the visible income, expense and budget overview for one month.',
+                'schema' => ['type' => 'object', 'properties' => ['month' => ['type' => 'string', 'pattern' => '^[0-9]{4}-(0[1-9]|1[0-2])$']], 'required' => ['month'], 'additionalProperties' => false],
+                'rules' => ['month' => ['required', 'date_format:Y-m']],
+                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->overview($actor, $data['month']),
+            ],
+            'list_visible_finance_budgets' => [
+                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'List visible finance budgets',
+                'description' => 'List monthly category budgets visible to the member, for the current month unless a month is given.',
+                'schema' => ['type' => 'object', 'properties' => ['month' => ['type' => 'string', 'pattern' => '^[0-9]{4}-(0[1-9]|1[0-2])$']], 'additionalProperties' => false],
+                'rules' => ['month' => ['nullable', 'date_format:Y-m']],
+                'execute' => fn (User $actor, array $data): array => ['budgets' => $this->container->make(FinanceService::class)->budgets($actor, $data['month'] ?? null)],
+            ],
+            'list_visible_finance_recurring_entries' => [
+                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'List visible recurring finance entries',
+                'description' => 'List recurring income and expense schedules visible to the member.',
+                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
+                'execute' => fn (User $actor): array => ['recurring_entries' => $this->container->make(FinanceService::class)->recurringEntries($actor)],
             ],
             'show_visible_recipe' => [
                 'module' => 'recipes', 'scopes' => ['recipes:view'], 'title' => 'Show a visible recipe',
@@ -213,5 +270,22 @@ class McpDomainReadWorkflowRegistry
         $validated = Validator::make($arguments, $read['rules'])->validate();
 
         return ($read['execute'])($actor, $validated);
+    }
+
+    /** @param array<mixed> $data
+     * @param  list<string>  $keys
+     * @return array<mixed>
+     */
+    private function withoutKeys(array $data, array $keys): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_string($key) && in_array($key, $keys, true)) {
+                unset($data[$key]);
+            } elseif (is_array($value)) {
+                $data[$key] = $this->withoutKeys($value, $keys);
+            }
+        }
+
+        return $data;
     }
 }

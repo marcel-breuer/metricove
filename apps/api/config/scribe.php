@@ -1,5 +1,6 @@
 <?php
 
+use App\Docs\OpenApi\ApiContractGenerator;
 use App\Docs\OpenApi\SessionCookieSecurityGenerator;
 use App\Docs\Strategies\AuthenticationFromRouteMiddleware;
 use Knuckles\Scribe\Config\AuthIn;
@@ -170,7 +171,7 @@ return [
 
         // Additional generators to use when generating the OpenAPI spec.
         // Should extend `Knuckles\Scribe\Writing\OpenApiSpecGenerators\OpenApiGenerator`.
-        'generators' => [SessionCookieSecurityGenerator::class],
+        'generators' => [SessionCookieSecurityGenerator::class, ApiContractGenerator::class],
     ],
 
     'groups' => [
