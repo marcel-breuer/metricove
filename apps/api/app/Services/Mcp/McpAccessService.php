@@ -24,6 +24,11 @@ class McpAccessService
 
     private const CORE_PROFILE_SCOPE = 'core:profile:view';
 
+    private const CORE_REMINDERS_SCOPE = 'core:reminders:view';
+
+    /** @var list<string> Core scopes belong to the always-on Core module and need no module grant. */
+    private const CORE_SCOPES = [self::CORE_PROFILE_SCOPE, self::CORE_REMINDERS_SCOPE];
+
     /** @var array<string, array{module: string, capability: ModuleCapability}> */
     private const SCOPES = [
         'tracking:view' => ['module' => 'tracking', 'capability' => ModuleCapability::View],
@@ -83,7 +88,7 @@ class McpAccessService
             return [];
         }
 
-        $allowed = [self::CORE_PROFILE_SCOPE];
+        $allowed = self::CORE_SCOPES;
         foreach (self::MCP_VIEW_MODULES as $module) {
             try {
                 $this->access->authorize($user, $module, ModuleCapability::View);
@@ -203,7 +208,7 @@ class McpAccessService
         }
 
         $definition = self::SCOPES[$scope] ?? null;
-        if ($scope === self::CORE_PROFILE_SCOPE) {
+        if (in_array($scope, self::CORE_SCOPES, true)) {
             return $actor;
         }
 
