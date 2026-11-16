@@ -22,7 +22,7 @@ use App\Services\Mcp\UtilityReadingPreviewToolHandler;
 use Illuminate\Http\Request;
 use Mcp\Schema\Tool as McpToolSchema;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server;
+use Mcp\Server\Server;
 use Mcp\Server\Authorization\AccessToken;
 use Mcp\Server\Transport\Http\Middleware\CorsMiddleware;
 use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;

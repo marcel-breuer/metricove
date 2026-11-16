@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Services\AI\AssistantToolRegistry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 use Mcp\Server\Handler\ToolHandlerInterface;
 

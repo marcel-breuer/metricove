@@ -87,7 +87,7 @@ class McpAccessTest extends TestCase
         $profileSecret = $this->createToken($admin, ['core:profile:view']);
         $profileNames = array_column($this->mcp($profileSecret, 'tools/list')->assertOk()->json('result.tools'), 'name');
         $this->assertSame(['show_current_member_profile'], $profileNames);
-        $profile = $this->mcp($profileSecret, 'tools/call', ['name' => 'show_current_member_profile', 'arguments' => []])
+        $profile = $this->mcp($profileSecret, 'tools/call', ['name' => 'show_current_member_profile', 'arguments' => (object) []])
             ->assertOk()->json('result.structuredContent.profile');
         $this->assertSame($admin->name, $profile['name']);
         $this->assertArrayNotHasKey('email', $profile);
@@ -511,7 +511,7 @@ class McpAccessTest extends TestCase
         $secret = $this->createToken($owner, ['utilities:view']);
         $read = $this->mcp($secret, 'tools/call', [
             'name' => 'summarize_visible_utility_readings',
-            'arguments' => [],
+            'arguments' => (object) [],
         ])->assertOk();
         $content = json_encode($read->json('result.structuredContent') ?? $read->json('result.content'), JSON_THROW_ON_ERROR);
 
