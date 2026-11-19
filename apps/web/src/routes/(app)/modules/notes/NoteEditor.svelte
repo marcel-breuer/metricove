@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import { control, field, fieldLabel } from '#lib/ui/styles';
 	import { untrack } from 'svelte';
 	import { notesRequest } from '#lib/api-client';
@@ -100,10 +101,9 @@
 				<input bind:value={tagsText} placeholder={$t('Separate tags with commas')} class="{control}" />
 			</label>
 		</div>
-		<label class="{field} min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
+		<div class="{field} min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]"><label for="markdown-extra-63163">
 			<span class="{fieldLabel}">{$t('Markdown')}</span>
-			<textarea bind:value={body} oninput={schedulePreview} rows="16" maxlength="100000" placeholder={$t('Write your note in Markdown…')} class="{control} min-h-64 resize-y font-mono text-sm leading-6 lg:h-full lg:resize-none"></textarea>
-		</label>
+			</label><MarkdownEditor id="markdown-extra-63163" bind:value={body} oninput={schedulePreview} rows={16} maxlength={100000} placeholder={$t('Write your note in Markdown…')} class="{control} min-h-64 resize-y font-mono text-sm leading-6 lg:h-full lg:resize-none" /></div>
 		<section class="flex min-h-0 flex-col gap-2" aria-labelledby="{formId}-preview">
 			<h3 id="{formId}-preview" class="{fieldLabel}">{$t('Preview')}</h3>
 			<div class="min-h-40 flex-1 overflow-y-auto rounded-[0.625rem] border border-line bg-surface-subtle p-4">

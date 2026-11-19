@@ -20,12 +20,23 @@ const { default: EmptyState } = await import('./EmptyState.svelte');
 const { default: Disclosure } = await import('./Disclosure.svelte');
 const { default: PageHeader } = await import('./PageHeader.svelte');
 const { default: PageHeading } = await import('./PageHeading.svelte');
+const { default: MarkdownEditor } = await import('./MarkdownEditor.svelte');
 
 const text = (value: string) => createRawSnippet(() => ({ render: () => `<span>${value}</span>` }));
 
 afterEach(() => setUserPreferences({ language: 'en' }));
 
 describe('shared UI components', () => {
+	it('renders a localized Markdown toolbar and preserves textarea constraints', () => {
+		setUserPreferences({ language: 'de' });
+		const { body } = render(MarkdownEditor, { props: { id: 'details', value: 'Text', maxlength: 500, required: true, disabled: true } });
+		expect(body).toContain('aria-label="Markdown-Formatierung"');
+		expect(body).toContain('aria-label="Fett"');
+		expect(body).toContain('id="details"');
+		expect(body).toContain('maxlength="500"');
+		expect(body).toContain('disabled');
+	});
+
 	it('renders navigation buttons as links with the shared button styling', () => {
 		const { body } = render(Button, { props: { href: '/modules/tracking', variant: 'secondary', size: 'small', children: text('Open') } });
 		expect(body).toContain('<a href="/modules/tracking"');

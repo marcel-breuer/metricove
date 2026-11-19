@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -128,7 +129,7 @@
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Fuel type")}<select bind:value={fuelType} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#each vehicleFuelTypes as fuel}<option value={fuel.value}>{$t(fuel.label)}</option>{/each}</select></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Odometer unit")}<select bind:value={odometerUnit} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="km">{$t("Kilometres · km")}</option><option value="mi">{$t("Miles · mi")}</option></select></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household vehicle")}</option>{/if}</select></label>
-				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Context for this vehicle")}></textarea></label>
+				<div class="block text-sm font-medium text-ink-secondary sm:col-span-2"><label for="markdown-field-6">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><MarkdownEditor id="markdown-field-6" bind:value={description} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Context for this vehicle")} /></div>
 				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-ink-subtle">{$t("Private vehicle, insurance, mileage and cost details are hidden from administrators unless the owner grants access.")}</p></div>
 			</form>
 		</div>

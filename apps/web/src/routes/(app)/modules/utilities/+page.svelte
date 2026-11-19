@@ -1,4 +1,6 @@
 <script lang="ts">
+	import MarkdownInline from '#lib/ui/MarkdownInline.svelte';
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -111,7 +113,7 @@
 				<ul class="mt-5 grid gap-3 md:grid-cols-2">
 					{#each meters as meter (meter.id)}
 						<li><a href={`/modules/utilities/${meter.id}`} class="group flex min-h-32 flex-col justify-between rounded-[20px] border glass-surface p-5 transition hover:border-accent-ink/50 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
-							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-ink">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-ink-muted">{meter.meter_label} · {meter.unit}</span><span class="mt-1 block text-xs text-ink-subtle">{meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))}</span></span>
+							<span><span class="flex flex-wrap items-center justify-between gap-2"><span class="font-semibold text-ink">{meter.name}</span><Badge>{$t(visibilityLabel(meter.visibility))}</Badge></span><span class="mt-2 block text-sm text-ink-muted">{meter.meter_label} · {meter.unit}</span><MarkdownInline class="mt-1 block text-xs text-ink-subtle" value={meter.description || (meter.alert_threshold ? $t('Alert above {value} {unit} per interval', { value: formatMeasurement(meter.alert_threshold, meter.unit), unit: meter.unit }) : $t('No interval alert set'))} /></span>
 							<span class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open readings")} <span aria-hidden="true">→</span></span>
 						</a></li>
 					{/each}
@@ -132,7 +134,7 @@
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter type")}<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#each utilityMeterTypes as type}<option value={type.value}>{$t(type.label)} · {type.unit}</option>{/each}</select></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household meter")}</option>{/if}</select></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Alert threshold")} <span class="font-normal text-ink-subtle">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
-				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><textarea bind:value={description} maxlength="2000" rows="2" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Location or meter details")}></textarea></label>
+				<div class="block text-sm font-medium text-ink-secondary sm:col-span-2"><label for="markdown-field-2">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><MarkdownEditor id="markdown-field-2" bind:value={description} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Location or meter details")} /></div>
 				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-ink-subtle">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p></div>
 			</form>
 		</div>

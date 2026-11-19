@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Markdown from '#lib/ui/Markdown.svelte';
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import BackLink from '#lib/ui/BackLink.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
@@ -472,7 +474,7 @@
 					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
 				</div>
 				<h1 class="page-title break-words">{tracker.name}</h1>
-				{#if tracker.description}<p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">{tracker.description}</p>{/if}
+				{#if tracker.description}<Markdown class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted" value={tracker.description} />{/if}
 			</div>
 			{#snippet actions()}
 				{#if tracker}
@@ -493,7 +495,7 @@
 					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
 						<p class="text-sm leading-6 text-ink-muted sm:col-span-2 lg:col-span-1">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
 						<label class="block text-sm font-medium text-ink-secondary">{$t("Tracker name")}<input bind:value={schemaName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-						<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1">{$t("Description")}<textarea bind:value={schemaDescription} maxlength="500" rows="4" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea></label>
+						<div class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1"><label for="markdown-field-5">{$t("Description")}</label><MarkdownEditor id="markdown-field-5" bind:value={schemaDescription} maxlength={500} rows={4} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></div>
 					</div>
 					<div class="space-y-4">
 					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 lg:border-t-0 lg:pt-0">

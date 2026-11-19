@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import { control, field, fieldLabel, fileInput, iconButton } from '#lib/ui/styles';
 	import { untrack } from 'svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -132,10 +133,9 @@
 					<p class="self-end pb-3 text-xs leading-5 text-ink-muted">{editing ? $t('Visibility: {visibility}', { visibility: $t(form.visibility === 'private' ? 'Private' : 'Household') }) : $t(visibilityHint)}</p>
 				{/if}
 			</div>
-			<label class="{field}">
+			<div class="{field}"><label for="markdown-extra-64247">
 				<span class="{fieldLabel}">{$t('Preparation instructions')}</span>
-				<textarea bind:value={form.instructions} maxlength="20000" rows="10" placeholder={$t('Write the steps in the order you follow them…')} class="{control} resize-y leading-6"></textarea>
-			</label>
+				</label><MarkdownEditor id="markdown-extra-64247" bind:value={form.instructions} maxlength={20000} rows={10} placeholder={$t('Write the steps in the order you follow them…')} class="{control} resize-y leading-6" /></div>
 			<div class="{field}">
 				<label class="{field}">
 					<span class="{fieldLabel}">{$t('Recipe photo or PDF')} <span class="text-xs font-normal text-ink-muted">{$t('optional · JPEG, PNG or WebP up to 5 MB; PDF up to 10 MB')}</span></span>
