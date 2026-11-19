@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Markdown from '#lib/ui/Markdown.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import { iconButton, panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
@@ -155,7 +156,7 @@
 			</Panel>
 			<Panel>
 				<h2 class="text-base font-semibold">{$t('Preparation')}</h2>
-				<p class="mt-3 whitespace-pre-line text-sm leading-7 text-ink-secondary">{recipe.instructions || $t('No preparation steps recorded.')}</p>
+				<Markdown class="mt-3 text-sm leading-7 text-ink-secondary" value={recipe.instructions || $t('No preparation steps recorded.')} />
 			</Panel>
 		</div>
 

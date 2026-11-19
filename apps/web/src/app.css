@@ -241,3 +241,14 @@ dialog.glass-chrome {
 		scroll-behavior: auto !important;
 	}
 }
+
+/* Shared rendering for user-authored Markdown. */
+.markdown-content { overflow-wrap: anywhere; }
+.markdown-content > * + * { margin-top: 0.75em; }
+.markdown-content ul, .markdown-content ol { padding-left: 1.5em; }
+.markdown-content ul { list-style: disc; }
+.markdown-content ol { list-style: decimal; }
+.markdown-content a { color: var(--color-accent-ink); text-decoration: underline; }
+.markdown-content blockquote { border-left: 2px solid currentColor; padding-left: 1em; }
+.markdown-content pre { overflow-x: auto; white-space: pre; }
+.markdown-content h1, .markdown-content h2, .markdown-content h3 { font-weight: 600; }

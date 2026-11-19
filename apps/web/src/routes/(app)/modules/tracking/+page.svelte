@@ -1,4 +1,6 @@
 <script lang="ts">
+	import MarkdownInline from '#lib/ui/MarkdownInline.svelte';
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -209,7 +211,7 @@
 										<span class="font-semibold text-ink">{tracker.name}</span>
 										<Badge>{$t(visibilityLabel(tracker.visibility))}</Badge>
 									</span>
-									<span class="mt-1 block text-sm leading-5 text-ink-muted">{tracker.description ?? tracker.fields.map((field) => field.label).join(' · ')}</span>
+									<MarkdownInline class="mt-1 block text-sm leading-5 text-ink-muted" value={tracker.description ?? tracker.fields.map((field) => field.label).join(' · ')} />
 									<span class="mt-2 block text-xs text-ink-subtle">{tracker.fields.length} {$t(tracker.fields.length === 1 ? 'field' : 'fields')} {$t("· schema v")}{tracker.schema_version}</span>
 								</span>
 								<span class="inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open history")} <span aria-hidden="true">→</span></span>
@@ -242,9 +244,8 @@
 							{#if canCreateShared}<option value="household">{$t("Household template")}</option>{/if}
 						</select>
 					</label>
-					<label class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span>
-						<textarea bind:value={description} maxlength="500" rows="4" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("What does this tracker help you follow?")}></textarea>
-					</label>
+					<div class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1"><label for="markdown-extra-96929">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span>
+						</label><MarkdownEditor id="markdown-extra-96929" bind:value={description} maxlength={500} rows={4} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("What does this tracker help you follow?")} /></div>
 				</div>
 
 				<div class="border-t border-line pt-6 lg:border-t-0 lg:pt-0">

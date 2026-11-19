@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Markdown from '#lib/ui/Markdown.svelte';
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -252,7 +254,7 @@
 
 		<form onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-[20px] border glass-surface p-5 sm:p-7">
 			<label for="assistant-question" class="block text-sm font-semibold text-ink">{$t("What would you like to know?")}</label>
-			<textarea id="assistant-question" bind:value={question} maxlength="4000" rows="4" placeholder={$t("For example: How did my visible utility readings change over the last few entries?")} class="mt-3 min-h-32 w-full resize-y rounded-[10px] border border-line-strong bg-page px-4 py-3 text-sm leading-6 text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" disabled={!status.available || submitting}></textarea>
+			<MarkdownEditor id="assistant-question" bind:value={question} maxlength={4000} rows={4} placeholder={$t("For example: How did my visible utility readings change over the last few entries?")} class="mt-3 min-h-32 w-full resize-y rounded-[10px] border border-line-strong bg-page px-4 py-3 text-sm leading-6 text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" disabled={!status.available || submitting} />
 			<div class="mt-4 max-w-lg">
 				<label for="assistant-project" class="block text-sm font-medium text-ink-secondary">{$t("Project context key")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label>
 				<input id="assistant-project" bind:value={questionProject} maxlength="120" placeholder={$t("e.g. budget-app")} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-4 py-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" disabled={!status.available || submitting} />
@@ -285,7 +287,7 @@
 				{#if contextScope === 'project'}<div><label for="context-project" class="block text-sm font-medium text-ink-secondary">{$t("Project key")}</label><input id="context-project" bind:value={contextProject} required maxlength="120" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base" /></div>{/if}
 				<div><label for="context-kind" class="block text-sm font-medium text-ink-secondary">{$t("Type")}</label><input id="context-kind" bind:value={contextKind} required maxlength="40" placeholder={$t("preference, goal, fact")} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base" /></div>
 				<div><label for="context-source" class="block text-sm font-medium text-ink-secondary">{$t("Source")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><input id="context-source" bind:value={contextSource} maxlength="120" placeholder={$t("Added by me")} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base" /></div>
-				<div class="sm:col-span-2"><label for="context-content" class="block text-sm font-medium text-ink-secondary">{$t("Context")}</label><textarea id="context-content" bind:value={contextContent} required maxlength="4000" rows="3" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base"></textarea></div>
+				<div class="sm:col-span-2"><label for="context-content" class="block text-sm font-medium text-ink-secondary">{$t("Context")}</label><MarkdownEditor id="context-content" bind:value={contextContent} required maxlength={4000} rows={3} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base" /></div>
 				<div class="sm:col-span-2"><button type="submit" disabled={contextBusy || !contextContent.trim() || (contextScope === 'project' && !contextProject.trim())} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save context')}</button></div>
 			</form>
 			</Modal>
@@ -293,7 +295,7 @@
 				<ul class="mt-6 divide-y divide-line rounded-xl border border-line">
 					{#each contextEntries as entry (entry.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
-							<div class="min-w-0 flex-1"><p class="text-xs font-medium text-accent-ink">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink-secondary">{entry.content}</p><p class="mt-1 text-xs text-ink-subtle">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
+							<div class="min-w-0 flex-1"><p class="text-xs font-medium text-accent-ink">{$t(entry.kind)} · {entry.scope === 'project' ? entry.project_key : $t('all questions')}</p><Markdown class="mt-2 text-sm leading-6 text-ink-secondary" value={entry.content} /><p class="mt-1 text-xs text-ink-subtle">{$t("Expires")} {entry.expires_at ? formatDate(entry.expires_at) : $t('never')} {$t("· updated")} {formatDate(entry.updated_at)}</p></div>
 							<div class="flex shrink-0 gap-2"><button type="button" onclick={() => beginContextEdit(entry)} class="min-h-10 rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink">{$t("Edit")}</button><button type="button" onclick={() => { contextToDelete = entry; contextDeleteOpen = true; }} class="min-h-10 rounded-lg border border-danger/20 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10">{$t("Delete")}</button></div>
 						</li>
 					{/each}
@@ -301,7 +303,7 @@
 			{:else}<p class="mt-5 text-sm text-ink-subtle">{$t("No saved context yet.")}</p>{/if}
 			{#if contextMessage}<p role="status" class="mt-4 text-sm text-positive">{contextMessage}</p>{/if}
 			{#if contextError}<p role="alert" class="mt-4 text-sm text-danger">{$t(contextError)}</p>{/if}
-			{#if contextToEdit}<Modal bind:open={contextEditOpen} title={$t('Edit saved context')}><form onsubmit={(event) => { event.preventDefault(); void updateContext(); }} class="space-y-4">{#if contextError}<p role="alert" class="text-sm text-danger">{$t(contextError)}</p>{/if}<label class="block text-sm font-medium text-ink-secondary">{$t('Context')}<textarea bind:value={editedContextContent} required maxlength="4000" rows="5" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base"></textarea></label><button type="submit" disabled={contextBusy || !editedContextContent.trim()} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save changes')}</button></form></Modal>{/if}
+			{#if contextToEdit}<Modal bind:open={contextEditOpen} title={$t('Edit saved context')}><form onsubmit={(event) => { event.preventDefault(); void updateContext(); }} class="space-y-4">{#if contextError}<p role="alert" class="text-sm text-danger">{$t(contextError)}</p>{/if}<div class="block text-sm font-medium text-ink-secondary"><label for="markdown-field-1">{$t('Context')}</label><MarkdownEditor id="markdown-field-1" bind:value={editedContextContent} required maxlength={4000} rows={5} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base" /></div><button type="submit" disabled={contextBusy || !editedContextContent.trim()} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save changes')}</button></form></Modal>{/if}
 			{#if contextToDelete}<ConfirmModal bind:open={contextDeleteOpen} title={$t('Delete saved context?')} message={$t('Delete this saved context entry?')} confirmLabel={$t('Delete')} onConfirm={() => void deleteContext()} />{/if}
 		</section>
 	{/if}
@@ -310,7 +312,7 @@
 	{#if answer}
 		<section aria-labelledby="assistant-answer-title" class="rounded-2xl border border-accent-ink/20 bg-accent/5 p-5 sm:p-7">
 			<h2 id="assistant-answer-title" class="text-base font-semibold text-accent-ink">{$t("Answer")}</h2>
-			<p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-ink-secondary">{answer}</p>
+			<Markdown class="mt-3 text-sm leading-7 text-ink-secondary" value={answer} />
 		</section>
 	{/if}
 </section>

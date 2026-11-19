@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Markdown from '#lib/ui/Markdown.svelte';
+	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import { control } from '#lib/ui/styles';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import { goto } from '$app/navigation';
@@ -373,10 +375,9 @@
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Task title')}</span>
 					<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="{control}" />
 				</label>
-				<label class="block md:col-span-2 lg:col-span-4">
+				<div class="block md:col-span-2 lg:col-span-4"><label for="markdown-extra-72554">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Details')}</span>
-					<textarea maxlength="4000" bind:value={description} rows="6" placeholder={$t('Add the context someone needs to get it done.')} class="{control} resize-y"></textarea>
-				</label>
+					</label><MarkdownEditor id="markdown-extra-72554" maxlength={4000} bind:value={description} rows={6} placeholder={$t('Add the context someone needs to get it done.')} class="{control} resize-y" /></div>
 				<label class="block">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Due date')}</span>
 					<input type="datetime-local" bind:value={dueInput} oninput={() => (taskTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')} class="{control}" />
@@ -445,7 +446,7 @@
 							<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 								<div class="min-w-0 flex-1">
 									<div class="flex flex-wrap items-center gap-2"><h3 class="text-base font-semibold text-ink">{task.title}</h3><span class="rounded-full px-2.5 py-1 text-xs font-medium {task.priority === 'high' ? 'bg-danger/10 text-danger' : task.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-surface-subtle text-ink-secondary'}">{$t(task.priority[0].toUpperCase() + task.priority.slice(1))}</span><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-secondary">{$t(task.visibility === 'private' ? 'Private' : 'Shared')}</span>{#if task.is_completed}<span class="rounded-full bg-positive/10 px-2.5 py-1 text-xs text-positive">{$t('Completed')}</span>{/if}</div>
-									{#if task.description}<p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink-secondary">{task.description}</p>{/if}
+									{#if task.description}<Markdown class="mt-2 text-sm leading-6 text-ink-secondary" value={task.description} />{/if}
 									<div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-muted">
 						{#if task.due_at}<span>{$t('Due')} {formatDateTime(task.due_at)}</span>{:else}<span>{$t('No due date')}</span>{/if}
 										{#if task.assignee}<span>{$t('Assigned to')} {task.assignee.name}</span>{:else}<span>{$t('Unassigned')}</span>{/if}

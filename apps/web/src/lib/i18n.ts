@@ -6,6 +6,8 @@ export type NumberLocale = 'de-DE' | 'en-US' | 'en-GB';
 export type CurrencyDisplay = 'code' | 'symbol';
 
 const german: Record<string, string> = {
+	'Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.': 'Zählerstände sind kumulativ. Der Verbrauch wird aus benachbarten Daten in chronologischer Reihenfolge berechnet.',
+	'Markdown formatting': 'Markdown-Formatierung', 'Bold': 'Fett', 'Italic': 'Kursiv', 'Heading': 'Überschrift', 'Bulleted list': 'Aufzählung', 'Link': 'Link',
 	'Full tank': 'Vollgetankt', 'Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.': 'Nur nach vollständigem Tanken markieren. Der Verbrauch wird zwischen aufeinanderfolgenden Volltankungen mit Kilometerständen berechnet.',
 	'Enter the total amount; fuel quantity, price per liter and odometer are optional. Two values calculate the third.': 'Gib den Gesamtbetrag ein; Kraftstoffmenge, Literpreis und Kilometerstand sind optional. Zwei Werte berechnen den dritten.',
 	'Calculated from the other two values.': 'Aus den beiden anderen Werten berechnet.', 'Fuel consumption': 'Kraftstoffverbrauch',
