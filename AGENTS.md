@@ -40,7 +40,7 @@ Metricove includes a SvelteKit UI. For new UI views, redesigns, and targeted UI 
 Ziel: Pipeline auf Unit-Tests, Releases und Tags minimieren. Überflüssige Prüfungen (Security, Lint/Format, Static Analysis, Build-Only, Commit-Titel-Validierung, Dependabot-Auto-Merge) laufen nicht mehr in GitHub Actions.
 
 **Behaltene Workflows**
-- `quality-gates.yml` (PR und push auf `main`): Backend-Unit-/Feature-Tests (`composer test`, PHP 8.4, SQLite) und Frontend-Unit-Tests (`bun test`, Bun 1.4.4). Required für Release-Automation.
+- `quality-gates.yml` (PR und push auf `main`): Backend-Unit-/Feature-Tests (`composer test`, PHP 8.4, SQLite) und Frontend-Unit-Tests (`bun test`, Bun 1.4.5). Required für Release-Automation.
 - `compose-build.yml` (nur push auf `main`): Compose-Konfiguration prüfen, Release-Images für AMD64/ARM64 validieren (ohne Veröffentlichung), Upgrade-/Rollback- und Backup-/Restore-Smoke-Tests. Nur noch Release-Gate, keine PR-Läufe mehr.
 - `release-please.yml` (push auf `main`, manuell): Release-PR erstellen/aktualisieren, Tags und GitHub-Releases erzeugen. Wartet auf erfolgreiche `quality-gates.yml`- und `compose-build.yml`-Läufe für denselben Commit.
 - `publish-images.yml` (Release `published`): Container-Images für API, Web und Gateway veröffentlichen. Prüft Tag-Format, CHANGELOG-Eintrag und erfolgreiche Main-CI für den Release-Commit.
