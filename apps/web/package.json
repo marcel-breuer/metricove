@@ -1,13 +1,8 @@
 {
 	"name": "@metricove/web",
 	"private": true,
-<<<<<<< HEAD
-	"version": "0.27.0",
-	"packageManager": "bun@1.4.5",
-=======
 	"version": "0.28.0",
-	"packageManager": "bun@1.4.4",
->>>>>>> origin/release-please--branches--main--components--metricove
+	"packageManager": "bun@1.4.5",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
