@@ -94,6 +94,35 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      - name: Set the GitHub release title to the version
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: actions/github-script@v9
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            const version = process.env.RELEASE_VERSION;
+            if (!tag || !version || !/^\d+\.\d+\.\d+$/.test(version)) {
+              throw new Error("Release Please did not provide a valid release tag and version.");
+            }
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag,
+            });
+            const title = `v${version}`;
+            if (release.name !== title) {
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.id,
+                name: title,
+              });
+              core.info(`Updated release title for ${tag} to ${title}.`);
+            }
+
       - name: Merge the release PR after all release checks pass
         uses: actions/github-script@v9
         env:
