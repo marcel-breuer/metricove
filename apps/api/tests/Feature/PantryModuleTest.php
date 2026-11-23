@@ -84,6 +84,38 @@ class PantryModuleTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'items')->assertJsonPath('items.0.expiry_status', 'today');
     }
 
+    public function test_editable_pantry_item_can_be_deleted_with_its_stock_history_and_resource_grants(): void
+    {
+        $owner = $this->member(true);
+        $viewer = $this->member();
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
+        $this->grant($viewer, ['view' => true]);
+        $this->enable($owner, true);
+
+        $itemId = (int) $this->item($owner, 'Pantry item to delete', '2', 'cans')->assertCreated()->json('item.id');
+        $item = PantryItem::query()->findOrFail($itemId);
+        app(ModuleAccessService::class)->grantPrivateResourceAccess($owner, $item, $viewer, ModuleCapability::View);
+
+        $this->actingAs($owner, 'web')->patchJson("/api/pantry/{$itemId}", [
+            'expected_version' => 1, 'location' => 'Cupboard',
+        ])->assertOk()->assertJsonPath('item.version', 2);
+
+        $this->actingAs($owner, 'web')->deleteJson("/api/pantry/{$itemId}", [
+            'expected_version' => 1,
+        ])->assertStatus(409);
+        $this->assertDatabaseHas('pantry_items', ['id' => $itemId]);
+
+        $this->actingAs($owner, 'web')->deleteJson("/api/pantry/{$itemId}", [
+            'expected_version' => 2,
+        ])->assertOk()->assertJsonPath('message', 'Pantry item deleted.');
+
+        $this->assertDatabaseMissing('pantry_items', ['id' => $itemId]);
+        $this->assertDatabaseMissing('pantry_stock_movements', ['pantry_item_id' => $itemId]);
+        $this->assertDatabaseMissing('resource_user_permissions', [
+            'resource_type' => $item->getMorphClass(), 'resource_id' => $itemId,
+        ]);
+    }
+
     public function test_private_items_and_history_require_resource_visibility_even_from_an_admin(): void
     {
         $admin = $this->member(true);

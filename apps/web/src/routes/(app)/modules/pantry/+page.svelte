@@ -10,6 +10,7 @@
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
 	import { APP_SHELL_CONTEXT, type AppShellContext } from '#lib/app-shell';
 	import Modal from '#lib/ui/Modal.svelte';
+	import ConfirmModal from '#lib/ui/ConfirmModal.svelte';
 	import { formatMeasurement } from '#lib/number-format';
 	import type { PantryExpiryStatus, PantryItem, PantryMovement, PantryResponse } from '#lib/pantry';
 
@@ -46,6 +47,8 @@
 	let adjustmentOpen = $state(false);
 	let adjustment = $state('');
 	let adjustmentNote = $state('');
+	let itemToDelete = $state<PantryItem | null>(null);
+	let deleteOpen = $state(false);
 	let historyItemId = $state<number | null>(null);
 	let history = $state<PantryMovement[]>([]);
 	let historyLoading = $state(false);
@@ -188,6 +191,28 @@
 			if (historyItemId !== null) await loadHistory(historyItemId);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The stock adjustment could not be saved.';
+			if (error.includes('changed since it was loaded')) await loadItems();
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function deleteItem(item: PantryItem): Promise<void> {
+		error = '';
+		message = '';
+		saving = true;
+		try {
+			await api(`/api/pantry/${item.id}`, 'DELETE', { expected_version: item.version });
+			itemToDelete = null;
+			deleteOpen = false;
+			if (historyItemId === item.id) {
+				historyItemId = null;
+				history = [];
+			}
+			message = 'Pantry item deleted.';
+			await loadItems();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The pantry item could not be deleted.';
 			if (error.includes('changed since it was loaded')) await loadItems();
 		} finally {
 			saving = false;
@@ -368,6 +393,7 @@
 										{#if item.can_edit}
 											<button type="button" onclick={() => openAdjustment(item)} class="rounded-lg border border-positive/20 px-3 py-2 text-xs font-semibold text-positive hover:bg-positive/10">{$t("Adjust stock")}</button>
 											<button type="button" onclick={() => openEdit(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t("Edit")}</button>
+										<button type="button" disabled={saving} onclick={() => { itemToDelete = item; deleteOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 disabled:opacity-50">{$t("Delete")}</button>
 										{/if}
 										<button type="button" aria-expanded={historyItemId === item.id} onclick={() => void toggleHistory(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t(historyItemId === item.id ? 'Hide history' : 'History')}</button>
 									</div>
@@ -408,3 +434,4 @@
 		</section>
 	{/if}
 </div>
+{#if itemToDelete}<ConfirmModal bind:open={deleteOpen} title={$t('Delete pantry item?')} message={$t('Delete this pantry item and its stock history?')} confirmLabel={$t('Delete')} busy={saving} onConfirm={() => void deleteItem(itemToDelete!)} />{/if}
