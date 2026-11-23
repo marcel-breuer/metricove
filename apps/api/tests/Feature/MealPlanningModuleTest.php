@@ -28,6 +28,7 @@ class MealPlanningModuleTest extends TestCase
         $this->assertFalse(app(ModuleStateService::class)->isEnabled('recipes'));
         $created = $this->actingAs($owner, 'web')->postJson('/api/meal-planning/slots', [
             'planned_for' => '2026-10-19', 'meal_type' => 'dinner', 'dish_name' => 'Lemon pasta', 'servings' => 4,
+            'notes' => 'Pack leftovers',
         ])->assertCreated()
             ->assertJsonPath('slot.dish_type', 'free_text')
             ->assertJsonPath('slot.dish_label', 'Lemon pasta')
@@ -41,7 +42,23 @@ class MealPlanningModuleTest extends TestCase
         $this->actingAs($owner, 'web')->getJson('/api/meal-planning?week_start=2026-10-20')->assertUnprocessable();
 
         $this->actingAs($owner, 'web')->patchJson("/api/meal-planning/slots/{$slotId}", [
-            'planned_for' => '2026-10-20', 'meal_type' => 'lunch', 'dish_name' => 'Herb soup', 'servings' => 2,
+            'planned_for' => '2026-10-20', 'meal_type' => 'lunch',
+        ])->assertOk()->assertJsonPath('slot.planned_for', '2026-10-20')
+            ->assertJsonPath('slot.meal_type', 'lunch')->assertJsonPath('slot.dish_label', 'Lemon pasta')
+            ->assertJsonPath('slot.servings', 4)->assertJsonPath('slot.notes', 'Pack leftovers');
+
+        $occupiedSlotId = (int) $this->actingAs($owner, 'web')->postJson('/api/meal-planning/slots', [
+            'planned_for' => '2026-10-20', 'meal_type' => 'breakfast', 'dish_name' => 'Oatmeal', 'servings' => 1,
+        ])->assertCreated()->json('slot.id');
+        $this->actingAs($owner, 'web')->patchJson("/api/meal-planning/slots/{$slotId}", [
+            'planned_for' => '2026-10-20', 'meal_type' => 'breakfast',
+        ])->assertUnprocessable();
+        $this->assertDatabaseHas('meal_plan_slots', [
+            'id' => $slotId, 'planned_for' => '2026-10-20', 'meal_type' => 'lunch', 'dish_name' => 'Lemon pasta',
+        ]);
+
+        $this->actingAs($owner, 'web')->patchJson("/api/meal-planning/slots/{$slotId}", [
+            'dish_name' => 'Herb soup', 'servings' => 2,
         ])->assertOk()->assertJsonPath('slot.dish_label', 'Herb soup')->assertJsonPath('slot.servings', 2);
         $this->actingAs($owner, 'web')->postJson('/api/meal-planning/slots', [
             'planned_for' => '2026-10-20', 'meal_type' => 'lunch', 'dish_name' => 'Duplicate', 'servings' => 2,
@@ -51,8 +68,9 @@ class MealPlanningModuleTest extends TestCase
         $this->assertDatabaseHas('meal_plan_slots', ['id' => $slotId, 'dish_name' => 'Herb soup']);
         app(ModuleManagementService::class)->setEnabled($admin, 'meal_planning', true);
         $this->actingAs($owner, 'web')->getJson('/api/meal-planning?week_start=2026-10-19')
-            ->assertOk()->assertJsonPath('slots.0.dish_label', 'Herb soup');
+            ->assertOk()->assertJsonCount(2, 'slots')->assertJsonPath('slots.1.dish_label', 'Herb soup');
         $this->actingAs($owner, 'web')->deleteJson("/api/meal-planning/slots/{$slotId}")->assertOk();
+        $this->actingAs($owner, 'web')->deleteJson("/api/meal-planning/slots/{$occupiedSlotId}")->assertOk();
         $this->assertDatabaseCount('meal_plan_slots', 0);
     }
 
