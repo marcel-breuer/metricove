@@ -14,7 +14,7 @@ class ReceiptTargetOptionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'target_type' => ['required', 'in:finance,vehicle'],
+            'target_type' => ['required', 'in:vehicle'],
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }

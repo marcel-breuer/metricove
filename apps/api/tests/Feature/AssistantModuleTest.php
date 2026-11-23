@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\FinanceCategory;
-use App\Models\FinancialTransaction;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
 use App\Models\TrackerDefinition;
@@ -41,44 +39,6 @@ class AssistantModuleTest extends TestCase
             'ai.api_key' => '',
             'ai.external_provider' => false,
         ]);
-    }
-
-    public function test_finance_tool_returns_only_permission_visible_totals_and_does_not_store_chat(): void
-    {
-        $admin = $this->member(true);
-        $viewer = $this->member(false);
-        $owner = $this->member(false);
-        $this->enable($admin, ['finance']);
-        $this->grant($viewer, 'finance', true);
-
-        $shared = $this->category($admin, false, 'Shared');
-        $own = $this->category($viewer, true, 'Personal');
-        $private = $this->category($owner, true, 'Hidden');
-        $month = CarbonImmutable::today()->format('Y-m');
-        $this->transaction($shared, $admin, false, '10.00', 'Shared note');
-        $this->transaction($own, $viewer, true, '3.00', 'Personal note');
-        $this->transaction($private, $owner, true, '900.00', 'Hidden private note');
-
-        Http::fakeSequence()
-            ->push($this->toolCall('summarize_finance_month', ['month' => $month]))
-            ->push($this->assistantAnswer('Visible month totals only.'));
-
-        $this->actingAs($viewer, 'web')->postJson('/api/ai/assistant', [
-            'message' => 'Summarize expenses for this month.',
-        ])->assertOk()->assertJsonPath('answer', 'Visible month totals only.');
-
-        $requests = Http::recorded()->map(fn (array $pair): Request => $pair[0])->values();
-        $this->assertCount(2, $requests);
-        $secondRequest = $requests[1]->data();
-        $toolMessage = collect($secondRequest['messages'])->firstWhere('role', 'tool');
-        $toolResult = json_decode($toolMessage['content'], true, flags: JSON_THROW_ON_ERROR);
-
-        $this->assertSame('13.00', $toolResult['totals'][0]['expenses']);
-        $this->assertStringNotContainsString('900.00', $toolMessage['content']);
-        $this->assertStringNotContainsString('Hidden private note', $toolMessage['content']);
-        $this->assertStringNotContainsString('Personal note', $toolMessage['content']);
-        $this->assertFalse(Schema::hasTable('assistant_conversations'));
-        $this->assertSame(3, FinancialTransaction::query()->count());
     }
 
     public function test_external_provider_requires_per_request_consent_before_any_network_call(): void
@@ -206,31 +166,6 @@ class AssistantModuleTest extends TestCase
         $this->assertStringNotContainsString('Excluded description', $payload);
     }
 
-    public function test_disabled_or_unpermitted_modules_are_not_offered_and_forced_calls_are_rejected(): void
-    {
-        $admin = $this->member(true);
-        $member = $this->member(false);
-        $this->enable($admin, ['finance']);
-        $this->grant($member, 'finance', false);
-
-        $this->actingAs($member, 'web')->getJson('/api/ai/assistant')
-            ->assertOk()->assertJsonPath('modules', []);
-
-        Http::fake(['*' => Http::response($this->toolCall('summarize_finance_month', ['month' => '2026-10']))]);
-        $this->actingAs($member, 'web')->postJson('/api/ai/assistant', ['message' => 'Show finance totals'])
-            ->assertUnprocessable()->assertJsonValidationErrors('assistant');
-        $this->assertCount(1, Http::recorded());
-
-        $this->grant($member, 'finance', true);
-        app(ModuleManagementService::class)->setEnabled($admin, 'finance', false);
-        $this->actingAs($member, 'web')->getJson('/api/ai/assistant')
-            ->assertOk()->assertJsonPath('modules', []);
-
-        $this->actingAs($member, 'web')->postJson('/api/ai/assistant', ['message' => 'Show finance totals'])
-            ->assertUnprocessable()->assertJsonValidationErrors('assistant');
-        $this->assertCount(2, Http::recorded());
-    }
-
     public function test_unregistered_sql_or_shell_tool_calls_fail_closed(): void
     {
         $admin = $this->member(true);
@@ -241,7 +176,7 @@ class AssistantModuleTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('assistant');
 
         $this->assertCount(1, Http::recorded());
-        $this->assertSame(0, FinancialTransaction::query()->count());
+        $this->assertDatabaseCount('financial_transactions', 0);
     }
 
     public function test_core_assistant_requires_provider_configuration_without_module_access(): void
@@ -281,32 +216,6 @@ class AssistantModuleTest extends TestCase
             ['user_id' => $member->id, 'module_key' => $module],
             ['can_view' => $view, 'can_create' => false, 'can_edit' => false, 'can_manage' => false],
         );
-    }
-
-    private function category(User $owner, bool $private, string $name): FinanceCategory
-    {
-        return FinanceCategory::query()->create([
-            'owner_user_id' => $private ? $owner->id : null,
-            'created_by_user_id' => $owner->id,
-            'is_private' => $private,
-            'type' => 'expense',
-            'name' => $name,
-        ]);
-    }
-
-    private function transaction(FinanceCategory $category, User $owner, bool $private, string $amount, string $description): void
-    {
-        FinancialTransaction::query()->create([
-            'finance_category_id' => $category->id,
-            'owner_user_id' => $private ? $owner->id : null,
-            'created_by_user_id' => $owner->id,
-            'is_private' => $private,
-            'type' => 'expense',
-            'description' => $description,
-            'amount' => $amount,
-            'currency' => 'EUR',
-            'occurred_on' => CarbonImmutable::today()->format('Y-m-d'),
-        ]);
     }
 
     /** @param array<string, mixed> $arguments

@@ -20,6 +20,7 @@
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'analytics'));
+	const selectedMetric = $derived(catalog.find((metric) => metric.key === metricKey));
 	const canView = $derived(access?.capabilities.view ?? false);
 	const canCreate = $derived(access?.capabilities.create ?? false);
 	const canEdit = $derived(access?.capabilities.edit ?? false);
@@ -34,6 +35,8 @@
 	let title = $state('');
 	let rangeKey = $state<AnalyticsRange>('30d');
 	let chartType = $state<AnalyticsChartType>('line');
+	let measureKey = $state<'change' | 'value'>('change');
+	let groupKey = $state<'unit' | 'record'>('unit');
 	let editingId = $state<number | null>(null);
 	let createOpen = $state(false);
 	let editOpen = $state(false);
@@ -42,6 +45,8 @@
 	let editTitle = $state('');
 	let editRange = $state<AnalyticsRange>('30d');
 	let editChart = $state<AnalyticsChartType>('line');
+	let editMeasure = $state<'change' | 'value'>('change');
+	let editGroup = $state<'unit' | 'record'>('unit');
 
 	$effect(() => {
 		if (!shell.loading && canView) void loadDashboard();
@@ -97,7 +102,9 @@
 				metric_key: metricKey,
 				title: title.trim() || undefined,
 				range_key: rangeKey,
-				chart_type: chartType
+				chart_type: chartType,
+				measure_key: measureKey,
+				group_key: groupKey
 			});
 			title = '';
 			message = 'Widget added to your dashboard.';
@@ -116,6 +123,8 @@
 		editTitle = widget.title;
 		editRange = widget.range_key;
 		editChart = widget.chart_type;
+			editMeasure = widget.measure_key;
+			editGroup = widget.group_key;
 	}
 
 	async function saveWidget(widget: AnalyticsWidget): Promise<void> {
@@ -128,7 +137,9 @@
 				expected_version: widget.version,
 				title: editTitle.trim(),
 				range_key: editRange,
-				chart_type: editChart
+				chart_type: editChart,
+				measure_key: editMeasure,
+				group_key: editGroup
 			});
 			editingId = null;
 			editOpen = false;
@@ -179,7 +190,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-screen-xl">
-	<PageHeading eyebrow="Your data, at a glance" title="Analytics dashboard" description="Choose charts from modules you can view. Currency and measurement units stay in separate series; source records remain private." />
+	<PageHeading eyebrow="Your data, at a glance" title="Analytics dashboard" description="Choose an available data table, its date, measure and grouping columns, and the chart type. Only records you can view are included." />
 
 	{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 	{#if message}<Notice tone="success" message={message} class="mt-5" />{/if}
@@ -195,12 +206,23 @@
 			{#if catalog.length === 0}
 				<p class="mt-5 rounded-xl border border-line bg-page p-4 text-sm leading-6 text-ink-muted">{$t("No data sources are available yet. Ask an administrator to enable a source module and grant you view access.")}</p>
 			{:else}
-				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_1fr_1fr_auto]" onsubmit={createWidget}>
-					<label class="block text-xs font-medium text-ink-secondary">{$t("Data source")}
+				<form class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3" onsubmit={createWidget}>
+					<label class="block text-xs font-medium text-ink-secondary">{$t('Data table')}
 						<select bind:value={metricKey} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-							{#each catalog as metric (metric.key)}<option value={metric.key}>{$t(metric.label)} · {$t(metric.source_label)}</option>{/each}
+							{#each catalog as metric (metric.key)}<option value={metric.key}>{$t(metric.table_label)} · {$t(metric.source_label)}</option>{/each}
 						</select>
 					</label>
+					<label class="block text-xs font-medium text-ink-secondary">{$t('Measure column')}
+						<select bind:value={measureKey} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
+							<option value="change">{$t('Change between readings')} · {selectedMetric?.measure_columns[1]}</option><option value="value">{$t('Recorded value')} · {selectedMetric?.measure_columns[0]}</option>
+						</select>
+					</label>
+					<label class="block text-xs font-medium text-ink-secondary">{$t('Group column')}
+						<select bind:value={groupKey} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
+							<option value="unit">{$t(selectedMetric?.group_columns[0] ?? 'Unit')}</option><option value="record">{$t(selectedMetric?.group_columns[1] ?? 'Record name')}</option>
+						</select>
+					</label>
+					<p class="text-xs leading-5 text-ink-muted sm:col-span-2 xl:col-span-3">{$t('Date column')}: <code class="font-mono">{selectedMetric?.date_column}</code> · {$t('Only rows visible to your account are included.')}</p>
 					<label class="block text-xs font-medium text-ink-secondary">{$t("Widget title")}
 						<input bind:value={title} maxlength="80" placeholder={$t(catalog.find((metric) => metric.key === metricKey)?.label ?? 'A clear title')} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 					</label>
@@ -230,7 +252,7 @@
 		<div class="mt-6 rounded-[20px] border border-dashed glass-surface px-5 py-14 text-center">
 			<div class="mx-auto grid size-14 place-items-center rounded-2xl border border-line-strong bg-page text-xl text-accent-ink" aria-hidden="true">⌁</div>
 			<h2 class="mt-4 text-xl font-semibold text-ink">{$t("Your dashboard is ready to configure.")}</h2>
-			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-ink-muted">{$t("Add a chart to follow expenses, utility consumption or distance travelled from the sources you can view.")}</p>
+			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-ink-muted">{$t('Add a chart to compare reading values or changes across the utility and vehicle records you can view.')}</p>
 		</div>
 	{:else}
 		<div class="mt-6 grid gap-4 xl:grid-cols-2">
@@ -249,7 +271,7 @@
 						<div class="mt-5 grid gap-4">
 							{#each widget.series as series (series.label)}
 								<section class="min-w-0 rounded-xl border border-line bg-page p-3 sm:p-4" aria-label={$t('{series} series', { series: series.label })}>
-									<div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-sm font-semibold text-ink">{series.label}</p><p class="text-xs text-ink-muted">{$t("Total")} <span class="font-semibold tabular-nums text-ink-secondary">{displayedValue(series.total, widget.metric_key === 'finance.expenses')} {series.unit}</span></p></div>
+							<div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-sm font-semibold text-ink">{series.label}</p><p class="text-xs text-ink-muted">{$t("Total")} <span class="font-semibold tabular-nums text-ink-secondary">{displayedValue(series.total, false)} {series.unit}</span></p></div>
 									<div class="mt-3 min-w-0">
 										<svg viewBox="0 0 720 210" preserveAspectRatio="none" class="h-44 w-full overflow-visible sm:h-48" role="img" aria-label={`${widget.title}, ${series.label}, ${$t('range')} ${analyticsRanges.find((range) => range.value === widget.range_key)?.label}`}>
 											<line x1="28" y1="174" x2="692" y2="174" stroke="#334155" stroke-width="1" />
@@ -261,7 +283,7 @@
 												{#each values as value, index (index)}
 													{@const x = values.length === 1 ? 360 : 34 + index * (652 / (values.length - 1))}
 													{@const y = 166 - (value / maximum) * 132}
-													<circle cx={x} cy={y} r="3.5" fill="#67e8f9"><title>{widget.periods[index]}: {displayedValue(series.values[index], widget.metric_key === 'finance.expenses')} {series.unit}</title></circle>
+									<circle cx={x} cy={y} r="3.5" fill="#67e8f9"><title>{widget.periods[index]}: {displayedValue(series.values[index], false)} {series.unit}</title></circle>
 												{/each}
 											{:else}
 												{@const values = series.values.map((value) => Math.max(0, Number(value) || 0))}
@@ -269,7 +291,7 @@
 												{@const slot = 652 / Math.max(1, values.length)}
 												{#each values as value, index (index)}
 													{@const height = value === 0 ? 0 : Math.max(2, (value / maximum) * 132)}
-													<rect x={34 + index * slot + slot * 0.16} y={166 - height} width={Math.max(1, slot * 0.68)} height={height} rx="3" fill="#67e8f9" opacity="0.88"><title>{widget.periods[index]}: {displayedValue(series.values[index], widget.metric_key === 'finance.expenses')} {series.unit}</title></rect>
+									<rect x={34 + index * slot + slot * 0.16} y={166 - height} width={Math.max(1, slot * 0.68)} height={height} rx="3" fill="#67e8f9" opacity="0.88"><title>{widget.periods[index]}: {displayedValue(series.values[index], false)} {series.unit}</title></rect>
 												{/each}
 											{/if}
 											<text x="30" y="198" fill="#94a3b8" font-size="11">{widget.periods.length ? periodLabel(widget.periods[0], widget.range_key) : ''}</text>
@@ -287,6 +309,8 @@
 							<label class="block text-xs font-medium text-ink-secondary">{$t("Widget title")}<input bind:value={editTitle} maxlength="80" required class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none max-sm:text-base" /></label>
 							<label class="block text-xs font-medium text-ink-secondary">{$t("Time range")}<select bind:value={editRange} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none max-sm:text-base">{#each analyticsRanges as range (range.value)}<option value={range.value}>{$t(range.label)}</option>{/each}</select></label>
 							<label class="block text-xs font-medium text-ink-secondary">{$t("Chart type")}<select bind:value={editChart} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none max-sm:text-base"><option value="line">{$t("Line")}</option><option value="bar">{$t("Bars")}</option></select></label>
+			<label class="block text-xs font-medium text-ink-secondary">{$t('Measure column')}<select bind:value={editMeasure} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink"><option value="change">{$t('Change between readings')}</option><option value="value">{$t('Recorded value')}</option></select></label>
+			<label class="block text-xs font-medium text-ink-secondary">{$t('Group column')}<select bind:value={editGroup} class="mt-1.5 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink"><option value="unit">{$t('Unit')}</option><option value="record">{$t('Record name')}</option></select></label>
 							<div class="flex items-end gap-2"><button disabled={saving} class="min-h-10 rounded-lg bg-accent px-3 text-xs font-semibold text-on-accent disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { editingId = null; editOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-xs font-semibold text-ink-secondary">{$t("Cancel")}</button><button type="button" disabled={saving} onclick={() => { widgetToRemove = widget; removeOpen = true; }} class="ml-auto min-h-10 rounded-lg border border-danger/30 px-3 text-xs font-semibold text-danger hover:bg-danger/10 disabled:opacity-50">{$t("Remove")}</button></div>
 						</form>
 						</Modal>

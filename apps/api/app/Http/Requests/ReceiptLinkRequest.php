@@ -14,7 +14,7 @@ class ReceiptLinkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'target_type' => ['required', 'in:finance,vehicle'],
+            'target_type' => ['required', 'in:vehicle'],
             'target_record_id' => ['required', 'integer', 'min:1'],
         ];
     }

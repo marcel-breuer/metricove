@@ -16,8 +16,7 @@ class UpdateReminderPreferencesRequest extends FormRequest
         return [
             'email_enabled' => ['sometimes', 'boolean'],
             'lead_days' => ['sometimes', 'integer', 'between:0,30'],
-            'sources' => ['sometimes', 'array:finance,vehicles,utilities,tasks'],
-            'sources.finance' => ['sometimes', 'boolean'],
+            'sources' => ['sometimes', 'array:vehicles,utilities,pantry,tasks'],
             'sources.vehicles' => ['sometimes', 'boolean'],
             'sources.utilities' => ['sometimes', 'boolean'],
             'sources.tasks' => ['sometimes', 'boolean'],

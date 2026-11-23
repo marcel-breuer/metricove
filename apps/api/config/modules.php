@@ -30,13 +30,6 @@ return [
             'dependencies' => ['core'],
             'always_enabled' => false,
         ],
-        'finance' => [
-            'label' => 'Finance',
-            'description' => 'Private and household transactions, categories, budgets and recurring entries.',
-            'version' => '0.1.0',
-            'dependencies' => ['core'],
-            'always_enabled' => false,
-        ],
         'recipes' => [
             'label' => 'Recipes',
             'description' => 'Recipes, ingredients, servings and preparation steps.',
@@ -82,13 +75,6 @@ return [
         'analytics' => [
             'label' => 'Analytics',
             'description' => 'Private cross-module charts for data the member can view.',
-            'version' => '0.1.0',
-            'dependencies' => ['core'],
-            'always_enabled' => false,
-        ],
-        'import' => [
-            'label' => 'Import',
-            'description' => 'Validated utility reading CSV imports, scoped exports and local meter-photo suggestions.',
             'version' => '0.1.0',
             'dependencies' => ['core'],
             'always_enabled' => false,

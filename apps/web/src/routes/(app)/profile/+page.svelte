@@ -18,6 +18,8 @@
 	let user: AuthUser | null = $state(null);
 	let name = $state('');
 	let email = $state('');
+	let recipeUnits = $state<string[]>(['piece', 'g', 'kg', 'ml', 'l', 'bunch', 'tsp', 'tbsp']);
+	let newRecipeUnit = $state('');
 	let loading = $state(true);
 	let busy = $state(false);
 	let message = $state('');
@@ -55,7 +57,6 @@
 		'core:profile:view': 'View your basic profile preferences',
 		'core:reminders:view': 'View your open reminders',
 		'tracking:view': 'View permitted tracking summaries',
-		'finance:view': 'View permitted monthly finance totals',
 		'utilities:view': 'View permitted utility readings',
 		'utilities:create': 'Prepare utility readings for your approval',
 		'vehicles:view': 'View permitted vehicle odometer summaries'
@@ -117,6 +118,7 @@
 			user = result.user;
 			name = result.user.name;
 			email = result.user.email;
+			recipeUnits = [...result.user.recipe_units];
 			setUserPreferences(result.user);
 		} catch {
 			error = 'Profile is unavailable. Check your connection and try again.';
@@ -152,7 +154,8 @@
 				},
 				body: JSON.stringify({
 					name, email, language: $uiLanguage, number_locale: $numberLocale,
-					default_currency: $defaultCurrency, currency_display: $currencyDisplay
+					default_currency: $defaultCurrency, currency_display: $currencyDisplay,
+					recipe_units: recipeUnits
 				})
 			});
 			const result = (await response.json()) as ApiResponse;
@@ -176,6 +179,18 @@
 		} finally {
 			busy = false;
 		}
+	}
+
+	function addRecipeUnit(): void {
+		const value = newRecipeUnit.trim();
+		if (!value || value.length > 40 || recipeUnits.some((unit) => unit.toLocaleLowerCase() === value.toLocaleLowerCase())) return;
+		recipeUnits = [...recipeUnits, value];
+		newRecipeUnit = '';
+	}
+
+	function removeRecipeUnit(value: string): void {
+		if (recipeUnits.length <= 1) return;
+		recipeUnits = recipeUnits.filter((unit) => unit !== value);
 	}
 
 	async function changePassword(event: SubmitEvent): Promise<void> {
@@ -361,6 +376,25 @@
 								</select>
 							</label>
 						</div>
+						<section class="space-y-3 rounded-xl border border-line p-4" aria-labelledby="recipe-units-heading">
+							<div>
+								<h3 id="recipe-units-heading" class="text-sm font-semibold text-ink">{$t('Recipe units')}</h3>
+								<p class="mt-1 text-xs leading-5 text-ink-muted">{$t('Choose the units available in your recipe ingredient dropdowns. These settings belong to your account.')}</p>
+							</div>
+							<ul class="flex flex-wrap gap-2">
+								{#each recipeUnits as unit (unit)}
+									<li class="inline-flex min-h-9 items-center gap-2 rounded-lg border border-line-strong bg-page px-3 text-sm text-ink">
+										<span>{$t(unit)}</span>
+										<button type="button" aria-label={$t('Remove recipe unit {unit}', { unit: $t(unit) })} onclick={() => removeRecipeUnit(unit)} disabled={recipeUnits.length <= 1} class="font-medium text-ink-muted hover:text-danger disabled:opacity-40">×</button>
+									</li>
+								{/each}
+							</ul>
+							<div class="flex flex-col gap-2 sm:flex-row">
+								<label class="sr-only" for="new-recipe-unit">{$t('Add a custom recipe unit')}</label>
+								<input id="new-recipe-unit" bind:value={newRecipeUnit} maxlength="40" placeholder={$t('For example, clove')} class="min-h-11 min-w-0 flex-1 rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
+								<Button variant="secondary" type="button" disabled={!newRecipeUnit.trim() || recipeUnits.length >= 80} onclick={addRecipeUnit}>{$t('Add unit')}</Button>
+							</div>
+						</section>
 						{#if message}<Notice tone="success" message={$t(message)} />{/if}
 						{#if error}<Notice tone="error" message={$t(error)} />{/if}
 						<Button type="submit" fullWidth disabled={busy}>

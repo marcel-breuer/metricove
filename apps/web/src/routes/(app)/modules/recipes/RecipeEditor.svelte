@@ -16,6 +16,7 @@
 		draft = null,
 		notices = [],
 		visibilityOptions,
+		unitOptions = ['piece', 'g', 'kg', 'ml', 'l', 'bunch', 'tsp', 'tbsp'],
 		visibilityHint = '',
 		onSaved
 	}: {
@@ -26,6 +27,7 @@
 		draft?: RecipeDraft | null;
 		notices?: string[];
 		visibilityOptions: RecipeVisibility[];
+		unitOptions?: string[];
 		/** Shown instead of the visibility select when only one option applies. */
 		visibilityHint?: string;
 		onSaved: (recipe: Recipe | null, created: boolean) => void | Promise<void>;
@@ -115,7 +117,7 @@
 					<input bind:value={form.category} maxlength="80" placeholder={$t('Dinner')} class="{control}" />
 				</label>
 				<label class="{field}">
-					<span class="{fieldLabel}">{$t('Servings')}</span>
+					<span class="{fieldLabel}">{$t('People')}</span>
 					<input bind:value={form.servings} type="number" min="1" max="1000" required={!editing} class="{control}" />
 				</label>
 				<label class="{field}">
@@ -173,7 +175,10 @@
 							</label>
 							<label class="{field} gap-1 text-xs text-ink-muted">
 								<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Unit')}</span>
-								<input bind:value={ingredient.unit} maxlength="40" placeholder={$t('Optional')} class="{control}" />
+								<select bind:value={ingredient.unit} class="{control}">
+									<option value="">{$t('Optional')}</option>
+									{#each [...new Set([...unitOptions, ...(ingredient.unit && !unitOptions.includes(ingredient.unit) ? [ingredient.unit] : [])])] as unit (unit)}<option value={unit}>{$t(unit)}</option>{/each}
+								</select>
 							</label>
 						</div>
 						<label class="{field} order-4 col-span-2 gap-1 text-xs text-ink-muted sm:col-span-1">

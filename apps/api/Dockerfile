@@ -61,6 +61,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=www-data:www-data apps/api/ ./
+COPY --chown=www-data:www-data docs/ /var/docs/
+COPY --chown=www-data:www-data README.md /var/README.md
 
 USER www-data
 RUN touch .env \

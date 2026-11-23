@@ -3,22 +3,18 @@
 namespace App\Providers;
 
 use App\Contracts\AssistantProvider;
-use App\Contracts\MeterPhotoOcr;
 use App\Models\User;
 use App\Services\AI\AiProviderConfiguration;
 use App\Services\AI\AssistantToolRegistry;
 use App\Services\AI\ClaudeAssistantProvider;
 use App\Services\AI\GeminiAssistantProvider;
 use App\Services\AI\OpenAiCompatibleAssistantProvider;
-use App\Services\AI\Tools\FinanceMonthSummaryTool;
 use App\Services\AI\Tools\TrackingSnapshotTool;
 use App\Services\AI\Tools\UtilitiesSnapshotTool;
 use App\Services\AI\Tools\VehiclesSnapshotTool;
 use App\Services\AI\Tools\VisibleSnapshotTool;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Auth\ConfiguredFrontendUrl;
-use App\Services\Finance\FinanceService;
-use App\Services\Import\TesseractMeterPhotoOcr;
 use App\Services\Mcp\McpWriteWorkflowRegistry;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
@@ -40,7 +36,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(MeterPhotoOcr::class, TesseractMeterPhotoOcr::class);
         $this->app->bind(AssistantProvider::class, function ($app): AssistantProvider {
             $configuration = $app->make(AiProviderConfiguration::class);
 
@@ -52,7 +47,6 @@ class AppServiceProvider extends ServiceProvider
         });
         $this->app->singleton(AssistantToolRegistry::class, function ($app): AssistantToolRegistry {
             return new AssistantToolRegistry($app->make(ModuleAccessService::class), [
-                $app->make(FinanceMonthSummaryTool::class),
                 $app->make(TrackingSnapshotTool::class),
                 $app->make(UtilitiesSnapshotTool::class),
                 $app->make(VehiclesSnapshotTool::class),
@@ -64,17 +58,6 @@ class AppServiceProvider extends ServiceProvider
                     $lists = array_slice($shopping->index($actor), 0, 12);
 
                     return ['lists' => array_map(fn (array $list): array => $shopping->show($actor, (int) $list['id']), $lists)];
-                }),
-                new VisibleSnapshotTool('finance', 'list_visible_financial_records', 'Show the visible finance overview, recent transactions, budgets and recurring entries, separated by currency and record scope.', function (User $actor) use ($app): array {
-                    $finance = $app->make(FinanceService::class);
-                    $month = now()->format('Y-m');
-
-                    return [
-                        'overview' => $finance->overview($actor, $month),
-                        'transactions' => $finance->transactions($actor, $month),
-                        'budgets' => $finance->budgets($actor, $month),
-                        'recurring_entries' => $finance->recurringEntries($actor),
-                    ];
                 }),
                 new VisibleSnapshotTool('analytics', 'show_visible_analytics', 'Show the signed-in member’s own analytics dashboard, with source data recalculated under current module and record permissions.', fn (User $actor): array => $app->make(AnalyticsService::class)->dashboard($actor)),
                 new VisibleSnapshotTool('tasks', 'list_visible_tasks', 'List open household tasks visible to the signed-in member. Private tasks are limited to their owner or explicitly authorized members.', fn (User $actor): array => ['tasks' => $app->make(HouseholdTaskService::class)->index($actor, ['status' => 'open'])]),

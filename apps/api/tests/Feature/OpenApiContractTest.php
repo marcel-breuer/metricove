@@ -89,7 +89,7 @@ class OpenApiContractTest extends TestCase
     {
         $spec = $this->contract()->committed();
 
-        $this->assertSame(['key' => 'finance', 'capability' => 'view'], $spec['paths']['/api/finance/transactions']['get']['x-metricove-module']);
+        $this->assertSame(['key' => 'analytics', 'capability' => 'view'], $spec['paths']['/api/analytics/dashboard']['get']['x-metricove-module']);
         $this->assertTrue($spec['paths']['/api/admin/members']['get']['x-metricove-admin-only']);
         $this->assertArrayNotHasKey('/api/mcp', $spec['paths']);
     }

@@ -23,6 +23,7 @@ export type ShoppingItem = {
 	is_checked: boolean;
 	checked_at: string | null;
 	checked_by: string | null;
+	pantry_received: boolean;
 	version: number;
 	can_edit: boolean;
 	created_at: string | null;

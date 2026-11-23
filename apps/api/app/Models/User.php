@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'language', 'number_locale', 'default_currency', 'currency_display'])]
+#[Fillable(['name', 'email', 'password', 'language', 'number_locale', 'default_currency', 'currency_display', 'recipe_units'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -42,6 +42,7 @@ class User extends Authenticatable
             'reminder_email_enabled' => 'boolean',
             'reminder_lead_days' => 'integer',
             'reminder_sources' => 'array',
+            'recipe_units' => 'array',
             'password' => 'hashed',
         ];
     }
@@ -50,5 +51,15 @@ class User extends Authenticatable
     public function modulePermissions(): HasMany
     {
         return $this->hasMany(ModuleUserPermission::class);
+    }
+
+    /** @return list<string> */
+    public function recipeUnits(): array
+    {
+        $units = $this->getAttribute('recipe_units');
+
+        return is_array($units)
+            ? array_values(array_filter($units, 'is_string'))
+            : ['piece', 'g', 'kg', 'ml', 'l', 'bunch', 'tsp', 'tbsp'];
     }
 }

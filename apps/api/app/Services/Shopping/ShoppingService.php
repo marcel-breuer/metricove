@@ -11,6 +11,7 @@ use App\Models\ShoppingList;
 use App\Models\ShoppingListEvent;
 use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
+use App\Services\Pantry\PantryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -22,7 +23,10 @@ class ShoppingService
 {
     private const MODULE = 'shopping';
 
-    public function __construct(private readonly ModuleAccessService $access) {}
+    public function __construct(
+        private readonly ModuleAccessService $access,
+        private readonly PantryService $pantry,
+    ) {}
 
     /** @return list<array<string, mixed>> */
     public function index(User $actor): array
@@ -253,6 +257,9 @@ class ShoppingService
             $item->is_checked = $checked;
             $item->checked_at = $checked ? now() : null;
             $item->checked_by_user_id = $checked ? $actor->id : null;
+            if ($checked && $item->pantry_received_at === null && $this->pantry->receiveShoppingPurchase($actor, $item)) {
+                $item->pantry_received_at = now();
+            }
             $item->version++;
             $item->save();
             $this->bumpList($list);
@@ -466,6 +473,7 @@ class ShoppingService
             'sort_order' => (int) $item->sort_order,
             'is_checked' => (bool) $item->is_checked,
             'checked_at' => $item->checked_at?->toISOString(),
+            'pantry_received' => $item->pantry_received_at !== null,
             'checked_by' => $item->checkedBy?->name,
             'version' => (int) $item->version,
             'can_edit' => $canEdit,

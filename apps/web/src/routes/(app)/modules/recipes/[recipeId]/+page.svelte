@@ -120,7 +120,7 @@
 				<p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{recipe.category ?? $t('Uncategorized')} · {$t(recipe.visibility === 'household' ? 'Household' : 'Private')}</p>
 				<h1 class="page-title break-words">{recipe.title}</h1>
 				<p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tabular-nums text-ink-muted">
-					{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('Servings missing')}</span>{/if}
+					{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} person' : '{count} people', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('People count missing')}</span>{/if}
 					{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}
 					<span>{$t(recipe.ingredients.length === 1 ? '{count} ingredient' : '{count} ingredients', { count: recipe.ingredients.length })}</span>
 					{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}

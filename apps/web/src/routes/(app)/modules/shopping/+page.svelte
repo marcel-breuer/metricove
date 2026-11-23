@@ -275,11 +275,11 @@
 		error = '';
 		message = '';
 		try {
-			await api<ShoppingListsResponse>('/api/shopping/items/' + item.id + '/checked', 'PATCH', {
+			const result = await api<ShoppingListsResponse>('/api/shopping/items/' + item.id + '/checked', 'PATCH', {
 				expected_version: item.version,
 				checked
 			});
-			message = checked ? 'Item checked off.' : 'Item restored to the list.';
+			message = checked && result.item?.pantry_received ? 'Item checked off and added to your private pantry.' : checked ? 'Item checked off.' : 'Item restored to the list.';
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The item status could not be changed.';
@@ -641,7 +641,7 @@
 										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-line-strong bg-page text-accent-ink focus:ring-2 focus:ring-accent-ink/40 disabled:opacity-50 sm:mt-0" />
 										<div class="min-w-0 flex-1">
 											<p class="break-words text-sm font-medium {item.is_checked ? 'text-ink-subtle line-through' : 'text-ink'}">{item.name}</p>
-											<p class="mt-1 text-xs text-ink-subtle">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}</p>
+											<p class="mt-1 text-xs text-ink-subtle">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}{#if item.pantry_received}<span> · {$t('Added to your private pantry')}</span>{/if}</p>
 										</div>
 										{#if item.can_edit}
 											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">

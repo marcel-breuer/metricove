@@ -6,7 +6,6 @@ use App\Enums\ModuleCapability;
 use App\Exceptions\ModuleDisabled;
 use App\Exceptions\ModuleNotFound;
 use App\Models\AnalyticsWidget;
-use App\Models\FinancialTransaction;
 use App\Models\User;
 use App\Models\UtilityMeter;
 use App\Models\UtilityReading;
@@ -28,18 +27,15 @@ class AnalyticsService
 {
     private const MAX_WIDGETS = 12;
 
-    /** @var array<string, array{label: string, description: string, source_module: string, source_label: string, scale: int}> */
+    /** @var array<string, array{label: string, description: string, table_label: string, date_column: string, measure_columns: list<string>, group_columns: list<string>, source_module: string, source_label: string, scale: int}> */
     private const METRICS = [
-        'finance.expenses' => [
-            'label' => 'Expenses by currency',
-            'description' => 'Recorded expenses over time, kept separate by currency.',
-            'source_module' => 'finance',
-            'source_label' => 'Finance',
-            'scale' => 2,
-        ],
         'utilities.consumption' => [
             'label' => 'Utility consumption',
             'description' => 'Consumption between consecutive visible meter readings.',
+            'table_label' => 'Utility meter readings',
+            'date_column' => 'reading_date',
+            'measure_columns' => ['value', 'change'],
+            'group_columns' => ['unit', 'meter'],
             'source_module' => 'utilities',
             'source_label' => 'Utilities',
             'scale' => 6,
@@ -47,6 +43,10 @@ class AnalyticsService
         'vehicles.distance' => [
             'label' => 'Distance travelled',
             'description' => 'Distance between consecutive visible odometer readings.',
+            'table_label' => 'Vehicle odometer readings',
+            'date_column' => 'reading_date',
+            'measure_columns' => ['value', 'change'],
+            'group_columns' => ['unit', 'vehicle'],
             'source_module' => 'vehicles',
             'source_label' => 'Vehicles',
             'scale' => 3,
@@ -58,13 +58,13 @@ class AnalyticsService
         private readonly ModuleStateService $states,
     ) {}
 
-    /** @return array<string, array{label: string, description: string, source_module: string, source_label: string, scale: int}> */
+    /** @return array<string, array{label: string, description: string, table_label: string, date_column: string, measure_columns: list<string>, group_columns: list<string>, source_module: string, source_label: string, scale: int}> */
     public static function metrics(): array
     {
         return self::METRICS;
     }
 
-    /** @return list<array{key: string, label: string, description: string, source_module: string, source_label: string}> */
+    /** @return list<array{key: string, label: string, description: string, source_module: string, source_label: string, table_label: string, date_column: string, measure_columns: list<string>, group_columns: list<string>}> */
     public function catalog(User $actor): array
     {
         $this->access->authorize($actor, 'analytics', ModuleCapability::View);
@@ -81,13 +81,17 @@ class AnalyticsService
                 'description' => $metric['description'],
                 'source_module' => $metric['source_module'],
                 'source_label' => $metric['source_label'],
+                'table_label' => $metric['table_label'],
+                'date_column' => $metric['date_column'],
+                'measure_columns' => $metric['measure_columns'],
+                'group_columns' => $metric['group_columns'],
             ];
         }
 
         return $catalog;
     }
 
-    /** @return array{catalog: list<array<string, string>>, widgets: list<array<string, mixed>>} */
+    /** @return array{catalog: list<array<string, mixed>>, widgets: list<array<string, mixed>>} */
     public function dashboard(User $actor): array
     {
         $this->access->authorize($actor, 'analytics', ModuleCapability::View);
@@ -103,16 +107,17 @@ class AnalyticsService
 
         foreach ($widgets as $widget) {
             $isAvailable = isset($available[$widget->metric_key]);
+            $cacheKey = implode('.', [$widget->metric_key, $widget->measure_key, $widget->group_key]);
 
-            if ($isAvailable && ! array_key_exists($widget->metric_key, $rawMetrics)) {
-                $rawMetrics[$widget->metric_key] = $this->aggregate($actor, $widget->metric_key);
+            if ($isAvailable && ! array_key_exists($cacheKey, $rawMetrics)) {
+                $rawMetrics[$cacheKey] = $this->aggregate($actor, $widget->metric_key, $widget->measure_key, $widget->group_key);
             }
 
             $result[] = [
                 ...$this->presentWidget($widget),
                 'available' => $isAvailable,
                 'periods' => $isAvailable ? $this->periods($widget->range_key) : [],
-                'series' => $isAvailable ? $this->renderSeries($rawMetrics[$widget->metric_key], $widget->range_key, self::METRICS[$widget->metric_key]['scale']) : [],
+                'series' => $isAvailable ? $this->renderSeries($rawMetrics[$cacheKey], $widget->range_key, self::METRICS[$widget->metric_key]['scale']) : [],
             ];
         }
 
@@ -145,6 +150,8 @@ class AnalyticsService
                 'title' => trim((string) ($data['title'] ?? '')) ?: $metric['label'],
                 'range_key' => $data['range_key'],
                 'chart_type' => $data['chart_type'],
+                'measure_key' => $data['measure_key'] ?? 'change',
+                'group_key' => $data['group_key'] ?? 'unit',
                 'position' => ((int) $widgets->max('position')) + 1,
                 'version' => 1,
             ]);
@@ -175,6 +182,8 @@ class AnalyticsService
                 'title' => trim($data['title']),
                 'range_key' => $data['range_key'],
                 'chart_type' => $data['chart_type'],
+                'measure_key' => $data['measure_key'] ?? $widget->measure_key,
+                'group_key' => $data['group_key'] ?? $widget->group_key,
                 'version' => $widget->version + 1,
             ])->save();
 
@@ -189,44 +198,23 @@ class AnalyticsService
     }
 
     /** @return array<string, mixed> */
-    private function aggregate(User $actor, string $metricKey): array
+    private function aggregate(User $actor, string $metricKey, string $measureKey = 'change', string $groupKey = 'unit'): array
     {
         $metric = self::METRICS[$metricKey];
         $this->access->authorize($actor, $metric['source_module'], ModuleCapability::View);
         [$start, $end] = $this->bounds('12m');
 
         return match ($metricKey) {
-            'finance.expenses' => $this->financeExpenses($actor, $start, $end),
-            'utilities.consumption' => $this->utilityConsumption($actor, $start, $end),
-            'vehicles.distance' => $this->vehicleDistance($actor, $start, $end),
+            'utilities.consumption' => $this->utilityConsumption($actor, $start, $end, $measureKey, $groupKey),
+            'vehicles.distance' => $this->vehicleDistance($actor, $start, $end, $measureKey, $groupKey),
         };
     }
 
     /** @return array<string, array<string, string>> */
-    private function financeExpenses(User $actor, string $start, string $end): array
-    {
-        $rows = $this->visibleResources($actor, FinancialTransaction::class, 'financial_transactions', FinancialTransaction::query())
-            ->where('type', 'expense')
-            ->whereBetween('occurred_on', [$start, $end])
-            ->selectRaw('occurred_on as period, currency as unit, SUM(amount) as amount')
-            ->groupBy('occurred_on', 'currency')
-            ->orderBy('occurred_on')
-            ->orderBy('currency')
-            ->get();
-        $daily = [];
-
-        foreach ($rows as $row) {
-            $this->addDecimal($daily, $row->unit, $row->period, (string) $row->amount, 2);
-        }
-
-        return $daily;
-    }
-
-    /** @return array<string, array<string, string>> */
-    private function utilityConsumption(User $actor, string $start, string $end): array
+    private function utilityConsumption(User $actor, string $start, string $end, string $measureKey, string $groupKey): array
     {
         $meters = $this->visibleResources($actor, UtilityMeter::class, 'utility_meters', UtilityMeter::query())
-            ->orderBy('id')->get(['id', 'unit'])->keyBy('id');
+            ->orderBy('id')->get(['id', 'name', 'unit'])->keyBy('id');
 
         if ($meters->isEmpty()) {
             return [];
@@ -255,9 +243,10 @@ class AnalyticsService
             $value = (string) $row->visible_value;
             $meterId = (int) $row->utility_meter_id;
 
-            if (isset($previous[$meterId]) && $row->reading_date >= $start) {
-                $amount = BigDecimal::of($value)->minus($previous[$meterId])->toScale(6)->__toString();
-                $this->addDecimal($daily, $meters[$meterId]->unit, $row->reading_date, $amount, 6);
+            if ($row->reading_date >= $start && ($measureKey === 'value' || isset($previous[$meterId]))) {
+                $amount = $measureKey === 'value' ? $value : BigDecimal::of($value)->minus($previous[$meterId])->toScale(6)->__toString();
+                $label = $groupKey === 'record' ? (string) $meters[$meterId]->name : (string) $meters[$meterId]->unit;
+                $this->addDecimal($daily, $label, $row->reading_date, $amount, 6);
             }
 
             $previous[$meterId] = $value;
@@ -267,10 +256,10 @@ class AnalyticsService
     }
 
     /** @return array<string, array<string, string>> */
-    private function vehicleDistance(User $actor, string $start, string $end): array
+    private function vehicleDistance(User $actor, string $start, string $end, string $measureKey, string $groupKey): array
     {
         $vehicles = $this->visibleResources($actor, Vehicle::class, 'vehicles', Vehicle::query())
-            ->orderBy('id')->get(['id', 'odometer_unit'])->keyBy('id');
+            ->orderBy('id')->get(['id', 'name', 'odometer_unit'])->keyBy('id');
 
         if ($vehicles->isEmpty()) {
             return [];
@@ -299,9 +288,10 @@ class AnalyticsService
             $value = (string) $row->visible_value;
             $vehicleId = (int) $row->vehicle_id;
 
-            if (isset($previous[$vehicleId]) && $row->reading_date >= $start) {
-                $amount = BigDecimal::of($value)->minus($previous[$vehicleId])->toScale(3)->__toString();
-                $this->addDecimal($daily, $vehicles[$vehicleId]->odometer_unit, $row->reading_date, $amount, 3);
+            if ($row->reading_date >= $start && ($measureKey === 'value' || isset($previous[$vehicleId]))) {
+                $amount = $measureKey === 'value' ? $value : BigDecimal::of($value)->minus($previous[$vehicleId])->toScale(3)->__toString();
+                $label = $groupKey === 'record' ? (string) $vehicles[$vehicleId]->name : (string) $vehicles[$vehicleId]->odometer_unit;
+                $this->addDecimal($daily, $label, $row->reading_date, $amount, 3);
             }
 
             $previous[$vehicleId] = $value;
@@ -451,6 +441,8 @@ class AnalyticsService
             'title' => $widget->title,
             'range_key' => $widget->range_key,
             'chart_type' => $widget->chart_type,
+            'measure_key' => $widget->measure_key,
+            'group_key' => $widget->group_key,
             'position' => (int) $widget->position,
             'version' => (int) $widget->version,
         ];

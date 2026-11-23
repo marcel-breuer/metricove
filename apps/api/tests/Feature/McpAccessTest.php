@@ -92,8 +92,6 @@ class McpAccessTest extends TestCase
         $this->assertSame($admin->name, $profile['name']);
         $this->assertArrayNotHasKey('email', $profile);
 
-        $this->enableModule($admin, 'finance');
-        $this->grant($admin, 'finance', ['view' => true]);
         app(ModuleManagementService::class)->setEnabled($admin, 'utilities', false);
         $afterDisable = $this->mcp($secret, 'tools/list')->assertOk();
         $this->assertSame([], $afterDisable->json('result.tools'));
@@ -294,7 +292,7 @@ class McpAccessTest extends TestCase
     public function test_notion_recipe_import_tool_is_no_longer_offered(): void
     {
         $admin = $this->admin();
-        foreach (['import', 'recipes'] as $module) {
+        foreach (['recipes'] as $module) {
             $this->enableModule($admin, $module);
             $this->grant($admin, $module, ['view' => true, 'create' => true]);
         }
@@ -385,7 +383,7 @@ class McpAccessTest extends TestCase
     public function test_write_tool_catalog_is_typed_and_gated_by_current_module_grants(): void
     {
         $admin = $this->admin();
-        $modules = ['tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning', 'pantry', 'shopping', 'analytics', 'tasks', 'notes', 'receipts'];
+        $modules = ['tracking', 'utilities', 'vehicles', 'recipes', 'meal_planning', 'pantry', 'shopping', 'analytics', 'tasks', 'notes', 'receipts'];
         foreach ($modules as $module) {
             $this->enableModule($admin, $module);
             $this->grant($admin, $module, ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
@@ -404,14 +402,13 @@ class McpAccessTest extends TestCase
         $names = array_column($tools, 'name');
 
         foreach ([
-            'preview_create_finance_category', 'preview_create_finance_budget', 'preview_create_finance_recurring_entry',
             'preview_create_utility_meter', 'preview_update_utility_meter', 'preview_create_vehicle', 'preview_update_vehicle',
             'preview_add_vehicle_maintenance', 'preview_add_vehicle_insurance', 'preview_add_vehicle_cost',
             'preview_create_recipe', 'preview_create_meal_plan_slot', 'preview_create_pantry_item', 'preview_create_shopping_list',
             'preview_create_analytics_widget', 'preview_create_household_task', 'complete_approved_mcp_change',
             'show_current_member_profile', 'show_visible_recipe', 'list_meal_plan_week',
             'list_visible_tracker_schemas', 'show_visible_tracker_schema', 'list_visible_tracker_entries',
-            'list_visible_finance_categories', 'show_visible_utility_meter', 'list_visible_utility_reading_revisions',
+            'show_visible_utility_meter', 'list_visible_utility_reading_revisions',
             'show_visible_vehicle', 'list_visible_vehicle_odometer_revisions', 'list_visible_pantry_movements',
             'show_visible_shopping_list', 'list_visible_shopping_history', 'list_visible_task_assignees',
             'list_visible_task_history', 'list_visible_analytics_metrics',
@@ -430,48 +427,6 @@ class McpAccessTest extends TestCase
         app(ModuleManagementService::class)->setEnabled($admin, 'vehicles', false);
         $afterDisable = $this->mcp($secret, 'tools/list')->assertOk()->json('result.tools');
         $this->assertNotContains('preview_create_vehicle', array_column($afterDisable, 'name'));
-    }
-
-    public function test_import_read_tool_requires_import_and_source_scopes_and_is_bounded(): void
-    {
-        $admin = $this->admin();
-        $this->enableModule($admin, 'import');
-        $this->enableModule($admin, 'utilities');
-        $this->grant($admin, 'import', ['view' => true]);
-        $this->grant($admin, 'utilities', ['view' => true]);
-        $meter = UtilityMeter::query()->create([
-            'owner_user_id' => null,
-            'created_by_user_id' => $admin->id,
-            'name' => 'Export meter',
-            'meter_type' => 'water',
-            'unit' => 'm³',
-            'is_private' => false,
-        ]);
-        foreach (['4.25', '5.50'] as $index => $value) {
-            UtilityReading::query()->create([
-                'utility_meter_id' => $meter->id,
-                'owner_user_id' => null,
-                'created_by_user_id' => $admin->id,
-                'is_private' => false,
-                'reading_date' => '2026-10-'.($index === 0 ? '01' : '20'),
-                'value' => $value,
-                'note' => 'Reading '.$index,
-            ]);
-        }
-
-        $missingSourceScope = $this->createToken($admin, ['import:view']);
-        $missingTools = $this->mcp($missingSourceScope, 'tools/list')->assertOk()->json('result.tools');
-        $this->assertNotContains('list_exportable_utility_readings', array_column($missingTools, 'name'));
-
-        $secret = $this->createToken($admin, ['import:view', 'utilities:view']);
-        $result = $this->mcp($secret, 'tools/call', [
-            'name' => 'list_exportable_utility_readings',
-            'arguments' => ['meter_id' => $meter->id, 'limit' => 1],
-        ])->assertOk()->json('result.structuredContent');
-        $this->assertSame(1, count($result['readings']));
-        $this->assertSame(true, $result['truncated']);
-        $this->assertSame('2026-10-01', $result['readings'][0]['reading_date']);
-        $this->assertSame('Reading 0', $result['readings'][0]['note']);
     }
 
     public function test_mcp_read_tools_respect_resource_privacy_and_token_scope(): void
@@ -518,13 +473,6 @@ class McpAccessTest extends TestCase
         $this->assertStringContainsString('Shared gas meter', $content);
         $this->assertStringNotContainsString('Private water meter', $content);
         $this->assertStringNotContainsString('This note is private', $content);
-        $listed = $this->mcp($secret, 'tools/list')->assertOk();
-        $this->assertNotContains('summarize_finance_month', array_column($listed->json('result.tools'), 'name'));
-        $denied = $this->mcp($secret, 'tools/call', [
-            'name' => 'summarize_finance_month',
-            'arguments' => ['month' => '2026-10'],
-        ]);
-        $this->assertTrue($denied->getStatusCode() !== 200 || $denied->json('result.isError') === true);
     }
 
     private function admin(): User

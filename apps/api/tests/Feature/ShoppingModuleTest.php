@@ -114,6 +114,39 @@ class ShoppingModuleTest extends TestCase
         $this->actingAs($admin, 'web')->getJson('/api/shopping/lists')->assertOk()->assertJsonCount(0, 'lists');
     }
 
+    public function test_checking_a_purchased_item_adds_it_to_the_users_private_pantry_once(): void
+    {
+        $admin = $this->member(true);
+        $owner = $this->member();
+        $this->grant($admin, ['view' => true, 'manage' => true]);
+        $this->grant($owner, ['view' => true, 'create' => true, 'edit' => true]);
+        app(ModuleManagementService::class)->setEnabled($admin, 'shopping', true);
+        app(ModuleManagementService::class)->setEnabled($admin, 'pantry', true);
+        ModuleUserPermission::query()->updateOrCreate(
+            ['user_id' => $owner->id, 'module_key' => 'pantry'],
+            ['can_view' => true, 'can_create' => true, 'can_edit' => true, 'can_manage' => false],
+        );
+
+        $listId = (int) $this->actingAs($owner, 'web')->postJson('/api/shopping/lists', ['name' => 'Groceries'])
+            ->assertCreated()->json('list.id');
+        $itemId = (int) $this->addItem($owner, $listId, 'Oat milk')->assertCreated()->json('item.id');
+
+        $this->actingAs($owner, 'web')->patchJson("/api/shopping/items/{$itemId}/checked", [
+            'expected_version' => 1, 'checked' => true,
+        ])->assertOk()->assertJsonPath('item.pantry_received', true);
+        $this->assertDatabaseHas('pantry_items', [
+            'owner_user_id' => $owner->id, 'is_private' => true, 'name' => 'Oat milk', 'quantity' => '1.000', 'unit' => 'piece',
+        ]);
+
+        $this->actingAs($owner, 'web')->patchJson("/api/shopping/items/{$itemId}/checked", [
+            'expected_version' => 2, 'checked' => false,
+        ])->assertOk()->assertJsonPath('item.pantry_received', true);
+        $this->actingAs($owner, 'web')->patchJson("/api/shopping/items/{$itemId}/checked", [
+            'expected_version' => 3, 'checked' => true,
+        ])->assertOk()->assertJsonPath('item.pantry_received', true);
+        $this->assertDatabaseCount('pantry_items', 1);
+    }
+
     public function test_household_list_allows_members_with_item_edit_but_not_view_only_members(): void
     {
         $admin = $this->member(true);

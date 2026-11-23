@@ -1,15 +1,6 @@
 import type { Vehicle } from '#lib/vehicles';
 
-export type ReceiptFinanceCategory = {
-	id: number;
-	type: 'expense' | 'income';
-	name: string;
-	visibility: string;
-};
-
 export type ReceiptOptions = {
-	finance_available: boolean;
-	finance_categories: ReceiptFinanceCategory[];
 	vehicles_available: boolean;
 	vehicles: Vehicle[];
 };
@@ -49,7 +40,7 @@ export type ReceiptPreview = {
 
 export type ReceiptDocument = {
 	id: number;
-	target_type: 'finance' | 'vehicle' | null;
+	target_type: 'vehicle' | null;
 	target_record_id: number | null;
 	target_linked: boolean;
 	target_category: string | null;
@@ -92,13 +83,10 @@ export type ReceiptResponse = {
 	duplicate_matches?: ReceiptDuplicateMatch[];
 	default_currency?: string;
 	needs_confirmation?: true;
-	finance_available?: boolean;
-	finance_categories?: ReceiptFinanceCategory[];
 	vehicles_available?: boolean;
 	vehicles?: Vehicle[];
 	targets?: Array<{ id: number; label: string; date: string; amount: string; currency: string }>;
-	create_categories?: ReceiptFinanceCategory[];
 	create_vehicles?: Vehicle[];
-	target?: { type: 'finance' | 'vehicle'; id: number; record?: Record<string, unknown> | null } | null;
+	target?: { type: 'vehicle'; id: number; record?: Record<string, unknown> | null } | null;
 	errors?: Record<string, string[]>;
 };

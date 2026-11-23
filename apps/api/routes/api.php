@@ -10,10 +10,8 @@ use App\Http\Controllers\Api\AiContextController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Api\AuthenticationController;
-use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\HouseholdTaskController;
-use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\InitialSetupController;
 use App\Http\Controllers\Api\InvitationClaimController;
 use App\Http\Controllers\Api\McpAccessController;
@@ -243,48 +241,6 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:vehicles,edit')->whereNumber('cost')->name('costs.destroy');
         });
 
-        Route::prefix('finance')->name('finance.')->group(function (): void {
-            Route::get('/overview', [FinanceController::class, 'overview'])
-                ->middleware('module.access:finance,view')->name('overview');
-            Route::get('/categories', [FinanceController::class, 'categories'])
-                ->middleware('module.access:finance,view')->name('categories.index');
-            Route::post('/categories', [FinanceController::class, 'storeCategory'])
-                ->middleware('module.enabled:finance')->name('categories.store');
-            Route::patch('/categories/{category}', [FinanceController::class, 'updateCategory'])
-                ->middleware('module.enabled:finance')->whereNumber('category')->name('categories.update');
-            Route::delete('/categories/{category}', [FinanceController::class, 'deleteCategory'])
-                ->middleware('module.enabled:finance')->whereNumber('category')->name('categories.destroy');
-
-            Route::get('/transactions', [FinanceController::class, 'transactions'])
-                ->middleware('module.access:finance,view')->name('transactions.index');
-            Route::post('/transactions', [FinanceController::class, 'storeTransaction'])
-                ->middleware('module.enabled:finance')->name('transactions.store');
-            Route::patch('/transactions/{transaction}', [FinanceController::class, 'updateTransaction'])
-                ->middleware('module.enabled:finance')->whereNumber('transaction')->name('transactions.update');
-            Route::delete('/transactions/{transaction}', [FinanceController::class, 'deleteTransaction'])
-                ->middleware('module.enabled:finance')->whereNumber('transaction')->name('transactions.destroy');
-
-            Route::get('/recurring', [FinanceController::class, 'recurringEntries'])
-                ->middleware('module.access:finance,view')->name('recurring.index');
-            Route::post('/recurring', [FinanceController::class, 'storeRecurringEntry'])
-                ->middleware('module.enabled:finance')->name('recurring.store');
-            Route::patch('/recurring/{entry}', [FinanceController::class, 'updateRecurringEntry'])
-                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.update');
-            Route::delete('/recurring/{entry}', [FinanceController::class, 'deleteRecurringEntry'])
-                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.destroy');
-            Route::post('/recurring/{entry}/record', [FinanceController::class, 'recordRecurringOccurrence'])
-                ->middleware('module.enabled:finance')->whereNumber('entry')->name('recurring.record');
-
-            Route::get('/budgets', [FinanceController::class, 'budgets'])
-                ->middleware('module.access:finance,view')->name('budgets.index');
-            Route::post('/budgets', [FinanceController::class, 'storeBudget'])
-                ->middleware('module.enabled:finance')->name('budgets.store');
-            Route::patch('/budgets/{budget}', [FinanceController::class, 'updateBudget'])
-                ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.update');
-            Route::delete('/budgets/{budget}', [FinanceController::class, 'deleteBudget'])
-                ->middleware('module.enabled:finance')->whereNumber('budget')->name('budgets.destroy');
-        });
-
         Route::prefix('analytics')->name('analytics.')->group(function (): void {
             Route::get('/catalog', [AnalyticsController::class, 'catalog'])
                 ->middleware('module.access:analytics,view')->name('catalog');
@@ -296,27 +252,6 @@ Route::middleware('web')->group(function (): void {
                 ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.update');
             Route::delete('/widgets/{widget}', [AnalyticsController::class, 'destroy'])
                 ->middleware(['module.access:analytics,edit', 'throttle:30,1'])->whereNumber('widget')->name('widgets.destroy');
-        });
-
-        Route::prefix('import')->name('import.')->group(function (): void {
-            Route::post('/finance/transactions/preview', [ImportController::class, 'previewFinanceTransactions'])
-                ->middleware(['module.access:import,create', 'module.access:finance,view', 'module.access:finance,create', 'throttle:10,1'])
-                ->name('finance.transactions.preview');
-            Route::post('/finance/transactions/confirm', [ImportController::class, 'confirmFinanceTransactions'])
-                ->middleware(['module.access:import,create', 'module.access:finance,view', 'module.access:finance,create', 'throttle:10,1'])
-                ->name('finance.transactions.confirm');
-            Route::get('/utilities/meters/{meter}/readings.csv', [ImportController::class, 'export'])
-                ->middleware(['module.access:import,view', 'module.access:utilities,view'])
-                ->whereNumber('meter')->name('utilities.readings.export');
-            Route::post('/utilities/meters/{meter}/readings/preview', [ImportController::class, 'preview'])
-                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
-                ->whereNumber('meter')->name('utilities.readings.preview');
-            Route::post('/utilities/meters/{meter}/readings/confirm', [ImportController::class, 'confirm'])
-                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
-                ->whereNumber('meter')->name('utilities.readings.confirm');
-            Route::post('/utilities/meters/{meter}/reading-suggestions', [ImportController::class, 'suggest'])
-                ->middleware(['module.access:import,create', 'module.access:utilities,view', 'module.access:utilities,create', 'throttle:10,1'])
-                ->whereNumber('meter')->name('utilities.readings.suggest');
         });
 
         Route::prefix('receipts')->name('receipts.')->group(function (): void {

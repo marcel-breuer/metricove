@@ -49,7 +49,7 @@
 							<span class="h-4 w-1 rounded-[2px] bg-[#5eead4]" aria-hidden="true"></span>
 							<span>{$t('Your modules')}</span>
 						</div>
-						{@render artRow(true, 'Finance', financeIcon)}
+						{@render artRow(true, 'Recipes', recipesIcon)}
 						{@render artRow(false, 'Utilities', utilitiesIcon)}
 						{@render artRow(false, 'Vehicles', vehiclesIcon)}
 					</div>
@@ -71,7 +71,7 @@
 	</div>
 </main>
 
-{#snippet financeIcon()}<path d="M4 7.5h16M6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>{/snippet}
+{#snippet recipesIcon()}<path d="M4 4v6a4 4 0 0 0 8 0V4M8 4v16m7-9h5l-1.2-7H16l-1 7Zm2.5 0V20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>{/snippet}
 {#snippet utilitiesIcon()}<path d="M12 3v18M5 7h14M7 7l-4 7h8L7 7Zm10 0-4 7h8l-4-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>{/snippet}
 {#snippet vehiclesIcon()}<path d="M3 13.5 5.2 8a2 2 0 0 1 1.9-1.3h9.8A2 2 0 0 1 18.8 8l2.2 5.5v4h-2v-2H5v2H3v-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="13" r="1" fill="currentColor"/><circle cx="17" cy="13" r="1" fill="currentColor"/>{/snippet}
 

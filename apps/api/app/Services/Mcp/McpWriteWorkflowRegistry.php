@@ -6,10 +6,6 @@ use App\Contracts\ModuleResource;
 use App\Enums\ModuleCapability;
 use App\Exceptions\ModuleDisabled;
 use App\Models\AnalyticsWidget;
-use App\Models\FinanceBudget;
-use App\Models\FinanceCategory;
-use App\Models\FinanceRecurringEntry;
-use App\Models\FinancialTransaction;
 use App\Models\HouseholdTask;
 use App\Models\MealPlanSlot;
 use App\Models\NoteFolder;
@@ -29,8 +25,6 @@ use App\Models\VehicleInsurancePolicy;
 use App\Models\VehicleMaintenanceRecord;
 use App\Models\VehicleOdometerReading;
 use App\Services\Analytics\AnalyticsService;
-use App\Services\Finance\FinanceDecimalValue;
-use App\Services\Finance\FinanceService;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Modules\ModuleAccessService;
 use App\Services\Notes\NoteService;
@@ -231,119 +225,6 @@ class McpWriteWorkflowRegistry
                     return $this->container->make(ShoppingService::class)->updateList($actor, $id, $data);
                 },
             ],
-            'create_financial_transaction' => [
-                'module' => 'finance', 'capability' => 'create', 'title' => 'Create a financial transaction',
-                'description' => 'Prepare a private or household transaction for member approval.',
-                'schema' => ['type' => 'object', 'properties' => [
-                    'finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'type' => ['type' => 'string', 'enum' => ['income', 'expense']],
-                    'description' => ['type' => 'string', 'maxLength' => 200], 'payee' => ['type' => 'string', 'maxLength' => 200],
-                    'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'],
-                    'occurred_on' => ['type' => 'string', 'format' => 'date'], 'visibility' => ['type' => 'string', 'enum' => ['private', 'household']],
-                ], 'required' => ['finance_category_id', 'type', 'description', 'amount', 'currency', 'occurred_on', 'visibility'], 'additionalProperties' => false],
-                'rules' => ['finance_category_id' => ['required', 'integer', 'min:1'], 'type' => ['required', 'in:income,expense'], 'description' => ['required', 'string', 'max:200'], 'payee' => ['nullable', 'string', 'max:200'], 'amount' => ['required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'occurred_on' => ['required', 'date_format:Y-m-d'], 'visibility' => ['required', 'in:private,household']],
-                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->createTransaction($actor, $data),
-            ],
-            'create_finance_category' => [
-                'module' => 'finance', 'capability' => 'create', 'title' => 'Create a finance category',
-                'description' => 'Prepare a private or household category for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['type' => ['type' => 'string', 'enum' => ['income', 'expense']], 'name' => ['type' => 'string', 'maxLength' => 80], 'visibility' => ['type' => 'string', 'enum' => ['private', 'household']]], 'required' => ['type', 'name', 'visibility'], 'additionalProperties' => false],
-                'rules' => ['type' => ['required', 'in:income,expense'], 'name' => ['required', 'string', 'max:80'], 'visibility' => ['required', 'in:private,household']],
-                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->createCategory($actor, $data),
-            ],
-            'update_finance_category' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Rename a finance category', 'description' => 'Prepare a category rename for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['category_id' => ['type' => 'integer', 'minimum' => 1], 'name' => ['type' => 'string', 'maxLength' => 80]], 'required' => ['category_id', 'name'], 'additionalProperties' => false],
-                'rules' => ['category_id' => ['required', 'integer', 'min:1'], 'name' => ['required', 'string', 'max:80']],
-                'execute' => function (User $actor, array $data): array {
-                    $id = (int) $data['category_id'];
-                    unset($data['category_id']);
-
-                    return $this->container->make(FinanceService::class)->updateCategory($actor, $id, $data);
-                },
-            ],
-            'delete_finance_category' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Delete a finance category', 'description' => 'Prepare deletion of an unused category for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['category_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['category_id'], 'additionalProperties' => false],
-                'rules' => ['category_id' => ['required', 'integer', 'min:1']],
-                'execute' => function (User $actor, array $data): array {
-                    $this->container->make(FinanceService::class)->deleteCategory($actor, (int) $data['category_id']);
-
-                    return ['status' => 'deleted'];
-                },
-            ],
-            'create_finance_budget' => [
-                'module' => 'finance', 'capability' => 'create', 'title' => 'Create a finance budget', 'description' => 'Prepare a monthly category budget for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'period_start' => ['type' => 'string', 'format' => 'date'], 'visibility' => ['type' => 'string', 'enum' => ['private', 'household']]], 'required' => ['finance_category_id', 'amount', 'currency', 'period_start', 'visibility'], 'additionalProperties' => false],
-                'rules' => ['finance_category_id' => ['required', 'integer', 'min:1'], 'amount' => ['required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'period_start' => ['required', 'date_format:Y-m-d'], 'visibility' => ['required', 'in:private,household']],
-                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->createBudget($actor, $data),
-            ],
-            'update_finance_budget' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Update a finance budget', 'description' => 'Prepare a budget change for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['budget_id' => ['type' => 'integer', 'minimum' => 1], 'finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'period_start' => ['type' => 'string', 'format' => 'date']], 'required' => ['budget_id'], 'additionalProperties' => false],
-                'rules' => ['budget_id' => ['required', 'integer', 'min:1'], 'finance_category_id' => ['sometimes', 'required', 'integer', 'min:1'], 'amount' => ['sometimes', 'required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['sometimes', 'required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'period_start' => ['sometimes', 'required', 'date_format:Y-m-d']],
-                'execute' => function (User $actor, array $data): array {
-                    $id = (int) $data['budget_id'];
-                    unset($data['budget_id']);
-
-                    return $this->container->make(FinanceService::class)->updateBudget($actor, $id, $data);
-                },
-            ],
-            'delete_finance_budget' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Delete a finance budget', 'description' => 'Prepare budget deletion for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['budget_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['budget_id'], 'additionalProperties' => false],
-                'rules' => ['budget_id' => ['required', 'integer', 'min:1']],
-                'execute' => function (User $actor, array $data): array {
-                    $this->container->make(FinanceService::class)->deleteBudget($actor, (int) $data['budget_id']);
-
-                    return ['status' => 'deleted'];
-                },
-            ],
-            'create_finance_recurring_entry' => [
-                'module' => 'finance', 'capability' => 'create', 'title' => 'Create a recurring finance entry', 'description' => 'Prepare a private or household recurring entry for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'type' => ['type' => 'string', 'enum' => ['income', 'expense']], 'description' => ['type' => 'string', 'maxLength' => 200], 'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'frequency' => ['type' => 'string', 'enum' => ['weekly', 'monthly', 'quarterly', 'yearly']], 'starts_on' => ['type' => 'string', 'format' => 'date'], 'next_due_on' => ['type' => 'string', 'format' => 'date'], 'ends_on' => ['type' => 'string', 'format' => 'date'], 'visibility' => ['type' => 'string', 'enum' => ['private', 'household']]], 'required' => ['finance_category_id', 'type', 'description', 'amount', 'currency', 'frequency', 'starts_on', 'next_due_on', 'visibility'], 'additionalProperties' => false],
-                'rules' => ['finance_category_id' => ['required', 'integer', 'min:1'], 'type' => ['required', 'in:income,expense'], 'description' => ['required', 'string', 'max:200'], 'amount' => ['required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'frequency' => ['required', 'in:weekly,monthly,quarterly,yearly'], 'starts_on' => ['required', 'date_format:Y-m-d'], 'next_due_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:starts_on'], 'ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:starts_on'], 'visibility' => ['required', 'in:private,household']],
-                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->createRecurringEntry($actor, $data),
-            ],
-            'update_finance_recurring_entry' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Update a recurring finance entry', 'description' => 'Prepare a recurring entry update for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['entry_id' => ['type' => 'integer', 'minimum' => 1], 'finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'type' => ['type' => 'string', 'enum' => ['income', 'expense']], 'description' => ['type' => 'string', 'maxLength' => 200], 'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'frequency' => ['type' => 'string', 'enum' => ['weekly', 'monthly', 'quarterly', 'yearly']], 'starts_on' => ['type' => 'string', 'format' => 'date'], 'next_due_on' => ['type' => 'string', 'format' => 'date'], 'ends_on' => ['type' => 'string', 'format' => 'date'], 'is_active' => ['type' => 'boolean']], 'required' => ['entry_id'], 'additionalProperties' => false],
-                'rules' => ['entry_id' => ['required', 'integer', 'min:1'], 'finance_category_id' => ['sometimes', 'required', 'integer', 'min:1'], 'type' => ['sometimes', 'required', 'in:income,expense'], 'description' => ['sometimes', 'required', 'string', 'max:200'], 'amount' => ['sometimes', 'required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['sometimes', 'required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'frequency' => ['sometimes', 'required', 'in:weekly,monthly,quarterly,yearly'], 'starts_on' => ['sometimes', 'required', 'date_format:Y-m-d'], 'next_due_on' => ['sometimes', 'required', 'date_format:Y-m-d'], 'ends_on' => ['sometimes', 'nullable', 'date_format:Y-m-d'], 'is_active' => ['sometimes', 'boolean']],
-                'execute' => function (User $actor, array $data): array {
-                    $id = (int) $data['entry_id'];
-                    unset($data['entry_id']);
-
-                    return $this->container->make(FinanceService::class)->updateRecurringEntry($actor, $id, $data);
-                },
-            ],
-            'delete_finance_recurring_entry' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Delete a recurring finance entry', 'description' => 'Prepare recurring entry deletion for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['entry_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['entry_id'], 'additionalProperties' => false],
-                'rules' => ['entry_id' => ['required', 'integer', 'min:1']],
-                'execute' => function (User $actor, array $data): array {
-                    $this->container->make(FinanceService::class)->deleteRecurringEntry($actor, (int) $data['entry_id']);
-
-                    return ['status' => 'deleted'];
-                },
-            ],
-            'record_finance_recurring_occurrence' => [
-                'module' => 'finance', 'capability' => 'create', 'title' => 'Record a recurring finance occurrence', 'description' => 'Prepare the current due occurrence as a transaction for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['entry_id' => ['type' => 'integer', 'minimum' => 1], 'occurrence_on' => ['type' => 'string', 'format' => 'date'], 'occurred_on' => ['type' => 'string', 'format' => 'date']], 'required' => ['entry_id', 'occurrence_on'], 'additionalProperties' => false],
-                'rules' => ['entry_id' => ['required', 'integer', 'min:1'], 'occurrence_on' => ['required', 'date_format:Y-m-d'], 'occurred_on' => ['nullable', 'date_format:Y-m-d']],
-                'execute' => function (User $actor, array $data): array {
-                    return $this->container->make(FinanceService::class)->recordRecurringOccurrence($actor, (int) $data['entry_id'], array_diff_key($data, ['entry_id' => true]));
-                },
-            ],
-            'update_financial_transaction' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Update a financial transaction', 'description' => 'Prepare a transaction update for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['transaction_id' => ['type' => 'integer', 'minimum' => 1], 'finance_category_id' => ['type' => 'integer', 'minimum' => 1], 'type' => ['type' => 'string', 'enum' => ['income', 'expense']], 'description' => ['type' => 'string', 'maxLength' => 200], 'payee' => ['type' => 'string', 'maxLength' => 200], 'amount' => ['type' => 'string', 'maxLength' => 24], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'occurred_on' => ['type' => 'string', 'format' => 'date']], 'required' => ['transaction_id'], 'additionalProperties' => false],
-                'rules' => ['transaction_id' => ['required', 'integer', 'min:1'], 'finance_category_id' => ['sometimes', 'required', 'integer', 'min:1'], 'type' => ['sometimes', 'required', 'in:income,expense'], 'description' => ['sometimes', 'required', 'string', 'max:200'], 'payee' => ['sometimes', 'nullable', 'string', 'max:200'], 'amount' => ['sometimes', 'required', 'string', 'regex:/\\A(?:0|[1-9]\\d{0,15})(?:\\.\\d{1,2})?\\z/'], 'currency' => ['sometimes', 'required', 'string', 'regex:/\\A[A-Z]{3}\\z/'], 'occurred_on' => ['sometimes', 'required', 'date_format:Y-m-d']],
-                'execute' => function (User $actor, array $data): array {
-                    $id = (int) $data['transaction_id'];
-                    unset($data['transaction_id']);
-
-                    return $this->container->make(FinanceService::class)->updateTransaction($actor, $id, $data);
-                },
-            ],
             'add_tracker_entry' => [
                 'module' => 'tracking', 'capability' => 'create', 'title' => 'Add a tracker entry',
                 'description' => 'Prepare a typed tracker entry for member approval.',
@@ -409,8 +290,8 @@ class McpWriteWorkflowRegistry
             'create_analytics_widget' => [
                 'module' => 'analytics', 'capability' => 'create', 'title' => 'Create an analytics widget',
                 'description' => 'Prepare a chart from the member\'s currently permitted analytics catalog.',
-                'schema' => ['type' => 'object', 'properties' => ['metric_key' => ['type' => 'string', 'maxLength' => 80], 'title' => ['type' => 'string', 'maxLength' => 80], 'range_key' => ['type' => 'string', 'enum' => ['30d', '90d', '12m']], 'chart_type' => ['type' => 'string', 'enum' => ['line', 'bar']]], 'required' => ['metric_key', 'range_key', 'chart_type'], 'additionalProperties' => false],
-                'rules' => ['metric_key' => ['required', 'string', 'in:finance.expenses,utilities.consumption,vehicles.distance'], 'title' => ['nullable', 'string', 'max:80'], 'range_key' => ['required', 'in:30d,90d,12m'], 'chart_type' => ['required', 'in:line,bar']],
+                'schema' => ['type' => 'object', 'properties' => ['metric_key' => ['type' => 'string', 'enum' => ['utilities.consumption', 'vehicles.distance']], 'title' => ['type' => 'string', 'maxLength' => 80], 'range_key' => ['type' => 'string', 'enum' => ['30d', '90d', '12m']], 'chart_type' => ['type' => 'string', 'enum' => ['line', 'bar']], 'measure_key' => ['type' => 'string', 'enum' => ['change', 'value']], 'group_key' => ['type' => 'string', 'enum' => ['unit', 'record']]], 'required' => ['metric_key', 'range_key', 'chart_type'], 'additionalProperties' => false],
+                'rules' => ['metric_key' => ['required', 'string', 'in:utilities.consumption,vehicles.distance'], 'title' => ['nullable', 'string', 'max:80'], 'range_key' => ['required', 'in:30d,90d,12m'], 'chart_type' => ['required', 'in:line,bar'], 'measure_key' => ['sometimes', 'in:change,value'], 'group_key' => ['sometimes', 'in:unit,record']],
                 'execute' => fn (User $actor, array $data): array => $this->container->make(AnalyticsService::class)->createWidget($actor, $data),
             ],
             'update_analytics_widget' => [
@@ -545,16 +426,6 @@ class McpWriteWorkflowRegistry
                 'rules' => ['item_id' => ['required', 'integer', 'min:1']],
                 'execute' => function (User $actor, array $data): array {
                     $this->container->make(ShoppingService::class)->deleteItem($actor, (int) $data['item_id']);
-
-                    return ['status' => 'deleted'];
-                },
-            ],
-            'delete_financial_transaction' => [
-                'module' => 'finance', 'capability' => 'edit', 'title' => 'Delete a financial transaction', 'description' => 'Prepare deletion of a visible financial transaction for member approval.',
-                'schema' => ['type' => 'object', 'properties' => ['transaction_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['transaction_id'], 'additionalProperties' => false],
-                'rules' => ['transaction_id' => ['required', 'integer', 'min:1']],
-                'execute' => function (User $actor, array $data): array {
-                    $this->container->make(FinanceService::class)->deleteTransaction($actor, (int) $data['transaction_id']);
 
                     return ['status' => 'deleted'];
                 },
@@ -834,9 +705,6 @@ class McpWriteWorkflowRegistry
 
         $target = match ($name) {
             'create_shopping_item', 'update_shopping_list' => ShoppingList::query()->find($arguments['list_id'] ?? null),
-            'update_finance_category', 'delete_finance_category' => FinanceCategory::query()->find($arguments['category_id'] ?? null),
-            'update_finance_budget', 'delete_finance_budget' => FinanceBudget::query()->find($arguments['budget_id'] ?? null),
-            'update_finance_recurring_entry', 'delete_finance_recurring_entry', 'record_finance_recurring_occurrence' => FinanceRecurringEntry::query()->find($arguments['entry_id'] ?? null),
             'update_recipe', 'delete_recipe' => Recipe::query()->find($arguments['recipe_id'] ?? null),
             'update_note', 'archive_note', 'delete_note' => PersonalNote::query()->find($arguments['note_id'] ?? null),
             'update_tracker_schema', 'delete_tracker' => TrackerDefinition::query()->find($arguments['tracker_id'] ?? null),
@@ -845,13 +713,12 @@ class McpWriteWorkflowRegistry
             'update_vehicle' => Vehicle::query()->find($arguments['vehicle_id'] ?? null),
             'add_vehicle_maintenance', 'add_vehicle_insurance', 'add_vehicle_cost' => Vehicle::query()->find($arguments['vehicle_id'] ?? null),
             'update_pantry_item', 'adjust_pantry_stock' => PantryItem::query()->find($arguments['item_id'] ?? null),
-            'update_financial_transaction', 'delete_financial_transaction' => FinancialTransaction::query()->find($arguments['transaction_id'] ?? null),
             'update_shopping_item', 'move_shopping_item', 'set_shopping_item_checked', 'delete_shopping_item' => ShoppingItem::query()->with('shoppingList')->find($arguments['item_id'] ?? null)?->shoppingList,
             default => null,
         };
 
         if ($target instanceof ModuleResource && ! $target->isPrivate()
-            && in_array($workflow['module'], ['recipes', 'meal_planning', 'pantry', 'shopping', 'finance'], true)) {
+            && in_array($workflow['module'], ['recipes', 'meal_planning', 'pantry', 'shopping'], true)) {
             return ['manage'];
         }
 
@@ -884,9 +751,6 @@ class McpWriteWorkflowRegistry
                 }
             }
         }
-        if ($name === 'create_financial_transaction' && FinanceDecimalValue::money($validated['amount'] ?? null) === null) {
-            throw ValidationException::withMessages(['amount' => 'Enter a positive transaction amount.']);
-        }
         if ($name === 'add_vehicle_odometer_reading' && VehicleDecimalValue::distance($validated['value'] ?? null) === null) {
             throw ValidationException::withMessages(['value' => 'Enter a valid odometer reading.']);
         }
@@ -912,9 +776,6 @@ class McpWriteWorkflowRegistry
         if ($requiredOnly !== null && count(array_diff(array_keys($validated), $requiredOnly)) === 0) {
             throw ValidationException::withMessages(['arguments' => 'Provide at least one field to update.']);
         }
-        if ($name === 'update_financial_transaction' && isset($validated['amount']) && FinanceDecimalValue::money($validated['amount']) === null) {
-            throw ValidationException::withMessages(['amount' => 'Enter a positive transaction amount.']);
-        }
 
         return $validated;
     }
@@ -934,7 +795,6 @@ class McpWriteWorkflowRegistry
     public function authorizeResources(string $name, User $actor, array $arguments): void
     {
         match ($name) {
-            'create_financial_transaction' => $this->authorizeResource($actor, 'finance', 'create', FinanceCategory::class, (int) $arguments['finance_category_id']),
             'create_note' => isset($arguments['folder_id']) ? $this->authorizeNoteFolder($actor, (int) $arguments['folder_id'], 'create') : null,
             'update_note' => isset($arguments['folder_id']) ? $this->authorizeNoteFolder($actor, (int) $arguments['folder_id'], 'edit') : null,
             'add_tracker_entry' => $this->authorizeResource($actor, 'tracking', 'create', TrackerDefinition::class, (int) $arguments['tracker_id']),
@@ -949,11 +809,6 @@ class McpWriteWorkflowRegistry
             'update_pantry_item', 'adjust_pantry_stock' => $this->authorizeResource($actor, 'pantry', 'edit', PantryItem::class, (int) $arguments['item_id']),
             'update_shopping_list' => $this->authorizeResource($actor, 'shopping', 'edit', ShoppingList::class, (int) $arguments['list_id']),
             'update_shopping_item', 'move_shopping_item', 'set_shopping_item_checked', 'delete_shopping_item' => $this->authorizeShoppingItem($actor, (int) $arguments['item_id']),
-            'update_financial_transaction', 'delete_financial_transaction' => $this->authorizeResource($actor, 'finance', 'edit', FinancialTransaction::class, (int) $arguments['transaction_id']),
-            'update_finance_category', 'delete_finance_category' => $this->authorizeResource($actor, 'finance', 'edit', FinanceCategory::class, (int) $arguments['category_id']),
-            'update_finance_budget', 'delete_finance_budget' => $this->authorizeResource($actor, 'finance', 'edit', FinanceBudget::class, (int) $arguments['budget_id']),
-            'update_finance_recurring_entry', 'delete_finance_recurring_entry' => $this->authorizeResource($actor, 'finance', 'edit', FinanceRecurringEntry::class, (int) $arguments['entry_id']),
-            'record_finance_recurring_occurrence' => $this->authorizeResource($actor, 'finance', 'create', FinanceRecurringEntry::class, (int) $arguments['entry_id']),
             'update_tracker_entry', 'delete_tracker_entry' => $this->authorizeTrackerEntry($actor, (int) $arguments['entry_id']),
             'update_tracker_schema', 'delete_tracker' => $this->authorizeResource($actor, 'tracking', 'manage', TrackerDefinition::class, (int) $arguments['tracker_id']),
             'correct_vehicle_odometer_reading' => $this->authorizeVehicleReading($actor, (int) $arguments['reading_id']),
@@ -984,7 +839,6 @@ class McpWriteWorkflowRegistry
 
         if ($name === 'create_analytics_widget') {
             $source = match ($arguments['metric_key'] ?? null) {
-                'finance.expenses' => 'finance',
                 'utilities.consumption' => 'utilities',
                 'vehicles.distance' => 'vehicles',
                 default => null,

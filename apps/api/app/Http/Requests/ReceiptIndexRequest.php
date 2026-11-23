@@ -29,8 +29,8 @@ class ReceiptIndexRequest extends FormRequest
             'min_amount' => ['sometimes', 'nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'],
             'max_amount' => ['sometimes', 'nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'],
             'currency' => ['required_with:min_amount,max_amount', 'nullable', 'regex:/\A[A-Z]{3}\z/'],
-            'target_type' => ['sometimes', 'nullable', 'in:finance,vehicle,archive'],
-            'category' => ['sometimes', 'nullable', 'regex:/\A(?:finance:\d+|vehicle:(?:fuel|maintenance|insurance|tax|registration|finance|other))\z/'],
+            'target_type' => ['sometimes', 'nullable', 'in:vehicle,archive'],
+            'category' => ['sometimes', 'nullable', 'regex:/\Avehicle:(?:fuel|maintenance|insurance|tax|registration|finance|other)\z/'],
             'sharing_status' => ['sometimes', 'nullable', 'in:private,shared'],
             'page' => ['sometimes', 'integer', 'min:1'],
         ];

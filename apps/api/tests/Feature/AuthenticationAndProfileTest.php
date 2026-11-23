@@ -173,11 +173,19 @@ class AuthenticationAndProfileTest extends TestCase
                 'is_admin' => false,
                 'is_active' => false,
                 'password' => Str::random(32),
+                'recipe_units' => ['piece', 'g'],
             ])
             ->assertOk()
             ->assertJsonPath('user.name', 'Updated Name')
             ->assertJsonPath('user.email', 'updated@example.test')
-            ->assertJsonPath('user.is_admin', true);
+            ->assertJsonPath('user.is_admin', true)
+            ->assertJsonPath('user.recipe_units.0', 'piece');
+
+        $this->actingAs($user, 'web')->patchJson('/api/profile', [
+            'name' => 'Updated Name',
+            'email' => 'updated@example.test',
+            'recipe_units' => ['piece', 'ml', 'splash'],
+        ])->assertOk()->assertJsonPath('user.recipe_units', ['piece', 'ml', 'splash']);
 
         $user->refresh();
         $this->assertTrue($user->is_admin);

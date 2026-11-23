@@ -7,6 +7,7 @@ export type AuthUser = {
 	number_locale: 'de-DE' | 'en-US' | 'en-GB';
 	default_currency: 'EUR' | 'USD' | 'GBP' | 'CHF';
 	currency_display: 'code' | 'symbol';
+	recipe_units: string[];
 };
 
 export type ApiResponse = {

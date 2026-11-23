@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import { get } from 'svelte/store';
 import { parse } from 'svelte/compiler';
 import { analyticsRanges } from './analytics';
-import { financeFrequencies } from './finance';
 import { setUserPreferences, t } from './i18n';
 import { utilityMeterTypes } from './utilities';
 import { vehicleCostCategories, vehicleFuelTypes, vehiclePeriods } from './vehicles';
@@ -15,7 +14,7 @@ type Node = Record<string, unknown>;
 const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
 const unchangedGerman = new Set([
 	'AI', 'CHF', 'EUR', 'GBP', 'USD', 'LPG', 'Volvo', 'Diesel', 'Hybrid', 'Metricove', 'Metricove MCP', '· Metricove',
-	'Core', 'Tracking', 'Import', 'Status', 'Details', 'Name', 'Text', 'Service', 'Gas',
+	'Core', 'Tracking', 'Status', 'Details', 'Name', 'Text', 'Service', 'Gas',
 	'Optional', 'optional', '(optional)', '(optional,', 'Moment', 'Start', 'Total',
 	'Admin', 'Version', 'Transport', 'Minimum', 'Maximum', 'Name A–Z', 'Schema v',
 	'Claude', 'Gemini', 'OpenRouter', 'https://provider.example/v1'
@@ -113,15 +112,11 @@ describe('dialog localization audit', () => {
 	it('translates selectable labels without changing the values sent to the API', () => {
 		setUserPreferences({ language: 'de' });
 		const translate = get(t);
-		const options = [...analyticsRanges, ...financeFrequencies, ...utilityMeterTypes, ...vehicleFuelTypes, ...vehicleCostCategories, ...vehiclePeriods];
+		const options = [...analyticsRanges, ...utilityMeterTypes, ...vehicleFuelTypes, ...vehicleCostCategories, ...vehiclePeriods];
 		for (const option of options) {
 			if (!unchangedGerman.has(option.label)) expect(translate(option.label)).not.toBe(option.label);
 		}
-		for (const message of ['Breakfast', 'Lunch', 'Dinner', 'Expenses by currency', 'Utility consumption', 'Distance travelled']) {
-			expect(translate(message)).not.toBe(message);
-		}
-		for (const subject of ['transaction', 'budget', 'category', 'recurring entry']) {
-			const message = `Delete this ${subject}? This cannot be undone.`;
+		for (const message of ['Breakfast', 'Lunch', 'Dinner', 'Utility consumption', 'Distance travelled']) {
 			expect(translate(message)).not.toBe(message);
 		}
 		expect(utilityMeterTypes[0]).toMatchObject({ value: 'electricity', label: 'Electricity', unit: 'kWh' });

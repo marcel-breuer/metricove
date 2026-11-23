@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\McpAccessToken;
 use App\Services\AI\AssistantToolRegistry;
-use App\Services\Import\ImportService;
 use App\Services\Mcp\AssistantReadToolHandler;
-use App\Services\Mcp\ImportUtilityReadingsToolHandler;
 use App\Services\Mcp\McpAccessService;
 use App\Services\Mcp\McpApiReference;
 use App\Services\Mcp\McpDomainReadToolHandler;
@@ -56,7 +54,6 @@ class McpController extends Controller
         McpAccessService $access,
         McpWriteWorkflowRegistry $writeRegistry,
         McpWriteWorkflowService $writeWorkflows,
-        ImportService $imports,
         McpDomainReadWorkflowRegistry $domainReadRegistry,
         McpApiReference $apiReference,
     ): Response {
@@ -114,7 +111,7 @@ class McpController extends Controller
         );
 
         $server->addPrompt(
-            fn (): array => [['role' => 'user', 'content' => 'Review my household for the coming week using only the Metricove read tools available to this token. Check open reminders, due tasks, the meal plan week, shopping lists, pantry items that expire soon and finance budgets where those tools exist. Summarize what needs attention, grouped by module, and propose follow-ups. Do not make changes; if a change is useful, name the preview tool you would use and wait for my instruction.']],
+            fn (): array => [['role' => 'user', 'content' => 'Review my household for the coming week using only the Metricove read tools available to this token. Check open reminders, due tasks, the meal plan week, shopping lists and pantry items that expire soon. Summarize what needs attention, grouped by module, and propose follow-ups. Do not make changes; if a change is useful, name the preview tool you would use and wait for my instruction.']],
             'weekly_household_review',
             'Weekly household review',
             'Read-only review of reminders, tasks, meals, shopping, pantry and budgets across the modules this token can see.',
@@ -133,7 +130,6 @@ class McpController extends Controller
                 continue;
             }
             $module = match ($name) {
-                'summarize_finance_month', 'list_visible_financial_records' => 'finance',
                 'summarize_visible_utility_readings' => 'utilities',
                 'summarize_visible_vehicle_odometer_readings' => 'vehicles',
                 'summarize_visible_tracker_entries' => 'tracking',
@@ -177,27 +173,6 @@ class McpController extends Controller
                     annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false),
                 ),
                 new McpDomainReadToolHandler($domainReadRegistry, $access, $token, $read['name'], $read['scopes']),
-            );
-        }
-
-        if (in_array('import:view', $scopes, true) && in_array('utilities:view', $scopes, true)) {
-            $server->add(
-                new McpToolSchema(
-                    name: 'list_exportable_utility_readings',
-                    title: 'List exportable utility readings',
-                    inputSchema: [
-                        'type' => 'object',
-                        'properties' => [
-                            'meter_id' => ['type' => 'integer', 'minimum' => 1],
-                            'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50],
-                        ],
-                        'required' => ['meter_id'],
-                        'additionalProperties' => false,
-                    ],
-                    description: 'List up to 50 authorized utility reading rows in export order. Both Import and Utilities read access are required.',
-                    annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false),
-                ),
-                new ImportUtilityReadingsToolHandler($access, $imports, $token),
             );
         }
 

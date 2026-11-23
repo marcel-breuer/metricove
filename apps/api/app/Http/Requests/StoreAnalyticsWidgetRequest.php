@@ -27,6 +27,8 @@ class StoreAnalyticsWidgetRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:80'],
             'range_key' => ['required', Rule::in(['30d', '90d', '12m'])],
             'chart_type' => ['required', Rule::in(['line', 'bar'])],
+            'measure_key' => ['sometimes', Rule::in(['change', 'value'])],
+            'group_key' => ['sometimes', Rule::in(['unit', 'record'])],
         ];
     }
 }

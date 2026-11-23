@@ -110,6 +110,11 @@ class MealPlanningModuleTest extends TestCase
             'servings' => 4,
         ])->assertCreated()->assertJsonPath('slot.recipe.title', 'Private recipe: saffron pear')->json('slot.id');
 
+        $this->actingAs($owner, 'web')->patchJson("/api/meal-planning/slots/{$privateId}", [
+            'servings' => 1,
+            'notes' => 'Scale ingredients for one person',
+        ])->assertOk()->assertJsonPath('slot.recipe.id', $recipeId)->assertJsonPath('slot.servings', 1);
+
         $slot = MealPlanSlot::query()->findOrFail($privateId);
         app(ModuleAccessService::class)->grantPrivateResourceAccess($owner, $slot, $viewer, ModuleCapability::View);
         $viewerPlan = $this->actingAs($viewer, 'web')->getJson('/api/meal-planning?week_start=2026-10-19')

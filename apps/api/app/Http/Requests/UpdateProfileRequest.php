@@ -18,10 +18,14 @@ class UpdateProfileRequest extends FormRequest
     {
         $name = $this->input('name');
         $email = $this->input('email');
+        $recipeUnits = $this->input('recipe_units');
 
         $this->merge([
             'name' => is_string($name) ? trim($name) : $name,
             'email' => is_string($email) ? Str::lower(trim($email)) : $email,
+            'recipe_units' => is_array($recipeUnits)
+                ? array_map(static fn (mixed $unit): mixed => is_string($unit) ? trim($unit) : $unit, $recipeUnits)
+                : $recipeUnits,
         ]);
     }
 
@@ -52,6 +56,8 @@ class UpdateProfileRequest extends FormRequest
             'number_locale' => ['sometimes', 'required', 'in:de-DE,en-US,en-GB'],
             'default_currency' => ['sometimes', 'required', 'in:EUR,USD,GBP,CHF'],
             'currency_display' => ['sometimes', 'required', 'in:code,symbol'],
+            'recipe_units' => ['sometimes', 'required', 'array', 'min:1', 'max:80'],
+            'recipe_units.*' => ['required', 'string', 'max:40', 'distinct:ignore_case'],
         ];
     }
 }

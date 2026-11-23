@@ -63,6 +63,7 @@ class ProfileController extends Controller
             'number_locale' => $user->number_locale,
             'default_currency' => $user->default_currency,
             'currency_display' => $user->currency_display,
+            'recipe_units' => $user->recipeUnits(),
         ];
     }
 }
