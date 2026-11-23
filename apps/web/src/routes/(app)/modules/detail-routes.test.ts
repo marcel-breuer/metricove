@@ -41,7 +41,7 @@ describe('entity detail subpages', () => {
 	}
 
 	it('uses the shared compact modal for routine create and edit forms', () => {
-		for (const path of ['./tasks/+page.svelte', './pantry/+page.svelte', './meal_planning/+page.svelte', './tracking/+page.svelte', './tracking/[trackerId]/+page.svelte', './vehicles/+page.svelte', './vehicles/[vehicleId]/+page.svelte', './finance/+page.svelte', './utilities/+page.svelte']) {
+		for (const path of ['./tasks/+page.svelte', './pantry/+page.svelte', './meal_planning/+page.svelte', './tracking/+page.svelte', './tracking/[trackerId]/+page.svelte', './vehicles/+page.svelte', './vehicles/[vehicleId]/+page.svelte', './utilities/+page.svelte']) {
 			expect(read(path)).toContain('size="wide"');
 		}
 		expect(read('./receipts/+page.svelte')).toContain('size="fullscreen"');

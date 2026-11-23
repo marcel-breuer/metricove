@@ -198,7 +198,7 @@ class ReceiptService
                 static fn (array $category): bool => ($category['type'] ?? null) === 'expense',
             ));
             $financeAvailable = $financeCategories !== [];
-        } catch (AuthorizationException|ModuleDisabled) {
+        } catch (AuthorizationException|ModuleDisabled|ModuleNotFound) {
             // A target module is optional; an inaccessible target is not offered.
         }
 

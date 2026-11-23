@@ -24,13 +24,11 @@ Metricove is designed for a **single household per installation**. Members can t
 | Tracking | User-defined trackers, fields, units, historical readings |
 | Utilities | Electricity, water, gas, meter readings and usage calculations |
 | Vehicles | Odometer readings, servicing, insurance and operating costs |
-| Finance | Spending, income, budgets and recurring expenses; banking integrations later |
 | Recipes | Recipes, ingredients, servings, instructions, categories and favorites |
 | Meal Planning | Weekly breakfast/lunch/dinner plans using recipes or free-text meals |
 | Shopping | Shared shopping lists, manual items and optional ingredient suggestions |
 | Tasks | Private and shared household tasks, assignments, due dates, recurring chores and completion history |
 | Analytics | Charts and comparisons for enabled and authorized modules |
-| Import | CSV import/export and assisted meter-photo recognition |
 | AI | In-app assistant, model adapters and permission-aware MCP tools |
 | Health (future) | Opt-in, strictly private personal health and fitness metrics |
 

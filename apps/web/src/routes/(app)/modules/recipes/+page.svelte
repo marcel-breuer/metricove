@@ -19,6 +19,7 @@
 	const canView = $derived(access?.capabilities.view ?? false);
 	const canCreate = $derived(access?.capabilities.create ?? false);
 	const canManageShared = $derived(shell.currentUser?.is_admin === true && (access?.capabilities.manage ?? false));
+	const recipeUnitOptions = $derived(shell.currentUser?.recipe_units ?? ['piece', 'g', 'kg', 'ml', 'l', 'bunch', 'tsp', 'tbsp']);
 	const canAddRecipe = $derived(canCreate || canManageShared);
 
 	let recipes = $state<Recipe[]>([]);
@@ -211,7 +212,7 @@
 								{@render favoriteButton(recipe)}
 							</div>
 							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-ink-muted">
-								{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} serving' : '{count} servings', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('Servings missing')}</span>{/if}
+								{#if recipe.servings}<span>{$t(recipe.servings === 1 ? '{count} person' : '{count} people', { count: recipe.servings })}</span>{:else}<span class="text-warning">{$t('People count missing')}</span>{/if}
 								{#if recipe.preparation_minutes}<span>{$t('{count} min', { count: recipe.preparation_minutes })}</span>{/if}
 								<span>{$t(recipe.ingredients.length === 1 ? '{count} ingredient' : '{count} ingredients', { count: recipe.ingredients.length })}</span>
 								{#if recipe.needs_review}<Badge tone="warning">{$t('Needs review')}</Badge>{/if}
@@ -248,7 +249,7 @@
 			</Modal>
 		{/if}
 		{#if canAddRecipe}
-			<RecipeEditor bind:open={editorOpen} draft={editorDraft} notices={importNotices} visibilityOptions={formVisibilityOptions} {visibilityHint} onSaved={recipeSaved} />
+			<RecipeEditor bind:open={editorOpen} draft={editorDraft} notices={importNotices} visibilityOptions={formVisibilityOptions} unitOptions={recipeUnitOptions} {visibilityHint} onSaved={recipeSaved} />
 		{/if}
 		{#if canView && !canAddRecipe}
 			<Notice tone="info" message="Your account can view recipes. Ask an administrator for Recipes Create to add private recipes or Recipes Manage to create household recipes." />

@@ -28,8 +28,6 @@ Bounded summaries backed by the same registry as the in-app assistant. Each requ
 
 | Tool | Module |
 | --- | --- |
-| `summarize_finance_month` | Finance |
-| `list_visible_financial_records` | Finance |
 | `summarize_visible_tracker_entries` | Tracking |
 | `summarize_visible_utility_readings` | Utilities |
 | `summarize_visible_vehicle_odometer_readings` | Vehicles |
@@ -44,7 +42,6 @@ Bounded summaries backed by the same registry as the in-app assistant. Each requ
 
 | Tool | Scopes | Description |
 | --- | --- | --- |
-| `list_exportable_utility_readings` | `import:view` and `utilities:view` | Up to 50 utility reading rows in export order |
 | `preview_utility_reading` | `utilities:create` and `utilities:view` | Prepare a utility reading for approval |
 | `complete_approved_utility_reading` | `utilities:create` and `utilities:view` | Save an approved utility reading (idempotent) |
 | `complete_approved_mcp_change` | any write scope | Complete any approved `preview_*` change (idempotent) |
@@ -59,9 +56,6 @@ Bounded summaries backed by the same registry as the in-app assistant. Each requ
 | `list_visible_vehicle_odometer_readings` | Vehicles | `vehicles:view` | List a bounded, cursor-based page of odometer readings for one authorized vehicle, newest first. |
 | `list_visible_vehicle_records` | Vehicles | `vehicles:view` | List a bounded, cursor-based page of maintenance records, insurance policies or costs for one authorized vehicle. Invoice files are not returned. |
 | `list_visible_utility_meters` | Utilities | `utilities:view` | List utility meters currently visible to the member, including the ids needed by other utility tools. |
-| `show_visible_finance_overview` | Finance | `finance:view` | Show the visible income, expense and budget overview for one month. |
-| `list_visible_finance_budgets` | Finance | `finance:view` | List monthly category budgets visible to the member, for the current month unless a month is given. |
-| `list_visible_finance_recurring_entries` | Finance | `finance:view` | List recurring income and expense schedules visible to the member. |
 | `show_visible_recipe` | Recipes | `recipes:view` | Show one authorized recipe with its ingredient list and preparation steps. |
 | `list_visible_notes` | Notes | `notes:view` | List a bounded page of notes currently visible to the member, with optional search and filters. |
 | `show_visible_note` | Notes | `notes:view` | Show one note, including its body, only when the member can view that resource. |
@@ -71,7 +65,6 @@ Bounded summaries backed by the same registry as the in-app assistant. Each requ
 | `list_visible_tracker_schemas` | Tracking | `tracking:view` | List tracker definitions visible to the member, without private entry values. |
 | `show_visible_tracker_schema` | Tracking | `tracking:view` | Show one authorized tracker definition and its bounded schema revision history. |
 | `list_visible_tracker_entries` | Tracking | `tracking:view` | List a bounded page of authorized entries using the current typed tracker schema. |
-| `list_visible_finance_categories` | Finance | `finance:view` | List finance categories currently visible to the member. |
 | `show_visible_utility_meter` | Utilities | `utilities:view` | Show one authorized meter with its bounded readings and usage summary. |
 | `list_visible_utility_reading_revisions` | Utilities | `utilities:view` | List the bounded audit history for one authorized reading. |
 | `show_visible_vehicle` | Vehicles | `vehicles:view` | Show one authorized vehicle with bounded odometer, maintenance, insurance and cost records. |
@@ -105,18 +98,6 @@ Every tool below only prepares a change. Completion goes through `complete_appro
 | `preview_update_pantry_item` | Pantry | `edit` | Prepare a version-checked pantry detail update for approval. |
 | `preview_create_shopping_list` | Shopping | `create` | Prepare a shopping list for member approval. |
 | `preview_update_shopping_list` | Shopping | `edit` | Prepare a version-checked shopping list rename for member approval. |
-| `preview_create_financial_transaction` | Finance | `create` | Prepare a private or household transaction for member approval. |
-| `preview_create_finance_category` | Finance | `create` | Prepare a private or household category for member approval. |
-| `preview_update_finance_category` | Finance | `edit` | Prepare a category rename for member approval. |
-| `preview_delete_finance_category` | Finance | `edit` | Prepare deletion of an unused category for member approval. |
-| `preview_create_finance_budget` | Finance | `create` | Prepare a monthly category budget for member approval. |
-| `preview_update_finance_budget` | Finance | `edit` | Prepare a budget change for member approval. |
-| `preview_delete_finance_budget` | Finance | `edit` | Prepare budget deletion for member approval. |
-| `preview_create_finance_recurring_entry` | Finance | `create` | Prepare a private or household recurring entry for member approval. |
-| `preview_update_finance_recurring_entry` | Finance | `edit` | Prepare a recurring entry update for member approval. |
-| `preview_delete_finance_recurring_entry` | Finance | `edit` | Prepare recurring entry deletion for member approval. |
-| `preview_record_finance_recurring_occurrence` | Finance | `create` | Prepare the current due occurrence as a transaction for member approval. |
-| `preview_update_financial_transaction` | Finance | `edit` | Prepare a transaction update for member approval. |
 | `preview_add_tracker_entry` | Tracking | `create` | Prepare a typed tracker entry for member approval. |
 | `preview_create_tracker` | Tracking | `create` | Prepare a private or household typed tracker schema for member approval. |
 | `preview_update_tracker_schema` | Tracking | `manage` | Prepare a version-checked schema change for member approval. |
@@ -137,7 +118,6 @@ Every tool below only prepares a change. Completion goes through `complete_appro
 | `preview_move_shopping_item` | Shopping | `edit` | Prepare a version-checked shopping list reorder for member approval. |
 | `preview_set_shopping_item_checked` | Shopping | `edit` | Prepare a reversible check-off for member approval. |
 | `preview_delete_shopping_item` | Shopping | `edit` | Prepare removal of a shopping list item for member approval. |
-| `preview_delete_financial_transaction` | Finance | `edit` | Prepare deletion of a visible financial transaction for member approval. |
 | `preview_delete_tracker_entry` | Tracking | `edit` | Prepare deletion of a tracker entry for member approval. |
 | `preview_correct_vehicle_odometer_reading` | Vehicles | `edit` | Prepare an odometer correction for member approval. |
 | `preview_delete_analytics_widget` | Analytics | `edit` | Prepare removal of a personal analytics widget for member approval. |

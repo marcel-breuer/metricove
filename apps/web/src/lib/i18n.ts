@@ -6,6 +6,16 @@ export type NumberLocale = 'de-DE' | 'en-US' | 'en-GB';
 export type CurrencyDisplay = 'code' | 'symbol';
 
 const german: Record<string, string> = {
+	'piece': 'Stück', 'g': 'g', 'kg': 'kg', 'ml': 'ml', 'l': 'l', 'bunch': 'Bund', 'tsp': 'TL', 'tbsp': 'EL',
+	'Recipe units': 'Rezepteinheiten', 'Choose the units available in your recipe ingredient dropdowns. These settings belong to your account.': 'Wähle die Einheiten für die Zutatenauswahl deiner Rezepte. Diese Einstellung gilt für dein Konto.',
+	'Remove recipe unit {unit}': 'Rezepteinheit {unit} entfernen', 'Add a custom recipe unit': 'Eigene Rezepteinheit hinzufügen', 'For example, clove': 'Zum Beispiel: Zehe', 'Add unit': 'Einheit hinzufügen',
+	'People': 'Personen', '{count} person': '{count} Person', '{count} people': '{count} Personen', 'People count missing': 'Personenzahl fehlt',
+	'Data table': 'Datentabelle', 'Measure column': 'Messwertspalte', 'Group column': 'Gruppierungsspalte', 'Change between readings': 'Differenz zwischen Messwerten', 'Recorded value': 'Erfasster Messwert', 'Record name': 'Datensatzname',
+	'Utility meter readings': 'Zählerstände', 'Vehicle odometer readings': 'Kilometerstände', 'meter': 'Zähler', 'vehicle': 'Fahrzeug', 'value': 'Messwert', 'change': 'Differenz', 'Date column': 'Datumsspalte', 'Only rows visible to your account are included.': 'Es werden nur Datensätze berücksichtigt, die für dein Konto sichtbar sind.',
+	'Choose an available data table, its date, measure and grouping columns, and the chart type. Only records you can view are included.': 'Wähle eine verfügbare Datentabelle, ihre Datums-, Messwert- und Gruppierungsspalten sowie den Diagrammtyp. Es werden nur für dich sichtbare Datensätze verwendet.',
+	'Add a chart to compare reading values or changes across the utility and vehicle records you can view.': 'Vergleiche Messwerte oder Differenzen aus den für dich sichtbaren Zähler- und Fahrzeugdaten.',
+	'Item checked off and added to your private pantry.': 'Artikel abgehakt und deinem privaten Vorrat hinzugefügt.', 'Added to your private pantry': 'In deinen privaten Vorrat übernommen',
+	'The linked recipe is not available to your account right now. You can update the number of people or notes, or convert this slot to a dish name.': 'Das verknüpfte Rezept ist derzeit für dein Konto nicht verfügbar. Du kannst die Personenzahl oder Notizen ändern oder den Eintrag in einen Gerichtnamen umwandeln.',
 	'Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.': 'Zählerstände sind kumulativ. Der Verbrauch wird aus benachbarten Daten in chronologischer Reihenfolge berechnet.',
 	'Markdown formatting': 'Markdown-Formatierung', 'Bold': 'Fett', 'Italic': 'Kursiv', 'Heading': 'Überschrift', 'Bulleted list': 'Aufzählung', 'Link': 'Link',
 	'Full tank': 'Vollgetankt', 'Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.': 'Nur nach vollständigem Tanken markieren. Der Verbrauch wird zwischen aufeinanderfolgenden Volltankungen mit Kilometerständen berechnet.',

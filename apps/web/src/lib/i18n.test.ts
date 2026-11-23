@@ -14,7 +14,6 @@ describe('interface translations', () => {
 		expect(get(defaultCurrency)).toBe('CHF');
 		expect(translate('Invite a member.')).toBe('Lade ein Mitglied ein.');
 		expect(translate('Analytics dashboard')).toBe('Analyseübersicht');
-		expect(translate('A clearer view of your money.')).toBe('Mehr Überblick über deine Finanzen.');
 		expect(translate('The list everyone can trust')).toBe('Eine Liste, auf die sich alle verlassen können');
 		expect(translate('Manage modules.')).toBe('Module verwalten.');
 		expect(translate('Open dashboard')).toBe('Dashboard öffnen');
@@ -27,11 +26,9 @@ describe('interface translations', () => {
 		expect(translate('Monthly distance chart description', { unit: 'km' })).toBe('Monatliche Fahrstrecke in km für die letzten 12 Monate, gefolgt von einer Durchschnittsprognose für die nächsten 3 Monate.');
 		expect(translate('Add two visible odometer readings from the last 12 months to see monthly distance and an average projection for the next three months.')).toBe('Erfasse zwei sichtbare Kilometerstände aus den letzten 12 Monaten, um die monatliche Fahrstrecke und eine Durchschnittsprognose für die nächsten drei Monate zu sehen.');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');
-		expect(translate('{capability} permission for {module}', { capability: translate('View'), module: translate('Finance') })).toBe('Berechtigung „Ansehen“ für Finanzen');
 		expect(translate('Alert above {value} {unit} per interval', { value: '12,5', unit: 'kWh' })).toBe('Warnung über 12,5 kWh pro Intervall');
 		expect(translate(visibilityLabel('private'))).toBe('Privat');
 		expect(translate(visibilityLabel('household'))).toBe('Gemeinsam');
-		expect(translate('Category deleted.')).toBe('Kategorie gelöscht.');
 		expect(translate('active administrators')).toBe('aktive Admins');
 	});
 });

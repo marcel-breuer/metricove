@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Services\Finance\FinanceDecimalValue;
 use App\Services\Vehicles\VehicleDecimalValue;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -38,8 +37,7 @@ class ConfirmReceiptRequest extends FormRequest
             'preview_token' => ['required', 'string', 'max:10000'],
             'confirmed' => ['accepted'],
             'idempotency_key' => ['required', 'uuid'],
-            'target_type' => ['required', 'in:archive,finance,vehicle'],
-            'finance_category_id' => ['required_if:target_type,finance', 'nullable', 'integer', 'min:1'],
+            'target_type' => ['required', 'in:archive,vehicle'],
             'vehicle_id' => ['required_if:target_type,vehicle', 'nullable', 'integer', 'min:1'],
             'vehicle_category' => ['required_if:target_type,vehicle', 'nullable', 'in:fuel,maintenance,insurance,tax,registration,finance,other'],
             'description' => ['required', 'string', 'max:200'],
@@ -85,7 +83,7 @@ class ConfirmReceiptRequest extends FormRequest
                         }
                     }
                 }
-            } elseif (FinanceDecimalValue::money($this->input('amount')) === null) {
+            } elseif (VehicleDecimalValue::money($this->input('amount')) === null) {
                 $validator->errors()->add('amount', 'Enter a non-negative amount with up to 16 whole and 2 fractional digits.');
             }
             if ($fuelOdometerValue !== null && $fuelOdometerValue !== '' && VehicleDecimalValue::distance($fuelOdometerValue) === null) {

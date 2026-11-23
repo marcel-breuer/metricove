@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\FinanceCategory;
-use App\Models\FinancialTransaction;
 use App\Models\HouseholdSettings;
 use App\Models\ModuleUserPermission;
 use App\Models\ResourceUserPermission;
@@ -22,58 +20,6 @@ use Tests\TestCase;
 class AnalyticsModuleTest extends TestCase
 {
     use RefreshDatabase;
-
-    public function test_finance_widgets_respect_record_visibility_and_keep_currencies_separate(): void
-    {
-        $admin = $this->member(true);
-        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $this->enable($admin, ['analytics', 'finance']);
-        $this->grant($viewer, 'analytics', ['view' => true, 'create' => true, 'edit' => true]);
-        $this->grant($viewer, 'finance', ['view' => true]);
-
-        $sharedCategory = $this->category($admin, false);
-        $ownCategory = $this->category($viewer, true);
-        $privateCategory = $this->category($owner, true);
-        $date = CarbonImmutable::today()->subDay()->format('Y-m-d');
-        $older = CarbonImmutable::today()->subDays(60)->format('Y-m-d');
-        $this->transaction($sharedCategory, $admin, false, '12.50', 'EUR', $date);
-        $this->transaction($ownCategory, $viewer, true, '2.50', 'EUR', $date);
-        $granted = $this->transaction($privateCategory, $owner, true, '5.00', 'EUR', $date);
-        ResourceUserPermission::query()->create([
-            'resource_type' => $granted->getMorphClass(),
-            'resource_id' => $granted->id,
-            'user_id' => $viewer->id,
-            'capability' => 'view',
-        ]);
-        $this->transaction($privateCategory, $owner, true, '900.00', 'EUR', $date, 'Hidden private expense');
-        $this->transaction($sharedCategory, $admin, false, '3.25', 'USD', $date);
-        $this->transaction($sharedCategory, $admin, false, '4.00', 'EUR', $older);
-
-        $this->createWidget($viewer, 'finance.expenses', '30d');
-        $this->createWidget($viewer, 'finance.expenses', '90d');
-
-        $dashboard = $this->actingAs($viewer, 'web')->getJson('/api/analytics/dashboard')->assertOk();
-        $widgets = $dashboard->json('widgets');
-        $this->assertCount(2, $widgets);
-        $this->assertTrue($widgets[0]['available']);
-        $this->assertCount(2, $widgets[0]['series']);
-        $eur = collect($widgets[0]['series'])->firstWhere('label', 'EUR');
-        $usd = collect($widgets[0]['series'])->firstWhere('label', 'USD');
-        $this->assertSame('20.00', $eur['total']);
-        $this->assertSame('3.25', $usd['total']);
-        $this->assertSame(30, count($widgets[0]['periods']));
-        $this->assertSame('24.00', collect($widgets[1]['series'])->firstWhere('label', 'EUR')['total']);
-        $this->assertStringNotContainsString('Hidden private expense', json_encode($dashboard->json(), JSON_THROW_ON_ERROR));
-
-        $other = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $this->grant($other, 'analytics', ['view' => true, 'edit' => true]);
-        $widgetId = (int) $widgets[0]['id'];
-        $this->actingAs($other, 'web')->patchJson("/api/analytics/widgets/{$widgetId}", [
-            'expected_version' => 1, 'title' => 'Stolen widget', 'range_key' => '30d', 'chart_type' => 'line',
-        ])->assertNotFound();
-        $this->assertDatabaseHas('analytics_widgets', ['id' => $widgetId, 'user_id' => $viewer->id]);
-    }
 
     public function test_utility_and_vehicle_values_are_grouped_by_unit_and_hidden_readings_break_intervals(): void
     {
@@ -114,70 +60,21 @@ class AnalyticsModuleTest extends TestCase
 
         $this->createWidget($viewer, 'utilities.consumption', '30d');
         $this->createWidget($viewer, 'vehicles.distance', '30d');
+        $this->actingAs($viewer, 'web')->postJson('/api/analytics/widgets', [
+            'metric_key' => 'utilities.consumption', 'range_key' => '30d', 'chart_type' => 'bar',
+            'measure_key' => 'value', 'group_key' => 'record',
+        ])->assertCreated()->assertJsonPath('widget.measure_key', 'value')->assertJsonPath('widget.group_key', 'record');
         $dashboard = $this->actingAs($viewer, 'web')->getJson('/api/analytics/dashboard')->assertOk();
         $utility = collect($dashboard->json('widgets'))->firstWhere('metric_key', 'utilities.consumption');
         $vehicle = collect($dashboard->json('widgets'))->firstWhere('metric_key', 'vehicles.distance');
+        $readingsWidget = collect($dashboard->json('widgets'))->first(fn (array $widget): bool => $widget['measure_key'] === 'value');
 
         $this->assertSame('1.000000', collect($utility['series'])->firstWhere('label', 'kWh')['total']);
         $this->assertSame('2.125000', collect($utility['series'])->firstWhere('label', 'm³')['total']);
         $this->assertSame('25.125', collect($vehicle['series'])->firstWhere('label', 'km')['total']);
         $this->assertSame('4.000', collect($vehicle['series'])->firstWhere('label', 'mi')['total']);
+        $this->assertSame('321.000000', collect($readingsWidget['series'])->firstWhere('label', 'Shared electricity')['total']);
         $this->assertStringNotContainsString('900.000', json_encode($dashboard->json(), JSON_THROW_ON_ERROR));
-    }
-
-    public function test_disabled_or_unpermitted_sources_are_not_available_and_return_no_values(): void
-    {
-        $admin = $this->member(true);
-        $viewer = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $owner = User::factory()->create(['is_admin' => false, 'is_active' => true]);
-        $this->enable($admin, ['analytics', 'finance']);
-        $this->grant($viewer, 'analytics', ['view' => true, 'create' => true]);
-        $this->grant($viewer, 'finance', []);
-        $this->grant($owner, 'finance', ['view' => true]);
-        $category = $this->category($owner, true);
-        $this->transaction($category, $owner, true, '500.00', 'EUR', CarbonImmutable::today()->format('Y-m-d'));
-
-        $this->actingAs($viewer, 'web')->getJson('/api/analytics/catalog')->assertOk()->assertJsonCount(0, 'metrics');
-        $this->actingAs($viewer, 'web')->postJson('/api/analytics/widgets', [
-            'metric_key' => 'finance.expenses', 'range_key' => '30d', 'chart_type' => 'line',
-        ])->assertForbidden();
-
-        $this->grant($viewer, 'finance', ['view' => true]);
-        $this->createWidget($viewer, 'finance.expenses', '30d');
-        app(ModuleManagementService::class)->setEnabled($admin, 'finance', false);
-        $dashboard = $this->actingAs($viewer, 'web')->getJson('/api/analytics/dashboard')->assertOk();
-        $this->assertSame([], $dashboard->json('catalog'));
-        $this->assertFalse($dashboard->json('widgets.0.available'));
-        $this->assertSame([], $dashboard->json('widgets.0.series'));
-        $this->assertDatabaseHas('financial_transactions', ['amount' => '500.00']);
-    }
-
-    public function test_repeated_widgets_share_one_source_aggregation_query(): void
-    {
-        $admin = $this->member(true);
-        $this->enable($admin, ['analytics', 'finance']);
-        $this->grant($admin, 'analytics', ['view' => true, 'create' => true]);
-        $this->grant($admin, 'finance', ['view' => true]);
-        $category = $this->category($admin, true);
-        $this->transaction($category, $admin, true, '10.00', 'EUR', CarbonImmutable::today()->format('Y-m-d'));
-
-        for ($index = 0; $index < 12; $index++) {
-            $this->createWidget($admin, 'finance.expenses', $index % 2 === 0 ? '30d' : '12m');
-        }
-
-        $transactionQueries = 0;
-        DB::listen(function (QueryExecuted $query) use (&$transactionQueries): void {
-            if (str_contains(strtolower($query->sql), 'financial_transactions')) {
-                $transactionQueries++;
-            }
-        });
-
-        $dashboard = $this->actingAs($admin, 'web')->getJson('/api/analytics/dashboard')->assertOk();
-        $this->assertCount(12, $dashboard->json('widgets'));
-        $this->assertSame(1, $transactionQueries);
-        $this->actingAs($admin, 'web')->postJson('/api/analytics/widgets', [
-            'metric_key' => 'finance.expenses', 'range_key' => '30d', 'chart_type' => 'line',
-        ])->assertUnprocessable()->assertJsonValidationErrors('widgets');
     }
 
     private function member(bool $admin): User
@@ -207,39 +104,6 @@ class AnalyticsModuleTest extends TestCase
                 'can_manage' => $capabilities['manage'] ?? false,
             ],
         );
-    }
-
-    private function category(User $owner, bool $private): FinanceCategory
-    {
-        return FinanceCategory::query()->create([
-            'owner_user_id' => $private ? $owner->id : null,
-            'created_by_user_id' => $owner->id,
-            'is_private' => $private,
-            'type' => 'expense',
-            'name' => fake()->unique()->words(2, true),
-        ]);
-    }
-
-    private function transaction(
-        FinanceCategory $category,
-        User $owner,
-        bool $private,
-        string $amount,
-        string $currency,
-        string $date,
-        string $description = 'Ordinary expense',
-    ): FinancialTransaction {
-        return FinancialTransaction::query()->create([
-            'finance_category_id' => $category->id,
-            'owner_user_id' => $private ? $owner->id : null,
-            'created_by_user_id' => $owner->id,
-            'is_private' => $private,
-            'type' => 'expense',
-            'description' => $description,
-            'amount' => $amount,
-            'currency' => $currency,
-            'occurred_on' => $date,
-        ]);
     }
 
     private function createWidget(User $owner, string $metric, string $range): void

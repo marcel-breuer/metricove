@@ -53,10 +53,8 @@ class McpOperationalCoverageTest extends TestCase
         $member = User::factory()->create(['is_admin' => false, 'is_active' => true]);
         foreach ([$admin, $member] as $user) {
             $this->grant($user, 'vehicles', ['view' => true, 'create' => true, 'edit' => true, 'manage' => true]);
-            $this->grant($user, 'finance', ['view' => true, 'create' => true]);
         }
         $this->enable($admin, 'vehicles');
-        $this->enable($admin, 'finance');
         $privateVehicle = $this->createVehicle($admin, 'private', 'Admin only car');
         $sharedVehicle = $this->createVehicle($admin, 'household', 'Shared car');
         $this->actingAs($admin, 'web')->postJson("/api/vehicles/{$sharedVehicle}/maintenance", [
@@ -81,13 +79,6 @@ class McpOperationalCoverageTest extends TestCase
         $this->assertToolRejected($this->tool($secret, 'list_visible_vehicle_records', ['vehicle_id' => $sharedVehicle, 'type' => 'invoices']));
         $this->assertToolRejected($this->tool($secret, 'list_visible_vehicle_records', ['vehicle_id' => $sharedVehicle, 'type' => 'costs', 'limit' => 500]));
 
-        $this->assertNotContains('show_visible_finance_overview', $this->toolNames($secret));
-        $financeSecret = $this->createToken($member, ['finance:view']);
-        $overview = $this->structured($this->tool($financeSecret, 'show_visible_finance_overview', ['month' => '2026-10']));
-        $this->assertIsArray($overview);
-        $this->assertToolRejected($this->tool($financeSecret, 'show_visible_finance_overview', ['month' => '2026-13']));
-        $this->assertArrayHasKey('budgets', $this->structured($this->tool($financeSecret, 'list_visible_finance_budgets', [])));
-        $this->assertArrayHasKey('recurring_entries', $this->structured($this->tool($financeSecret, 'list_visible_finance_recurring_entries', [])));
     }
 
     public function test_task_checklist_writes_need_approval_scope_and_the_current_version(): void

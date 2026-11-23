@@ -12,6 +12,8 @@ class AnalyticsWidget extends Model
         'title',
         'range_key',
         'chart_type',
+        'measure_key',
+        'group_key',
         'position',
         'version',
     ];

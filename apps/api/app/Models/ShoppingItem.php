@@ -9,7 +9,7 @@ class ShoppingItem extends Model
 {
     protected $fillable = [
         'shopping_list_id', 'created_by_user_id', 'checked_by_user_id', 'name',
-        'quantity', 'unit', 'sort_order', 'is_checked', 'checked_at', 'version',
+        'quantity', 'unit', 'sort_order', 'is_checked', 'checked_at', 'pantry_received_at', 'version',
     ];
 
     protected function casts(): array
@@ -19,6 +19,7 @@ class ShoppingItem extends Model
             'sort_order' => 'integer',
             'is_checked' => 'boolean',
             'checked_at' => 'immutable_datetime',
+            'pantry_received_at' => 'immutable_datetime',
             'version' => 'integer',
         ];
     }

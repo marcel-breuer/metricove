@@ -24,10 +24,10 @@ class McpDocumentationTest extends TestCase
         $names = [
             ...array_column(app(McpDomainReadWorkflowRegistry::class)->all(), 'name'),
             ...array_column(app(McpWriteWorkflowRegistry::class)->all(), 'name'),
-            'summarize_finance_month', 'list_visible_financial_records', 'summarize_visible_tracker_entries',
+            'summarize_visible_tracker_entries',
             'summarize_visible_utility_readings', 'summarize_visible_vehicle_odometer_readings', 'list_visible_recipes',
             'show_visible_meal_plans', 'list_visible_pantry_items', 'list_visible_shopping_lists', 'show_visible_analytics',
-            'list_visible_tasks', 'list_exportable_utility_readings', 'preview_utility_reading',
+            'list_visible_tasks', 'preview_utility_reading',
             'complete_approved_utility_reading', 'complete_approved_mcp_change',
         ];
 

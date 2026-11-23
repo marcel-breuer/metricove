@@ -6,7 +6,6 @@ use App\Enums\ModuleCapability;
 use App\Exceptions\ModuleDisabled;
 use App\Exceptions\ModuleNotFound;
 use App\Mail\UpcomingReminderMail;
-use App\Models\FinanceRecurringEntry;
 use App\Models\HouseholdReminder;
 use App\Models\HouseholdTask;
 use App\Models\HouseholdTaskChecklistItem;
@@ -33,7 +32,7 @@ use Throwable;
 
 class ReminderService
 {
-    private const SOURCES = ['finance', 'vehicles', 'utilities', 'pantry', 'tasks'];
+    private const SOURCES = ['vehicles', 'utilities', 'pantry', 'tasks'];
 
     public function __construct(
         private readonly ModuleAccessService $access,
@@ -295,19 +294,6 @@ class ReminderService
     {
         $items = [];
 
-        if ($this->states->isEnabled('finance')) {
-            foreach (FinanceRecurringEntry::query()
-                ->where('is_active', true)
-                ->whereNotNull('next_due_on')
-                ->whereDate('next_due_on', '>=', $today->toDateString())
-                ->whereDate('next_due_on', '<=', $limit->toDateString())
-                ->where(fn ($query) => $query->whereNull('ends_on')->orWhereDate('ends_on', '>=', $today->toDateString()))
-                ->orderBy('next_due_on')->limit(500)->get() as $entry) {
-                $due = CarbonImmutable::parse($entry->next_due_on)->format('Y-m-d');
-                $items[] = $this->candidate('finance', 'finance_recurring_entry', $entry->id, $due, $due);
-            }
-        }
-
         if ($this->states->isEnabled('vehicles')) {
             foreach (VehicleInsurancePolicy::query()
                 ->whereDate('valid_until', '>=', $today->toDateString())
@@ -413,20 +399,6 @@ class ReminderService
             return null;
         }
 
-        if ($source instanceof FinanceRecurringEntry) {
-            if (! $source->is_active || $source->next_due_on === null) {
-                return null;
-            }
-
-            $nextDueOn = CarbonImmutable::parse($source->next_due_on);
-            if ($nextDueOn->format('Y-m-d') !== $occurrence
-                || ($source->ends_on !== null && CarbonImmutable::parse($source->ends_on)->lt($nextDueOn))) {
-                return null;
-            }
-
-            return ['title' => 'Finance · '.$source->description.' is due', 'href' => '/modules/finance', 'due_on' => $occurrence];
-        }
-
         if ($source instanceof VehicleInsurancePolicy || $source instanceof VehicleMaintenanceRecord) {
             $vehicle = Vehicle::query()->find($source->vehicle_id);
             if (! $vehicle instanceof Vehicle || ! $this->canView($member, 'vehicles', $vehicle)) {
@@ -487,7 +459,6 @@ class ReminderService
     private function source(string $type, int $id): ?Model
     {
         return match ($type) {
-            'finance_recurring_entry' => FinanceRecurringEntry::query()->find($id),
             'vehicle_insurance' => VehicleInsurancePolicy::query()->find($id),
             'vehicle_maintenance' => VehicleMaintenanceRecord::query()->find($id),
             'pantry_item' => PantryItem::query()->find($id),

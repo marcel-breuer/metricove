@@ -18,8 +18,8 @@ class McpAccessService
 {
     /** @var list<string> */
     private const MCP_VIEW_MODULES = [
-        'tracking', 'utilities', 'vehicles', 'finance', 'recipes', 'meal_planning',
-        'pantry', 'shopping', 'analytics', 'tasks', 'import', 'notes', 'receipts',
+        'tracking', 'utilities', 'vehicles', 'recipes', 'meal_planning',
+        'pantry', 'shopping', 'analytics', 'tasks', 'notes', 'receipts',
     ];
 
     private const CORE_PROFILE_SCOPE = 'core:profile:view';
@@ -38,9 +38,6 @@ class McpAccessService
         'vehicles:view' => ['module' => 'vehicles', 'capability' => ModuleCapability::View],
         'vehicles:create' => ['module' => 'vehicles', 'capability' => ModuleCapability::Create],
         'vehicles:edit' => ['module' => 'vehicles', 'capability' => ModuleCapability::Edit],
-        'finance:view' => ['module' => 'finance', 'capability' => ModuleCapability::View],
-        'finance:create' => ['module' => 'finance', 'capability' => ModuleCapability::Create],
-        'finance:edit' => ['module' => 'finance', 'capability' => ModuleCapability::Edit],
         'recipes:view' => ['module' => 'recipes', 'capability' => ModuleCapability::View],
         'recipes:create' => ['module' => 'recipes', 'capability' => ModuleCapability::Create],
         'recipes:edit' => ['module' => 'recipes', 'capability' => ModuleCapability::Edit],
@@ -57,7 +54,6 @@ class McpAccessService
         'analytics:create' => ['module' => 'analytics', 'capability' => ModuleCapability::Create],
         'analytics:edit' => ['module' => 'analytics', 'capability' => ModuleCapability::Edit],
         'tasks:view' => ['module' => 'tasks', 'capability' => ModuleCapability::View],
-        'import:view' => ['module' => 'import', 'capability' => ModuleCapability::View],
         'receipts:view' => ['module' => 'receipts', 'capability' => ModuleCapability::View],
         'notes:view' => ['module' => 'notes', 'capability' => ModuleCapability::View],
         'notes:create' => ['module' => 'notes', 'capability' => ModuleCapability::Create],
@@ -70,7 +66,6 @@ class McpAccessService
         'tracking:manage' => ['module' => 'tracking', 'capability' => ModuleCapability::Manage],
         'utilities:manage' => ['module' => 'utilities', 'capability' => ModuleCapability::Manage],
         'vehicles:manage' => ['module' => 'vehicles', 'capability' => ModuleCapability::Manage],
-        'finance:manage' => ['module' => 'finance', 'capability' => ModuleCapability::Manage],
         'recipes:manage' => ['module' => 'recipes', 'capability' => ModuleCapability::Manage],
         'meal_planning:manage' => ['module' => 'meal_planning', 'capability' => ModuleCapability::Manage],
         'pantry:manage' => ['module' => 'pantry', 'capability' => ModuleCapability::Manage],

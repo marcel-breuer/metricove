@@ -189,7 +189,6 @@
 		const payload: Record<string, string | number> = {
 			planned_for: plannedFor,
 			meal_type: mealType,
-			dish_type: dishType,
 			servings: Number(servings),
 			notes
 		};
@@ -302,7 +301,7 @@
 			</label>
 			{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
 				<div class="sm:col-span-2 rounded-xl border border-line bg-page px-4 py-3 text-sm leading-6 text-ink-muted">
-					{$t("The linked recipe is not available to your account right now. You can update servings or notes, or convert this slot to a dish name.")}
+					{$t("The linked recipe is not available to your account right now. You can update the number of people or notes, or convert this slot to a dish name.")}
 					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-accent-ink hover:text-accent-ink">{$t("Convert to a dish name")}</button>
 				</div>
 			{:else}<label class="text-xs font-medium text-ink-muted">{$t("Dish source")}
@@ -311,7 +310,7 @@
 					{#if canViewRecipes}<option value="recipe">{$t("Link a recipe")}</option>{/if}
 				</select>
 			</label>{/if}
-			<label class="text-xs font-medium text-ink-muted">{$t("Servings")}
+			<label class="text-xs font-medium text-ink-muted">{$t("People")}
 				<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			{#if dishType === 'recipe' && (canViewRecipes || editingSlotId === null)}
@@ -366,7 +365,7 @@
 								</div>
 								{#if slot}
 									<p class="mt-2 break-words text-sm font-medium leading-5 text-ink">{slot.dish_label}</p>
-									<p class="mt-1 text-xs text-ink-subtle">{slot.servings} {$t(slot.servings === 1 ? 'serving' : 'servings')}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
+									<p class="mt-1 text-xs text-ink-subtle">{$t(slot.servings === 1 ? '{count} person' : '{count} people', { count: slot.servings })}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
 									{#if slot.can_edit}
 										<div class="mt-3 flex gap-2">
 											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>

@@ -4,7 +4,6 @@ namespace App\Services\Mcp;
 
 use App\Models\User;
 use App\Services\Analytics\AnalyticsService;
-use App\Services\Finance\FinanceService;
 use App\Services\MealPlanning\MealPlanningService;
 use App\Services\Notes\NoteService;
 use App\Services\Pantry\PantryService;
@@ -78,26 +77,6 @@ class McpDomainReadWorkflowRegistry
                 'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
                 'execute' => fn (User $actor): array => ['meters' => $this->container->make(UtilityService::class)->index($actor)],
             ],
-            'show_visible_finance_overview' => [
-                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'Show a finance month overview',
-                'description' => 'Show the visible income, expense and budget overview for one month.',
-                'schema' => ['type' => 'object', 'properties' => ['month' => ['type' => 'string', 'pattern' => '^[0-9]{4}-(0[1-9]|1[0-2])$']], 'required' => ['month'], 'additionalProperties' => false],
-                'rules' => ['month' => ['required', 'date_format:Y-m']],
-                'execute' => fn (User $actor, array $data): array => $this->container->make(FinanceService::class)->overview($actor, $data['month']),
-            ],
-            'list_visible_finance_budgets' => [
-                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'List visible finance budgets',
-                'description' => 'List monthly category budgets visible to the member, for the current month unless a month is given.',
-                'schema' => ['type' => 'object', 'properties' => ['month' => ['type' => 'string', 'pattern' => '^[0-9]{4}-(0[1-9]|1[0-2])$']], 'additionalProperties' => false],
-                'rules' => ['month' => ['nullable', 'date_format:Y-m']],
-                'execute' => fn (User $actor, array $data): array => ['budgets' => $this->container->make(FinanceService::class)->budgets($actor, $data['month'] ?? null)],
-            ],
-            'list_visible_finance_recurring_entries' => [
-                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'List visible recurring finance entries',
-                'description' => 'List recurring income and expense schedules visible to the member.',
-                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
-                'execute' => fn (User $actor): array => ['recurring_entries' => $this->container->make(FinanceService::class)->recurringEntries($actor)],
-            ],
             'show_visible_recipe' => [
                 'module' => 'recipes', 'scopes' => ['recipes:view'], 'title' => 'Show a visible recipe',
                 'description' => 'Show one authorized recipe with its ingredient list and preparation steps.',
@@ -128,8 +107,8 @@ class McpDomainReadWorkflowRegistry
             'list_visible_receipts' => [
                 'module' => 'receipts', 'scopes' => ['receipts:view'], 'title' => 'List visible receipts',
                 'description' => 'List a bounded page of receipts and invoice metadata currently visible to the member. Original files are not returned.',
-                'schema' => ['type' => 'object', 'properties' => ['search' => ['type' => 'string', 'maxLength' => 100], 'date_from' => ['type' => 'string', 'format' => 'date'], 'date_to' => ['type' => 'string', 'format' => 'date'], 'min_amount' => ['type' => 'string', 'maxLength' => 19], 'max_amount' => ['type' => 'string', 'maxLength' => 19], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'target_type' => ['type' => 'string', 'enum' => ['finance', 'vehicle', 'archive']], 'sharing_status' => ['type' => 'string', 'enum' => ['private', 'shared']], 'page' => ['type' => 'integer', 'minimum' => 1]], 'additionalProperties' => false],
-                'rules' => ['search' => ['nullable', 'string', 'max:100'], 'date_from' => ['nullable', 'date_format:Y-m-d'], 'date_to' => ['nullable', 'date_format:Y-m-d'], 'min_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'max_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'currency' => ['nullable', 'regex:/\A[A-Z]{3}\z'], 'target_type' => ['nullable', 'in:finance,vehicle,archive'], 'sharing_status' => ['nullable', 'in:private,shared'], 'page' => ['nullable', 'integer', 'min:1']],
+                'schema' => ['type' => 'object', 'properties' => ['search' => ['type' => 'string', 'maxLength' => 100], 'date_from' => ['type' => 'string', 'format' => 'date'], 'date_to' => ['type' => 'string', 'format' => 'date'], 'min_amount' => ['type' => 'string', 'maxLength' => 19], 'max_amount' => ['type' => 'string', 'maxLength' => 19], 'currency' => ['type' => 'string', 'pattern' => '^[A-Z]{3}$'], 'target_type' => ['type' => 'string', 'enum' => ['vehicle', 'archive']], 'sharing_status' => ['type' => 'string', 'enum' => ['private', 'shared']], 'page' => ['type' => 'integer', 'minimum' => 1]], 'additionalProperties' => false],
+                'rules' => ['search' => ['nullable', 'string', 'max:100'], 'date_from' => ['nullable', 'date_format:Y-m-d'], 'date_to' => ['nullable', 'date_format:Y-m-d'], 'min_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'max_amount' => ['nullable', 'regex:/\A\d{1,16}(?:\.\d{1,2})?\z/'], 'currency' => ['nullable', 'regex:/\A[A-Z]{3}\z'], 'target_type' => ['nullable', 'in:vehicle,archive'], 'sharing_status' => ['nullable', 'in:private,shared'], 'page' => ['nullable', 'integer', 'min:1']],
                 'execute' => function (User $actor, array $data): array {
                     $result = $this->container->make(ReceiptService::class)->index($actor, $data);
                     foreach ($result['receipts'] as &$receipt) {
@@ -166,12 +145,6 @@ class McpDomainReadWorkflowRegistry
                 'schema' => ['type' => 'object', 'properties' => ['tracker_id' => ['type' => 'integer', 'minimum' => 1], 'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50], 'before_recorded_at' => ['type' => 'string', 'format' => 'date-time'], 'before_id' => ['type' => 'integer', 'minimum' => 1]], 'required' => ['tracker_id'], 'additionalProperties' => false],
                 'rules' => ['tracker_id' => ['required', 'integer', 'min:1'], 'limit' => ['nullable', 'integer', 'between:1,50'], 'before_recorded_at' => ['nullable', 'date'], 'before_id' => ['nullable', 'integer', 'min:1']],
                 'execute' => fn (User $actor, array $data): array => $this->container->make(TrackerEntryService::class)->history($actor, (int) $data['tracker_id'], (int) ($data['limit'] ?? 30), $data['before_recorded_at'] ?? null, isset($data['before_id']) ? (int) $data['before_id'] : null),
-            ],
-            'list_visible_finance_categories' => [
-                'module' => 'finance', 'scopes' => ['finance:view'], 'title' => 'List visible finance categories',
-                'description' => 'List finance categories currently visible to the member.',
-                'schema' => ['type' => 'object', 'properties' => new \stdClass, 'additionalProperties' => false], 'rules' => [],
-                'execute' => fn (User $actor): array => ['categories' => $this->container->make(FinanceService::class)->categories($actor)],
             ],
             'show_visible_utility_meter' => [
                 'module' => 'utilities', 'scopes' => ['utilities:view'], 'title' => 'Show a visible utility meter',

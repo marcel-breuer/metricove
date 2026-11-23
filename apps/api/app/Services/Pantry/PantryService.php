@@ -8,6 +8,7 @@ use App\Exceptions\ModuleNotFound;
 use App\Models\HouseholdSettings;
 use App\Models\PantryItem;
 use App\Models\PantryStockMovement;
+use App\Models\ShoppingItem;
 use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
 use Carbon\CarbonImmutable;
@@ -86,6 +87,34 @@ class PantryService
         }, 3);
 
         return $this->presentItem($actor, $item, CarbonImmutable::today());
+    }
+
+    /** Add one checked shopping item to the purchaser's private pantry, once per list item. */
+    public function receiveShoppingPurchase(User $actor, ShoppingItem $shoppingItem): bool
+    {
+        try {
+            $this->access->authorize($actor, self::MODULE, ModuleCapability::Create);
+        } catch (AuthorizationException|ModuleDisabled|ModuleNotFound) {
+            return false;
+        }
+
+        $quantity = PantryQuantity::quantity($shoppingItem->quantity === null ? '1.000' : (string) $shoppingItem->quantity) ?? '1.000';
+        $unit = trim((string) $shoppingItem->unit) ?: 'piece';
+        $item = PantryItem::query()->create([
+            'owner_user_id' => $actor->id,
+            'created_by_user_id' => $actor->id,
+            'is_private' => true,
+            'name' => trim($shoppingItem->name),
+            'quantity' => $quantity,
+            'unit' => $unit,
+            'location' => null,
+            'best_before_on' => null,
+            'version' => 1,
+        ]);
+
+        $this->recordMovement($item, $actor, 'initial', '0.000', $quantity, $quantity, $unit, 'Added from a checked shopping item.');
+
+        return true;
     }
 
     /** @param array<string, mixed> $data

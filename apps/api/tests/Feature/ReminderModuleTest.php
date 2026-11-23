@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Mail\UpcomingReminderMail;
-use App\Models\FinanceCategory;
-use App\Models\FinanceRecurringEntry;
 use App\Models\HouseholdReminder;
 use App\Models\HouseholdSettings;
 use App\Models\HouseholdTaskChecklistItem;
@@ -38,14 +36,14 @@ class ReminderModuleTest extends TestCase
         $reminders->updatePreferences($owner, ['email_enabled' => true, 'lead_days' => 7]);
         $reminders->updatePreferences($viewer, ['lead_days' => 7]);
 
-        $this->assertSame(['created' => 4, 'sent' => 4], $reminders->generate());
+        $this->assertSame(['created' => 3, 'sent' => 3], $reminders->generate());
         $this->assertSame(['created' => 0, 'sent' => 0], $reminders->generate());
-        Mail::assertSent(UpcomingReminderMail::class, 4);
+        Mail::assertSent(UpcomingReminderMail::class, 3);
         Mail::assertSent(UpcomingReminderMail::class, fn (UpcomingReminderMail $mail): bool => $mail->hasTo($owner->email));
         Mail::assertNotSent(UpcomingReminderMail::class, fn (UpcomingReminderMail $mail): bool => $mail->hasTo($viewer->email));
 
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(4, 'reminders')->assertJsonPath('unread_count', 4);
+            ->assertJsonCount(3, 'reminders')->assertJsonPath('unread_count', 3);
         $this->actingAs($viewer, 'web')->getJson('/api/reminders')->assertOk()
             ->assertJsonCount(0, 'reminders');
         $this->actingAs($admin, 'web')->getJson('/api/reminders')->assertOk()->assertJsonCount(0, 'reminders');
@@ -54,26 +52,25 @@ class ReminderModuleTest extends TestCase
         $this->actingAs($owner, 'web')->patchJson('/api/reminders/'.$ownerReminder->id, ['action' => 'read'])
             ->assertOk();
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonPath('reminders.0.is_read', true)->assertJsonPath('unread_count', 3);
+        ->assertJsonPath('reminders.0.is_read', true)->assertJsonPath('unread_count', 2);
     }
 
-    public function test_member_can_disable_a_source_and_source_module_disable_removes_its_reminders(): void
+    public function test_member_can_disable_a_source_and_disabled_source_module_removes_its_reminders(): void
     {
         [$admin, $owner] = $this->members();
         $this->enableSources($admin);
         $this->travelTo(CarbonImmutable::parse('2026-10-24 08:00:00'));
         $this->createUpcomingSources($owner);
         $service = app(ReminderService::class);
-        $service->updatePreferences($owner, ['sources' => ['vehicles' => false, 'utilities' => false], 'lead_days' => 7]);
-
+        $service->updatePreferences($owner, ['sources' => ['vehicles' => false], 'lead_days' => 7]);
         $service->generate();
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
             ->assertJsonCount(1, 'reminders');
 
-        app(ModuleManagementService::class)->setEnabled($admin, 'finance', false);
+        app(ModuleManagementService::class)->setEnabled($admin, 'utilities', false);
         $this->actingAs($owner, 'web')->getJson('/api/reminders')->assertOk()
-            ->assertJsonCount(0, 'reminders')->assertJsonMissing(['source_module' => 'finance']);
-        $this->assertDatabaseMissing('household_reminders', ['recipient_user_id' => $owner->id, 'source_module' => 'finance']);
+            ->assertJsonCount(0, 'reminders')->assertJsonMissing(['source_module' => 'utilities']);
+        $this->assertDatabaseMissing('household_reminders', ['recipient_user_id' => $owner->id, 'source_module' => 'utilities']);
     }
 
     public function test_ambiguous_email_success_is_not_retried_when_delivery_marker_fails(): void
@@ -85,8 +82,8 @@ class ReminderModuleTest extends TestCase
         $service = app(ReminderService::class);
         $service->updatePreferences($owner, [
             'email_enabled' => true,
-            'lead_days' => 7,
-            'sources' => ['vehicles' => false, 'utilities' => false],
+            'lead_days' => 3,
+            'sources' => ['utilities' => false],
         ]);
         Mail::fake();
 
@@ -122,8 +119,8 @@ class ReminderModuleTest extends TestCase
         $this->createUpcomingSources($owner);
         $service = app(ReminderService::class);
         $service->updatePreferences($owner, [
-            'lead_days' => 7,
-            'sources' => ['vehicles' => false, 'utilities' => false],
+            'lead_days' => 3,
+            'sources' => ['vehicles' => true, 'utilities' => false],
         ]);
         Mail::fake();
 
@@ -148,16 +145,13 @@ class ReminderModuleTest extends TestCase
         $this->actingAs($owner, 'web')->getJson('/api/reminders/preferences')->assertOk()
             ->assertJsonPath('preferences.email_enabled', false)
             ->assertJsonPath('preferences.lead_days', 3)
-            ->assertJsonPath('preferences.sources.finance', true);
+            ->assertJsonMissingPath('preferences.sources.finance');
         $this->actingAs($owner, 'web')->patchJson('/api/reminders/preferences', [
             'email_enabled' => true,
             'lead_days' => 10,
-            'sources' => ['finance' => false],
         ])->assertOk()->assertJsonPath('preferences.email_enabled', true)
             ->assertJsonPath('preferences.lead_days', 10)
-            ->assertJsonPath('preferences.sources.finance', false)
             ->assertJsonPath('preferences.sources', [
-                'finance' => false,
                 'vehicles' => true,
                 'utilities' => true,
                 'pantry' => true,
@@ -168,7 +162,7 @@ class ReminderModuleTest extends TestCase
         $this->actingAs($other, 'web')->getJson('/api/reminders/preferences')->assertOk()
             ->assertJsonPath('preferences.email_enabled', false)
             ->assertJsonPath('preferences.lead_days', 3)
-            ->assertJsonPath('preferences.sources.finance', true);
+            ->assertJsonMissingPath('preferences.sources.finance');
     }
 
     public function test_task_checklist_reminders_use_local_due_time_optional_lead_and_daily_repeats_until_completed(): void
@@ -231,36 +225,13 @@ class ReminderModuleTest extends TestCase
 
     private function enableSources(User $admin): void
     {
-        foreach (['finance', 'vehicles', 'utilities', 'tasks'] as $module) {
+        foreach (['vehicles', 'utilities', 'tasks'] as $module) {
             app(ModuleManagementService::class)->setEnabled($admin, $module, true);
         }
     }
 
     private function createUpcomingSources(User $owner): void
     {
-        $category = FinanceCategory::query()->create([
-            'owner_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
-            'is_private' => true,
-            'type' => 'expense',
-            'name' => 'Bills',
-        ]);
-        FinanceRecurringEntry::query()->create([
-            'finance_category_id' => $category->id,
-            'owner_user_id' => $owner->id,
-            'created_by_user_id' => $owner->id,
-            'is_private' => true,
-            'type' => 'expense',
-            'description' => 'Electricity bill',
-            'amount' => '80.00',
-            'currency' => 'EUR',
-            'frequency' => 'monthly',
-            'starts_on' => '2026-01-01',
-            'next_due_on' => '2026-10-26',
-            'ends_on' => null,
-            'is_active' => true,
-        ]);
-
         $vehicle = Vehicle::query()->create([
             'owner_user_id' => $owner->id,
             'created_by_user_id' => $owner->id,

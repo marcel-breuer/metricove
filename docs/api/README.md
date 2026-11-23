@@ -19,7 +19,7 @@ TOKEN=$(awk '$6=="XSRF-TOKEN"{print $7}' jar | python3 -c 'import sys,urllib.par
 curl -c jar -b jar -H "X-XSRF-TOKEN: $TOKEN" -H 'Accept: application/json' \
   -H 'Content-Type: application/json' -d '{"email":"me@example.com","password":"..."}' \
   https://metricove.example/api/auth/login
-curl -b jar -H 'Accept: application/json' 'https://metricove.example/api/finance/transactions?month=2026-10'
+curl -b jar -H 'Accept: application/json' 'https://metricove.example/api/modules'
 ```
 
 Use placeholders for credentials in scripts and keep them out of logs.
@@ -81,8 +81,7 @@ Every operation, with request fields and validation rules, is in [`openapi.yaml`
 | Tracking | `/api/tracking/trackers`, `/api/tracking/entries/{id}` | Typed schemas and entries |
 | Utilities | `/api/utilities/meters`, `/api/utilities/readings/{id}` | Meters, readings, revisions |
 | Vehicles | `/api/vehicles`, `/api/vehicles/{id}/{odometer-readings,maintenance,insurance,costs,history/{type}}` | Odometer, maintenance, insurance, costs |
-| Finance | `/api/finance/{overview,transactions,categories,budgets,recurring}` | Money as decimal strings |
-| Receipts | `/api/receipts` | Upload preview, confirm, link to finance or vehicle records, sharing |
+| Receipts | `/api/receipts` | Upload preview, confirm, link to vehicle records, sharing |
 | Recipes | `/api/recipes` | Recipes, favorites, photos, URL import preview |
 | Meal planning | `/api/meal-planning` | Weekly slots, copy previous week |
 | Shopping | `/api/shopping/lists`, `/api/shopping/items/{id}` | Lists, items, history, meal suggestions |
@@ -90,7 +89,6 @@ Every operation, with request fields and validation rules, is in [`openapi.yaml`
 | Tasks | `/api/tasks` | Tasks, completion, history, checklist items |
 | Notes | `/api/notes`, `/api/notes/folders` | Private notes, folders, preview |
 | Analytics | `/api/analytics/*` | Catalog, dashboard, personal widgets |
-| Import | `/api/import/*` | CSV and photo imports with preview and confirm |
 | Health | `/api/health` | Unauthenticated liveness |
 
 ## Examples

@@ -7,6 +7,10 @@ export type AnalyticsMetric = {
 	description: string;
 	source_module: string;
 	source_label: string;
+	table_label: string;
+	date_column: string;
+	measure_columns: string[];
+	group_columns: string[];
 };
 
 export type AnalyticsSeries = {
@@ -22,6 +26,8 @@ export type AnalyticsWidget = {
 	title: string;
 	range_key: AnalyticsRange;
 	chart_type: AnalyticsChartType;
+	measure_key: 'change' | 'value';
+	group_key: 'unit' | 'record';
 	position: number;
 	version: number;
 	available: boolean;

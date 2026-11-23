@@ -23,8 +23,6 @@
 	const canCreate = $derived(access?.capabilities.create ?? false);
 	const canEdit = $derived(access?.capabilities.edit ?? false);
 	const canManage = $derived(access?.capabilities.manage ?? false);
-	const importAccess = $derived(shell.modules.find((module) => module.key === 'import'));
-	const canSuggest = $derived(canCreate && importAccess?.capabilities.create === true);
 
 	let meter = $state<UtilityMeter | null>(null);
 	let readings = $state<UtilityReading[]>([]);
@@ -37,9 +35,6 @@
 	let readingValue = $state('');
 	let readingNote = $state('');
 	let readingPhoto = $state<File | null>(null);
-	let ocrWorking = $state(false);
-	let ocrMessage = $state('');
-	let ocrSuggestedValue = $state('');
 	let meterName = $state('');
 	let alertThreshold = $state('');
 	let editingReadingId = $state<number | null>(null);
@@ -119,36 +114,6 @@
 			error = 'The reading could not be saved. Check your connection and try again.';
 		} finally {
 			saving = false;
-		}
-	}
-
-	async function suggestReadingFromPhoto(): Promise<void> {
-		if (!meter || !readingPhoto || !canSuggest || ocrWorking) return;
-		const token = csrfToken();
-		if (!token) { ocrMessage = 'Reload this page and try again.'; return; }
-		const form = new FormData();
-		form.set('photo', readingPhoto);
-		ocrWorking = true;
-		ocrMessage = '';
-		try {
-			const response = await fetch(`/api/import/utilities/meters/${meter.id}/reading-suggestions`, {
-				method: 'POST', credentials: 'same-origin',
-				headers: { Accept: 'application/json', 'X-XSRF-TOKEN': token }, body: form
-			});
-			if (response.status === 401) { await goto('/login'); return; }
-			const result = (await response.json()) as { value?: string | null; message?: string };
-			if (!response.ok) throw new Error(result.message || 'A local reading suggestion is unavailable.');
-			if (result.value) {
-				readingValue = formatDecimalInput(result.value, $numberLocale);
-				ocrSuggestedValue = result.value;
-				ocrMessage = 'Suggested {value} {unit}. Check the meter photo and save the reading yourself.';
-			} else {
-				ocrMessage = 'No single reading could be recognized. Enter the value from the photo manually.';
-			}
-		} catch (cause) {
-			ocrMessage = cause instanceof Error ? cause.message : 'A local reading suggestion is unavailable.';
-		} finally {
-			ocrWorking = false;
 		}
 	}
 
@@ -285,10 +250,7 @@
 						<label class="block text-sm font-medium text-ink-secondary">{$t("Reading date")}<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
 						<label class="block text-sm font-medium text-ink-secondary">{$t("Cumulative value")} <span class="font-normal text-ink-subtle">({meter.unit})</span><input bind:value={readingValue} type="number" min="0" step="1" required inputmode="numeric" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder="1234" /></label>
 						<div class="block text-sm font-medium text-ink-secondary"><label for="markdown-field-3">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><MarkdownEditor id="markdown-field-3" bind:value={readingNote} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Meter display or context")} /></div>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Meter photo")} <span class="font-normal text-ink-subtle">{$t("(optional, max 5 MB)")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; ocrMessage = ''; }} class="{fileInput} mt-2" /></label>
-						{#if canSuggest}
-							<div><button type="button" onclick={suggestReadingFromPhoto} disabled={!readingPhoto || ocrWorking || saving} class="min-h-10 rounded-lg border border-accent-ink/30 px-3 text-xs font-semibold text-accent-ink transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50">{$t(ocrWorking ? 'Reading photo locally…' : 'Suggest value from photo')}</button><p class="mt-2 text-xs leading-5 text-ink-subtle">{$t("Local OCR only. The suggestion is never saved until you confirm with Save reading.")}</p>{#if ocrMessage}<p role="status" class="mt-2 text-sm text-accent-ink">{$t(ocrMessage, { value: ocrSuggestedValue ? formatMeasurement(ocrSuggestedValue, meter.unit) : '', unit: meter.unit })}</p>{/if}</div>
-						{/if}
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Meter photo")} <span class="font-normal text-ink-subtle">{$t("(optional, max 5 MB)")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; }} class="{fileInput} mt-2" /></label>
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</button>
 					</form>
 					</Modal>

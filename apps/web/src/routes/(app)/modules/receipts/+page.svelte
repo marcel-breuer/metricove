@@ -18,7 +18,7 @@
 	import { vehicleCostCategories } from '#lib/vehicles';
 	import type { ReceiptDocument, ReceiptDuplicateMatch, ReceiptFieldStatus, ReceiptOptions, ReceiptPagination, ReceiptPreview, ReceiptResponse, ReceiptSuggestions } from '#lib/receipts';
 
-	type TargetType = 'archive' | 'finance' | 'vehicle';
+	type TargetType = 'archive' | 'vehicle';
 	type ReceiptField = keyof ReceiptSuggestions;
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
@@ -29,8 +29,6 @@
 	const canManageSharing = $derived(access?.capabilities.manage === true);
 
 	let options = $state<ReceiptOptions>({
-		finance_available: false,
-		finance_categories: [],
 		vehicles_available: false,
 		vehicles: []
 	});
@@ -62,8 +60,7 @@
 	let reviewedFields = $state<ReceiptField[]>([]);
 	let duplicateMatches = $state<ReceiptDuplicateMatch[]>([]);
 	let duplicateAcknowledged = $state(false);
-	let targetType = $state<TargetType>('finance');
-	let financeCategoryId = $state('');
+	let targetType = $state<TargetType>('archive');
 	let vehicleId = $state('');
 	let vehicleCategory = $state('fuel');
 	let description = $state('');
@@ -89,13 +86,11 @@
 	let idempotencyKey = $state('');
 	let targetLinkReceiptId = $state<number | null>(null);
 	let targetActionMode = $state<'link' | 'create' | null>(null);
-	let linkTargetType = $state<'finance' | 'vehicle'>('finance');
+	let linkTargetType = $state<'vehicle'>('vehicle');
 	let linkSearch = $state('');
 	let targetMatches = $state<Array<{ id: number; label: string; date: string; amount: string; currency: string }>>([]);
-	let targetCreateCategories = $state<ReceiptOptions['finance_categories']>([]);
 	let targetCreateVehicles = $state<ReceiptOptions['vehicles']>([]);
 	let targetRecordId = $state('');
-	let targetFinanceCategoryId = $state('');
 	let targetVehicleId = $state('');
 	let targetVehicleCategory = $state('fuel');
 	let targetOptionsLoading = $state(false);
@@ -103,10 +98,8 @@
 
 	const availableTargetOptions = $derived([
 		{ value: 'archive' as const, label: 'Save to archive only' },
-		...(options.finance_available ? [{ value: 'finance' as const, label: 'Finance expense' }] : []),
 		...(options.vehicles_available ? [{ value: 'vehicle' as const, label: 'Vehicle cost' }] : [])
 	]);
-	const expenseCategories = $derived(options.finance_categories.filter((category) => category.type === 'expense'));
 	const hasReceiptFilters = $derived(Boolean(receiptSearch.trim() || dateFrom || dateTo || minAmount || maxAmount || currencyFilter || targetFilter || categoryFilter || sharingStatusFilter));
 	const showFuelFields = true;
 	const canConfirm = $derived(!confirming && !preparingScan && reviewRequired.every((field) => reviewedFields.includes(field)) && (duplicateMatches.length === 0 || duplicateAcknowledged));
@@ -132,7 +125,6 @@
 		}
 	}
 	const currentReceiptTarget = (receipt: ReceiptDocument): string => {
-		if (receipt.target_type === 'finance') return 'Finance expense';
 		if (receipt.target_type === 'vehicle') return 'Vehicle cost';
 		return receipt.target_linked ? 'Target entry unavailable' : 'Archived only';
 	};
@@ -211,15 +203,12 @@
 			if (canCreate) {
 				tasks.push(request<ReceiptOptions & ReceiptResponse>('/api/receipts/options').then((result) => {
 					options = {
-						finance_available: result.finance_available === true,
-						finance_categories: result.finance_categories ?? [],
 						vehicles_available: result.vehicles_available === true,
 						vehicles: result.vehicles ?? []
 					};
 					if (!availableTargetOptions.some((option) => option.value === targetType)) {
-						targetType = availableTargetOptions[0]?.value ?? 'finance';
+				targetType = availableTargetOptions[0]?.value ?? 'archive';
 					}
-					if (!financeCategoryId && expenseCategories[0]) financeCategoryId = String(expenseCategories[0].id);
 					if (!vehicleId && options.vehicles[0]) vehicleId = String(options.vehicles[0].id);
 				}));
 			}
@@ -308,22 +297,19 @@
 
 	function categoryFilterLabel(option: { value: string; label: string }): string {
 		const [type, category] = option.value.split(':', 2);
-		if (type === 'finance') {
-			return get(t)('Finance') + ' · ' + (option.label.split(' · ').slice(1).join(' · ') || category);
-		}
 		const labels: Record<string, string> = {
 			fuel: 'Fuel / charging',
 			maintenance: 'Maintenance',
 			insurance: 'Insurance',
 			tax: 'Tax',
 			registration: 'Registration',
-			finance: 'Vehicle financing',
+		finance: 'Vehicle financing',
 			other: 'Other'
 		};
 		return get(t)('Vehicle') + ' · ' + get(t)(labels[category] ?? category ?? 'Other');
 	}
 
-	async function openTargetAction(receipt: ReceiptDocument, mode: 'link' | 'create', type: 'finance' | 'vehicle'): Promise<void> {
+	async function openTargetAction(receipt: ReceiptDocument, mode: 'link' | 'create', type: 'vehicle'): Promise<void> {
 		clearMessages();
 		receiptError = '';
 		targetLinkReceiptId = receipt.id;
@@ -331,7 +317,6 @@
 		linkTargetType = type;
 		linkSearch = '';
 		targetRecordId = '';
-		targetFinanceCategoryId = '';
 		targetVehicleId = '';
 		targetVehicleCategory = receipt.fuel_liters !== null ? 'fuel' : 'other';
 		await loadTargetOptions();
@@ -345,10 +330,8 @@
 			if (linkSearch.trim()) query.set('search', linkSearch.trim());
 			const result = await request<ReceiptResponse>('/api/receipts/targets?' + query.toString());
 			targetMatches = result.targets ?? [];
-			targetCreateCategories = result.create_categories ?? [];
 			targetCreateVehicles = result.create_vehicles ?? [];
 			if (!targetRecordId && targetMatches[0]) targetRecordId = String(targetMatches[0].id);
-			if (!targetFinanceCategoryId && targetCreateCategories[0]) targetFinanceCategoryId = String(targetCreateCategories[0].id);
 			if (!targetVehicleId && targetCreateVehicles[0]) targetVehicleId = String(targetCreateVehicles[0].id);
 		} catch (cause) {
 			receiptError = cause instanceof Error ? cause.message : 'Receipt targets could not be loaded.';
@@ -379,11 +362,8 @@
 		targetActionBusy = true;
 		receiptError = '';
 		const payload: Record<string, string> = { target_type: linkTargetType };
-		if (linkTargetType === 'finance') payload.finance_category_id = targetFinanceCategoryId;
-		else {
-			payload.vehicle_id = targetVehicleId;
-			payload.vehicle_category = targetVehicleCategory;
-		}
+		payload.vehicle_id = targetVehicleId;
+		payload.vehicle_category = targetVehicleCategory;
 		try {
 			const result = await request<ReceiptResponse>(`/api/receipts/${targetLinkReceiptId}/target`, 'POST', JSON.stringify(payload));
 			if (result.receipt) receipts = receipts.map((receipt) => receipt.id === result.receipt?.id ? result.receipt : receipt);
@@ -483,7 +463,6 @@
 			updateReceiptFuelCalculation('amount');
 			description = merchant ? get(t)('Invoice from') + ' ' + merchant : get(t)('Invoice expense');
 			idempotencyKey = makeIdempotencyKey();
-			if (expenseCategories.length > 0) financeCategoryId = String(expenseCategories[0].id);
 			if (options.vehicles.length > 0) vehicleId = String(options.vehicles[0].id);
 		} catch (cause) {
 			error = cause instanceof Error ? cause.message : 'The invoice could not be previewed.';
@@ -529,7 +508,6 @@
 		}
 		for (const field of reviewedFields) form.append('reviewed_fields[]', field);
 		if (duplicateMatches.length > 0) form.set('duplicate_acknowledged', duplicateAcknowledged ? '1' : '0');
-		if (targetType === 'finance') form.set('finance_category_id', financeCategoryId);
 		if (targetType === 'vehicle') {
 			form.set('vehicle_id', vehicleId);
 			form.set('vehicle_category', vehicleCategory);
@@ -677,15 +655,7 @@
 										{/each}
 									</select>
 								</label>
-								{#if targetType === 'finance'}
-									<label class="block text-sm font-medium text-ink-secondary">{$t('Finance category')}
-										<select bind:value={financeCategoryId} required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">
-											{#each expenseCategories as category (category.id)}
-												<option value={category.id}>{category.name}</option>
-											{/each}
-										</select>
-									</label>
-								{:else if targetType === 'vehicle'}
+								{#if targetType === 'vehicle'}
 									<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle')}
 										<select bind:value={vehicleId} required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">
 											{#each options.vehicles as vehicle (vehicle.id)}
@@ -818,7 +788,6 @@
 					<select bind:value={targetFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
 						<option value="">{$t('All targets')}</option>
 						<option value="archive">{$t('Archived only')}</option>
-						<option value="finance">{$t('Finance expense')}</option>
 						<option value="vehicle">{$t('Vehicle cost')}</option>
 					</select>
 				</label>
@@ -866,15 +835,15 @@
 						</div>
 						{#if canEdit && receipt.is_owner && !receipt.target_linked}
 							<div class="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
-								<button type="button" onclick={() => void openTargetAction(receipt, 'link', 'finance')} class="min-h-9 rounded-lg border border-accent-ink/30 px-3 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t('Link to existing entry')}</button>
-								<button type="button" onclick={() => void openTargetAction(receipt, 'create', 'finance')} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:bg-surface-subtle">{$t('Create linked entry')}</button>
+								{#if options.vehicles_available}<button type="button" onclick={() => void openTargetAction(receipt, 'link', 'vehicle')} class="min-h-9 rounded-lg border border-accent-ink/30 px-3 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t('Link to existing entry')}</button>
+								<button type="button" onclick={() => void openTargetAction(receipt, 'create', 'vehicle')} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:bg-surface-subtle">{$t('Create linked entry')}</button>{/if}
 							</div>
 						{/if}
 						{#if targetLinkReceiptId === receipt.id}
 							<form class="mt-3 space-y-3 rounded-xl border glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
 								<div class="flex flex-wrap items-end gap-3">
 									<label class="block min-w-48 flex-1 text-sm font-medium text-ink-secondary">{$t('Target type')}
-										<select bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink"><option value="finance">{$t('Finance expense')}</option><option value="vehicle">{$t('Vehicle cost')}</option></select>
+									<select bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink"><option value="vehicle">{$t('Vehicle cost')}</option></select>
 									</label>
 									{#if targetActionMode === 'link'}
 										<label class="block min-w-48 flex-[2] text-sm font-medium text-ink-secondary">{$t('Search targets')}
@@ -887,10 +856,6 @@
 									<label class="block text-sm font-medium text-ink-secondary">{$t('Existing entry')}
 										<select bind:value={targetRecordId} required disabled={targetOptionsLoading || targetMatches.length === 0} class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base"><option value="">{$t(targetOptionsLoading ? 'Loading…' : 'No matching entries')}</option>{#each targetMatches as target (target.id)}<option value={target.id}>{target.label}</option>{/each}</select>
 									</label>
-								{:else if linkTargetType === 'finance'}
-									<label class="block text-sm font-medium text-ink-secondary">{$t('Finance category')}
-										<select bind:value={targetFinanceCategoryId} required disabled={targetCreateCategories.length === 0} class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">{#each targetCreateCategories as category (category.id)}<option value={category.id}>{category.name}</option>{/each}</select>
-									</label>
 								{:else}
 									<div class="grid gap-3 sm:grid-cols-2">
 										<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle')}
@@ -902,7 +867,7 @@
 									</div>
 								{/if}
 								<div class="flex flex-wrap gap-2">
-									<button type="submit" disabled={targetActionBusy || targetOptionsLoading || (targetActionMode === 'link' ? !targetRecordId : linkTargetType === 'finance' ? !targetFinanceCategoryId : !targetVehicleId)} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(targetActionBusy ? 'Saving…' : targetActionMode === 'link' ? 'Link receipt' : 'Create and link')}</button>
+									<button type="submit" disabled={targetActionBusy || targetOptionsLoading || (targetActionMode === 'link' ? !targetRecordId : !targetVehicleId)} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(targetActionBusy ? 'Saving…' : targetActionMode === 'link' ? 'Link receipt' : 'Create and link')}</button>
 									<button type="button" onclick={() => { targetLinkReceiptId = null; targetActionMode = null; }} class="min-h-10 rounded-lg border border-line-strong px-4 text-sm text-ink-secondary">{$t('Cancel')}</button>
 								</div>
 							</form>
