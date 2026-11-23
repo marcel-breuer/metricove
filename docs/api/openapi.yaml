@@ -4969,6 +4969,44 @@ paths:
       x-metricove-module:
         key: pantry
         capability: resource-checked
+    delete:
+      summary: 'Delete pantry'
+      operationId: deleteApiPantryItem
+      description: ''
+      parameters: {}
+      responses:
+        200:
+          description: 'Successful response.'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        422:
+          $ref: '#/components/responses/ValidationError'
+      tags:
+        - Pantry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expected_version:
+                  type: integer
+                  description: 'Must be at least 1.'
+              required:
+                - expected_version
+      security:
+        -
+          sessionCookie: {}
+      x-metricove-module:
+        key: pantry
+        capability: resource-checked
     parameters:
       -
         in: path

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdjustPantryStockRequest;
+use App\Http\Requests\DeletePantryItemRequest;
 use App\Http\Requests\StorePantryItemRequest;
 use App\Http\Requests\UpdatePantryItemRequest;
 use App\Models\User;
@@ -34,6 +35,13 @@ class PantryController extends Controller
             'message' => 'Pantry item updated.',
             'item' => $pantry->update($this->actor($request), $item, $request->validated()),
         ]);
+    }
+
+    public function destroy(DeletePantryItemRequest $request, int $item, PantryService $pantry): JsonResponse
+    {
+        $pantry->delete($this->actor($request), $item, $request->validated());
+
+        return response()->json(['message' => 'Pantry item deleted.']);
     }
 
     public function adjust(AdjustPantryStockRequest $request, int $item, PantryService $pantry): JsonResponse

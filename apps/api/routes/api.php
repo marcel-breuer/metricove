@@ -329,6 +329,8 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('module.access:pantry,view')->whereNumber('item')->name('movements.index');
             Route::patch('/{item}', [PantryController::class, 'update'])
                 ->middleware('module.enabled:pantry')->whereNumber('item')->name('update');
+            Route::delete('/{item}', [PantryController::class, 'destroy'])
+                ->middleware('module.enabled:pantry')->whereNumber('item')->name('destroy');
             Route::post('/{item}/adjustments', [PantryController::class, 'adjust'])
                 ->middleware('module.enabled:pantry')->whereNumber('item')->name('adjustments.store');
         });

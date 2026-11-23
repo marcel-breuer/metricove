@@ -8,6 +8,7 @@ use App\Exceptions\ModuleNotFound;
 use App\Models\HouseholdSettings;
 use App\Models\PantryItem;
 use App\Models\PantryStockMovement;
+use App\Models\ResourceUserPermission;
 use App\Models\ShoppingItem;
 use App\Models\User;
 use App\Services\Modules\ModuleAccessService;
@@ -140,6 +141,21 @@ class PantryService
         }, 3);
 
         return $this->presentItem($actor, $item, CarbonImmutable::today());
+    }
+
+    /** @param array<string, mixed> $data */
+    public function delete(User $actor, int $itemId, array $data): void
+    {
+        DB::transaction(function () use ($actor, $itemId, $data): void {
+            $item = $this->findForMutation($actor, $itemId);
+            $this->authorizeMutation($actor, $item);
+            $this->assertVersion($item, (int) $data['expected_version']);
+
+            ResourceUserPermission::query()
+                ->where('resource_type', $item->getMorphClass())
+                ->where('resource_id', $item->id)->delete();
+            $item->delete();
+        }, 3);
     }
 
     /** @param array<string, mixed> $data
