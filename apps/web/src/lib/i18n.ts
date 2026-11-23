@@ -311,7 +311,12 @@ const german: Record<string, string> = {
 	'Create your account': 'Konto erstellen', 'Reset your password': 'Setze dein Passwort zurück.',
 	'Choose a new password': 'Wähle ein neues Passwort', 'Set up your household': 'Richte deinen Haushalt ein',
 	'Create your administrator account': 'Erstelle dein Administratorkonto', 'Welcome,': 'Willkommen,',
-	'This household is already set up.': 'Dieser Haushalt ist bereits eingerichtet.'
+	'This household is already set up.': 'Dieser Haushalt ist bereits eingerichtet.',
+	'Reorder ingredients': 'Zutaten neu anordnen',
+	'Drag ingredient {number} to reorder': 'Zutat {number} zum Neuordnen ziehen',
+	'Move ingredient {number} up': 'Zutat {number} nach oben verschieben',
+	'Move ingredient {number} down': 'Zutat {number} nach unten verschieben',
+	'Moved ingredient to position {position}': 'Zutat an Position {position} verschoben'
 };
 
 const routeGerman: Record<string, string> = {

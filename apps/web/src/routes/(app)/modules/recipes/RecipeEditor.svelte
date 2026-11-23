@@ -7,7 +7,7 @@
 	import Notice from '#lib/ui/Notice.svelte';
 	import { numberLocale, t } from '#lib/i18n';
 	import { canonicalizeDecimalInput } from '#lib/number-format';
-	import { emptyRecipeDraft, emptyRecipeIngredient, recipeDraftFrom, type Recipe, type RecipeDraft, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
+	import { emptyRecipeDraft, emptyRecipeIngredient, moveRecipeIngredient, recipeDraftFrom, type Recipe, type RecipeDraft, type RecipeResponse, type RecipeVisibility } from '#lib/recipes';
 	import { recipeRequest } from '#lib/api-client';
 
 	let {
@@ -40,6 +40,9 @@
 	let removePhoto = $state(false);
 	let saving = $state(false);
 	let error = $state('');
+	let draggedIngredientIndex = $state<number | null>(null);
+	let dragOverIngredientIndex = $state<number | null>(null);
+	let ingredientOrderAnnouncement = $state('');
 	const editing = $derived(recipe !== null);
 
 	// Reset the form each time the dialog opens so stale edits never leak into the next recipe.
@@ -50,6 +53,9 @@
 			photoFile = null;
 			removePhoto = false;
 			error = '';
+			draggedIngredientIndex = null;
+			dragOverIngredientIndex = null;
+			ingredientOrderAnnouncement = '';
 		});
 	});
 
@@ -59,6 +65,28 @@
 
 	function removeIngredient(index: number): void {
 		form.ingredients = form.ingredients.filter((_, current) => current !== index);
+		ingredientOrderAnnouncement = '';
+	}
+
+	function moveIngredient(fromIndex: number, toIndex: number): void {
+		const reordered = moveRecipeIngredient(form.ingredients, fromIndex, toIndex);
+		if (reordered === form.ingredients) return;
+
+		form.ingredients = reordered;
+		dragOverIngredientIndex = null;
+		ingredientOrderAnnouncement = $t('Moved ingredient to position {position}', { position: toIndex + 1 });
+	}
+
+	function startIngredientDrag(event: DragEvent, index: number): void {
+		if (!event.dataTransfer) return;
+		draggedIngredientIndex = index;
+		event.dataTransfer.effectAllowed = 'move';
+		event.dataTransfer.setData('text/plain', String(index));
+	}
+
+	function finishIngredientDrag(): void {
+		draggedIngredientIndex = null;
+		dragOverIngredientIndex = null;
 	}
 
 	function choosePhoto(event: Event): void {
@@ -158,17 +186,52 @@
 
 		<fieldset class="min-w-0 space-y-3">
 			<legend class="{fieldLabel} mb-3">{$t('Ingredients')}</legend>
-			<ol class="space-y-3 sm:space-y-2">
-				{#each form.ingredients as ingredient, index (index)}
-					<li class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-xl border border-line p-3 sm:grid-cols-[minmax(0,1.6fr)_5.5rem_5.5rem_minmax(0,1.2fr)_auto] sm:items-end sm:border-0 sm:p-0">
+			<ol aria-label={$t('Reorder ingredients')} class="space-y-3 sm:space-y-2">
+				{#each form.ingredients as ingredient, index (ingredient)}
+					<li
+						ondragover={(event) => {
+							if (draggedIngredientIndex !== null) {
+								event.preventDefault();
+								if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+								dragOverIngredientIndex = index;
+							}
+						}}
+						ondragleave={() => {
+							if (dragOverIngredientIndex === index) dragOverIngredientIndex = null;
+						}}
+						ondrop={(event) => {
+							event.preventDefault();
+							if (draggedIngredientIndex !== null) moveIngredient(draggedIngredientIndex, index);
+							finishIngredientDrag();
+						}}
+						class="grid gap-2 rounded-xl border border-line p-3 transition-colors sm:grid-cols-[minmax(0,1.6fr)_5.5rem_5.5rem_minmax(0,1.2fr)_auto] sm:items-end sm:border-0 sm:p-0 {dragOverIngredientIndex === index ? 'bg-accent/5 outline outline-2 outline-accent-ink/45' : ''}"
+					>
+						<div class="order-1 flex justify-end gap-1 sm:order-last sm:items-center">
+							<button
+								type="button"
+								draggable="true"
+								aria-label={$t('Drag ingredient {number} to reorder', { number: index + 1 })}
+								ondragstart={(event) => startIngredientDrag(event, index)}
+								ondragend={finishIngredientDrag}
+								class="{iconButton} cursor-grab active:cursor-grabbing"
+							>
+								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M8 5h.01M16 5h.01M8 12h.01M16 12h.01M8 19h.01M16 19h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>
+							</button>
+							<button type="button" aria-label={$t('Move ingredient {number} up', { number: index + 1 })} onclick={() => moveIngredient(index, index - 1)} disabled={index === 0} class="{iconButton} disabled:cursor-not-allowed disabled:opacity-45">
+								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 14 6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+							</button>
+							<button type="button" aria-label={$t('Move ingredient {number} down', { number: index + 1 })} onclick={() => moveIngredient(index, index + 1)} disabled={index === form.ingredients.length - 1} class="{iconButton} disabled:cursor-not-allowed disabled:opacity-45">
+								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 10 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+							</button>
+							<button type="button" aria-label={$t('Remove ingredient')} onclick={() => removeIngredient(index)} class="{iconButton}">
+								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
+							</button>
+						</div>
 						<label class="{field} gap-1 text-xs text-ink-muted">
 							<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Ingredient')}</span>
 							<input bind:value={ingredient.name} required maxlength="120" placeholder={$t('Pasta')} class="{control}" />
 						</label>
-						<button type="button" aria-label={$t('Remove ingredient')} onclick={() => removeIngredient(index)} class="{iconButton} order-2 self-end sm:order-last">
-							<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-						</button>
-						<div class="order-3 col-span-2 grid grid-cols-2 gap-2 sm:contents">
+						<div class="order-3 grid grid-cols-2 gap-2 sm:contents">
 							<label class="{field} gap-1 text-xs text-ink-muted">
 								<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Quantity')}</span>
 								<input bind:value={ingredient.quantity} type="text" inputmode="decimal" placeholder={$t('Optional')} class="{control}" />
@@ -188,6 +251,7 @@
 					</li>
 				{/each}
 			</ol>
+			<p role="status" aria-live="polite" class="sr-only">{ingredientOrderAnnouncement}</p>
 			<Button variant="secondary" size="small" type="button" onclick={addIngredient} disabled={form.ingredients.length >= 100}>{$t('Add ingredient')}</Button>
 		</fieldset>
 

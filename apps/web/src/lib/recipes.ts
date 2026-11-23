@@ -43,6 +43,24 @@ export function editableRecipeIngredients(ingredients: RecipeIngredient[]): Reci
 	}));
 }
 
+/** Move an ingredient row while keeping all of its editable values together. */
+export function moveRecipeIngredient(
+	ingredients: RecipeIngredientInput[],
+	fromIndex: number,
+	toIndex: number
+): RecipeIngredientInput[] {
+	if (
+		fromIndex === toIndex ||
+		fromIndex < 0 || fromIndex >= ingredients.length ||
+		toIndex < 0 || toIndex >= ingredients.length
+	) return ingredients;
+
+	const reordered = [...ingredients];
+	const [ingredient] = reordered.splice(fromIndex, 1);
+	reordered.splice(toIndex, 0, ingredient);
+	return reordered;
+}
+
 export type RecipeResponse = {
 	message?: string;
 	recipes?: Recipe[];
