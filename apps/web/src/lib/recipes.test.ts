@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { editableRecipeIngredients, emptyRecipeDraft, parseImportedIngredient, recipeDraftFrom, type Recipe, type RecipeIngredient } from './recipes';
+import { editableRecipeIngredients, emptyRecipeDraft, moveRecipeIngredient, parseImportedIngredient, recipeDraftFrom, type Recipe, type RecipeIngredient, type RecipeIngredientInput } from './recipes';
 
 describe('editableRecipeIngredients', () => {
 	it('preserves visible ingredients and leaves missing source measurements blank', () => {
@@ -12,6 +12,32 @@ describe('editableRecipeIngredients', () => {
 			{ name: 'Pasta', quantity: '250', unit: 'g', note: '' },
 			{ name: 'Salt', quantity: '', unit: '', note: 'to taste' }
 		]);
+	});
+});
+
+describe('moveRecipeIngredient', () => {
+	const ingredients: RecipeIngredientInput[] = [
+		{ name: 'Pasta', quantity: '250', unit: 'g', note: 'for the sauce' },
+		{ name: 'Salt', quantity: '1', unit: 'tsp', note: 'to taste' },
+		{ name: 'Tomatoes', quantity: '400', unit: 'g', note: '' }
+	];
+
+	it('moves the entire ingredient row without mutating the original list', () => {
+		const reordered = moveRecipeIngredient(ingredients, 0, 2);
+
+		expect(reordered).toEqual([ingredients[1], ingredients[2], ingredients[0]]);
+		expect(reordered[2]).toBe(ingredients[0]);
+		expect(ingredients).toEqual([
+			{ name: 'Pasta', quantity: '250', unit: 'g', note: 'for the sauce' },
+			{ name: 'Salt', quantity: '1', unit: 'tsp', note: 'to taste' },
+			{ name: 'Tomatoes', quantity: '400', unit: 'g', note: '' }
+		]);
+	});
+
+	it('keeps the list unchanged when an index is outside the list', () => {
+		expect(moveRecipeIngredient(ingredients, -1, 1)).toBe(ingredients);
+		expect(moveRecipeIngredient(ingredients, 1, 3)).toBe(ingredients);
+		expect(moveRecipeIngredient(ingredients, 1, 1)).toBe(ingredients);
 	});
 });
 

@@ -38,6 +38,8 @@
 	let error = $state('');
 	let message = $state('');
 	let messageParams = $state<Record<string, string | number>>({});
+	let draggedSlotId = $state<number | null>(null);
+	let movingSlotId = $state<number | null>(null);
 	let editorOpen = $state(false);
 	let slotToRemove = $state<MealPlanSlot | null>(null);
 	let removeOpen = $state(false);
@@ -230,6 +232,55 @@
 		}
 	}
 
+	function canDropSlot(day: string, type: MealType): boolean {
+		if (draggedSlotId === null || movingSlotId !== null || slotFor(day, type)) return false;
+		const source = week?.slots.find((slot) => slot.id === draggedSlotId);
+		return source?.can_edit === true && (source.planned_for !== day || source.meal_type !== type);
+	}
+
+	function startSlotDrag(event: DragEvent, slot: MealPlanSlot): void {
+		if (!slot.can_edit || movingSlotId !== null) {
+			event.preventDefault();
+			return;
+		}
+		draggedSlotId = slot.id;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+			event.dataTransfer.setData('text/plain', String(slot.id));
+		}
+	}
+
+	function allowSlotDrop(event: DragEvent, day: string, type: MealType): void {
+		if (!canDropSlot(day, type)) return;
+		event.preventDefault();
+		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+	}
+
+	async function dropSlot(event: DragEvent, day: string, type: MealType): Promise<void> {
+		if (!canDropSlot(day, type)) return;
+		event.preventDefault();
+		const slot = week?.slots.find((candidate) => candidate.id === draggedSlotId);
+		if (!slot) return;
+
+		error = '';
+		message = '';
+		movingSlotId = slot.id;
+		try {
+			await api(`/api/meal-planning/slots/${slot.id}`, 'PATCH', { planned_for: day, meal_type: type });
+			message = 'Meal moved.';
+			await loadWeek();
+		} catch (cause) {
+			error = cause instanceof Error ? cause.message : 'The meal could not be moved.';
+		} finally {
+			movingSlotId = null;
+			draggedSlotId = null;
+		}
+	}
+
+	function endSlotDrag(): void {
+		draggedSlotId = null;
+	}
+
 	function slotsFor(day: string): MealPlanSlot[] {
 		return (week?.slots ?? []).filter((slot) => slot.planned_for === day);
 	}
@@ -348,6 +399,7 @@
 	{:else if !canView}
 		<div class="rounded-2xl border glass-surface p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
 	{:else}
+		<p class="text-xs text-ink-muted">{$t('Drag an editable meal to an empty slot, or use Move to choose its day and meal.')}</p>
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
 			{#each days as day (day)}
 				<article class="min-w-0 rounded-[20px] border glass-surface p-3 sm:p-4">
@@ -358,7 +410,12 @@
 					<div class="space-y-3">
 						{#each mealTypes as entry (entry.key)}
 							{@const slot = slotFor(day, entry.key)}
-							<section aria-label={$t(entry.label)} class="min-h-24 rounded-xl border border-line bg-page p-3">
+							<section
+								aria-label={$t(entry.label)}
+								class="min-h-24 rounded-xl border bg-page p-3 {canDropSlot(day, entry.key) ? 'border-dashed border-accent-ink/60 bg-accent-ink/5' : 'border-line'}"
+								ondragover={(event) => allowSlotDrop(event, day, entry.key)}
+								ondrop={(event) => void dropSlot(event, day, entry.key)}
+							>
 								<div class="flex items-center justify-between gap-2">
 									<h3 class="text-[0.68rem] font-semibold text-ink-subtle">{$t(entry.label)}</h3>
 									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-accent-ink">{$t("Household")}</span>{/if}
@@ -368,6 +425,18 @@
 									<p class="mt-1 text-xs text-ink-subtle">{$t(slot.servings === 1 ? '{count} person' : '{count} people', { count: slot.servings })}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
 									{#if slot.can_edit}
 										<div class="mt-3 flex gap-2">
+											<button
+												type="button"
+												draggable={movingSlotId !== slot.id}
+												onclick={() => openEdit(slot)}
+												ondragstart={(event) => startSlotDrag(event, slot)}
+												ondragend={endSlotDrag}
+												aria-label={$t('Move {meal}', { meal: slot.dish_label })}
+												class="min-h-9 cursor-grab rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60 active:cursor-grabbing"
+												title={$t('Drag to move, or select to choose a day and meal')}
+											>
+												{$t('Move')}
+											</button>
 											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>
 											<button type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</button>
 										</div>

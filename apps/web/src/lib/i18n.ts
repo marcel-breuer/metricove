@@ -311,7 +311,12 @@ const german: Record<string, string> = {
 	'Create your account': 'Konto erstellen', 'Reset your password': 'Setze dein Passwort zurück.',
 	'Choose a new password': 'Wähle ein neues Passwort', 'Set up your household': 'Richte deinen Haushalt ein',
 	'Create your administrator account': 'Erstelle dein Administratorkonto', 'Welcome,': 'Willkommen,',
-	'This household is already set up.': 'Dieser Haushalt ist bereits eingerichtet.'
+	'This household is already set up.': 'Dieser Haushalt ist bereits eingerichtet.',
+	'Reorder ingredients': 'Zutaten neu anordnen',
+	'Drag ingredient {number} to reorder': 'Zutat {number} zum Neuordnen ziehen',
+	'Move ingredient {number} up': 'Zutat {number} nach oben verschieben',
+	'Move ingredient {number} down': 'Zutat {number} nach unten verschieben',
+	'Moved ingredient to position {position}': 'Zutat an Position {position} verschoben'
 };
 
 const routeGerman: Record<string, string> = {
@@ -350,6 +355,8 @@ const routeGerman: Record<string, string> = {
 	'Active': 'Aktiv', 'Administrator': 'Administration', 'Configured': 'Eingerichtet', 'Not configured': 'Nicht eingerichtet',
 	'Add a transaction.': 'Buchung hinzufügen.', 'Add category': 'Kategorie hinzufügen', 'Add item': 'Artikel hinzufügen', 'Add schedule': 'Zeitplan hinzufügen',
 	'Add to the plan': 'Zum Plan hinzufügen', 'Add widget': 'Widget hinzufügen', 'Adding…': 'Wird hinzugefügt…',
+	'Drag an editable meal to an empty slot, or use Move to choose its day and meal.': 'Ziehe eine bearbeitbare Mahlzeit auf ein freies Feld oder nutze „Verschieben“, um Tag und Mahlzeit auszuwählen.',
+	'Drag to move, or select to choose a day and meal': 'Zum Verschieben ziehen oder auswählen, um Tag und Mahlzeit festzulegen',
 	'Ask a household administrator to create a shared list or grant you Create access.': 'Bitte eine Haushaltsadministration, eine gemeinsame Liste zu erstellen oder dir Erstellrechte zu geben.',
 	'Ask assistant': 'Assistent fragen', 'Checked items can be put back on the list at any time.': 'Abgehakte Artikel können jederzeit wieder auf die Liste gesetzt werden.',
 	'Clear the search or favorite filter to see the rest of your collection.': 'Entferne die Suche oder den Favoritenfilter, um den Rest deiner Sammlung zu sehen.',
@@ -358,6 +365,7 @@ const routeGerman: Record<string, string> = {
 	'Create tracker': 'Tracker erstellen', 'Create vehicle': 'Fahrzeug erstellen', 'Creating account…': 'Konto wird erstellt…',
 	'Demote': 'Zurückstufen', 'Edit planned meal': 'Geplante Mahlzeit bearbeiten', 'Edit recipe': 'Rezept bearbeiten', 'Edit record': 'Eintrag bearbeiten',
 	'Hide': 'Ausblenden', 'Hide correction history': 'Korrekturverlauf ausblenden', 'Hide history': 'Verlauf ausblenden', 'History': 'Verlauf', 'Item details': 'Artikeldetails', 'Manual adjustment': 'Manuelle Anpassung', 'Member': 'Mitglied', 'No items match this date filter': 'Für diesen Datumsfilter wurden keine Artikel gefunden.',
+	'Move': 'Verschieben', 'Move {meal}': '{meal} verschieben',
 	'No recipes match these filters.': 'Keine Rezepte entsprechen diesen Filtern.',
 	'Preparing…': 'Wird vorbereitet…', 'Preview CSV': 'CSV-Vorschau', 'Preview mapped rows': 'Zugeordnete Zeilen prüfen',
 	'Private tracker': 'Privater Tracker', 'Promote': 'Hochstufen', 'Reactivate': 'Reaktivieren', 'Reading photo locally…': 'Foto wird lokal ausgelesen…',
@@ -748,8 +756,10 @@ Object.assign(routeGerman, {
 	'MCP access settings are unavailable. Reload and try again.': 'Die MCP-Zugriffseinstellungen sind nicht verfügbar. Lade die Seite neu und versuche es erneut.',
 	'Maintenance record saved.': 'Wartungseintrag gespeichert.',
 	'Meal added to the week.': 'Mahlzeit zur Woche hinzugefügt.',
+	'Meal moved.': 'Mahlzeit verschoben.',
 	'Meal plan updated.': 'Essensplan aktualisiert.',
 	'Meal planning could not complete that request.': 'Die Anfrage an die Essensplanung konnte nicht abgeschlossen werden.',
+	'The meal could not be moved.': 'Die Mahlzeit konnte nicht verschoben werden.',
 	'Meal removed from the plan.': 'Mahlzeit aus dem Plan entfernt.',
 	'Meal suggestions could not be added.': 'Die Mahlzeitenvorschläge konnten nicht hinzugefügt werden.',
 	'Meal suggestions could not be prepared.': 'Die Mahlzeitenvorschläge konnten nicht vorbereitet werden.',

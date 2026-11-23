@@ -27,6 +27,11 @@ describe('interface translations', () => {
 		expect(translate('Add two visible odometer readings from the last 12 months to see monthly distance and an average projection for the next three months.')).toBe('Erfasse zwei sichtbare Kilometerstände aus den letzten 12 Monaten, um die monatliche Fahrstrecke und eine Durchschnittsprognose für die nächsten drei Monate zu sehen.');
 		expect(translate('Choose the capabilities available to {name}.', { name: 'Alex' })).toBe('Lege fest, welche Berechtigungen Alex erhält.');
 		expect(translate('Alert above {value} {unit} per interval', { value: '12,5', unit: 'kWh' })).toBe('Warnung über 12,5 kWh pro Intervall');
+		expect(translate('Reorder ingredients')).toBe('Zutaten neu anordnen');
+		expect(translate('Drag ingredient {number} to reorder', { number: 2 })).toBe('Zutat 2 zum Neuordnen ziehen');
+		expect(translate('Move ingredient {number} up', { number: 2 })).toBe('Zutat 2 nach oben verschieben');
+		expect(translate('Move ingredient {number} down', { number: 2 })).toBe('Zutat 2 nach unten verschieben');
+		expect(translate('Moved ingredient to position {position}', { position: 3 })).toBe('Zutat an Position 3 verschoben');
 		expect(translate(visibilityLabel('private'))).toBe('Privat');
 		expect(translate(visibilityLabel('household'))).toBe('Gemeinsam');
 		expect(translate('active administrators')).toBe('aktive Admins');
