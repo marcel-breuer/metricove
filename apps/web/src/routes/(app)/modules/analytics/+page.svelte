@@ -20,12 +20,12 @@
 
 	const shell = getContext<AppShellContext>(APP_SHELL_CONTEXT);
 	const access = $derived(shell.modules.find((module) => module.key === 'analytics'));
-	const selectedMetric = $derived(catalog.find((metric) => metric.key === metricKey));
 	const canView = $derived(access?.capabilities.view ?? false);
 	const canCreate = $derived(access?.capabilities.create ?? false);
 	const canEdit = $derived(access?.capabilities.edit ?? false);
 
 	let catalog = $state<AnalyticsMetric[]>([]);
+	const selectedMetric = $derived(catalog.find((metric) => metric.key === metricKey));
 	let widgets = $state<AnalyticsWidget[]>([]);
 	let loading = $state(true);
 	let saving = $state(false);

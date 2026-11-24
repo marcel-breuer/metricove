@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { panel } from './styles';
+	import { Card } from '#lib/components/ui/card/index.js';
 
 	const paddings = { none: 'p-0', medium: 'p-5 max-sm:p-4', large: 'p-6 max-sm:p-5' };
 
@@ -15,6 +15,6 @@
 	} = $props();
 </script>
 
-<section class="{panel} {paddings[padding]} {className}">
+<Card as="section" variant="glass" class="{paddings[padding]} {className}">
 	{@render children()}
-</section>
+</Card>

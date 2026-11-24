@@ -1,19 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { plugin } from 'bun';
 import { createRawSnippet } from 'svelte';
-import { compile } from 'svelte/compiler';
 import { render } from 'svelte/server';
 import { setUserPreferences } from '../i18n';
 
-plugin({
-	name: 'shared-component-rendering',
-	setup(build) {
-		build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => ({
-			contents: compile(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
-			loader: 'js'
-		}));
-	}
-});
+import './test-rendering';
 
 const { default: Button } = await import('./Button.svelte');
 const { default: EmptyState } = await import('./EmptyState.svelte');
@@ -39,8 +29,9 @@ describe('shared UI components', () => {
 
 	it('renders navigation buttons as links with the shared button styling', () => {
 		const { body } = render(Button, { props: { href: '/modules/tracking', variant: 'secondary', size: 'small', children: text('Open') } });
-		expect(body).toContain('<a href="/modules/tracking"');
-		expect(body).toContain('border-control-line bg-surface');
+		expect(body).toContain('<a');
+		expect(body).toContain('href="/modules/tracking"');
+		expect(body).toContain('border-input bg-secondary');
 		expect(body).not.toContain('<button');
 	});
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { AlertDialogCancel } from '#lib/components/ui/alert-dialog/index.js';
 	import Modal from './Modal.svelte';
 	import { t } from '#lib/i18n';
 	import Button from './Button.svelte';
@@ -20,10 +21,9 @@
 	} = $props();
 </script>
 
-<Modal bind:open {title}>
-	<p class="text-sm leading-6 text-ink-secondary">{message}</p>
+<Modal bind:open {title} confirmation={message}>
 	{#snippet footer()}
-		<Button variant="secondary" type="button" disabled={busy} onclick={() => (open = false)}>{$t('Cancel')}</Button>
+		<AlertDialogCancel variant="secondary" type="button" disabled={busy}>{$t('Cancel')}</AlertDialogCancel>
 		<Button variant="danger" type="button" disabled={busy} onclick={() => void onConfirm()}>{busy ? $t('Working…') : $t(confirmLabel)}</Button>
 	{/snippet}
 </Modal>

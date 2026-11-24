@@ -15,7 +15,7 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 
 ## Architecture
 - Modular Laravel/PHP backend, REST API, Laravel Policies, PostgreSQL, Redis queues, versioned migrations.
-- SvelteKit + TypeScript + Tailwind responsive web frontend; accessible and mobile-first.
+- SvelteKit + TypeScript + Tailwind CSS 4 + shadcn-svelte responsive web frontend; accessible and mobile-first.
 - Self-hostable with Docker Compose; current topology: Laravel API, Bun web, Nginx gateway, worker/scheduler, PostgreSQL, Redis. Only the gateway publishes a host port.
 - Code-shipped domain modules: Core, Tracking, Utilities, Vehicles, Finance, Receipts, Recipes, MealPlanning, Shopping, Analytics and Import; Health considered later. The permission-aware AI assistant is a Core app feature, not a separately enabled module.
 - See [architecture](docs/architecture/overview.md) and [module contracts](docs/modules/README.md). The API, web scaffold and Compose runtime are implemented; household setup and product modules are still being delivered incrementally. Do not claim unimplemented product behavior exists.
@@ -33,7 +33,9 @@ These instructions apply to humans and AI assistants (Codex, Copilot, Claude Cod
 
 ## UI analysis and design changes
 
-Metricove includes a SvelteKit UI. For new UI views, redesigns, and targeted UI reviews, use the repository skill `$unslop` at [.agents/skills/unslop/SKILL.md](.agents/skills/unslop/SKILL.md). Audit the rendered interface before proposing or making visual changes, then follow the skill's direction and review steps. Preserve Metricove's branding, design tokens, existing components, responsive behavior, accessibility, and localization rules in [Frontend components and i18n](.agent/skills/frontend-components-i18n/SKILL.md). Keep existing product behavior and agent rules; make only changes supported by the audit, and do not introduce a full redesign without the user's request.
+> UI is built with the latest shadcn. Use shadcn components for all new and changed UI, add them via the shadcn CLI, apply the glass look through the theme and variants, and keep the existing design tokens and colors. Do not introduce another component library or hand-rolled replacements for components shadcn provides.
+
+Metricove uses shadcn-svelte in its SvelteKit UI. For new UI views, redesigns, and targeted UI reviews, use the repository skill `$unslop` at [.agents/skills/unslop/SKILL.md](.agents/skills/unslop/SKILL.md). Audit the rendered interface before proposing or making visual changes, then follow the skill's direction and review steps. Preserve Metricove's branding, design tokens, shared component APIs, responsive behavior, accessibility, and localization rules in [Frontend components and i18n](.agent/skills/frontend-components-i18n/SKILL.md). Keep existing product behavior and agent rules; make only changes supported by the audit, and do not introduce a full redesign without the user's request.
 
 ## CI/CD-Pipeline (Stand 2026-11-15)
 

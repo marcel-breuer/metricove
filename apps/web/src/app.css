@@ -1,4 +1,29 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn-svelte/tailwind.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* shadcn's semantic palette follows the active Metricove theme. */
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+}
 
 /* Design tokens become Tailwind colors (bg-surface, text-ink, border-line, …). */
 @theme {
@@ -65,7 +90,26 @@
  * Solid surfaces are the baseline; transparency is a progressive enhancement.
  */
 :root {
-	--glass-solid: var(--color-surface);
+	--background: var(--color-page);
+	--foreground: var(--color-ink);
+	--card: var(--color-surface);
+	--card-foreground: var(--foreground);
+	--popover: var(--color-surface);
+	--popover-foreground: var(--foreground);
+	--primary: var(--color-accent);
+	--primary-foreground: var(--color-on-accent);
+	--secondary: var(--color-surface);
+	--secondary-foreground: var(--color-ink-secondary);
+	--muted: var(--color-surface-subtle);
+	--muted-foreground: var(--color-ink-muted);
+	--accent: var(--color-accent);
+	--accent-foreground: var(--color-on-accent);
+	--destructive: var(--color-danger);
+	--border: var(--color-line);
+	--input: var(--color-control-line);
+	--ring: var(--color-accent-ink);
+
+	--glass-solid: var(--card);
 	--glass-fill: var(--glass-solid);
 	--glass-inset-fill: var(--color-surface-subtle);
 	--glass-blur: none;
@@ -115,12 +159,8 @@ html[data-theme="dark"] {
 
 /* Panel: cards and sections. Blur sits on the panel level only. */
 @utility glass-surface {
-	border-color: var(--glass-rim);
+	@apply glass-chrome;
 	border-radius: var(--radius-panel);
-	background-color: var(--glass-fill);
-	-webkit-backdrop-filter: var(--glass-blur);
-	backdrop-filter: var(--glass-blur);
-	box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-rim), var(--glass-shadow);
 }
 
 /* Chrome: navigation, toolbars, dialogs. */
@@ -130,6 +170,13 @@ html[data-theme="dark"] {
 	-webkit-backdrop-filter: var(--glass-blur);
 	backdrop-filter: var(--glass-blur);
 	box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-rim), var(--glass-shadow);
+}
+
+/* The modal overlay already tints the page. Keep the dialog fill opaque. */
+@utility glass-dialog {
+	@apply glass-chrome;
+	border-radius: var(--radius-sheet);
+	background-color: var(--popover);
 }
 
 /* Inset: nested content, form fields and disclosures. No own blur. */
@@ -166,9 +213,8 @@ html[data-theme="dark"] {
 	}
 }
 
-/* Use one field treatment across module forms. Specificity and source order
- * keep legacy per-route utility classes from changing control geometry. */
-.app-shell form:not([role="search"]) :is(
+/* Module forms keep the same control geometry when dialogs are portaled. */
+:is(.app-shell, [data-slot="dialog-content"]) form:not([role="search"]) :is(
 	input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"]),
 	select,
 	textarea
@@ -187,18 +233,12 @@ html[data-theme="dark"] {
 	line-height: 20px;
 }
 
-/* Native modal backdrops sit directly behind dialogs, so translucent chrome
- * would mix the backdrop into the dialog and wash out its contents. */
-dialog.glass-chrome {
-	background-color: var(--color-surface);
-}
-
-.app-shell form:not([role="search"]) textarea {
+:is(.app-shell, [data-slot="dialog-content"]) form:not([role="search"]) textarea {
 	min-height: 88px;
 	resize: vertical;
 }
 
-.app-shell form:not([role="search"]) :is(
+:is(.app-shell, [data-slot="dialog-content"]) form:not([role="search"]) :is(
 	input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"]),
 	select,
 	textarea
@@ -206,14 +246,14 @@ dialog.glass-chrome {
 	border-color: var(--color-accent-ink);
 }
 
-.app-shell form:not([role="search"]) label:not(:has(input[type="checkbox"], input[type="radio"])) {
+:is(.app-shell, [data-slot="dialog-content"]) form:not([role="search"]) label:not(:has(input[type="checkbox"], input[type="radio"])) {
 	color: var(--color-ink-secondary);
 	font-size: 14px;
 	font-weight: 550;
 }
 
 @media (max-width: 640px) {
-	.app-shell form:not([role="search"]) :is(
+	:is(.app-shell, [data-slot="dialog-content"]) form:not([role="search"]) :is(
 		input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"]),
 		select,
 		textarea

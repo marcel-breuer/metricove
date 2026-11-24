@@ -1,19 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { plugin } from 'bun';
 import { createRawSnippet } from 'svelte';
-import { compile } from 'svelte/compiler';
 import { render } from 'svelte/server';
 import { setUserPreferences } from '../i18n';
 
-plugin({
-	name: 'modal-server-rendering',
-	setup(build) {
-		build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => ({
-			contents: compile(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
-			loader: 'js'
-		}));
-	}
-});
+import './test-rendering';
 
 const { default: Modal } = await import('./Modal.svelte');
 const { default: BackLink } = await import('./BackLink.svelte');
@@ -23,26 +13,26 @@ const text = (value: string) => createRawSnippet(() => ({ render: () => `<span>$
 afterEach(() => setUserPreferences({ language: 'en' }));
 
 describe('Modal', () => {
-	it('keeps the compact default size and names the dialog by its visible title', () => {
-		const { body } = render(Modal, { props: { title: 'Rename list', children: text('Body') } });
+	it('renders the compact dialog and its visible heading', () => {
+		const { body } = render(Modal, { props: { open: true, title: 'Rename list', children: text('Body') } });
 		expect(body).toContain('data-size="default"');
 		expect(body).not.toContain('data-size="fullscreen"');
-		const labelledBy = body.match(/aria-labelledby="([^"]+)"/)?.[1];
-		expect(labelledBy).toBeTruthy();
-		expect(body).toContain(`id="${labelledBy}"`);
+		expect(body).toContain('role="dialog"');
+		expect(body).toContain('data-slot="dialog-title"');
+		expect(body).toContain('role="heading" aria-level="2"');
+		expect(body).toContain('Rename list');
 		expect(body).not.toContain('aria-describedby');
 		expect(body).not.toContain('<footer');
 	});
 
 	it('renders the fullscreen variant with a scrolling body, description and sticky footer', () => {
 		const { body } = render(Modal, {
-			props: { title: 'Edit recipe', description: 'Tomato soup', size: 'fullscreen', children: text('Fields'), footer: text('Save') }
+			props: { open: true, title: 'Edit recipe', description: 'Tomato soup', size: 'fullscreen', children: text('Fields'), footer: text('Save') }
 		});
 		expect(body).toContain('data-size="fullscreen"');
 		expect(body).toContain('overflow-y-auto overscroll-contain');
-		const describedBy = body.match(/aria-describedby="([^"]+)"/)?.[1];
-		expect(describedBy).toBeTruthy();
-		expect(body).toContain(`id="${describedBy}"`);
+		expect(body).toContain('data-slot="dialog-description"');
+		expect(body).toContain('Tomato soup');
 		const content = body.indexOf('overscroll-contain');
 		const footer = body.indexOf('<footer');
 		expect(footer).toBeGreaterThan(content);
@@ -50,7 +40,7 @@ describe('Modal', () => {
 	});
 
 	it.each(['default', 'wide'] as const)('keeps %s dialog actions outside the scrolling body', (size) => {
-		const { body } = render(Modal, { props: { title: 'Edit', size, children: text('Fields'), footer: text('Save') } });
+		const { body } = render(Modal, { props: { open: true, title: 'Edit', size, children: text('Fields'), footer: text('Save') } });
 		const content = body.indexOf('overflow-y-auto overscroll-contain');
 		const footer = body.indexOf('<footer');
 		expect(content).toBeGreaterThan(-1);
@@ -60,7 +50,7 @@ describe('Modal', () => {
 
 	it('translates the close button in German', () => {
 		setUserPreferences({ language: 'de' });
-		const { body } = render(Modal, { props: { title: 'Test', size: 'fullscreen', children: text('x') } });
+		const { body } = render(Modal, { props: { open: true, title: 'Test', size: 'fullscreen', children: text('x') } });
 		expect(body).toContain('aria-label="Dialog schließen"');
 	});
 });

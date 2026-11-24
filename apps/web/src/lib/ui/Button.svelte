@@ -1,11 +1,15 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import { buttonClasses, type ButtonSize, type ButtonVariant } from './styles';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
+
+	const variants = { primary: 'default', secondary: 'secondary', ghost: 'ghost', danger: 'destructive' } as const;
+	const sizes = { small: 'sm', medium: 'default', large: 'lg' } as const;
 
 	type Props = Omit<HTMLButtonAttributes, 'class'> & {
-		variant?: ButtonVariant;
-		size?: ButtonSize;
+		variant?: keyof typeof variants;
+		size?: keyof typeof sizes;
 		fullWidth?: boolean;
 		align?: 'center' | 'start';
 		/** Renders a link styled as a button for navigation actions. */
@@ -27,13 +31,15 @@
 		...attributes
 	}: Props = $props();
 
-	const classes = $derived(`${buttonClasses({ variant, size, fullWidth, align })} ${className}`);
+	const classes = $derived(cn(fullWidth && 'w-full', align === 'start' && 'justify-start', className));
 </script>
 
 {#if href}
-	<a {href} class={classes} aria-label={attributes['aria-label']} onclick={attributes.onclick as ((event: MouseEvent) => void) | undefined}>{@render children()}</a>
-{:else}
-	<button bind:this={element} class={classes} {...attributes}>
+	<Button {href} class={classes} variant={variants[variant]} size={sizes[size]} aria-label={attributes['aria-label']} onclick={attributes.onclick}>
 		{@render children()}
-	</button>
+	</Button>
+{:else}
+	<Button bind:ref={element} class={classes} variant={variants[variant]} size={sizes[size]} type="submit" {...attributes}>
+		{@render children()}
+	</Button>
 {/if}
