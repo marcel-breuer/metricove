@@ -37,7 +37,7 @@ Modules should integrate with each other **without unnecessary hard dependencies
 ## Planned technology
 
 - **Backend:** Laravel / PHP, API-first modular monolith
-- **Frontend:** SvelteKit, TypeScript and Tailwind CSS; accessible, responsive UI
+- **Frontend:** SvelteKit, TypeScript, Tailwind CSS 4 and shadcn-svelte for an accessible, responsive UI
 - **Storage:** PostgreSQL, persistent media files; Redis for queues/cache as needed
 - **Runtime:** Docker Compose runs the API, web, Nginx gateway, PostgreSQL, Redis, Mailpit, queue worker and scheduler. The gateway publishes the app port; Mailpit's UI is bound to localhost for local email inspection.
 - **Deployment:** Docker Compose and optional Coolify integration. Each installation defines its own private deployment address.

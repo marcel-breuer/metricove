@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { t } from '#lib/i18n';
-	import { control, field, fieldLabel } from './styles';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
+	import { fieldLabel } from './styles';
 	let {
 		id,
 		label,
@@ -18,16 +20,16 @@
 	} = $props();
 </script>
 
-<label class="{field} {className}" for={id}>
+<Label for={id} variant="field" class={className}>
 	<span class={fieldLabel}>{$t(label)}</span>
-	<select
-		class={control}
+	<NativeSelect.Root
+		variant="glass"
 		{id}
 		value={value}
 		onchange={(event) => onchange?.(event.currentTarget.value)}
 	>
 		{#each options as option (option.value)}
-			<option value={option.value}>{$t(option.label)}</option>
+			<NativeSelect.Option value={option.value}>{$t(option.label)}</NativeSelect.Option>
 		{/each}
-	</select>
-</label>
+	</NativeSelect.Root>
+</Label>

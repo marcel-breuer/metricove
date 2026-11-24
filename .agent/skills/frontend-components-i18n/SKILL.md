@@ -10,7 +10,7 @@ description: Use for any Metricove frontend change to reuse or create accessible
 ## Components
 
 1. Before adding UI markup, inspect `apps/web/src/lib/ui` and nearby feature components for an existing fit. Reuse the closest suitable component and its established props and styling conventions.
-2. When no suitable component exists for a reusable visual or interaction pattern, create a typed, accessible component and use it in the current feature. Put cross-feature primitives in `apps/web/src/lib/ui`; keep domain-specific behavior with its feature so other screens can reuse it there.
+2. When no suitable component exists for a reusable visual or interaction pattern, create a typed, accessible composition of shadcn-svelte primitives and use it in the current feature. Look for a registry component or block first and add it with the shadcn-svelte CLI. Put cross-feature primitives in `apps/web/src/lib/ui`; keep domain-specific behavior with its feature so other screens can reuse it there.
 3. Avoid duplicating component markup across routes. Keep one-off domain content in its route when extracting it would not create a useful reusable boundary; do not add wrapper components solely to satisfy this rule.
 4. Preserve native semantics, keyboard behavior, labels, focus handling and responsive layouts when reusing or creating components.
 

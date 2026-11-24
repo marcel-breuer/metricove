@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClasses, control, field, fieldLabel, fileInput, iconButton, panel } from '#lib/ui/styles';
+	import { control, field, fieldLabel, fileInput, iconButton, panel } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import EmptyState from '#lib/ui/EmptyState.svelte';
@@ -177,9 +177,9 @@
 					{#each categories as recipeCategory}<option value={recipeCategory}>{recipeCategory}</option>{/each}
 				</select>
 			</label>
-			<button type="button" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-warning aria-pressed:text-warning">
+			<Button type="button" variant="secondary" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="aria-pressed:border-warning aria-pressed:text-warning">
 				{@render star(favoriteOnly)}{$t("Favorites")}
-			</button>
+			</Button>
 		</div>
 
 		<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
@@ -233,8 +233,8 @@
 		{#if canAddRecipe}
 			<Modal bind:open={importOpen} title={$t('Import a recipe')} description={$t('Paste a recipe page link or upload a text PDF. You can review and edit everything before saving.')}>
 				<div class="mb-4 grid grid-cols-2 gap-2" role="group" aria-label={$t('Import a recipe')}>
-					<button type="button" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('Web link')}</button>
-					<button type="button" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="{buttonClasses({ variant: 'secondary' })} aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('PDF file')}</button>
+					<Button type="button" variant="secondary" aria-pressed={importType === 'url'} onclick={() => (importType = 'url')} class="aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('Web link')}</Button>
+					<Button type="button" variant="secondary" aria-pressed={importType === 'pdf'} onclick={() => (importType = 'pdf')} class="aria-pressed:border-accent-ink aria-pressed:text-accent-ink">{$t('PDF file')}</Button>
 				</div>
 				<form onsubmit={importRecipe} class="space-y-4">
 					{#if importType === 'url'}
