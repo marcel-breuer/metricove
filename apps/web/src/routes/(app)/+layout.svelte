@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { iconButton } from '#lib/ui/styles';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import { onMount, setContext, tick } from 'svelte';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { onMount, setContext } from 'svelte';
+	import ChevronUp from '@lucide/svelte/icons/chevron-up';
+	import Menu from '@lucide/svelte/icons/menu';
+	import X from '@lucide/svelte/icons/x';
 	import type { LayoutProps } from './$types';
 	import { csrfToken, type ApiResponse, type AuthUser } from '#lib/auth';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
@@ -24,8 +29,7 @@
 	let signOutError = $state('');
 	let drawerOpen = $state(false);
 	let assistantSearch = $state('');
-	let drawer: HTMLElement | null = $state(null);
-	let drawerTrigger: HTMLButtonElement | null = $state(null);
+	const accountItemClass = 'min-h-11 cursor-pointer rounded-[10px] px-3 text-ink-secondary focus:bg-surface-subtle focus:text-ink';
 
 	const shellContext: AppShellContext = {
 		get currentUser() {
@@ -66,6 +70,15 @@
 
 	onMount(() => {
 		void loadShell();
+		const desktop = window.matchMedia('(min-width: 64rem)');
+		function closeDrawerOnDesktop(event: MediaQueryListEvent): void {
+			if (event.matches) drawerOpen = false;
+		}
+		desktop.addEventListener('change', closeDrawerOnDesktop);
+		return () => desktop.removeEventListener('change', closeDrawerOnDesktop);
+	});
+	afterNavigate(() => {
+		drawerOpen = false;
 	});
 
 	function titleForPath(path: string): string {
@@ -151,18 +164,6 @@
 		}
 	}
 
-	async function openDrawer(): Promise<void> {
-		drawerOpen = true;
-		await tick();
-		drawer?.querySelector<HTMLElement>('a, button')?.focus();
-	}
-
-	async function closeDrawer(): Promise<void> {
-		drawerOpen = false;
-		await tick();
-		drawerTrigger?.focus();
-	}
-
 	function submitAssistantSearch(event: SubmitEvent): void {
 		event.preventDefault();
 		const question = assistantSearch.trim();
@@ -180,37 +181,6 @@
 			event.preventDefault();
 			drawerOpen = false;
 			void goto('/assistant');
-			return;
-		}
-
-		if (event.key === 'Escape') {
-			if (drawerOpen) void closeDrawer();
-			return;
-		}
-
-		if (event.key !== 'Tab') return;
-
-		const container = drawerOpen ? drawer : null;
-		if (!container) return;
-
-		const items = Array.from(
-			container.querySelectorAll<HTMLElement>(
-				'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-			)
-		);
-		if (items.length === 0) return;
-
-		const first = items[0];
-		const last = items[items.length - 1];
-		if (document.activeElement === container) {
-			event.preventDefault();
-			(event.shiftKey ? last : first).focus();
-		} else if (event.shiftKey && document.activeElement === first) {
-			event.preventDefault();
-			last.focus();
-		} else if (!event.shiftKey && document.activeElement === last) {
-			event.preventDefault();
-			first.focus();
 		}
 	}
 
@@ -234,6 +204,7 @@
 			}
 
 			currentUser = null;
+			drawerOpen = false;
 			await goto('/login');
 		} catch {
 			signOutError = 'Sign-out is unavailable. Check your connection and try again.';
@@ -247,17 +218,17 @@
 
 <svelte:window onkeydown={handleWindowKeydown} />
 
-{#snippet brand(onNavigate?: () => void)}
-	<a href="/" onclick={onNavigate} class="flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-ink" aria-label={$t('Metricove overview')}>
+{#snippet brand()}
+	<a href="/" class="flex items-center gap-3 px-2 text-lg font-semibold tracking-tight text-ink" aria-label={$t('Metricove overview')}>
 		<span class="grid size-9 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-lg text-accent-ink" aria-hidden="true">M</span>
 		<span>Metric<span class="text-accent-ink">ove</span></span>
 	</a>
 {/snippet}
 
-{#snippet navLinks(links: NavLink[], onNavigate?: () => void)}
+{#snippet navLinks(links: NavLink[])}
 	<div class="space-y-1">
 		{#each links as link (link.href)}
-			<a href={link.href} onclick={onNavigate} aria-current={isActive(link.href) ? 'page' : undefined} class="relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors {isActive(link.href) ? 'bg-accent-ink/10 text-accent-ink before:absolute before:left-0 before:h-[1.6rem] before:w-[3px] before:rounded-r-full before:bg-accent' : 'text-ink-secondary hover:bg-surface-subtle hover:text-ink'}">
+			<a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined} class="relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors {isActive(link.href) ? 'bg-accent-ink/10 text-accent-ink before:absolute before:left-0 before:h-[1.6rem] before:w-[3px] before:rounded-r-full before:bg-accent' : 'text-ink-secondary hover:bg-surface-subtle hover:text-ink'}">
 				<ModuleIcon name={link.icon} />
 				<span class="min-w-0 truncate">{$t(link.label)}</span>
 			</a>
@@ -265,31 +236,46 @@
 	</div>
 {/snippet}
 
-{#snippet navigation(label: string, onNavigate?: () => void)}
-	<nav aria-label={$t(label)} class="flex-1 space-y-6 overflow-y-auto">
-		{@render navLinks(generalLinks, onNavigate)}
+{#snippet navigation(label: string)}
+	<nav aria-label={$t(label)} class="min-h-0 flex-1 space-y-6 overflow-y-auto">
+		{@render navLinks(generalLinks)}
 		{#if moduleLinks.length > 0}
 			<div>
 				<p class="px-3 text-xs font-semibold tracking-[0.01em] text-ink-muted">{$t('Your modules')}</p>
-				<div class="mt-2">{@render navLinks(moduleLinks, onNavigate)}</div>
+				<div class="mt-2">{@render navLinks(moduleLinks)}</div>
 			</div>
 		{/if}
 		{#if currentUser?.is_admin}
 			<div class="border-t border-line pt-5">
 				<p class="px-3 text-xs font-semibold tracking-[0.01em] text-ink-muted">{$t('Administration')}</p>
-				<div class="mt-2">{@render navLinks(adminLinks, onNavigate)}</div>
+				<div class="mt-2">{@render navLinks(adminLinks)}</div>
 			</div>
 		{/if}
 	</nav>
 {/snippet}
 
-{#snippet account(onNavigate?: () => void)}
+{#snippet account(inDrawer = false)}
 	<div class="mt-6 border-t border-line pt-4">
-		<a href="/profile" onclick={onNavigate} aria-current={isActive('/profile') ? 'page' : undefined} class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
-			<span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-subtle text-sm font-semibold text-accent-ink" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
-			<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-ink-muted">{$t('Profile & account')}</span></span>
-		</a>
-		<Button variant="ghost" size="small" onclick={signOut} class="mt-1 w-full justify-start">{$t('Sign out')}</Button>
+		{#if inDrawer && signOutError}
+			<Notice tone="error" message={signOutError} class="mb-3" />
+		{/if}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger class="flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+				<span class="grid size-9 shrink-0 place-items-center rounded-full bg-surface-subtle text-sm font-semibold text-accent-ink" aria-hidden="true">{currentUser?.name.slice(0, 1).toUpperCase() ?? '…'}</span>
+				<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-ink">{currentUser?.name ?? $t('Loading account')}</span><span class="mt-0.5 block text-xs text-ink-muted">{$t('Profile & account')}</span></span>
+				<ChevronUp class="size-4 shrink-0 text-ink-muted" aria-hidden="true" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content variant="glass" side="top" sideOffset={8} loop portalProps={{ disabled: inDrawer }}>
+				<DropdownMenu.Group>
+					<DropdownMenu.Item class={accountItemClass}>
+						{#snippet child({ props })}
+							<a {...props} href="/profile" aria-current={isActive('/profile') ? 'page' : undefined}>{$t('Profile & account')}</a>
+						{/snippet}
+					</DropdownMenu.Item>
+					<DropdownMenu.Item class={accountItemClass} onSelect={() => void signOut()}>{$t('Sign out')}</DropdownMenu.Item>
+				</DropdownMenu.Group>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 	</div>
 {/snippet}
 
@@ -304,9 +290,22 @@
 		<header class="sticky top-0 z-20 border-b glass-chrome px-4 sm:px-7 lg:px-10">
 			<div class="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-3 py-3 sm:flex-nowrap">
 				<div class="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-					<button bind:this={drawerTrigger} type="button" aria-label={$t('Open navigation')} aria-expanded={drawerOpen} aria-controls="mobile-navigation" onclick={() => void openDrawer()} class="{iconButton} lg:hidden">
-						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-					</button>
+					<Sheet.Root bind:open={drawerOpen}>
+						<Sheet.Trigger aria-label={$t('Open navigation')} class="{iconButton} lg:hidden">
+							<Menu aria-hidden="true" class="size-5" strokeWidth={1.7} />
+						</Sheet.Trigger>
+						<Sheet.Content variant="glass" side="left" showCloseButton={false} class="gap-0 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] data-[side=left]:w-[min(20rem,88vw)] motion-safe:animate-drawer-in">
+							<Sheet.Title class="sr-only">{$t('Main navigation')}</Sheet.Title>
+							<div class="mb-6 flex items-center justify-between">
+								{@render brand()}
+								<Sheet.Close aria-label={$t('Close navigation')} class={iconButton}>
+									<X aria-hidden="true" class="size-5" strokeWidth={1.7} />
+								</Sheet.Close>
+							</div>
+							{@render navigation('Mobile main navigation')}
+							{@render account(true)}
+						</Sheet.Content>
+					</Sheet.Root>
 					<div class="min-w-0">
 						<p class="truncate text-base font-semibold tracking-tight text-ink">{pageTitle}</p>
 						<p class="hidden text-xs text-ink-muted xl:block">{$t('Your household, in one private place')}</p>
@@ -359,7 +358,7 @@
 					<Button variant="secondary" size="small" onclick={() => void loadShell()}>{$t('Try again')}</Button>
 				</div>
 			{/if}
-			{#if signOutError}<Notice tone="error" message={signOutError} class="mb-6" />{/if}
+			{#if signOutError && !drawerOpen}<Notice tone="error" message={signOutError} class="mb-6" />{/if}
 			{#if loading}
 				<p role="status" class="text-sm text-ink-muted">{$t('Loading account')}…</p>
 			{:else if !shellError && currentUser}
@@ -368,19 +367,3 @@
 		</main>
 	</div>
 </div>
-
-{#if drawerOpen}
-	<div class="fixed inset-0 z-40 lg:hidden">
-		<button type="button" aria-label={$t('Close navigation')} class="absolute inset-0 bg-overlay" onclick={() => void closeDrawer()}></button>
-		<div bind:this={drawer} id="mobile-navigation" role="dialog" aria-modal="true" aria-label={$t('Main navigation')} tabindex="-1" class="absolute animate-drawer-in inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r glass-chrome px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none">
-			<div class="mb-6 flex items-center justify-between">
-				{@render brand(() => (drawerOpen = false))}
-				<button type="button" aria-label={$t('Close navigation')} onclick={() => void closeDrawer()} class="{iconButton}">
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-5"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-				</button>
-			</div>
-			{@render navigation('Mobile main navigation', () => (drawerOpen = false))}
-			{@render account(() => (drawerOpen = false))}
-		</div>
-	</div>
-{/if}
