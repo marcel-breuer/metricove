@@ -1,22 +1,8 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { plugin } from 'bun';
-import { compile, compileModule } from 'svelte/compiler';
 import { render } from 'svelte/server';
 import { setUserPreferences } from '../i18n';
 
-plugin({
-	name: 'icon-choice-server-rendering',
-	setup(build) {
-		build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => ({
-			contents: compile(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
-			loader: 'js'
-		}));
-		build.onLoad({ filter: /\.svelte\.js$/ }, async ({ path }) => ({
-			contents: compileModule(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
-			loader: 'js'
-		}));
-	}
-});
+import './test-rendering';
 
 const { default: IconChoiceGroup } = await import('./IconChoiceGroup.svelte');
 
