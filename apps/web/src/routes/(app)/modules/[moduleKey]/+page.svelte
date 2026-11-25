@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Button from '#lib/ui/Button.svelte';
 	import ModuleIcon from '#lib/ui/ModuleIcon.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -19,23 +21,23 @@
 </svelte:head>
 
 {#if shell.loading}
-	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading module access…")}</div>
+	<Alert variant="glass" role="status" class="p-6 text-sm text-ink-secondary">{$t("Loading module access…")}</Alert>
 {:else if module}
 	<section class="mx-auto max-w-4xl">
 		<PageHeading eyebrow="Your module" title={module.label} description={module.description} />
-		<div class="mt-8 rounded-[20px] border glass-surface p-6 sm:p-8">
+		<Card variant="glass" class="mt-8 rounded-[20px] p-6 sm:p-8">
 			<span class="grid size-11 place-items-center rounded-xl border border-line-strong text-accent-ink"><ModuleIcon name={module.key} /></span>
 			<h2 class="mt-5 text-xl font-semibold text-ink">{$t("This module is ready for its data tools.")}</h2>
 			<p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("The module is enabled and you have access. Its records and entry forms are being delivered in the upcoming module work.")}</p>
 			<p class="mt-5 text-xs text-ink-subtle">{$t("Available capabilities:")} {Object.entries(module.capabilities).filter(([, allowed]) => allowed).map(([capability]) => capability).join(', ')}</p>
-		</div>
+		</Card>
 		<Button href="/" variant="secondary" class="mt-6">{$t("Back to overview")}</Button>
 	</section>
 {:else}
-	<section class="mx-auto max-w-2xl rounded-[20px] border glass-surface p-6 sm:p-8">
+	<Card as="section" variant="glass" class="mx-auto max-w-2xl rounded-[20px] p-6 sm:p-8">
 		<p class="text-sm font-medium text-warning">{$t("Module unavailable")}</p>
 		<h1 class="mt-2 text-2xl font-semibold tracking-tight text-ink">{$t("You do not have access to this module.")}</h1>
 		<p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An active household administrator can enable modules and grant member capabilities.")}</p>
 		<Button href="/" class="mt-6">{$t("Return to overview")}</Button>
-	</section>
+	</Card>
 {/if}

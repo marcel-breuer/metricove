@@ -22,6 +22,7 @@
 </script>
 
 <script lang="ts">
+	import { panel } from "#lib/ui/styles.js";
 	import { cn, type WithElementRef } from "#lib/utils.js";
 	import type { HTMLAttributes } from "svelte/elements";
 
@@ -32,7 +33,7 @@
 		children,
 		...restProps
 	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-		variant?: AlertVariant;
+		variant?: AlertVariant | "plain" | "glass";
 	} = $props();
 </script>
 
@@ -40,7 +41,10 @@
 	bind:this={ref}
 	data-slot="alert"
 	role="alert"
-	class={cn(alertVariants({ variant }), className)}
+	class={cn(
+		variant === "plain" ? undefined : variant === "glass" ? panel : alertVariants({ variant }),
+		className
+	)}
 	{...restProps}
 >
 	{@render children?.()}

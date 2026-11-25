@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import { t } from '#lib/i18n';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -227,9 +229,9 @@
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading modules…")}</p>
+				<Alert variant="plain" role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading modules…")}</Alert>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border glass-surface p-5 text-sm text-ink-muted">{$t("No modules are registered.")}</p>
+				<Card as="p" variant="glass" class="mt-6 rounded-xl p-5 text-sm text-ink-muted">{$t("No modules are registered.")}</Card>
 			{:else}
 					<Panel padding="none" class="mt-5 overflow-hidden">
 					<ul class="divide-y divide-line px-4 sm:px-6">

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { onMount } from 'svelte';
@@ -95,13 +97,13 @@
 	{#if message}<Notice tone="success" message={message} class="mt-6" />{/if}
 	{#if error}<Notice tone="error" message={error} class="mt-6" />{/if}
 
-	<section class="mt-8 rounded-[20px] border glass-surface p-5 sm:p-6" aria-labelledby="inbox-heading">
+	<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-6" aria-labelledby="inbox-heading">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div><h2 id="inbox-heading" class="text-xl font-semibold text-ink">{$t('Upcoming')}</h2><p class="mt-1 text-sm text-ink-muted">{reminders.filter((reminder) => !reminder.is_read).length} {$t('unread reminders')}</p></div>
 			<button type="button" onclick={() => void load()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t('Refresh')}</button>
 		</div>
 		{#if loading}
-			<p role="status" class="mt-5 text-sm text-ink-muted">{$t('Loading reminders…')}</p>
+			<Alert variant="plain" role="status" class="mt-5 text-sm text-ink-muted">{$t('Loading reminders…')}</Alert>
 		{:else if reminders.length === 0}
 			<p class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t('No upcoming reminders. They appear here when enabled modules have an obligation or alert within your reminder window.')}</p>
 		{:else}
@@ -117,9 +119,9 @@
 				{/each}
 			</ul>
 		{/if}
-	</section>
+	</Card>
 
-	<section class="mt-8 rounded-[20px] border glass-surface p-5 sm:p-6" aria-labelledby="settings-heading">
+	<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-6" aria-labelledby="settings-heading">
 		<div><h2 id="settings-heading" class="text-xl font-semibold text-ink">{$t('Reminder settings')}</h2><p class="mt-1 text-sm text-ink-muted">{$t('Email is optional and uses the SMTP settings configured for this installation.')}</p></div>
 		<form class="mt-5 space-y-5" onsubmit={savePreferences}>
 			<label class="flex items-start gap-3 text-sm text-ink-secondary"><input bind:checked={emailEnabled} type="checkbox" class="mt-0.5 size-4 rounded border-line-strong bg-page accent-accent" /><span><span class="font-medium">{$t('Send reminder emails')}</span><span class="mt-1 block text-ink-muted">{$t('Email details are sent only while you retain permission to view the source record.')}</span></span></label>
@@ -127,5 +129,5 @@
 				<fieldset><legend class="text-sm font-medium text-ink-secondary">{$t('Reminder sources')}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2">{#each Object.keys(defaultSources) as source (source)}<label class="flex items-center gap-3 rounded-xl border border-line bg-page px-3 py-3 text-sm text-ink-secondary"><input bind:checked={sources[source]} type="checkbox" class="size-4 rounded border-line-strong bg-page accent-accent" />{$t(source === 'vehicles' ? 'Vehicle insurance and service' : source === 'utilities' ? 'Utility threshold alerts' : source === 'pantry' ? 'Pantry best-before dates' : 'Task checklist reminders')}</label>{/each}</div></fieldset>
 			<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save reminder settings')}</button>
 		</form>
-	</section>
+	</Card>
 </section>

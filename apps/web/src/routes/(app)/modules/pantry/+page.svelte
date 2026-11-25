@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import { control, field, fieldLabel } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -290,21 +293,21 @@
 	{/if}
 
 	{#if !shell.loading && !canView}
-		<section class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Pantry access is not enabled for your account.")}</section>
+		<Card as="section" variant="glass" class="p-6 text-sm text-ink-secondary">{$t("Pantry access is not enabled for your account.")}</Card>
 	{:else}
 		<section class="grid gap-3 sm:grid-cols-3" aria-label={$t("Pantry summary")}>
-			<div class="rounded-2xl border glass-surface p-5">
+			<Card variant="glass" class="p-5">
 				<p class="text-sm text-ink-muted">{$t("Stock lines")}</p>
 				<p class="mt-2 text-3xl font-semibold text-ink">{loading ? '—' : totalStockLines}</p>
-			</div>
-			<div class="rounded-2xl border border-warning/15 bg-warning/[0.06] p-5">
+			</Card>
+			<Card variant="warning" class="border-warning/15 bg-warning/[0.06] p-5">
 				<p class="text-sm text-warning/70">{$t("Expiring in 7 days")}</p>
 				<p class="mt-2 text-3xl font-semibold text-warning">{loading ? '—' : expiringSoon}</p>
-			</div>
-			<div class="rounded-2xl border border-danger/15 bg-danger/[0.05] p-5">
+			</Card>
+			<Card variant="danger" class="border-danger/15 p-5">
 				<p class="text-sm text-danger/70">{$t("Past best-before")}</p>
 				<p class="mt-2 text-3xl font-semibold text-danger">{loading ? '—' : expired}</p>
-			</div>
+			</Card>
 		</section>
 
 		<Modal bind:open={editorOpen} size="wide" title={$t(editingItem ? 'Edit pantry item' : 'Add to pantry')} description={editingItem ? editingItem.name : $t('New stock line')}>
@@ -365,28 +368,28 @@
 			</div>
 
 			{#if loading}
-				<div class="rounded-2xl border glass-surface p-8 text-center text-sm text-ink-muted">{$t("Loading pantry…")}</div>
+				<Alert variant="glass" role="status" class="p-8 text-center text-sm text-ink-muted">{$t("Loading pantry…")}</Alert>
 			{:else if items.length === 0}
-				<div class="rounded-2xl border border-dashed glass-surface px-6 py-12 text-center">
+				<Card variant="glass" class="border-dashed px-6 py-12 text-center">
 					<p class="text-base font-medium text-ink">{$t(filter === 'all' ? 'Nothing in the pantry yet' : 'No items match this date filter')}</p>
 					<p class="mt-2 text-sm text-ink-muted">{$t(filter === 'all' ? 'Add a food item to keep its quantity, location and best-before date in one place.' : 'Try another best-before filter to see more of your stock.')}</p>
 					{#if filter === 'all' && canAdd}<button type="button" onclick={openNewItem} class="mt-5 rounded-xl border border-positive/25 px-4 py-2.5 text-sm font-medium text-positive hover:bg-positive/10">{$t("Add first item")}</button>{/if}
-				</div>
+				</Card>
 			{:else}
 				<div class="grid gap-3 lg:grid-cols-2">
 					{#each items as item (item.id)}
-						<article class="overflow-hidden rounded-[20px] border glass-surface">
+						<Card as="article" variant="glass" class="overflow-hidden rounded-[20px]">
 							<div class="p-5">
 								<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 									<div class="min-w-0">
 										<div class="flex flex-wrap items-center gap-2">
 											<h3 class="truncate text-lg font-semibold text-ink">{item.name}</h3>
-											<span class="rounded-full border px-2.5 py-1 text-[11px] font-medium {item.visibility === 'household' ? 'border-accent-ink/20 bg-accent/10 text-accent-ink' : 'border-line bg-surface/[0.04] text-ink-muted'}">{$t(item.visibility === 'household' ? 'Household' : 'Private')}</span>
+											<Badge class="px-2.5 py-1 text-[11px] font-medium {item.visibility === 'household' ? 'border-accent-ink/20 bg-accent/10 text-accent-ink' : 'border-line bg-surface/[0.04] text-ink-muted'} leading-[1.5] whitespace-normal">{$t(item.visibility === 'household' ? 'Household' : 'Private')}</Badge>
 										</div>
 										<p class="mt-2 text-2xl font-semibold tracking-tight text-positive">{formatMeasurement(item.quantity, item.unit)} <span class="text-base font-medium text-positive/70">{item.unit}</span></p>
 										<div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-muted">
 											{#if item.location}<span>{$t("Stored in")} {item.location}</span>{/if}
-											<span class="rounded-full border px-2 py-1 {expiryTone(item.expiry_status)}">{expiryLabel(item.expiry_status, item.best_before_on)}</span>
+											<Badge class="px-2 py-1 {expiryTone(item.expiry_status)} font-normal leading-4 whitespace-normal">{expiryLabel(item.expiry_status, item.best_before_on)}</Badge>
 										</div>
 									</div>
 									<div class="flex flex-wrap gap-2 sm:justify-end">
@@ -411,7 +414,7 @@
 									<div class="mt-5 border-t border-line pt-4">
 										<h4 class="text-sm font-semibold text-ink">{$t("Stock history")}</h4>
 										{#if historyLoading}
-											<p class="mt-3 text-xs text-ink-muted">{$t("Loading movements…")}</p>
+											<Alert variant="plain" role="status" class="mt-3 text-xs text-ink-muted">{$t("Loading movements…")}</Alert>
 										{:else if history.length === 0}
 											<p class="mt-3 text-xs text-ink-muted">{$t("No stock movements recorded.")}</p>
 										{:else}
@@ -427,7 +430,7 @@
 									</div>
 								{/if}
 							</div>
-						</article>
+						</Card>
 					{/each}
 				</div>
 			{/if}

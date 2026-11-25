@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import { panel } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -113,7 +113,7 @@
 	{#if error && note}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading note…')}</p>
+		<Alert variant="glass" class="p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading note…')}</Alert>
 	{:else if !canView}
 		<Panel><h1 class="text-lg font-semibold">{$t('Notes are not available')}</h1><p class="mt-2 text-sm leading-6 text-ink-muted">{$t('Ask a household administrator to enable Notes and grant your account View access.')}</p></Panel>
 	{:else if !note}

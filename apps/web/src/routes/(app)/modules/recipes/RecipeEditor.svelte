@@ -2,6 +2,7 @@
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import { control, field, fieldLabel, iconButton } from '#lib/ui/styles';
 	import { untrack } from 'svelte';
@@ -133,7 +134,9 @@
 	{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 	{#if recipe?.needs_review}<Notice tone="warning" message={$t('This recipe has source details to review. Blank fields are kept as provided; fill in what you know.')} class="mb-5" />{/if}
 	{#if notices.length}
-		<ul role="status" class="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm leading-normal text-warning mb-5 list-disc space-y-1 pl-8">{#each notices as notice}<li>{$t(notice)}</li>{/each}</ul>
+		<Alert variant="warning" role="status" class="mb-5 pl-8">
+			<ul class="list-disc space-y-1">{#each notices as notice}<li>{$t(notice)}</li>{/each}</ul>
+		</Alert>
 	{/if}
 
 	<form id={formId} onsubmit={save} class="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">

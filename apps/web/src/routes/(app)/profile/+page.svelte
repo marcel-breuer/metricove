@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -352,7 +354,7 @@
 
 			<Panel padding="large" class="sm:p-8">
 				{#if loading}
-					<p role="status" class="text-sm text-ink-secondary">{$t('Loading your profile…')}</p>
+					<Alert variant="plain" role="status" class="text-sm text-ink-secondary">{$t('Loading your profile…')}</Alert>
 				{:else if user}
 					<h2 class="text-xl font-semibold">{$t('Profile details')}</h2>
 					<form class="mt-6 space-y-5" onsubmit={saveProfile}>
@@ -402,7 +404,7 @@
 						</Button>
 					</form>
 				{:else}
-					<p role="alert" class="text-sm text-danger">{$t(error || 'Profile is unavailable.')}</p>
+					<Alert variant="plain" role="alert" class="text-sm text-danger">{$t(error || 'Profile is unavailable.')}</Alert>
 					<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink">{$t('Sign in')}</a>
 				{/if}
 			</Panel>
@@ -433,7 +435,7 @@
 		</section>
 
 		<section class="mb-12 grid gap-8 lg:grid-cols-2">
-			<div class="rounded-2xl border glass-surface p-6 sm:p-8">
+			<Card variant="glass" class="p-6 sm:p-8">
 				<p class="text-sm font-medium text-ink-muted">{$t('External access')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('MCP access tokens')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('Use this endpoint with a Metricove bearer token. Tokens are shown once, can expire within one year or never expire, and can be revoked here. MCP uses Metricove-managed tokens; OAuth authorization-server discovery is not provided.')}</p>
@@ -476,10 +478,10 @@
 					<p class="mt-5 rounded-lg border border-line-strong bg-page px-3 py-3 text-sm text-ink-muted">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
 				{/if}
 				{#if newSecret}
-					<div class="mt-5 rounded-xl border border-warning/30 bg-warning/10 p-4">
+					<Alert variant="warning" role="none" class="mt-5 border-warning/30 bg-warning/10 p-4">
 						<p class="text-sm font-semibold text-warning">{$t('Copy this token now. It will not be shown again.')}</p>
 						<code class="mt-3 block break-all rounded-lg bg-page p-3 text-xs text-ink">{newSecret}</code>
-					</div>
+					</Alert>
 				{/if}
 				{#if mcpMessage}<Notice tone="success" message={mcpMessage} class="mt-4" />{/if}
 				{#if mcpError}<Notice tone="error" message={mcpError} class="mt-4" />{/if}
@@ -495,10 +497,10 @@
 						</div>
 					{/each}
 				</div>
-			</div>
+			</Card>
 			{#if tokenToRevoke}<ConfirmModal bind:open={mcpRevokeOpen} title={$t('Revoke MCP token?')} message={$t('Revoke the token {name}?', { name: tokenToRevoke.name })} confirmLabel={$t('Revoke')} busy={mcpBusy} onConfirm={async () => { if (await revokeMcpToken(tokenToRevoke!.id)) { mcpRevokeOpen = false; tokenToRevoke = null; } }} />{/if}
 
-			<div class="rounded-2xl border glass-surface p-6 sm:p-8">
+			<Card variant="glass" class="p-6 sm:p-8">
 				<p class="text-sm font-medium text-ink-muted">{$t('Human approval')}</p>
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
@@ -506,14 +508,14 @@
 					{#if mcpActions.length === 0}<p class="rounded-lg border border-line bg-page px-3 py-3 text-sm text-ink-muted">{$t('No pending actions.')}</p>{/if}
 					{#each mcpActions as action}
 						<article class="rounded-xl border border-line bg-page p-4">
-							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-ink">{action.meter ?? $t(action.action)}</h3><span class="rounded-full border border-accent-ink/20 bg-accent/10 px-2.5 py-1 text-xs text-accent-ink">{action.state}</span></div>
+							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-ink">{action.meter ?? $t(action.action)}</h3><Badge class="border-accent-ink/20 bg-accent/10 px-2.5 py-1 text-accent-ink font-normal leading-4 whitespace-normal">{action.state}</Badge></div>
 							{#if action.meter}<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-ink-subtle">{$t('Date')}</dt><dd class="mt-1 text-ink-secondary">{formatDate(action.reading_date ?? '')}</dd></div><div><dt class="text-ink-subtle">{$t('Reading')}</dt><dd class="mt-1 text-ink-secondary">{formatMeasurement(action.value ?? '', action.unit ?? '')} {action.unit}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-ink-subtle">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-ink-secondary">{action.note}</dd></div>{/if}</dl>{:else}<dl class="mt-4 space-y-2 text-sm">{#each Object.entries(action.details ?? {}) as [key, value]}<div class="grid grid-cols-[minmax(0,8rem)_1fr] gap-3"><dt class="break-words text-ink-subtle">{approvalFieldLabel(key)}</dt><dd class="break-words text-ink-secondary">{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>{/each}</dl>{/if}
 							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div class="col-span-2"><dt class="text-ink-subtle">{$t('Requested by')}</dt><dd class="mt-1 text-ink-secondary">{action.token_name}</dd></div><div class="col-span-2"><dt class="text-ink-subtle">{$t('Expires')}</dt><dd class="mt-1 text-ink-secondary">{formatDateTime(action.expires_at)}</dd></div></dl>
 							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-positive">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Cancel approval')}</button>{/if}
 						</article>
 					{/each}
 				</div>
-			</div>
+			</Card>
 		</section>
 	</div>
 </section>

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import { control } from '#lib/ui/styles';
@@ -436,7 +439,7 @@
 			</div>
 
 			{#if loading}
-				<p class="mt-6 text-sm text-ink-muted">{$t('Loading tasks…')}</p>
+				<Alert variant="plain" role="status" class="mt-6 text-sm text-ink-muted">{$t('Loading tasks…')}</Alert>
 			{:else if tasks.length === 0}
 				<div class="mt-6 rounded-2xl border border-dashed border-line-strong px-5 py-8 text-center"><p class="text-base font-semibold text-ink">{$t('Nothing on the list yet.')}</p><p class="mt-2 text-sm text-ink-muted">{$t('Add a household task or adjust your filters.')}</p></div>
 			{:else}
@@ -445,7 +448,7 @@
 						<li id="task-{task.id}" class="rounded-2xl border border-line bg-page p-4 sm:p-5">
 							<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-2"><h3 class="text-base font-semibold text-ink">{task.title}</h3><span class="rounded-full px-2.5 py-1 text-xs font-medium {task.priority === 'high' ? 'bg-danger/10 text-danger' : task.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-surface-subtle text-ink-secondary'}">{$t(task.priority[0].toUpperCase() + task.priority.slice(1))}</span><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-secondary">{$t(task.visibility === 'private' ? 'Private' : 'Shared')}</span>{#if task.is_completed}<span class="rounded-full bg-positive/10 px-2.5 py-1 text-xs text-positive">{$t('Completed')}</span>{/if}</div>
+									<div class="flex flex-wrap items-center gap-2"><h3 class="text-base font-semibold text-ink">{task.title}</h3><Badge class="px-2.5 py-1 font-medium {task.priority === 'high' ? 'bg-danger/10 text-danger' : task.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-surface-subtle text-ink-secondary'} border-0 leading-4 whitespace-normal">{$t(task.priority[0].toUpperCase() + task.priority.slice(1))}</Badge><Badge class="border-line-strong px-2.5 py-1 text-ink-secondary font-normal leading-4 whitespace-normal">{$t(task.visibility === 'private' ? 'Private' : 'Shared')}</Badge>{#if task.is_completed}<Badge class="bg-positive/10 px-2.5 py-1 text-positive border-0 font-normal leading-4 whitespace-normal">{$t('Completed')}</Badge>{/if}</div>
 									{#if task.description}<Markdown class="mt-2 text-sm leading-6 text-ink-secondary" value={task.description} />{/if}
 									<div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-ink-muted">
 						{#if task.due_at}<span>{$t('Due')} {formatDateTime(task.due_at)}</span>{:else}<span>{$t('No due date')}</span>{/if}
@@ -468,7 +471,7 @@
 									{#if task.checklist_items.length === 0}<p class="mt-2 text-sm text-ink-muted">{$t('No checklist items yet.')}</p>{/if}
 									<ol class="mt-3 space-y-3">
 										{#each task.checklist_items as item, index (item.id)}
-											<li id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl border glass-surface p-3">
+											<Card as="li" variant="glass" id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl p-3">
 												{#if editingChecklistItemId === item.id}
 													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
 														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="{control}" /></label>
@@ -485,7 +488,7 @@
 														{#if task.can_edit_checklist && !task.is_completed}<div class="flex flex-wrap gap-1"><Button variant="ghost" size="small" aria-label={$t('Move up')} disabled={index === 0} onclick={() => void moveChecklistItem(task, item, -1)}>↑</Button><Button variant="ghost" size="small" aria-label={$t('Move down')} disabled={index === task.checklist_items.length - 1} onclick={() => void moveChecklistItem(task, item, 1)}>↓</Button><Button variant="ghost" size="small" onclick={() => editChecklistItem(item)}>{$t('Edit')}</Button><Button variant="danger" size="small" onclick={() => { checklistDeleteTarget = { task, item }; checklistDeleteOpen = true; }}>{$t('Delete')}</Button></div>{/if}
 													</div>
 												{/if}
-											</li>
+											</Card>
 										{/each}
 									</ol>
 									{#if task.can_edit_checklist && !task.is_completed}

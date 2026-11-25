@@ -2,6 +2,7 @@
 	import Button from '#lib/ui/Button.svelte';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { goto } from '$app/navigation';
 	import { t } from '#lib/i18n';
@@ -88,7 +89,7 @@
 			Metricove
 		</a>
 
-		<section class="my-auto rounded-[20px] border glass-surface p-6 sm:p-8">
+		<Card as="section" variant="glass" class="my-auto rounded-[20px] p-6 sm:p-8">
 			<p class="text-sm font-medium text-ink-muted">{$t("Household invitation")}</p>
 			<h1 id="invitation-form-heading" class="mt-3 text-3xl font-semibold tracking-tight">{$t("Create your account")}</h1>
 			<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t("Choose the name and password you want to use for your Metricove account.")}</p>
@@ -122,7 +123,7 @@
 			{:else}
 				<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink hover:text-accent-ink">{$t("Return to sign in")}</a>
 			{/if}
-		</section>
+		</Card>
 
 		<footer class="border-t border-line pt-5 text-sm text-ink-subtle">{$t("The invitation link expires according to this household's settings and cannot be reused.")}</footer>
 	</div>

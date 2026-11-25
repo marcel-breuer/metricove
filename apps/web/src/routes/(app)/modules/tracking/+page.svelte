@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import MarkdownInline from '#lib/ui/MarkdownInline.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
@@ -195,14 +197,14 @@
 				<button type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 rounded-xl border glass-surface px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</p>
+				<Alert variant="glass" role="status" class="mt-5 rounded-xl px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</Alert>
 			{:else if trackers.length === 0}
-				<div class="mt-5 rounded-[20px] border glass-surface p-6 sm:p-8">
+				<Card variant="glass" class="mt-5 rounded-[20px] p-6 sm:p-8">
 					<h3 class="text-lg font-semibold text-ink">{$t("No trackers yet.")}</h3>
 					<p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Create a private tracker for yourself, or ask an administrator to create a household template. Existing measurements are never visible to administrators unless their owner shares them.")}</p>
-				</div>
+				</Card>
 			{:else}
-				<ul class="mt-5 divide-y divide-line rounded-[20px] border glass-surface">
+				<Card as="ul" variant="glass" class="mt-5 divide-y divide-line rounded-[20px]">
 					{#each trackers as tracker (tracker.id)}
 						<li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 							<a href={'/modules/tracking/' + tracker.id} class="group flex min-h-16 min-w-0 flex-1 flex-col gap-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:flex-row sm:items-center sm:justify-between">
@@ -219,14 +221,14 @@
 							{#if tracker.can_manage_schema}<button type="button" disabled={deletingTrackerId === tracker.id} onclick={() => { trackerToDelete = tracker; deleteModalOpen = true; }} class="min-h-10 shrink-0 rounded-lg border border-danger/20 px-3 text-sm font-medium text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</button>{/if}
 						</li>
 					{/each}
-				</ul>
+				</Card>
 			{/if}
 		</section>
 	{:else}
-		<div class="mt-8 rounded-2xl border border-warning/20 bg-warning/5 p-5 text-sm leading-6 text-warning">
+		<Alert variant="warning" role="none" class="mt-8 rounded-2xl border-warning/20 bg-warning/5 p-5 leading-6">
 			<p class="font-semibold">{$t("View access is not enabled.")}</p>
 			<p class="mt-1 text-warning/75">{$t("You can create a tracker if you have create access, but browsing schemas and histories requires an explicit View grant.")}</p>
-		</div>
+		</Alert>
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
@@ -255,7 +257,7 @@
 					</div>
 					<ol class="mt-4 space-y-4">
 						{#each fields as field, index (field.local_key)}
-							<li class="rounded-xl border border-line bg-page p-4">
+							<Card as="li" variant="inset" class="p-4">
 								<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_auto]">
 									<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}
 										<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Steps")} />
@@ -283,7 +285,7 @@
 										<label class="block text-xs font-medium text-ink-muted">{$t("Maximum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label>
 									</div>
 								{/if}
-							</li>
+							</Card>
 						{/each}
 					</ol>
 				</div>
@@ -300,6 +302,6 @@
 		</Modal>
 		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}
 	{:else}
-		<p class="mt-8 rounded-xl border glass-surface px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</p>
+		<Card as="p" variant="glass" class="mt-8 rounded-xl px-4 py-5 text-sm leading-6 text-ink-muted">{$t("Your account does not have permission to create a tracker. Ask an administrator for create access.")}</Card>
 	{/if}
 </section>

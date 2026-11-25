@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -212,7 +215,7 @@
 			<Notice tone="error" message={error} class="mt-8" />
 		{/if}
 
-		<section class="mt-10 rounded-[20px] border glass-surface p-5 sm:p-8" aria-labelledby="members-heading">
+		<Card as="section" variant="glass" class="mt-10 rounded-[20px] p-5 sm:p-8" aria-labelledby="members-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
@@ -222,7 +225,7 @@
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading members…")}</p>
+				<Alert variant="plain" role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading members…")}</Alert>
 			{:else if members.length === 0}
 				<p class="mt-6 text-sm text-ink-muted">{$t("There are no household members to show.")}</p>
 			{:else}
@@ -233,8 +236,8 @@
 								<p class="break-words text-base font-semibold text-ink">{member.name}{$t(member.id === me?.id ? ' · You' : '')}</p>
 								<p class="mt-1 break-all text-sm text-ink-muted">{member.email}</p>
 								<div class="mt-3 flex flex-wrap gap-2">
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_admin ? 'border-accent-ink/30 bg-accent/10 text-accent-ink' : 'border-line-strong text-ink-secondary'}">{$t(member.is_admin ? 'Administrator' : 'Member')}</span>
-									<span class="rounded-full border px-2.5 py-1 text-xs font-medium {member.is_active ? 'border-positive/30 bg-positive/10 text-positive' : 'border-warning/30 bg-warning/10 text-warning'}">{$t(member.is_active ? 'Active' : 'Suspended')}</span>
+									<Badge class="px-2.5 py-1 font-medium {member.is_admin ? 'border-accent-ink/30 bg-accent/10 text-accent-ink' : 'border-line-strong text-ink-secondary'} leading-4 whitespace-normal">{$t(member.is_admin ? 'Administrator' : 'Member')}</Badge>
+									<Badge class="px-2.5 py-1 font-medium {member.is_active ? 'border-positive/30 bg-positive/10 text-positive' : 'border-warning/30 bg-warning/10 text-warning'} leading-4 whitespace-normal">{$t(member.is_active ? 'Active' : 'Suspended')}</Badge>
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-2 lg:justify-end">
@@ -247,16 +250,16 @@
 					{/each}
 				</ul>
 			{/if}
-	</section>
+	</Card>
 	{#if memberToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove household member?')} message={$t('Remove {name} from this household? This cannot be undone.', { name: memberToRemove.name })} busy={busy} confirmLabel={$t('Remove')} onConfirm={() => void removeMember(memberToRemove!)} />{/if}
 
-		<section class="mt-8 rounded-[20px] border glass-surface p-5 sm:p-8" aria-labelledby="audit-heading">
+		<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-8" aria-labelledby="audit-heading">
 			<div>
 				<h2 id="audit-heading" class="text-xl font-semibold">{$t("Recent access history")}</h2>
 				<p class="mt-1 text-sm text-ink-muted">{$t("The latest 100 role and account status changes.")}</p>
 			</div>
 			{#if loading}
-				<p role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading access history…")}</p>
+				<Alert variant="plain" role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading access history…")}</Alert>
 			{:else if events.length === 0}
 				<p class="mt-5 text-sm text-ink-muted">{$t("No member changes have been recorded.")}</p>
 			{:else}
@@ -272,7 +275,7 @@
 					{/each}
 				</ol>
 			{/if}
-		</section>
+		</Card>
 
 	</div>
 </section>

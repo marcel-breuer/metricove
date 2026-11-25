@@ -2,6 +2,8 @@
 	import Button from '#lib/ui/Button.svelte';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -172,12 +174,12 @@
 			</div>
 
 			<div class="space-y-6">
-				<section class="rounded-2xl border glass-surface p-6 sm:p-8" aria-labelledby="invite-heading">
+				<Card as="section" variant="glass" class="p-6 sm:p-8" aria-labelledby="invite-heading">
 					<h2 id="invite-heading" class="text-xl font-semibold">{$t("Send an invitation")}</h2>
 					<Button type="button" onclick={() => (createOpen = true)} class="mt-5 rounded-lg py-3 hover:not-disabled:bg-accent/90 hover:not-disabled:brightness-100">{$t("Send an invitation")}</Button>
 					{#if message}<Notice tone="success" message={message} class="mt-4" />{/if}
 					{#if error}<Notice tone="error" message={error} class="mt-4" />{/if}
-				</section>
+				</Card>
 				<Modal bind:open={createOpen} title={$t("Send an invitation")} description={$t("Send an invitation using only their email address. They will choose their own name and password.")}>
 					<form class="space-y-5" onsubmit={createInvitation}>
 						<div>
@@ -191,13 +193,13 @@
 					</form>
 				</Modal>
 
-				<section class="rounded-2xl border glass-surface p-6 sm:p-8" aria-labelledby="pending-heading">
+				<Card as="section" variant="glass" class="p-6 sm:p-8" aria-labelledby="pending-heading">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<h2 id="pending-heading" class="text-xl font-semibold">{$t("Pending invitations")}</h2>
 						<Button type="button" onclick={() => void loadInvitations()} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-sm font-medium shadow-none hover:not-disabled:border-accent-ink">{$t("Refresh")}</Button>
 					</div>
 					{#if loading}
-						<p role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading invitations…")}</p>
+						<Alert variant="plain" role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading invitations…")}</Alert>
 					{:else if invitations.length === 0}
 						<p class="mt-5 text-sm text-ink-muted">{$t("There are no pending invitations.")}</p>
 					{:else}
@@ -216,7 +218,7 @@
 							{/each}
 						</ul>
 					{/if}
-				</section>
+				</Card>
 				{#if invitationToRevoke}<ConfirmModal bind:open={revokeOpen} title={$t('Revoke invitation?')} message={$t('Revoke the invitation sent to {email}?', { email: invitationToRevoke.email })} confirmLabel={$t('Revoke')} busy={busy} onConfirm={() => void updateInvitation(invitationToRevoke!, 'revoke')} />{/if}
 			</div>
 		</section>

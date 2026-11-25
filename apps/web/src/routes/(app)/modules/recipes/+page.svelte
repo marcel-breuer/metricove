@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
-	import { control, fieldLabel, iconButton, panel } from '#lib/ui/styles';
+	import { control, fieldLabel, iconButton } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import EmptyState from '#lib/ui/EmptyState.svelte';
@@ -187,7 +189,7 @@
 
 		<h2 id="recipe-list-title" class="sr-only">{$t("Your recipes")}</h2>
 		{#if loading}
-			<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted">{$t("Loading recipes…")}</p>
+			<Alert variant="glass" role="status" class="p-5 max-sm:p-4 text-sm text-ink-muted">{$t("Loading recipes…")}</Alert>
 		{:else if !canView}
 			<Notice tone="info" message="Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission." />
 		{:else if visibleRecipes.length === 0}
@@ -202,7 +204,7 @@
 		{:else}
 			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{#each visibleRecipes as recipe (recipe.id)}
-					<li class="{panel} flex min-w-0 flex-col overflow-hidden">
+					<Card as="li" variant="glass" class="flex min-w-0 flex-col overflow-hidden">
 						{#if recipe.photo_url}{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="flex aspect-[16/9] items-center gap-3 border-b border-line bg-surface-subtle px-5 text-sm font-medium text-ink-secondary hover:text-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}{/if}
 						<div class="flex flex-1 flex-col gap-3 p-5">
 							<div class="flex items-start justify-between gap-3">
@@ -227,7 +229,7 @@
 								<Button href="/modules/recipes/{recipe.id}" variant="secondary" size="small">{$t('Show recipe')}</Button>
 							</div>
 						</div>
-					</li>
+					</Card>
 				{/each}
 			</ul>
 		{/if}

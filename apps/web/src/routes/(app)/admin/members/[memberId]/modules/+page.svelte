@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -140,9 +143,9 @@
 			</div>
 
 			{#if loading}
-				<p role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading module rights…")}</p>
+				<Alert variant="plain" role="status" class="mt-6 text-sm text-ink-secondary">{$t("Loading module rights…")}</Alert>
 			{:else if modules.length === 0}
-				<p class="mt-6 rounded-xl border glass-surface p-5 text-sm text-ink-muted">{$t("No optional modules are registered.")}</p>
+				<Card as="p" variant="glass" class="mt-6 rounded-xl p-5 text-sm text-ink-muted">{$t("No optional modules are registered.")}</Card>
 			{:else}
 				<ul class="mt-5 grid gap-4 md:grid-cols-2">
 					{#each modules as module (module.key)}
@@ -153,7 +156,7 @@
 									<h3 class="text-lg font-semibold">{$t(module.label)}</h3>
 									<p class="mt-2 text-sm leading-6 text-ink-secondary">{$t(module.description)}</p>
 								</div>
-								<span class="rounded-full border px-2.5 py-1 text-xs font-medium {module.enabled ? 'border-positive/30 bg-positive/10 text-positive' : 'border-line-strong bg-page text-ink-secondary'}">{$t(module.enabled ? 'Enabled' : 'Disabled')}</span>
+								<Badge class="px-2.5 py-1 font-medium {module.enabled ? 'border-positive/30 bg-positive/10 text-positive' : 'border-line-strong bg-page text-ink-secondary'} leading-4 whitespace-normal">{$t(module.enabled ? 'Enabled' : 'Disabled')}</Badge>
 							</div>
 							{#if !module.enabled}
 								<p class="mt-3 text-xs text-ink-subtle">{$t("Rights stay stored while disabled. Enabling the module resets all active members to full capabilities.")}</p>
