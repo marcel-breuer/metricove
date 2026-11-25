@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { fileInput } from '#lib/ui/styles';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import Button from '#lib/ui/Button.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
@@ -47,9 +50,9 @@
 	let categoryFilter = $state('');
 	let sharingStatusFilter = $state('');
 	let selectedFile = $state<File | null>(null);
-	let pdfInput = $state<HTMLInputElement>();
-	let cameraInput = $state<HTMLInputElement>();
-	let photosInput = $state<HTMLInputElement>();
+	let pdfInput = $state<HTMLInputElement | null>(null);
+	let cameraInput = $state<HTMLInputElement | null>(null);
+	let photosInput = $state<HTMLInputElement | null>(null);
 	let photoPages = $state<File[]>([]);
 	let preparingScan = $state(false);
 	let filePreviewUrl = $state('');
@@ -266,18 +269,17 @@
 		if (file) filePreviewUrl = URL.createObjectURL(file);
 	}
 
-	function needsReview(field: string): boolean {
-		return reviewRequired.includes(field as ReceiptField);
+	function needsReview(field: ReceiptField): boolean {
+		return reviewRequired.includes(field);
 	}
 
-	function isFieldReviewed(field: string): boolean {
-		return reviewedFields.includes(field as ReceiptField);
+	function isFieldReviewed(field: ReceiptField): boolean {
+		return reviewedFields.includes(field);
 	}
 
-	function setFieldReview(field: string, event: Event): void {
-		const checked = (event.currentTarget as HTMLInputElement).checked;
+	function setFieldReview(field: ReceiptField, checked: boolean): void {
 		reviewedFields = checked
-			? [...new Set([...reviewedFields, field as ReceiptField])]
+			? [...new Set([...reviewedFields, field])]
 			: reviewedFields.filter((candidate) => candidate !== field);
 	}
 
@@ -585,6 +587,25 @@
 	<title>{$t('Receipts')} — Metricove</title>
 </svelte:head>
 
+{#snippet fieldReview(field: ReceiptField, value: string)}
+	{#if needsReview(field)}
+		<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+			<span>{$t(fieldStatusLabel(field))}</span>
+			<div class="mt-2 flex items-start gap-2">
+				<Checkbox
+					id="receipt-reviewed-{field}"
+					checked={isFieldReviewed(field)}
+					onCheckedChange={(checked) => setFieldReview(field, checked)}
+					class="mt-0.5"
+				/>
+				<Label for="receipt-reviewed-{field}" variant="field" class="block text-xs! text-warning!">
+					{$t(fieldReviewPrompt(value))}
+				</Label>
+			</div>
+		</div>
+	{/if}
+{/snippet}
+
 <section class="mx-auto max-w-6xl space-y-6">
 	<PageHeading eyebrow="Private documents" title="Receipts" description="Upload a receipt or invoice, review the extracted details, then archive it or create a matching entry." />
 
@@ -599,15 +620,15 @@
 			</div>
 			<form class="space-y-5" onsubmit={previewFile}>
 				<div class="grid gap-3 sm:grid-cols-3">
-					<label class="block text-sm font-medium text-ink-secondary">{$t('Choose a PDF')}
-						<input bind:this={pdfInput} type="file" accept="application/pdf,.pdf" onchange={choosePdf} class="{fileInput} mt-2" />
-					</label>
-					<label class="block text-sm font-medium text-ink-secondary">{$t('Take a photo page')}
-						<input bind:this={cameraInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" onchange={addPhotoPages} class="{fileInput} mt-2" />
-					</label>
-					<label class="block text-sm font-medium text-ink-secondary">{$t('Add photo pages')}
-						<input bind:this={photosInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple onchange={addPhotoPages} class="{fileInput} mt-2" />
-					</label>
+					<Label variant="field" class="block text-sm font-medium text-ink-secondary">{$t('Choose a PDF')}
+						<Input variant="file" bind:ref={pdfInput} type="file" accept="application/pdf,.pdf" onchange={choosePdf} class="mt-2" />
+					</Label>
+					<Label variant="field" class="block text-sm font-medium text-ink-secondary">{$t('Take a photo page')}
+						<Input variant="file" bind:ref={cameraInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" capture="environment" onchange={addPhotoPages} class="mt-2" />
+					</Label>
+					<Label variant="field" class="block text-sm font-medium text-ink-secondary">{$t('Add photo pages')}
+						<Input variant="file" bind:ref={photosInput} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple onchange={addPhotoPages} class="mt-2" />
+					</Label>
 				</div>
 				<p class="mt-2 text-xs leading-5 text-ink-subtle">{$t('PDF up to 10 MB and 5 pages. Add up to 5 JPEG, PNG or iPhone HEIC photo pages; they are converted and combined on this device.')}</p>
 				{#if photoPages.length > 0}
@@ -615,7 +636,7 @@
 						<p class="text-sm font-medium text-ink-secondary">{$t('Scan pages')} ({photoPages.length}/{receiptPageLimit})</p>
 						<ol class="mt-2 space-y-2">
 							{#each photoPages as photo, index (photo.name + index)}
-								<li class="flex items-center justify-between gap-3 text-sm text-ink-secondary"><span class="truncate">{index + 1}. {photo.name}</span><button type="button" onclick={() => void removePhotoPage(index)} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:border-line-strong" aria-label={$t('Remove page')}>{$t('Remove')}</button></li>
+								<li class="flex items-center justify-between gap-3 text-sm text-ink-secondary"><span class="truncate">{index + 1}. {photo.name}</span><Button type="button" onclick={() => void removePhotoPage(index)} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-xs shadow-none" aria-label={$t('Remove page')}>{$t('Remove')}</Button></li>
 							{/each}
 						</ol>
 						{#if preparingScan}<p role="status" class="mt-2 text-xs text-accent-ink">{$t('Preparing scan locally…')}</p>{/if}
@@ -626,9 +647,9 @@
 						<iframe title={$t('Invoice preview')} src={filePreviewUrl} class="h-[28rem] w-full rounded-lg bg-surface"></iframe>
 					</div>
 				{/if}
-				<button type="submit" disabled={previewing || preparingScan || !selectedFile} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-wait disabled:opacity-60">
+				<Button type="submit" disabled={previewing || preparingScan || !selectedFile} class="rounded-xl px-5 disabled:cursor-wait disabled:opacity-60">
 					{$t(previewing ? 'Reading invoice locally…' : 'Preview invoice')}
-				</button>
+				</Button>
 			</form>
 
 			{#if preview && !reviewOpen}
@@ -648,76 +669,85 @@
 						{/if}
 						<form id="receipt-review-form" class="min-w-0 space-y-5" onsubmit={confirmReceipt}>
 							<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Entry type')}
-									<select bind:value={targetType} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">
+								<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-entry-type" class="block">{$t('Entry type')}</Label>
+									<NativeSelect.Root variant="glass" id="receipt-entry-type" bind:value={targetType} class="mt-2">
 										{#each availableTargetOptions as option}
-											<option value={option.value}>{$t(option.label)}</option>
+											<NativeSelect.Option value={option.value}>{$t(option.label)}</NativeSelect.Option>
 										{/each}
-									</select>
-								</label>
+									</NativeSelect.Root>
+								</div>
 								{#if targetType === 'vehicle'}
-									<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle')}
-										<select bind:value={vehicleId} required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">
+									<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-entry-vehicle" class="block">{$t('Vehicle')}</Label>
+										<NativeSelect.Root variant="glass" id="receipt-entry-vehicle" bind:value={vehicleId} required class="mt-2">
 											{#each options.vehicles as vehicle (vehicle.id)}
-												<option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</option>
+												<NativeSelect.Option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</NativeSelect.Option>
 											{/each}
-										</select>
-									</label>
-									<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle cost category')}
-										<select bind:value={vehicleCategory} required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">
+										</NativeSelect.Root>
+									</div>
+									<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-entry-vehicle-category" class="block">{$t('Vehicle cost category')}</Label>
+										<NativeSelect.Root variant="glass" id="receipt-entry-vehicle-category" bind:value={vehicleCategory} required class="mt-2">
 											{#each vehicleCostCategories as category (category.value)}
-												<option value={category.value}>{$t(category.label)}</option>
+												<NativeSelect.Option value={category.value}>{$t(category.label)}</NativeSelect.Option>
 											{/each}
-										</select>
-									</label>
+										</NativeSelect.Root>
+									</div>
 								{/if}
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Description')}
-									<input bind:value={description} required maxlength="200" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Merchant')}
-									<input bind:value={merchant} oninput={() => clearFieldReview('merchant')} maxlength="200" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-									{#if needsReview('merchant')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('merchant'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('merchant')} onchange={(event) => setFieldReview('merchant', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(merchant))}</span></label></div>{/if}
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice number')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-									<input bind:value={invoiceNumber} oninput={() => clearFieldReview('invoice_number')} maxlength="100" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-									{#if needsReview('invoice_number')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('invoice_number'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_number')} onchange={(event) => setFieldReview('invoice_number', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(invoiceNumber))}</span></label></div>{/if}
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice date')}
-									<input bind:value={invoiceDate} oninput={() => clearFieldReview('invoice_date')} type="date" required class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-									{#if needsReview('invoice_date')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('invoice_date'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('invoice_date')} onchange={(event) => setFieldReview('invoice_date', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(invoiceDate))}</span></label></div>{/if}
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Total amount')}
-									<input bind:value={amount} oninput={() => { clearFieldReview('amount'); updateReceiptFuelCalculation('amount'); }} required inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" placeholder={formatDecimalInput('125.00', $numberLocale)} />
-									{#if needsReview('amount')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('amount')} onchange={(event) => setFieldReview('amount', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(amount))}</span></label></div>{/if}
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Currency')}
-									<input bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength="3" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" placeholder="EUR" />
-									{#if needsReview('currency')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('currency'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('currency')} onchange={(event) => setFieldReview('currency', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(currency))}</span></label></div>{/if}
-								</label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t('Tax amount')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-									<input bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" placeholder={formatDecimalInput('19.00', $numberLocale)} />
-									{#if needsReview('tax_amount')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('tax_amount'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('tax_amount')} onchange={(event) => setFieldReview('tax_amount', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(taxAmount))}</span></label></div>{/if}
-								</label>
+								<Label variant="field" class="block text-sm font-medium text-ink-secondary">{$t('Description')}
+									<Input variant="glass" bind:value={description} required maxlength={200} class="mt-2" />
+								</Label>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-merchant" class="block text-sm font-medium text-ink-secondary">{$t('Merchant')}</Label>
+									<Input variant="glass" id="receipt-merchant" bind:value={merchant} oninput={() => clearFieldReview('merchant')} maxlength={200} class="mt-2" />
+									{@render fieldReview('merchant', merchant)}
+								</div>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-invoice-number" class="block text-sm font-medium text-ink-secondary">{$t('Invoice number')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span></Label>
+									<Input variant="glass" id="receipt-invoice-number" bind:value={invoiceNumber} oninput={() => clearFieldReview('invoice_number')} maxlength={100} class="mt-2" />
+									{@render fieldReview('invoice_number', invoiceNumber)}
+								</div>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-invoice-date" class="block text-sm font-medium text-ink-secondary">{$t('Invoice date')}</Label>
+									<Input variant="glass" id="receipt-invoice-date" bind:value={invoiceDate} oninput={() => clearFieldReview('invoice_date')} type="date" required class="mt-2" />
+									{@render fieldReview('invoice_date', invoiceDate)}
+								</div>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-amount" class="block text-sm font-medium text-ink-secondary">{$t('Total amount')}</Label>
+									<Input variant="glass" id="receipt-amount" bind:value={amount} oninput={() => { clearFieldReview('amount'); updateReceiptFuelCalculation('amount'); }} required inputmode="decimal" class="mt-2" placeholder={formatDecimalInput('125.00', $numberLocale)} />
+									{@render fieldReview('amount', amount)}
+								</div>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-currency" class="block text-sm font-medium text-ink-secondary">{$t('Currency')}</Label>
+									<Input variant="glass" id="receipt-currency" bind:value={currency} oninput={() => clearFieldReview('currency')} required maxlength={3} class="mt-2" placeholder="EUR" />
+									{@render fieldReview('currency', currency)}
+								</div>
+								<div class="min-w-0 font-[550]">
+									<Label variant="field" for="receipt-tax-amount" class="block text-sm font-medium text-ink-secondary">{$t('Tax amount')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span></Label>
+									<Input variant="glass" id="receipt-tax-amount" bind:value={taxAmount} oninput={() => clearFieldReview('tax_amount')} inputmode="decimal" class="mt-2" placeholder={formatDecimalInput('19.00', $numberLocale)} />
+									{@render fieldReview('tax_amount', taxAmount)}
+								</div>
 							</div>
 							{#if showFuelFields}
 								<fieldset class="rounded-xl border border-line bg-page p-4">
 									<legend class="px-2 text-sm font-semibold text-ink-secondary">{$t('Fuel details')}</legend>
 									<p class="mb-3 text-xs leading-5 text-ink-muted">{$t('Review liters and unit price before saving. Odometer is optional.')}</p>
 									<div class="grid gap-4 sm:grid-cols-3">
-										<label class="block text-sm font-medium text-ink-secondary">{$t('Fuel quantity (liters)')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-										<input bind:value={fuelLiters} oninput={() => { clearFieldReview('fuel_liters'); updateReceiptFuelCalculation('fuel_liters'); }} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-										{#if needsReview('fuel_liters')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_liters'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_liters')} onchange={(event) => setFieldReview('fuel_liters', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelLiters))}</span></label></div>{/if}
-										</label>
-										<label class="block text-sm font-medium text-ink-secondary">{$t('Price per liter')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-										<input bind:value={fuelUnitPrice} oninput={() => { clearFieldReview('fuel_unit_price'); updateReceiptFuelCalculation('fuel_unit_price'); }} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-										{#if needsReview('fuel_unit_price')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_unit_price'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_unit_price')} onchange={(event) => setFieldReview('fuel_unit_price', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelUnitPrice))}</span></label></div>{/if}
-										</label>
-										<label class="block text-sm font-medium text-ink-secondary">{$t('Odometer reading')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span>
-										<input bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-page px-3 text-sm text-ink" />
-										{#if needsReview('fuel_odometer_value')}<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning"><span>{$t(fieldStatusLabel('fuel_odometer_value'))}</span><label class="mt-2 flex items-start gap-2"><input type="checkbox" checked={isFieldReviewed('fuel_odometer_value')} onchange={(event) => setFieldReview('fuel_odometer_value', event)} class="mt-0.5 accent-accent" /><span>{$t(fieldReviewPrompt(fuelOdometerValue))}</span></label></div>{/if}
-										</label>
+										<div class="min-w-0">
+										<Label variant="field" for="receipt-fuel-liters" class="block text-sm font-medium text-ink-secondary">{$t('Fuel quantity (liters)')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span></Label>
+										<Input variant="glass" id="receipt-fuel-liters" bind:value={fuelLiters} oninput={() => { clearFieldReview('fuel_liters'); updateReceiptFuelCalculation('fuel_liters'); }} type="text" inputmode="decimal" class="mt-2" />
+										{@render fieldReview('fuel_liters', fuelLiters)}
+										</div>
+										<div class="min-w-0">
+										<Label variant="field" for="receipt-fuel-unit-price" class="block text-sm font-medium text-ink-secondary">{$t('Price per liter')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span></Label>
+										<Input variant="glass" id="receipt-fuel-unit-price" bind:value={fuelUnitPrice} oninput={() => { clearFieldReview('fuel_unit_price'); updateReceiptFuelCalculation('fuel_unit_price'); }} type="text" inputmode="decimal" class="mt-2" />
+										{@render fieldReview('fuel_unit_price', fuelUnitPrice)}
+										</div>
+										<div class="min-w-0">
+										<Label variant="field" for="receipt-fuel-odometer-value" class="block text-sm font-medium text-ink-secondary">{$t('Odometer reading')} <span class="font-normal text-ink-subtle">{$t('Optional')}</span></Label>
+										<Input variant="glass" id="receipt-fuel-odometer-value" bind:value={fuelOdometerValue} oninput={() => clearFieldReview('fuel_odometer_value')} type="text" inputmode="decimal" class="mt-2" />
+										{@render fieldReview('fuel_odometer_value', fuelOdometerValue)}
+										</div>
 									</div>
-									{#if targetType === 'vehicle' && vehicleCategory === 'fuel'}<label class="mt-3 flex items-start gap-2 text-sm text-ink-secondary"><input bind:checked={fuelFullTank} type="checkbox" class="mt-1 accent-accent" /><span><span class="font-medium">{$t('Full tank')}</span><span class="mt-1 block text-xs leading-5 text-ink-muted">{$t('Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.')}</span></span></label>{/if}
+									{#if targetType === 'vehicle' && vehicleCategory === 'fuel'}<div class="mt-3 flex items-start gap-2 text-sm text-ink-secondary"><Checkbox id="receipt-fuel-full-tank" bind:checked={fuelFullTank} class="mt-1" /><Label variant="field" for="receipt-fuel-full-tank" class="block"><span class="font-medium">{$t('Full tank')}</span><span class="mt-1 block text-xs leading-5 text-ink-muted">{$t('Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.')}</span></Label></div>{/if}
 									{#if calculatedFuelField}<p class="mt-3 text-xs text-ink-muted" role="status">{$t('Calculated from the other two values.')}</p>{/if}
 									{#if fuelCalculatedTotal !== null && currency.length === 3}
 										<p class="mt-3 text-sm text-ink-secondary">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal, currency)}</p>
@@ -729,7 +759,7 @@
 								<div class="rounded-xl border border-warning/40 bg-warning/10 p-4" role="status">
 									<h4 class="font-semibold text-warning">{$t('Possible duplicate receipts')}</h4>
 									<ul class="mt-2 space-y-1 text-sm text-warning/90">{#each duplicateMatches as duplicate (duplicate.id)}<li>{duplicate.merchant ?? $t('Invoice')} · {formatDate(duplicate.invoice_date)} · {formatCurrency(duplicate.amount, duplicate.currency)} ({$t(duplicate.reasons.includes('identical_file') ? 'Identical file' : duplicate.reasons.includes('merchant_invoice_number') ? 'Same merchant and invoice number' : 'Same merchant, date and total')})</li>{/each}</ul>
-									<label class="mt-3 flex items-start gap-2 text-sm text-warning"><input type="checkbox" bind:checked={duplicateAcknowledged} class="mt-0.5 accent-accent" /><span>{$t('I reviewed the warning and want to save this receipt anyway.')}</span></label>
+									<div class="mt-3 flex items-start gap-2 text-sm text-warning"><Checkbox id="receipt-duplicate-acknowledgment" bind:checked={duplicateAcknowledged} class="mt-0.5" /><Label variant="field" for="receipt-duplicate-acknowledgment" class="block font-normal! text-warning!">{$t('I reviewed the warning and want to save this receipt anyway.')}</Label></div>
 								</div>
 							{/if}
 						</form>
@@ -835,40 +865,40 @@
 						</div>
 						{#if canEdit && receipt.is_owner && !receipt.target_linked}
 							<div class="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
-								{#if options.vehicles_available}<button type="button" onclick={() => void openTargetAction(receipt, 'link', 'vehicle')} class="min-h-9 rounded-lg border border-accent-ink/30 px-3 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t('Link to existing entry')}</button>
-								<button type="button" onclick={() => void openTargetAction(receipt, 'create', 'vehicle')} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:bg-surface-subtle">{$t('Create linked entry')}</button>{/if}
+								{#if options.vehicles_available}<Button type="button" onclick={() => void openTargetAction(receipt, 'link', 'vehicle')} variant="ghost" size="small" class="rounded-lg border-accent-ink/30 text-xs font-medium text-accent-ink hover:not-disabled:bg-accent/10 hover:not-disabled:text-accent-ink">{$t('Link to existing entry')}</Button>
+								<Button type="button" onclick={() => void openTargetAction(receipt, 'create', 'vehicle')} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-xs shadow-none">{$t('Create linked entry')}</Button>{/if}
 							</div>
 						{/if}
 						{#if targetLinkReceiptId === receipt.id}
 							<form class="mt-3 space-y-3 rounded-xl border glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
 								<div class="flex flex-wrap items-end gap-3">
-									<label class="block min-w-48 flex-1 text-sm font-medium text-ink-secondary">{$t('Target type')}
-									<select bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink"><option value="vehicle">{$t('Vehicle cost')}</option></select>
-									</label>
+									<div class="block min-w-48 flex-1 text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-link-type" class="block">{$t('Target type')}</Label>
+									<NativeSelect.Root variant="glass" id="receipt-link-type" bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2"><NativeSelect.Option value="vehicle">{$t('Vehicle cost')}</NativeSelect.Option></NativeSelect.Root>
+									</div>
 									{#if targetActionMode === 'link'}
-										<label class="block min-w-48 flex-[2] text-sm font-medium text-ink-secondary">{$t('Search targets')}
-											<input bind:value={linkSearch} oninput={() => { targetRecordId = ''; }} class="mt-2 min-h-10 w-full rounded-lg border border-line-strong bg-page px-3 text-sm text-ink" />
-										</label>
-										<button type="button" onclick={() => void loadTargetOptions()} disabled={targetOptionsLoading} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary disabled:opacity-50">{$t('Search')}</button>
+										<Label variant="field" class="block min-w-48 flex-[2] text-sm font-medium text-ink-secondary">{$t('Search targets')}
+											<Input variant="glass" bind:value={linkSearch} oninput={() => { targetRecordId = ''; }} class="mt-2" />
+										</Label>
+										<Button type="button" onclick={() => void loadTargetOptions()} disabled={targetOptionsLoading} variant="secondary" size="small" class="min-h-10 rounded-lg border-line-strong bg-transparent text-sm shadow-none">{$t('Search')}</Button>
 									{/if}
 								</div>
 								{#if targetActionMode === 'link'}
-									<label class="block text-sm font-medium text-ink-secondary">{$t('Existing entry')}
-										<select bind:value={targetRecordId} required disabled={targetOptionsLoading || targetMatches.length === 0} class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base"><option value="">{$t(targetOptionsLoading ? 'Loading…' : 'No matching entries')}</option>{#each targetMatches as target (target.id)}<option value={target.id}>{target.label}</option>{/each}</select>
-									</label>
+									<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-link-record" class="block">{$t('Existing entry')}</Label>
+										<NativeSelect.Root variant="glass" id="receipt-link-record" bind:value={targetRecordId} required disabled={targetOptionsLoading || targetMatches.length === 0} class="mt-2"><NativeSelect.Option value="">{$t(targetOptionsLoading ? 'Loading…' : 'No matching entries')}</NativeSelect.Option>{#each targetMatches as target (target.id)}<NativeSelect.Option value={target.id}>{target.label}</NativeSelect.Option>{/each}</NativeSelect.Root>
+									</div>
 								{:else}
 									<div class="grid gap-3 sm:grid-cols-2">
-										<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle')}
-											<select bind:value={targetVehicleId} required disabled={targetCreateVehicles.length === 0} class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">{#each targetCreateVehicles as vehicle (vehicle.id)}<option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</option>{/each}</select>
-										</label>
-										<label class="block text-sm font-medium text-ink-secondary">{$t('Vehicle cost category')}
-											<select bind:value={targetVehicleCategory} class="mt-2 min-h-10 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base">{#each vehicleCostCategories as category (category.value)}<option value={category.value}>{$t(category.label)}</option>{/each}</select>
-										</label>
+										<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-link-vehicle" class="block">{$t('Vehicle')}</Label>
+											<NativeSelect.Root variant="glass" id="receipt-link-vehicle" bind:value={targetVehicleId} required disabled={targetCreateVehicles.length === 0} class="mt-2">{#each targetCreateVehicles as vehicle (vehicle.id)}<NativeSelect.Option value={vehicle.id}>{vehicle.name} · {vehicle.make} {vehicle.model}</NativeSelect.Option>{/each}</NativeSelect.Root>
+										</div>
+										<div class="block text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-link-vehicle-category" class="block">{$t('Vehicle cost category')}</Label>
+											<NativeSelect.Root variant="glass" id="receipt-link-vehicle-category" bind:value={targetVehicleCategory} class="mt-2">{#each vehicleCostCategories as category (category.value)}<NativeSelect.Option value={category.value}>{$t(category.label)}</NativeSelect.Option>{/each}</NativeSelect.Root>
+										</div>
 									</div>
 								{/if}
 								<div class="flex flex-wrap gap-2">
-									<button type="submit" disabled={targetActionBusy || targetOptionsLoading || (targetActionMode === 'link' ? !targetRecordId : !targetVehicleId)} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(targetActionBusy ? 'Saving…' : targetActionMode === 'link' ? 'Link receipt' : 'Create and link')}</button>
-									<button type="button" onclick={() => { targetLinkReceiptId = null; targetActionMode = null; }} class="min-h-10 rounded-lg border border-line-strong px-4 text-sm text-ink-secondary">{$t('Cancel')}</button>
+									<Button type="submit" disabled={targetActionBusy || targetOptionsLoading || (targetActionMode === 'link' ? !targetRecordId : !targetVehicleId)} size="small" class="min-h-10 rounded-lg px-4 text-sm">{$t(targetActionBusy ? 'Saving…' : targetActionMode === 'link' ? 'Link receipt' : 'Create and link')}</Button>
+									<Button type="button" onclick={() => { targetLinkReceiptId = null; targetActionMode = null; }} variant="secondary" size="small" class="min-h-10 rounded-lg border-line-strong bg-transparent px-4 text-sm shadow-none">{$t('Cancel')}</Button>
 								</div>
 							</form>
 						{/if}
