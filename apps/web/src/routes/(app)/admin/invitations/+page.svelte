@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Button from '#lib/ui/Button.svelte';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -171,27 +174,27 @@
 			<div class="space-y-6">
 				<section class="rounded-2xl border glass-surface p-6 sm:p-8" aria-labelledby="invite-heading">
 					<h2 id="invite-heading" class="text-xl font-semibold">{$t("Send an invitation")}</h2>
-					<button type="button" onclick={() => (createOpen = true)} class="mt-5 inline-flex items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Send an invitation")}</button>
+					<Button type="button" onclick={() => (createOpen = true)} class="mt-5 rounded-lg py-3 hover:not-disabled:bg-accent/90 hover:not-disabled:brightness-100">{$t("Send an invitation")}</Button>
 					{#if message}<Notice tone="success" message={message} class="mt-4" />{/if}
 					{#if error}<Notice tone="error" message={error} class="mt-4" />{/if}
 				</section>
 				<Modal bind:open={createOpen} title={$t("Send an invitation")} description={$t("Send an invitation using only their email address. They will choose their own name and password.")}>
 					<form class="space-y-5" onsubmit={createInvitation}>
 						<div>
-							<label for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Recipient email")}</label>
-							<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+							<Label variant="field" for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Recipient email")}</Label>
+							<Input variant="glass" id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 						</div>
 						{#if error}<Notice tone="error" message={error} />{/if}
-						<button type="submit" disabled={busy} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">
+						<Button type="submit" disabled={busy} fullWidth class="rounded-lg py-3 hover:not-disabled:bg-accent/90 hover:not-disabled:brightness-100 disabled:cursor-wait disabled:opacity-60">
 							{$t(busy ? 'Sending…' : 'Send invitation')}
-						</button>
+						</Button>
 					</form>
 				</Modal>
 
 				<section class="rounded-2xl border glass-surface p-6 sm:p-8" aria-labelledby="pending-heading">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<h2 id="pending-heading" class="text-xl font-semibold">{$t("Pending invitations")}</h2>
-						<button type="button" onclick={() => void loadInvitations()} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Refresh")}</button>
+						<Button type="button" onclick={() => void loadInvitations()} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-sm font-medium shadow-none hover:not-disabled:border-accent-ink">{$t("Refresh")}</Button>
 					</div>
 					{#if loading}
 						<p role="status" class="mt-5 text-sm text-ink-secondary">{$t("Loading invitations…")}</p>
@@ -206,8 +209,8 @@
 									<p class="mt-1 text-xs text-ink-muted">{$t(invitation.is_expired ? 'Expired' : 'Expires')} {formatDateTime(invitation.expires_at)}</p>
 									</div>
 									<div class="flex shrink-0 gap-2">
-									<button type="button" disabled={busy} onclick={() => void updateInvitation(invitation, 'resend')} aria-label={$t('Resend invitation to {email}', { email: invitation.email })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Resend")}</button>
-									<button type="button" disabled={busy} onclick={() => { invitationToRevoke = invitation; revokeOpen = true; }} aria-label={$t('Revoke invitation to {email}', { email: invitation.email })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-danger transition hover:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t("Revoke")}</button>
+									<Button type="button" disabled={busy} onclick={() => void updateInvitation(invitation, 'resend')} aria-label={$t('Resend invitation to {email}', { email: invitation.email })} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-sm font-medium shadow-none hover:not-disabled:border-accent-ink">{$t("Resend")}</Button>
+									<Button type="button" disabled={busy} onclick={() => { invitationToRevoke = invitation; revokeOpen = true; }} aria-label={$t('Revoke invitation to {email}', { email: invitation.email })} variant="ghost" size="small" class="rounded-lg border-line-strong text-sm font-medium text-danger hover:not-disabled:border-danger hover:not-disabled:bg-transparent hover:not-disabled:text-danger focus-visible:outline-danger">{$t("Revoke")}</Button>
 									</div>
 								</li>
 							{/each}

@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { control, field, fieldLabel, fileInput, iconButton, panel } from '#lib/ui/styles';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
+	import { control, fieldLabel, iconButton, panel } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import EmptyState from '#lib/ui/EmptyState.svelte';
@@ -238,11 +241,11 @@
 				</div>
 				<form onsubmit={importRecipe} class="space-y-4">
 					{#if importType === 'url'}
-						<label class="{field}"><span class="{fieldLabel}">{$t('Recipe page URL')}</span><input bind:value={importUrl} type="url" required maxlength="2048" placeholder="https://example.com/recipe" class="{control}" /></label>
+						<Label variant="field"><span class="{fieldLabel}">{$t('Recipe page URL')}</span><Input variant="glass" bind:value={importUrl} type="url" required maxlength={2048} placeholder="https://example.com/recipe" /></Label>
 					{:else}
-						<label class="{field}"><span class="{fieldLabel}">{$t('Recipe PDF')}</span><input type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} class="{fileInput}" /><span class="text-xs text-ink-muted">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></label>
+						<Label variant="field"><span class="{fieldLabel}">{$t('Recipe PDF')}</span><Input variant="file" type="file" accept="application/pdf,.pdf" required onchange={chooseImportFile} /><span class="text-xs text-ink-muted">{$t('PDF up to 10 MB; scanned PDFs are not supported yet.')}</span></Label>
 					{/if}
-					<label class="{field}"><span class="{fieldLabel}">{$t('Save as')}</span><select bind:value={importVisibility} class="{control}">{#each formVisibilityOptions as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}</select></label>
+					<div class="grid gap-2"><Label variant="field" for="recipe-import-visibility"><span class="{fieldLabel}">{$t('Save as')}</span></Label><NativeSelect.Root variant="glass" id="recipe-import-visibility" bind:value={importVisibility}>{#each formVisibilityOptions as option}<NativeSelect.Option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</NativeSelect.Option>{/each}</NativeSelect.Root></div>
 					{#if importError}<Notice tone="error" message={importError} />{/if}
 					<Button type="submit" fullWidth disabled={importBusy || (importType === 'pdf' && !importFile)}>{$t(importBusy ? 'Reading recipe…' : 'Parse recipe')}</Button>
 				</form>

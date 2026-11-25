@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
-	import { control, field, fieldLabel, fileInput, iconButton } from '#lib/ui/styles';
+	import { control, field, fieldLabel, iconButton } from '#lib/ui/styles';
 	import { untrack } from 'svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Modal from '#lib/ui/Modal.svelte';
@@ -135,42 +138,43 @@
 
 	<form id={formId} onsubmit={save} class="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 		<div class="space-y-5">
-			<label class="{field}">
+			<Label variant="field">
 				<span class="{fieldLabel}">{$t('Title')}</span>
-				<input bind:value={form.title} required maxlength="180" class="{control}" />
-			</label>
+				<Input variant="glass" bind:value={form.title} required maxlength={180} />
+			</Label>
 			<div class="grid gap-4 sm:grid-cols-2">
-				<label class="{field}">
+				<Label variant="field">
 					<span class="{fieldLabel}">{$t('Category')} <span class="text-xs font-normal text-ink-muted">{$t('optional')}</span></span>
-					<input bind:value={form.category} maxlength="80" placeholder={$t('Dinner')} class="{control}" />
-				</label>
-				<label class="{field}">
+					<Input variant="glass" bind:value={form.category} maxlength={80} placeholder={$t('Dinner')} />
+				</Label>
+				<Label variant="field">
 					<span class="{fieldLabel}">{$t('People')}</span>
-					<input bind:value={form.servings} type="number" min="1" max="1000" required={!editing} class="{control}" />
-				</label>
-				<label class="{field}">
+					<Input variant="glass" bind:value={() => form.servings, (value) => (form.servings = value == null ? '' : String(value))} type="number" min="1" max="1000" required={!editing} />
+				</Label>
+				<Label variant="field">
 					<span class="{fieldLabel}">{$t('Prep time')} <span class="text-xs font-normal text-ink-muted">{$t('minutes')}</span></span>
-					<input bind:value={form.preparationMinutes} type="number" min="1" max="1440" placeholder={$t('Optional')} class="{control}" />
-				</label>
+					<Input variant="glass" bind:value={() => form.preparationMinutes, (value) => (form.preparationMinutes = value == null ? '' : String(value))} type="number" min="1" max="1440" placeholder={$t('Optional')} />
+				</Label>
 				{#if (!editing && visibilityOptions.length > 1) || (editing && recipe?.can_change_visibility)}
-					<label class="{field}">
-						<span class="{fieldLabel}">{$t('Visibility')}</span>
-						<select bind:value={form.visibility} class="{control}">
-							{#each (editing ? allVisibilityOptions : visibilityOptions) as option}<option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</option>{/each}
-						</select>
-					</label>
+					<div class="{field} font-[550]">
+						<Label variant="field" for="{formId}-visibility" class={fieldLabel}>{$t('Visibility')}</Label>
+						<NativeSelect.Root variant="glass" id="{formId}-visibility" bind:value={form.visibility}>
+							{#each (editing ? allVisibilityOptions : visibilityOptions) as option}<NativeSelect.Option value={option}>{$t(option === 'private' ? 'Private' : 'Household')}</NativeSelect.Option>{/each}
+						</NativeSelect.Root>
+					</div>
 				{:else}
 					<p class="self-end pb-3 text-xs leading-5 text-ink-muted">{editing ? $t('Visibility: {visibility}', { visibility: $t(form.visibility === 'private' ? 'Private' : 'Household') }) : $t(visibilityHint)}</p>
 				{/if}
 			</div>
-			<div class="{field}"><label for="markdown-extra-64247">
-				<span class="{fieldLabel}">{$t('Preparation instructions')}</span>
-				</label><MarkdownEditor id="markdown-extra-64247" bind:value={form.instructions} maxlength={20000} rows={10} placeholder={$t('Write the steps in the order you follow them…')} class="{control} resize-y leading-6" /></div>
+			<div class={field}>
+				<Label variant="field" for="{formId}-instructions" class={fieldLabel}>{$t('Preparation instructions')}</Label>
+				<MarkdownEditor id="{formId}-instructions" bind:value={form.instructions} maxlength={20000} rows={10} placeholder={$t('Write the steps in the order you follow them…')} class="{control} resize-y leading-6" />
+			</div>
 			<div class="{field}">
-				<label class="{field}">
+				<Label variant="field">
 					<span class="{fieldLabel}">{$t('Recipe photo or PDF')} <span class="text-xs font-normal text-ink-muted">{$t('optional · JPEG, PNG or WebP up to 5 MB; PDF up to 10 MB')}</span></span>
-					<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" onchange={choosePhoto} class="{fileInput}" />
-				</label>
+					<Input variant="file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" onchange={choosePhoto} />
+				</Label>
 				{#if photoFile}
 					<p class="text-xs text-ink-muted">{$t('Selected:')} {photoFile.name}</p>
 				{:else if recipe?.photo_url && !removePhoto}
@@ -207,47 +211,48 @@
 						class="grid gap-2 rounded-xl border border-line p-3 transition-colors sm:grid-cols-[minmax(0,1.6fr)_5.5rem_5.5rem_minmax(0,1.2fr)_auto] sm:items-end sm:border-0 sm:p-0 {dragOverIngredientIndex === index ? 'bg-accent/5 outline outline-2 outline-accent-ink/45' : ''}"
 					>
 						<div class="order-1 flex justify-end gap-1 sm:order-last sm:items-center">
-							<button
+							<Button
 								type="button"
 								draggable="true"
 								aria-label={$t('Drag ingredient {number} to reorder', { number: index + 1 })}
 								ondragstart={(event) => startIngredientDrag(event, index)}
 								ondragend={finishIngredientDrag}
-								class="{iconButton} cursor-grab active:cursor-grabbing"
+								variant="ghost"
+								class="{iconButton} cursor-grab p-0 active:cursor-grabbing"
 							>
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="M8 5h.01M16 5h.01M8 12h.01M16 12h.01M8 19h.01M16 19h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>
-							</button>
-							<button type="button" aria-label={$t('Move ingredient {number} up', { number: index + 1 })} onclick={() => moveIngredient(index, index - 1)} disabled={index === 0} class="{iconButton} disabled:cursor-not-allowed disabled:opacity-45">
+							</Button>
+							<Button type="button" aria-label={$t('Move ingredient {number} up', { number: index + 1 })} onclick={() => moveIngredient(index, index - 1)} disabled={index === 0} variant="ghost" class="{iconButton} p-0 disabled:opacity-45">
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 14 6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
-							</button>
-							<button type="button" aria-label={$t('Move ingredient {number} down', { number: index + 1 })} onclick={() => moveIngredient(index, index + 1)} disabled={index === form.ingredients.length - 1} class="{iconButton} disabled:cursor-not-allowed disabled:opacity-45">
+							</Button>
+							<Button type="button" aria-label={$t('Move ingredient {number} down', { number: index + 1 })} onclick={() => moveIngredient(index, index + 1)} disabled={index === form.ingredients.length - 1} variant="ghost" class="{iconButton} p-0 disabled:opacity-45">
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 10 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
-							</button>
-							<button type="button" aria-label={$t('Remove ingredient')} onclick={() => removeIngredient(index)} class="{iconButton}">
+							</Button>
+							<Button type="button" aria-label={$t('Remove ingredient')} onclick={() => removeIngredient(index)} variant="ghost" class="{iconButton} p-0">
 								<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="size-4"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
-							</button>
+							</Button>
 						</div>
-						<label class="{field} gap-1 text-xs text-ink-muted">
+						<Label variant="field" class="text-xs text-ink-muted">
 							<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Ingredient')}</span>
-							<input bind:value={ingredient.name} required maxlength="120" placeholder={$t('Pasta')} class="{control}" />
-						</label>
+							<Input variant="glass" bind:value={ingredient.name} required maxlength={120} placeholder={$t('Pasta')} />
+						</Label>
 						<div class="order-3 grid grid-cols-2 gap-2 sm:contents">
-							<label class="{field} gap-1 text-xs text-ink-muted">
+							<Label variant="field" class="text-xs text-ink-muted">
 								<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Quantity')}</span>
-								<input bind:value={ingredient.quantity} type="text" inputmode="decimal" placeholder={$t('Optional')} class="{control}" />
-							</label>
-							<label class="{field} gap-1 text-xs text-ink-muted">
-								<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Unit')}</span>
-								<select bind:value={ingredient.unit} class="{control}">
-									<option value="">{$t('Optional')}</option>
-									{#each [...new Set([...unitOptions, ...(ingredient.unit && !unitOptions.includes(ingredient.unit) ? [ingredient.unit] : [])])] as unit (unit)}<option value={unit}>{$t(unit)}</option>{/each}
-								</select>
-							</label>
+								<Input variant="glass" bind:value={ingredient.quantity} type="text" inputmode="decimal" placeholder={$t('Optional')} />
+							</Label>
+							<div class="grid gap-2 font-[550]">
+								<Label variant="field" for="{formId}-ingredient-unit-{index}" class={index > 0 ? 'sm:sr-only' : ''}>{$t('Unit')}</Label>
+								<NativeSelect.Root variant="glass" id="{formId}-ingredient-unit-{index}" bind:value={ingredient.unit}>
+									<NativeSelect.Option value="">{$t('Optional')}</NativeSelect.Option>
+									{#each [...new Set([...unitOptions, ...(ingredient.unit && !unitOptions.includes(ingredient.unit) ? [ingredient.unit] : [])])] as unit (unit)}<NativeSelect.Option value={unit}>{$t(unit)}</NativeSelect.Option>{/each}
+								</NativeSelect.Root>
+							</div>
 						</div>
-						<label class="{field} order-4 col-span-2 gap-1 text-xs text-ink-muted sm:col-span-1">
+						<Label variant="field" class="order-4 col-span-2 text-xs text-ink-muted sm:col-span-1">
 							<span class={index > 0 ? 'sm:sr-only' : ''}>{$t('Note')} <span class="text-ink-subtle">{$t('optional')}</span></span>
-							<input bind:value={ingredient.note} maxlength="160" placeholder={$t('finely grated')} class="{control}" />
-						</label>
+							<Input variant="glass" bind:value={ingredient.note} maxlength={160} placeholder={$t('finely grated')} />
+						</Label>
 					</li>
 				{/each}
 			</ol>
