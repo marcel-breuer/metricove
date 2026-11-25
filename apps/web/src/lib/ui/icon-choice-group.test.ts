@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { plugin } from 'bun';
-import { compile } from 'svelte/compiler';
+import { compile, compileModule } from 'svelte/compiler';
 import { render } from 'svelte/server';
 import { setUserPreferences } from '../i18n';
 
@@ -11,6 +11,10 @@ plugin({
 			contents: compile(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
 			loader: 'js'
 		}));
+		build.onLoad({ filter: /\.svelte\.js$/ }, async ({ path }) => ({
+			contents: compileModule(await Bun.file(path).text(), { filename: path, generate: 'server' }).js.code,
+			loader: 'js'
+		}));
 	}
 });
 
@@ -19,7 +23,7 @@ const { default: IconChoiceGroup } = await import('./IconChoiceGroup.svelte');
 afterEach(() => setUserPreferences({ language: 'en' }));
 
 describe('icon choice groups', () => {
-	it('renders localized appearance choices as a selected native radio group with icons', () => {
+	it('renders localized appearance choices as a labeled radio group with icons', () => {
 		setUserPreferences({ language: 'de' });
 		const { body } = render(IconChoiceGroup, {
 			props: {
@@ -35,16 +39,19 @@ describe('icon choice groups', () => {
 			}
 		});
 
-		expect(body).toMatch(/<legend[^>]*>Darstellung<\/legend>/);
+		expect(body).toMatch(/<legend id="appearance-legend"[^>]*>Darstellung<\/legend>/);
+		expect(body).toContain('aria-labelledby="appearance-legend"');
+		expect(body).toContain('role="radiogroup"');
 		expect(body).toContain('Geräteeinstellung verwenden');
 		expect(body).toContain('Hell');
 		expect(body).toContain('Dunkel');
-		expect(body.match(/type="radio"/g)).toHaveLength(3);
+		expect(body.match(/role="radio"/g)).toHaveLength(3);
 		expect(body.match(/<svg viewBox="0 0 24 24"/g)).toHaveLength(3);
 
-		const selected = body.match(/<input[^>]*id="appearance-dark"[^>]*>/)?.[0];
-		expect(selected).toContain('name="appearance"');
-		expect(selected).toContain('checked');
+		const selected = body.match(/<button[^>]*id="appearance-dark"[^>]*>/)?.[0];
+		expect(selected).toContain('aria-checked="true"');
+		const formValue = body.match(/<input[^>]*name="appearance"[^>]*>/)?.[0];
+		expect(formValue).toContain('value="dark"');
 	});
 
 	it('renders language markers with full localized names instead of flag-only labels', () => {
@@ -67,11 +74,12 @@ describe('icon choice groups', () => {
 		expect(body).toContain('Deutsch');
 		expect(body).toContain('>EN</span>');
 		expect(body).toContain('>DE</span>');
-		expect(body.match(/type="radio"/g)).toHaveLength(2);
+		expect(body.match(/role="radio"/g)).toHaveLength(2);
 		expect(body.match(/<svg viewBox="0 0 24 24"/g)).toHaveLength(2);
 
-		const selected = body.match(/<input[^>]*id="language-de"[^>]*>/)?.[0];
-		expect(selected).toContain('name="language"');
-		expect(selected).toContain('checked');
+		const selected = body.match(/<button[^>]*id="language-de"[^>]*>/)?.[0];
+		expect(selected).toContain('aria-checked="true"');
+		const formValue = body.match(/<input[^>]*name="language"[^>]*>/)?.[0];
+		expect(formValue).toContain('value="de"');
 	});
 });
