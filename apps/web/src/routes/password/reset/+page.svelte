@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
@@ -87,7 +88,7 @@
 			Metricove
 		</a>
 
-		<section class="my-auto rounded-[20px] border glass-surface p-6 sm:p-8">
+		<Card as="section" variant="glass" class="my-auto rounded-[20px] p-6 sm:p-8">
 			<p class="text-sm font-medium text-ink-muted">{$t("Account recovery")}</p>
 			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Choose a new password")}</h1>
 			<form class="mt-8 space-y-5" onsubmit={resetPassword}>
@@ -117,7 +118,7 @@
 			</form>
 
 			<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink hover:text-accent-ink">{$t("Return to sign in")}</a>
-		</section>
+		</Card>
 
 		<footer class="border-t border-line pt-5 text-sm text-ink-subtle">{$t("The reset link expires and cannot be reused after a successful reset.")}</footer>
 	</div>

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
@@ -194,9 +197,9 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading meter…")}</div>
+	<Alert variant="glass" role="status" class="p-6 text-sm text-ink-secondary">{$t("Loading meter…")}</Alert>
 {:else if !canView}
-	<section class="mx-auto max-w-2xl rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8"><p class="text-sm font-medium text-warning">{$t("Utilities View access is required.")}</p><h1 class="mt-2 text-2xl font-semibold text-ink">{$t("This meter is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></section>
+	<Card as="section" variant="warning" class="mx-auto max-w-2xl p-6 sm:p-8"><p class="text-sm font-medium text-warning">{$t("Utilities View access is required.")}</p><h1 class="mt-2 text-2xl font-semibold text-ink">{$t("This meter is private to its authorized members.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("An administrator can enable Utilities and grant the exact module capability. Private meter records still require an explicit record grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></Card>
 {:else if meter}
 	<section class="mx-auto max-w-screen-xl">
 		<BackLink href="/modules/utilities" label="All meters" />
@@ -204,7 +207,7 @@
 			<div><p class="text-xs font-semibold text-accent-ink">{meter.meter_label} {$t("meter ·")} {$t(visibilityLabel(meter.visibility))}</p><h1 class="page-title break-words">{meter.name}</h1><Markdown class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted" value={meter.description ?? $t('Readings are cumulative. Consumption is calculated from adjacent dates in chronological order.')} /></div>
 			{#snippet actions()}
 				{#if meter}
-				<div class="grid min-w-0 grid-cols-2 gap-3 text-right"><div class="rounded-xl border glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></div><div class="rounded-xl border border-line glass-surface px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></div></div>
+				<div class="grid min-w-0 grid-cols-2 gap-3 text-right"><Card variant="glass" class="rounded-xl px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Latest interval")}</span><span class="mt-1 block text-lg font-semibold text-ink">{formatMeasurement(latestUsage?.consumption_since_previous, meter.unit)} <span class="text-sm font-medium text-ink-muted">{meter.unit}</span></span></Card><Card variant="glass" class="rounded-xl px-4 py-3"><span class="block text-xs text-ink-subtle">{$t("Alerts")}</span><span class="mt-1 block text-lg font-semibold {alertCount > 0 ? 'text-warning' : 'text-ink'}">{alertCount}</span></Card></div>
 				{/if}
 			{/snippet}
 		</PageHeader>
@@ -214,15 +217,15 @@
 		{#if canManage}
 			<button type="button" onclick={() => (meterModalOpen = true)} class="mt-6 min-h-10 rounded-lg border border-line-strong px-4 text-sm font-semibold text-ink-secondary">{$t('Edit meter settings')}</button>
 			<Modal bind:open={meterModalOpen} title={$t('Edit meter settings')}>
-			<form class="mt-6 grid gap-4 rounded-[20px] border glass-surface p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
+			<Card as="form" variant="glass" class="mt-6 grid gap-4 rounded-[20px] p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<input bind:value={meterName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
 				<label class="block text-sm font-medium text-ink-secondary">{$t("Interval alert threshold")} <span class="font-normal text-ink-subtle">({meter.unit})</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
 				<button type="submit" disabled={saving} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save settings')}</button>
-			</form>
+			</Card>
 			</Modal>
 		{/if}
 
-		<section class="mt-8 rounded-[20px] border glass-surface p-5 sm:p-7" aria-labelledby="trend-heading">
+		<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-7" aria-labelledby="trend-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Consumption trend")}</p><h2 id="trend-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Usage between readings")}</h2></div><p class="text-xs text-ink-subtle">{$t("Latest")} {chartData.length} {$t("intervals ·")} {meter.unit}</p></div>
 			{#if chartData.length === 0}
 				<p class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t("Add a second dated reading to see consumption.")}</p>
@@ -238,11 +241,11 @@
 					{/each}
 				</svg></div>
 			{/if}
-		</section>
+		</Card>
 
 		<div class="mt-8 grid gap-8 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
 			{#if canCreate}
-				<section class="h-fit rounded-[20px] border glass-surface p-5 sm:p-7" aria-labelledby="add-reading-heading">
+				<Card as="section" variant="glass" class="h-fit rounded-[20px] p-5 sm:p-7" aria-labelledby="add-reading-heading">
 					<p class="text-sm font-medium text-accent-ink">{$t("New reading")}</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Record the register.")}</h2><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("A reading can be added out of order when its value fits between the neighboring readings.")}</p>
 					<button type="button" onclick={() => (readingModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Record reading')}</button>
 					<Modal bind:open={readingModalOpen} title={$t('Record the register.')}>
@@ -254,19 +257,19 @@
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</button>
 					</form>
 					</Modal>
-				</section>
+				</Card>
 			{/if}
 
 			<section aria-labelledby="history-heading">
 				<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Reading history")}</p><h2 id="history-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Chronological record")}</h2></div><span class="text-xs text-ink-subtle">{readings.length} {$t("recent readings")}</span></div>
 				{#if readings.length === 0}
-					<div class="mt-4 rounded-[20px] border glass-surface p-6"><h3 class="font-semibold text-ink">{$t("No readings yet.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Save the current register value. The next reading will establish the first usage interval.")}</p></div>
+					<Card variant="glass" class="mt-4 rounded-[20px] p-6"><h3 class="font-semibold text-ink">{$t("No readings yet.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("Save the current register value. The next reading will establish the first usage interval.")}</p></Card>
 				{:else}
 				<ol class="mt-4 space-y-3">
 					{#each [...readings].reverse() as reading (reading.id)}
-						<li class="rounded-2xl border {reading.alert ? 'border-warning/30 bg-warning/[0.06]' : 'border-line glass-surface'} p-4 sm:p-5">
+						<Card as="li" variant={reading.alert ? 'warning' : 'glass'} class={['p-4 sm:p-5', reading.alert && 'border-warning/30 bg-warning/[0.06]']}>
 							<div class="flex flex-wrap items-start justify-between gap-4">
-								<div><div class="flex flex-wrap items-center gap-2"><time datetime={reading.reading_date} class="font-semibold text-ink">{formatDate(reading.reading_date)}</time>{#if reading.alert}<span class="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">{$t("Usage alert")}</span>{/if}{#if reading.revision_count > 0}<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{reading.revision_count} {$t(reading.revision_count === 1 ? 'correction' : 'corrections')}</span>{/if}</div><p class="mt-2 text-2xl font-semibold tracking-tight text-ink">{formatMeasurement(reading.value, reading.unit)} <span class="text-sm font-medium text-ink-muted">{reading.unit}</span></p></div>
+								<div><div class="flex flex-wrap items-center gap-2"><time datetime={reading.reading_date} class="font-semibold text-ink">{formatDate(reading.reading_date)}</time>{#if reading.alert}<Badge class="bg-warning/15 px-2 py-0.5 font-semibold text-warning border-0 leading-4 whitespace-normal">{$t("Usage alert")}</Badge>{/if}{#if reading.revision_count > 0}<Badge class="border-line-strong px-2 py-0.5 text-ink-muted font-normal leading-4 whitespace-normal">{reading.revision_count} {$t(reading.revision_count === 1 ? 'correction' : 'corrections')}</Badge>{/if}</div><p class="mt-2 text-2xl font-semibold tracking-tight text-ink">{formatMeasurement(reading.value, reading.unit)} <span class="text-sm font-medium text-ink-muted">{reading.unit}</span></p></div>
 								<div class="min-w-36 text-left sm:text-right"><span class="block text-xs text-ink-subtle">{$t("Since previous")}</span><span class="mt-1 block text-base font-semibold {reading.alert ? 'text-warning' : 'text-accent-ink'}">{formatMeasurement(reading.consumption_since_previous, meter.unit)} {reading.consumption_since_previous === null ? '' : reading.unit}</span>{#if reading.days_since_previous !== null}<span class="mt-1 block text-xs text-ink-subtle">{$t('{count} days since the previous reading', { count: reading.days_since_previous })}</span>{/if}</div>
 							</div>
 							{#if reading.note}<Markdown class="mt-3 text-sm leading-6 text-ink-secondary" value={reading.note} />{/if}
@@ -288,8 +291,8 @@
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
 							<ol class="mt-3 space-y-2 rounded-xl bg-page p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-line-strong pl-3 text-sm"><p class="font-medium text-ink-secondary">{formatDate(revision.old_reading_date)}: {formatMeasurement(revision.old_value, reading.unit)} → {formatDate(revision.new_reading_date)}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-ink-muted">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-ink-subtle">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
-							{:else if revisionsLoading === reading.id}<p role="status" class="mt-3 text-xs text-ink-subtle">{$t("Loading correction history…")}</p>{/if}
-						</li>
+							{:else if revisionsLoading === reading.id}<Alert variant="plain" role="status" class="mt-3 text-xs text-ink-subtle">{$t("Loading correction history…")}</Alert>{/if}
+						</Card>
 					{/each}
 				</ol>
 				{/if}
@@ -297,5 +300,5 @@
 		</div>
 	</section>
 {:else}
-	<section class="mx-auto max-w-2xl rounded-2xl border border-danger/20 bg-danger/5 p-6 sm:p-8"><p class="text-sm font-medium text-danger">{$t("Meter unavailable")}</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-ink">{$t("This meter could not be opened.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("It may have been removed, Utilities may be disabled, or you may not have a record-level grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></section>
+	<Card as="section" variant="danger" class="mx-auto max-w-2xl p-6 sm:p-8"><p class="text-sm font-medium text-danger">{$t("Meter unavailable")}</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-ink">{$t("This meter could not be opened.")}</h1><p class="mt-3 text-sm leading-6 text-ink-muted">{$t("It may have been removed, Utilities may be disabled, or you may not have a record-level grant.")}</p><a href="/modules/utilities" class="mt-6 inline-flex rounded-xl border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:border-accent-ink">{$t("Back to Utilities")}</a></Card>
 {/if}

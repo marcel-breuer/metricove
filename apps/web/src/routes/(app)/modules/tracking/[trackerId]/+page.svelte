@@ -1,10 +1,16 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import BackLink from '#lib/ui/BackLink.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
+	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import { ChevronRight } from '@lucide/svelte';
 	import { t } from '#lib/i18n';
 	import { formatDate as formatLocaleDate, formatDateTime, numberLocale } from '#lib/i18n';
 	import { page } from '$app/state';
@@ -456,14 +462,14 @@
 </svelte:head>
 
 {#if loading}
-	<div role="status" class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</div>
+	<Alert variant="glass" role="status" class="p-6 text-sm text-ink-secondary">{$t("Loading tracker and history…")}</Alert>
 {:else if error && !tracker}
-	<section class="rounded-2xl border glass-surface p-6 sm:p-8">
+	<Card as="section" variant="glass" class="p-6 sm:p-8">
 		<p class="text-sm font-medium text-warning">{$t("Tracker unavailable")}</p>
 		<h1 class="mt-2 text-2xl font-semibold text-ink">{$t("You cannot open this tracker.")}</h1>
-		<p role="alert" class="mt-3 text-sm leading-6 text-ink-muted">{$t(error)}</p>
+		<Alert variant="plain" role="alert" class="mt-3 text-sm leading-6 text-ink-muted">{$t(error)}</Alert>
 		<a href="/modules/tracking" class="mt-6 inline-flex min-h-11 items-center rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Back to trackers")}</a>
-	</section>
+	</Card>
 {:else if tracker}
 	<section class="mx-auto max-w-screen-xl">
 		<BackLink href="/modules/tracking" label="All trackers" />
@@ -471,7 +477,7 @@
 			<div class="min-w-0">
 				<div class="flex flex-wrap items-center gap-2">
 					<p class="text-sm font-medium text-accent-ink">{$t(tracker.visibility === 'household' ? 'Household template' : 'Private tracker')}</p>
-					<span class="rounded-full border border-line-strong px-2 py-0.5 text-xs text-ink-muted">{$t("Schema v")}{tracker.schema_version}</span>
+					<Badge class="border-line-strong px-2 py-0.5 text-ink-muted font-normal leading-4 whitespace-normal">{$t("Schema v")}{tracker.schema_version}</Badge>
 				</div>
 				<h1 class="page-title break-words">{tracker.name}</h1>
 				{#if tracker.description}<Markdown class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted" value={tracker.description} />{/if}
@@ -524,7 +530,7 @@
 		{#if canCreate}
 			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</button></div>
 			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
-			<section class="rounded-2xl border glass-surface p-5 sm:p-7" aria-labelledby="new-entry-heading">
+			<Card as="section" variant="glass" class="p-5 sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div><p class="text-sm font-medium text-accent-ink">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-ink">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Your entries are private to your account by default.")}</p></div>
 					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</button>{/if}
@@ -560,11 +566,11 @@
 						</label>
 						<p class="mt-2 text-xs leading-5 text-ink-muted">{$t('Attach a PDF or image up to 10 MB. Extracted values are suggestions; check them before saving.')}</p>
 						{#if attachmentFile}<div class="mt-3 flex flex-wrap items-center gap-3"><span class="max-w-full truncate text-sm text-ink-secondary">{attachmentFile.name}</span><button type="button" disabled={previewingAttachment} onclick={() => void previewAttachment()} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink disabled:opacity-50">{$t(previewingAttachment ? 'Reading file…' : 'Read file and suggest values')}</button></div>{/if}
-						{#if attachmentNotice}<p class="mt-3 text-sm text-ink-muted" aria-live="polite">{$t(attachmentNotice)}</p>{/if}
+						{#if attachmentNotice}<Alert variant="plain" role="status" class="mt-3 text-sm text-ink-muted">{$t(attachmentNotice)}</Alert>{/if}
 					</div>
 					<div class="flex justify-end border-t border-line pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
 				</form>
-			</section>
+			</Card>
 			</Modal>
 		{/if}
 
@@ -574,8 +580,8 @@
 				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each numericColumns as field (field.key)}
 						{@const series = numericSeries(field)}
-						<article class="rounded-2xl border glass-surface p-4 sm:p-5">
-							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><span class="rounded-full border border-line-strong px-2.5 py-1 text-xs text-ink-muted">{field.unit ?? '—'}</span></div>
+						<Card as="article" variant="glass" class="p-4 sm:p-5">
+							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><Badge class="border-line-strong px-2.5 py-1 text-ink-muted font-normal leading-4 whitespace-normal">{field.unit ?? '—'}</Badge></div>
 							{#if series.length > 0}
 								<div class="mt-4 overflow-hidden rounded-xl border border-line bg-page p-2" role="img" aria-label={field.label + ' measurement history'}>
 									<svg viewBox="0 0 1000 200" preserveAspectRatio="none" class="h-40 w-full">
@@ -588,34 +594,66 @@
 								</div>
 								<div class="mt-2 flex justify-between text-xs text-ink-subtle"><span>{formatDate(series[0].at)}</span><span>{formatDate(series[series.length - 1].at)}</span></div>
 							{:else}<p class="mt-4 rounded-lg bg-page p-4 text-sm text-ink-muted">{$t("No numeric values are available for this field yet.")}</p>{/if}
-						</article>
+						</Card>
 					{/each}
 				</div>
 			{/if}
 
 			{#if entries.length === 0}
-				<div class="mt-5 rounded-[20px] border glass-surface p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></div>
+				<Card variant="glass" class="mt-5 rounded-[20px] p-6 sm:p-8"><h3 class="text-lg font-semibold text-ink">{$t("No measurements recorded.")}</h3><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("This history only includes entries you own or that an owner explicitly shared with you.")}</p></Card>
 			{:else}
-				<div class="mt-5 overflow-hidden rounded-[20px] border glass-surface">
+				<Card variant="glass" class="mt-5 overflow-hidden rounded-[20px]">
 					<p id="measurement-history-scroll-hint" class="px-4 pt-3 text-xs leading-5 text-ink-muted sm:hidden">{$t("Swipe or scroll horizontally to view all columns.")}</p>
-					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-					<div class="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink" role="region" aria-labelledby="history-heading" aria-describedby="measurement-history-scroll-hint" tabindex="0">
-						<table class="min-w-full border-collapse text-left text-sm">
-							<thead class="bg-page text-xs text-ink-muted"><tr><th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{$t("Recorded at")}</th>{#each historyColumns as field (field.key)}<th scope="col" class="whitespace-nowrap px-4 py-3 sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</th>{/each}<th scope="col" class="px-4 py-3 sm:px-5">{$t("Note")}</th><th scope="col" aria-label={$t("Actions")}></th></tr></thead>
-							<tbody class="divide-y divide-line">
-								{#each entries as entry (entry.id)}
-									<tr class="align-top">
-										<th scope="row" class="whitespace-nowrap px-4 py-4 font-medium text-ink-secondary sm:px-5"><time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time><span class="mt-1 block text-xs font-normal text-ink-subtle">{$t("Schema v")}{entry.schema_version}</span></th>
-										{#each historyColumns as field (field.key)}<td class="whitespace-nowrap px-4 py-4 text-ink-secondary sm:px-5">{valueForEntry(entry, field.key)}</td>{/each}
-										<td class="max-w-xs px-4 py-4 text-ink-muted sm:px-5">{entry.note ?? '—'}{#if entry.attachment}<a class="mt-2 block break-all text-xs font-medium text-accent-ink underline" href={entry.attachment.url}>{$t('View attached file')}: {entry.attachment.name}</a>{/if}</td>
-										<td class="px-4 py-4 text-right"><div class="flex justify-end gap-2">{#if entry.can_edit}<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</button><button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>{/if}</div></td>
-									</tr>
+					<Table.Root
+						class="min-w-full border-collapse text-left"
+						containerProps={{
+							class: 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink',
+							role: 'region',
+							'aria-labelledby': 'history-heading',
+							'aria-describedby': 'measurement-history-scroll-hint',
+							tabindex: 0
+						}}
+					>
+						<Table.Header class="bg-page text-xs text-ink-muted [&_tr]:border-0">
+							<Table.Row variant="plain">
+								<Table.Head scope="col" class="h-auto px-4 py-3 font-bold text-ink-muted sm:px-5">{$t("Recorded at")}</Table.Head>
+								{#each historyColumns as field (field.key)}
+									<Table.Head scope="col" class="h-auto px-4 py-3 font-bold text-ink-muted sm:px-5">{field.label}{field.unit ? ' (' + field.unit + ')' : ''}</Table.Head>
 								{/each}
-							</tbody>
-						</table>
-					</div>
+								<Table.Head scope="col" class="h-auto px-4 py-3 font-bold whitespace-normal text-ink-muted sm:px-5">{$t("Note")}</Table.Head>
+								<Table.Head scope="col" class="h-auto p-0" aria-label={$t("Actions")} />
+							</Table.Row>
+						</Table.Header>
+						<Table.Body class="divide-y divide-line">
+							{#each entries as entry (entry.id)}
+								<Table.Row variant="plain">
+									<Table.Head scope="row" class="h-auto px-4 py-4 align-top text-ink-secondary sm:px-5">
+										<time datetime={entry.recorded_at}>{formatDate(entry.recorded_at)}</time>
+										<span class="mt-1 block text-xs font-normal text-ink-subtle">{$t("Schema v")}{entry.schema_version}</span>
+									</Table.Head>
+									{#each historyColumns as field (field.key)}
+										<Table.Cell class="px-4 py-4 align-top text-ink-secondary sm:px-5">{valueForEntry(entry, field.key)}</Table.Cell>
+									{/each}
+									<Table.Cell class="max-w-xs px-4 py-4 align-top whitespace-normal text-ink-muted sm:px-5">
+										{entry.note ?? '—'}
+										{#if entry.attachment}
+											<a class="mt-2 block break-all text-xs font-medium text-accent-ink underline" href={entry.attachment.url}>{$t('View attached file')}: {entry.attachment.name}</a>
+										{/if}
+									</Table.Cell>
+									<Table.Cell class="px-4 py-4 text-right align-top">
+										{#if entry.can_edit}
+											<div class="flex justify-end gap-2">
+												<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</button>
+												<button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>
+											</div>
+										{/if}
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						</Table.Body>
+					</Table.Root>
 					<p class="border-t border-line px-4 py-3 text-xs leading-5 text-ink-subtle">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
-				</div>
+				</Card>
 				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-line-strong px-5 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
 			{/if}
 		</section>
@@ -623,14 +661,21 @@
 		{#if tracker}<ConfirmModal bind:open={deleteTrackerModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: tracker.name })} busy={deletingTracker} onConfirm={() => void deleteTracker()} />{/if}
 
 		{#if revisions.length > 0}
-			<details class="mt-7 rounded-[20px] border glass-surface p-5">
-				<summary class="cursor-pointer font-semibold text-ink-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-ink-muted">({revisions.length})</span></summary>
-				<ol class="mt-4 divide-y divide-line">
-					{#each revisions as revision (revision.version)}
-						<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"><span class="text-sm text-ink-secondary">{$t("Version")} {revision.version} · {revision.schema.name} · {revision.schema.fields.length} {$t(revision.schema.fields.length === 1 ? 'field' : 'fields')}</span><time datetime={revision.created_at} class="text-xs text-ink-subtle">{formatDate(revision.created_at)}</time></li>
-					{/each}
-				</ol>
-			</details>
+			<Card variant="glass" class="mt-7 rounded-[20px] p-5">
+				<Collapsible.Root>
+					<Collapsible.Trigger class="group flex w-full cursor-pointer items-center gap-1 text-left font-semibold text-ink-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+						<ChevronRight aria-hidden="true" class="size-3 shrink-0 group-data-[state=open]:rotate-90" />
+						<span>{$t("Schema revisions")} <span class="ml-1 text-sm font-normal text-ink-muted">({revisions.length})</span></span>
+					</Collapsible.Trigger>
+					<Collapsible.Content>
+						<ol class="mt-4 divide-y divide-line">
+							{#each revisions as revision (revision.version)}
+								<li class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"><span class="text-sm text-ink-secondary">{$t("Version")} {revision.version} · {revision.schema.name} · {revision.schema.fields.length} {$t(revision.schema.fields.length === 1 ? 'field' : 'fields')}</span><time datetime={revision.created_at} class="text-xs text-ink-subtle">{formatDate(revision.created_at)}</time></li>
+							{/each}
+						</ol>
+					</Collapsible.Content>
+				</Collapsible.Root>
+			</Card>
 		{/if}
 	</section>
 {/if}

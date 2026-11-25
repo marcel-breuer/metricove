@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { formatDate, t } from '#lib/i18n';
@@ -198,10 +201,10 @@
 	{#if canCreate}
 		<div class="mt-6 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent">{$t('Add a chart')}</button></div>
 		<Modal bind:open={createOpen} title={$t('Add a chart')} description={$t('Available charts follow your current module access.')}>
-		<section class="rounded-2xl border glass-surface p-4 sm:p-6" aria-labelledby="add-widget-heading">
+		<Card as="section" variant="glass" class="p-4 sm:p-6" aria-labelledby="add-widget-heading">
 			<div class="flex flex-wrap items-start justify-between gap-3">
 				<div><h2 id="add-widget-heading" class="text-lg font-semibold text-ink">{$t("Add a chart")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Available charts follow your current module access.")}</p></div>
-				<span class="rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted">{$t('{count} / 12 widgets', { count: widgets.length })}</span>
+				<Badge class="border-line-strong px-3 py-1 font-medium text-ink-muted leading-4 whitespace-normal">{$t('{count} / 12 widgets', { count: widgets.length })}</Badge>
 			</div>
 			{#if catalog.length === 0}
 				<p class="mt-5 rounded-xl border border-line bg-page p-4 text-sm leading-6 text-ink-muted">{$t("No data sources are available yet. Ask an administrator to enable a source module and grant you view access.")}</p>
@@ -239,25 +242,25 @@
 					<button disabled={saving || widgets.length >= 12} class="min-h-11 self-end rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50">{$t(saving ? 'Saving…' : 'Add widget')}</button>
 				</form>
 			{/if}
-		</section>
+		</Card>
 		</Modal>
 	{/if}
 
 	{#if loading}
-		<div role="status" aria-live="polite" class="mx-auto flex min-h-64 max-w-2xl flex-col items-center justify-center py-12 text-center">
+		<Alert variant="plain" role="status" class="mx-auto flex min-h-64 max-w-2xl flex-col items-center justify-center py-12 text-center">
 			<span class="size-8 animate-spin rounded-full border-2 border-line-strong border-t-accent-ink" aria-hidden="true"></span>
 			<p class="mt-4 text-sm text-ink-secondary">{$t("Loading your charts…")}</p>
-		</div>
+		</Alert>
 	{:else if widgets.length === 0}
-		<div class="mt-6 rounded-[20px] border border-dashed glass-surface px-5 py-14 text-center">
+		<Card variant="glass" class="mt-6 rounded-[20px] border-dashed px-5 py-14 text-center">
 			<div class="mx-auto grid size-14 place-items-center rounded-2xl border border-line-strong bg-page text-xl text-accent-ink" aria-hidden="true">⌁</div>
 			<h2 class="mt-4 text-xl font-semibold text-ink">{$t("Your dashboard is ready to configure.")}</h2>
 			<p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-ink-muted">{$t('Add a chart to compare reading values or changes across the utility and vehicle records you can view.')}</p>
-		</div>
+		</Card>
 	{:else}
 		<div class="mt-6 grid gap-4 xl:grid-cols-2">
 			{#each widgets as widget (widget.id)}
-				<article class="min-w-0 rounded-[20px] border glass-surface p-4 sm:p-6">
+				<Card as="article" variant="glass" class="min-w-0 rounded-[20px] p-4 sm:p-6">
 					<div class="flex flex-wrap items-start justify-between gap-3">
 						<div class="min-w-0"><p class="text-xs font-medium text-accent-ink">{catalog.find((metric) => metric.key === widget.metric_key)?.source_label ?? 'Source unavailable'} · {analyticsRanges.find((range) => range.value === widget.range_key)?.label}</p><h2 class="mt-1 truncate text-xl font-semibold text-ink">{widget.title}</h2></div>
 						{#if canEdit}<button type="button" onclick={() => beginEdit(widget)} class="shrink-0 rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Configure")}</button>{/if}
@@ -315,7 +318,7 @@
 						</form>
 						</Modal>
 					{/if}
-				</article>
+				</Card>
 			{/each}
 		</div>
 	{/if}

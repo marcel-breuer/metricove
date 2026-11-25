@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import { iconButton, panel } from '#lib/ui/styles';
+	import { iconButton } from '#lib/ui/styles';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -105,7 +106,7 @@
 	{#if error && recipe}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<p class="{panel} p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading recipe…')}</p>
+		<Alert variant="glass" class="p-5 max-sm:p-4 text-sm text-ink-muted" role="status">{$t('Loading recipe…')}</Alert>
 	{:else if !canView}
 		<Notice tone="info" message="Recipes is enabled, but your account does not have Recipes View access. Ask a household administrator to grant the required module permission." />
 	{:else if !recipe}

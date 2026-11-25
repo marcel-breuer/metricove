@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -464,17 +466,17 @@
 	{#if error}<Notice tone="error" message={error} />{/if}
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border glass-surface p-7 text-sm text-ink-muted">{$t("Loading your shopping lists…")}</div>
+		<Alert variant="glass" role="status" class="p-7 text-sm text-ink-muted">{$t("Loading your shopping lists…")}</Alert>
 	{:else if !canView}
-		<section class="rounded-2xl border border-warning/20 bg-warning/5 p-6 sm:p-8">
+		<Card as="section" variant="warning" class="p-6 sm:p-8">
 			<p class="text-sm font-medium text-warning">{$t("Shopping View access is required.")}</p>
 			<h2 class="mt-2 text-xl font-semibold text-ink">{$t("Your lists stay private to the right members.")}</h2>
 			<p class="mt-3 text-sm leading-6 text-ink-muted">{$t("Ask a household administrator to enable Shopping and grant your account View access.")}</p>
-		</section>
+		</Card>
 	{:else}
 		<div class="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
 			<aside class="space-y-4">
-				<section class="rounded-2xl border glass-surface p-4">
+				<Card as="section" variant="glass" class="p-4">
 					<div class="mb-3 flex items-center justify-between gap-3">
 						<h2 class="text-sm font-semibold text-ink">{$t("Your lists")}</h2>
 						<span class="text-xs text-ink-subtle">{lists.length} / 100</span>
@@ -494,12 +496,12 @@
 					{:else}
 						<p class="rounded-xl border border-dashed border-line-strong px-3 py-4 text-xs leading-5 text-ink-muted">{$t("No lists yet. Create one to start collecting what you need.")}</p>
 					{/if}
-				</section>
+				</Card>
 
 				{#if canCreateList}
 					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Create a list')}</button>
 					<Modal bind:open={listModalOpen} title={$t('Create a list')}>
-					<form onsubmit={createList} class="space-y-3 rounded-[20px] border glass-surface p-4">
+					<Card as="form" variant="glass" onsubmit={createList} class="space-y-3 rounded-[20px] p-4">
 						<h2 class="text-sm font-semibold text-ink">{$t("Create a list")}</h2>
 						<label class="block text-xs font-medium text-ink-muted">{$t("List name")}
 							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
@@ -513,29 +515,29 @@
 							</label>
 						{/if}
 						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
-					</form>
+					</Card>
 					</Modal>
 				{/if}
 			</aside>
 
 			{#if !activeList}
-				<section class="flex min-h-64 flex-col items-center justify-center rounded-[20px] border glass-surface px-6 py-10 text-center">
+				<Card as="section" variant="glass" class="flex min-h-64 flex-col items-center justify-center rounded-[20px] px-6 py-10 text-center">
 					<p class="text-xs font-semibold text-accent-ink">{$t("Ready when you are")}</p>
 					<h2 class="mt-3 text-2xl font-semibold text-ink">{$t("Start with one thing.")}</h2>
 					<p class="mt-2 max-w-md text-sm leading-6 text-ink-muted">{$t(canCreateList ? 'Create a list on the left, then add items as you think of them.' : 'Ask a household administrator to create a shared list or grant you Create access.')}</p>
-				</section>
+				</Card>
 			{:else}
 				<section class="min-w-0 space-y-4">
 					{#if activeList.can_add_items}
 						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add item')}</button>
 						<Modal bind:open={addItemModalOpen} title={$t('Add item')} description={activeList.name}>
-						<form onsubmit={addItem} class="rounded-2xl border border-accent-ink/30 glass-surface p-4 sm:p-5">
+						<Card as="form" variant="glass" onsubmit={addItem} class="border-accent-ink/30 p-4 sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
 								<div>
 									<p class="text-xs font-semibold text-accent-ink">{$t("Quick add")}</p>
 									<h2 class="mt-1 text-lg font-semibold text-ink">{$t("What do you need?")}</h2>
 								</div>
-								{#if activeList.visibility === 'household'}<span class="rounded-full border border-accent-ink/30 px-3 py-1.5 text-xs text-accent-ink">{$t("Shared list")}</span>{/if}
+								{#if activeList.visibility === 'household'}<Badge class="border-accent-ink/30 px-3 py-1.5 text-accent-ink font-normal leading-4 whitespace-normal">{$t("Shared list")}</Badge>{/if}
 							</div>
 							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]">
 								<label class="text-xs font-medium text-ink-muted">{$t("Item")}
@@ -550,12 +552,12 @@
 								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>
 							</div>
 							<p class="mt-2 text-xs text-ink-subtle">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
-						</form>
+						</Card>
 						</Modal>
 					{/if}
 
 					{#if activeList.can_add_items}
-						<section class="rounded-2xl border border-accent-ink/25 glass-surface p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
+						<Card as="section" variant="glass" class="border-accent-ink/25 p-4 sm:p-5" aria-labelledby="meal-suggestions-title">
 							<div>
 								<p class="text-xs font-semibold text-accent-ink">{$t("Optional connection")}</p>
 								<h2 id="meal-suggestions-title" class="mt-1 text-lg font-semibold text-ink">{$t("Add ingredients from the weekly plan")}</h2>
@@ -571,10 +573,10 @@
 							{#if suggestionPreview}
 								<div class="mt-4 space-y-3 border-t border-line pt-4" aria-live="polite">
 									{#if !suggestionPreview.availability.meal_planning}
-										<p role="status" class="rounded-xl border border-warning/20 bg-warning/5 px-3 py-3 text-sm text-warning">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</p>
+										<Alert variant="warning" role="status" class="border-warning/20 bg-warning/5 px-3 py-3">{$t("Meal Planning is disabled or unavailable to your account. No plan data was loaded.")}</Alert>
 									{:else}
 										{#if suggestionPreview.suggestions.length === 0}
-											<p role="status" class="rounded-xl border border-line px-3 py-3 text-sm text-ink-muted">{$t("No importable recipe ingredients were found for this week.")}</p>
+											<Alert variant="plain" role="status" class="rounded-xl border border-line px-3 py-3 text-sm text-ink-muted">{$t("No importable recipe ingredients were found for this week.")}</Alert>
 										{:else}
 											<div class="flex flex-wrap items-center justify-between gap-2">
 												<p class="text-xs text-ink-muted">{$t("Select the ingredients you want and adjust each quantity for what you already have. Matching ingredients are combined across linked recipes.")}</p>
@@ -601,10 +603,10 @@
 									{/if}
 								</div>
 							{/if}
-						</section>
+						</Card>
 					{/if}
 
-					<div class="rounded-2xl border glass-surface">
+					<Card variant="glass">
 						<header class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
 							<div class="min-w-0">
 								<div class="flex flex-wrap items-center gap-2">
@@ -633,7 +635,7 @@
 						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-ink-secondary" for="shopping-list-name">{$t('List name')}<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" /></label><button type="submit" disabled={saving} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Rename')}</button></form></Modal>{/if}
 
 						{#if listLoading}
-							<p class="p-6 text-sm text-ink-muted">{$t("Loading items…")}</p>
+							<Alert variant="plain" role="status" class="p-6 text-sm text-ink-muted">{$t("Loading items…")}</Alert>
 						{:else if visibleItems.length}
 							<ul aria-label={$t("Shopping items")} class="divide-y divide-line">
 								{#each visibleItems as item (item.id)}
@@ -683,16 +685,16 @@
 								<p class="mt-1 text-xs text-ink-subtle">{$t(filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.')}</p>
 							</div>
 						{/if}
-					</div>
+					</Card>
 
-					<section class="overflow-hidden rounded-[20px] border glass-surface">
+					<Card as="section" variant="glass" class="overflow-hidden rounded-[20px]">
 						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-ink-secondary hover:bg-surface sm:px-5">
 							<span>{$t("List activity")}</span><span class="text-xs text-ink-subtle">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
 						</button>
 						{#if historyOpen}
 							<div class="border-t border-line px-4 py-3 sm:px-5">
 								{#if historyLoading}
-									<p class="py-3 text-xs text-ink-subtle">{$t("Loading activity…")}</p>
+									<Alert variant="plain" role="status" class="py-3 text-xs text-ink-subtle">{$t("Loading activity…")}</Alert>
 								{:else if activity.length}
 									<ol class="divide-y divide-line">
 										{#each activity as entry (entry.id)}
@@ -707,7 +709,7 @@
 								{/if}
 							</div>
 						{/if}
-					</section>
+					</Card>
 {#if itemToRemove}<ConfirmModal bind:open={removeModalOpen} title={$t('Remove shopping item?')} message={$t('Remove this item? Its activity will remain in the list history.')} onConfirm={() => void removeItem(itemToRemove!)} />{/if}
 				</section>
 			{/if}

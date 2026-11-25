@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import { segmented, segmentedButton } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -336,7 +339,7 @@
 		{/snippet}
 	</PageHeading>
 
-	{#if message}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm text-positive">{$t(message, messageParams)}</p>{/if}
+	{#if message}<Alert variant="success" role="status" class="bg-positive/10">{$t(message, messageParams)}</Alert>{/if}
 	{#if error}<Notice tone="error" message={error} />{/if}
 
 	<Modal bind:open={editorOpen} size="wide" title={$t(editingSlotId === null ? 'Add to the plan' : 'Edit planned meal')} description={plannedFor ? formatDay(plannedFor, { weekday: 'long', month: 'long', day: 'numeric' }) + ' · ' + $t(mealTypes.find((entry) => entry.key === mealType)?.label ?? '') : ''}>
@@ -351,10 +354,10 @@
 				</select>
 			</label>
 			{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
-				<div class="sm:col-span-2 rounded-xl border border-line bg-page px-4 py-3 text-sm leading-6 text-ink-muted">
+				<Alert variant="info" role="none" class="block border-line bg-page leading-6 text-ink-muted sm:col-span-2">
 					{$t("The linked recipe is not available to your account right now. You can update the number of people or notes, or convert this slot to a dish name.")}
 					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-accent-ink hover:text-accent-ink">{$t("Convert to a dish name")}</button>
-				</div>
+				</Alert>
 			{:else}<label class="text-xs font-medium text-ink-muted">{$t("Dish source")}
 				<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
 					<option value="free_text">{$t("Write a dish name")}</option>
@@ -395,14 +398,14 @@
 	</Modal>
 
 	{#if shell.loading || loading}
-		<div class="rounded-2xl border glass-surface p-7 text-sm text-ink-muted">{$t("Loading your week…")}</div>
+		<Alert variant="glass" role="status" class="p-7 text-sm text-ink-muted">{$t("Loading your week…")}</Alert>
 	{:else if !canView}
-		<div class="rounded-2xl border glass-surface p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</div>
+		<Card variant="glass" class="p-7 text-sm leading-6 text-ink-muted">{$t("Meal Planning is enabled, but your account does not have View access. Ask a household administrator for MealPlanning View permission.")}</Card>
 	{:else}
 		<p class="text-xs text-ink-muted">{$t('Drag an editable meal to an empty slot, or use Move to choose its day and meal.')}</p>
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
 			{#each days as day (day)}
-				<article class="min-w-0 rounded-[20px] border glass-surface p-3 sm:p-4">
+				<Card as="article" variant="glass" class="min-w-0 rounded-[20px] p-3 sm:p-4">
 					<header class="mb-3 border-b border-line pb-3">
 						<p class="text-xs font-semibold text-accent-ink">{formatDay(day, { weekday: 'short' })}</p>
 						<h2 class="mt-1 text-lg font-semibold text-ink">{formatDay(day, { month: 'short', day: 'numeric' })}</h2>
@@ -410,15 +413,17 @@
 					<div class="space-y-3">
 						{#each mealTypes as entry (entry.key)}
 							{@const slot = slotFor(day, entry.key)}
-							<section
+							<Card
+								as="section"
+								variant="inset"
 								aria-label={$t(entry.label)}
-								class="min-h-24 rounded-xl border bg-page p-3 {canDropSlot(day, entry.key) ? 'border-dashed border-accent-ink/60 bg-accent-ink/5' : 'border-line'}"
+								class="min-h-24 p-3 {canDropSlot(day, entry.key) ? 'border-dashed border-accent-ink/60 bg-accent-ink/5' : ''}"
 								ondragover={(event) => allowSlotDrop(event, day, entry.key)}
 								ondrop={(event) => void dropSlot(event, day, entry.key)}
 							>
 								<div class="flex items-center justify-between gap-2">
 									<h3 class="text-[0.68rem] font-semibold text-ink-subtle">{$t(entry.label)}</h3>
-									{#if slot && slot.visibility === 'household'}<span class="text-[0.65rem] text-accent-ink">{$t("Household")}</span>{/if}
+									{#if slot && slot.visibility === 'household'}<Badge class="border-0 p-0 text-[0.65rem] font-normal leading-normal whitespace-normal text-accent-ink">{$t("Household")}</Badge>{/if}
 								</div>
 								{#if slot}
 									<p class="mt-2 break-words text-sm font-medium leading-5 text-ink">{slot.dish_label}</p>
@@ -446,17 +451,17 @@
 								{:else}
 									<p class="mt-3 text-xs text-ink-subtle">{$t("Not planned")}</p>
 								{/if}
-							</section>
+							</Card>
 						{/each}
 					</div>
-				</article>
+				</Card>
 			{/each}
 		</div>
 	{/if}
 
-	<footer class="rounded-2xl border glass-surface px-5 py-4 text-xs leading-5 text-ink-subtle">
+	<Card as="footer" variant="glass" class="px-5 py-4 text-xs leading-5 text-ink-subtle">
 		{$t("Meal plans do not change shopping lists. Recipe links appear only when you can view both Meal Planning and that recipe.")}
-	</footer>
+	</Card>
 	{#if slotToRemove}<ConfirmModal bind:open={removeOpen} title={$t('Remove planned meal?')} message={$t('Remove this meal from the plan?')} onConfirm={() => void removeSlot(slotToRemove!)} />{/if}
 	{#if copyPreviousWeekOpen}<ConfirmModal bind:open={copyPreviousWeekOpen} title={$t('Copy previous week?')} message={$t('Copy visible meals from last week into empty slots this week? Existing meals will stay unchanged. Copied meals will be saved to your private plan.')} confirmLabel={$t('Copy previous week')} busy={copyingWeek} onConfirm={() => void copyPreviousWeek()} />{/if}
 </div>

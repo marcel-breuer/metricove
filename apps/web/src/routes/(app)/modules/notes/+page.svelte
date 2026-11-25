@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import { control, field } from '#lib/ui/styles';
 	import { goto } from '$app/navigation';
 	import { getContext, untrack } from 'svelte';
@@ -142,20 +144,20 @@
 					<label class="{field} gap-1"><span class="text-xs text-ink-muted">{$t('Folder')}</span><select bind:value={folderFilter} onchange={() => { pagination.current_page = 1; void loadNotes(); }} class="{control}"><option value="">{$t('All folders')}</option>{#each folders as folder (folder.id)}<option value={String(folder.id)}>{folder.name}</option>{/each}</select></label>
 					<label class="{field} gap-1"><span class="text-xs text-ink-muted">{$t('Show')}</span><select value={statusFilter} onchange={(event) => setStatus(event.currentTarget.value === 'archived' ? 'archived' : 'active')} class="{control}"><option value="active">{$t('Active notes')}</option><option value="archived">{$t('Archived notes')}</option></select></label>
 				</div>
-				{#if loading}<p class="mt-5 text-sm text-ink-muted" role="status">{$t('Loading notes…')}</p>
+				{#if loading}<Alert variant="plain" class="mt-5 text-sm text-ink-muted" role="status">{$t('Loading notes…')}</Alert>
 				{:else if notes.length === 0}<EmptyState title="No notes match your search." class="mt-5" />
 				{:else}
 					<ul class="mt-5 grid gap-3 md:grid-cols-2">
 						{#each notes as note (note.id)}
 							<li>
-								<a href="/modules/notes/{note.id}" class="flex h-full flex-col rounded-xl border glass-surface px-4 py-3 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
+								<Card as="a" variant="glass" href="/modules/notes/{note.id}" class="flex h-full flex-col rounded-xl px-4 py-3 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">
 									<span class="flex items-center justify-between gap-2"><span class="truncate font-medium text-ink">{note.title}</span>{#if note.shared_with_household}<Badge tone="accent" class="shrink-0">{$t('Shared')}</Badge>{/if}</span>
 									<span class="mt-1 line-clamp-2 text-sm leading-5 text-ink-muted">{note.preview || $t('No preview text.')}</span>
 									<span class="mt-auto flex flex-wrap items-center gap-1.5 pt-2">
 										{#each note.tags as tag (tag.id)}<Badge>{tag.name}</Badge>{/each}
 										{#if note.updated_at}<span class="ml-auto text-xs text-ink-subtle">{formatDateTime(note.updated_at)}</span>{/if}
 									</span>
-								</a>
+								</Card>
 							</li>
 						{/each}
 					</ul>

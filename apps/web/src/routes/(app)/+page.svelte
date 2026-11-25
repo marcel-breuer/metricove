@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
 	import Button from '#lib/ui/Button.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { getContext } from 'svelte';
@@ -19,10 +21,10 @@
 	<PageHeading eyebrow="Your household, at a glance" title="A clearer view of everyday life" description="Private by design. Your enabled modules appear here when their records and dashboards are ready." />
 
 	{#if shell.loading}
-		<div role="status" aria-live="polite" class="mx-auto flex min-h-72 max-w-2xl flex-col items-center justify-center py-12 text-center">
+		<Alert variant="plain" role="status" class="mx-auto flex min-h-72 max-w-2xl flex-col items-center justify-center py-12 text-center">
 			<span class="size-8 animate-spin rounded-full border-2 border-line-strong border-t-accent-ink" aria-hidden="true"></span>
 			<p class="mt-4 text-sm text-ink-secondary">{$t('Loading your household…')}</p>
-		</div>
+		</Alert>
 	{:else if shell.modules.length === 0}
 		<div class="mx-auto flex min-h-80 max-w-2xl flex-col items-center justify-center py-12 text-center">
 			<div class="grid size-16 place-items-center rounded-[20px] border glass-surface text-2xl text-ink-muted" aria-hidden="true"><ModuleIcon name="overview" class="size-6" /></div>
@@ -47,7 +49,7 @@
 				<div><h2 id="your-modules-heading" class="text-xl font-semibold text-ink">{$t('Your modules')}</h2><p class="mt-1 text-sm text-ink-muted">{shell.modules.length} {$t(shell.modules.length === 1 ? 'module available to you' : 'modules available to you')}</p></div>
 				{#if shell.currentUser?.is_admin}<Button href="/admin/modules" variant="secondary" size="small">{$t('Manage modules')}</Button>{/if}
 			</div>
-			<ul class="mt-5 divide-y divide-line rounded-[20px] border glass-surface">
+			<Card as="ul" variant="glass" class="mt-5 divide-y divide-line rounded-[20px]">
 				{#each shell.modules as module (module.key)}
 					<li>
 						<a href={`/modules/${module.key}`} class="group flex min-h-20 items-center gap-4 px-4 py-4 transition hover:bg-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-ink sm:px-6">
@@ -58,7 +60,7 @@
 						</a>
 					</li>
 				{/each}
-			</ul>
+			</Card>
 		</section>
 	{/if}
 </section>

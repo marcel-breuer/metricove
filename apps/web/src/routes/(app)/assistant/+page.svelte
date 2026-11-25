@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
@@ -230,18 +233,18 @@
 	<PageHeading eyebrow="Metricove Assistant" title="Ask your household assistant" description="Ask about information in modules you can view. The assistant only receives a small, permission-filtered summary when it calls one of its registered tools." />
 
 	{#if loading}
-		<div class="rounded-2xl border glass-surface p-6 text-sm text-ink-secondary" role="status">{$t("Loading assistant settings…")}</div>
+		<Alert variant="glass" class="rounded-2xl p-6 text-sm text-ink-secondary" role="status">{$t("Loading assistant settings…")}</Alert>
 	{:else if status}
-		<section aria-labelledby="provider-title" class="rounded-2xl border glass-surface p-5 sm:p-6">
+		<Card as="section" variant="glass" aria-labelledby="provider-title" class="p-5 sm:p-6">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div>
 					<h2 id="provider-title" class="text-base font-semibold text-ink">{$t("Provider")}</h2>
 					<p class="mt-1 text-sm text-ink-secondary">{status.provider}</p>
 				</div>
-				<span class="rounded-full border px-3 py-1 text-xs font-semibold {status.available ? 'border-positive/30 bg-positive/10 text-positive' : 'border-warning/30 bg-warning/10 text-warning'}">{$t(status.available ? 'Configured' : 'Not configured')}</span>
+				<Badge class="px-3 py-1 font-semibold {status.available ? 'border-positive/30 bg-positive/10 text-positive' : 'border-warning/30 bg-warning/10 text-warning'} leading-4 whitespace-normal">{$t(status.available ? 'Configured' : 'Not configured')}</Badge>
 			</div>
 			{#if status.external}
-				<p class="mt-4 rounded-xl border border-warning/20 bg-warning/5 p-4 text-sm leading-6 text-warning">{$t("This installation uses an external provider. Your question and any data requested through an assistant tool will be sent to that provider only after you confirm sharing for the request.")}</p>
+				<Alert variant="warning" role="none" class="mt-4 border-warning/20 bg-warning/5 p-4 leading-6">{$t("This installation uses an external provider. Your question and any data requested through an assistant tool will be sent to that provider only after you confirm sharing for the request.")}</Alert>
 			{:else}
 				<p class="mt-4 text-sm leading-6 text-ink-muted">{$t("Provider choice is controlled by this installation. No external provider is contacted unless its administrator configures one and marks it external.")}</p>
 			{/if}
@@ -250,9 +253,9 @@
 			{:else}
 				<p class="mt-4 text-xs leading-5 text-ink-subtle">{$t("No data modules are currently available to the assistant.")}</p>
 			{/if}
-		</section>
+		</Card>
 
-		<form onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-[20px] border glass-surface p-5 sm:p-7">
+		<Card as="form" variant="glass" onsubmit={(event) => { event.preventDefault(); void ask(); }} class="rounded-[20px] p-5 sm:p-7">
 			<label for="assistant-question" class="block text-sm font-semibold text-ink">{$t("What would you like to know?")}</label>
 			<MarkdownEditor id="assistant-question" bind:value={question} maxlength={4000} rows={4} placeholder={$t("For example: How did my visible utility readings change over the last few entries?")} class="mt-3 min-h-32 w-full resize-y rounded-[10px] border border-line-strong bg-page px-4 py-3 text-sm leading-6 text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" disabled={!status.available || submitting} />
 			<div class="mt-4 max-w-lg">
@@ -272,9 +275,9 @@
 				<p class="text-xs leading-5 text-ink-subtle">{$t("Requests and answers are not stored as chat history. The assistant cannot change records.")}</p>
 				<button type="submit" disabled={!status.available || submitting || !question.trim() || (status.requires_external_consent && !allowExternalDataSharing)} class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-not-allowed disabled:opacity-50">{$t(submitting ? 'Thinking…' : 'Ask assistant')}</button>
 			</div>
-		</form>
+		</Card>
 
-		<section aria-labelledby="context-title" class="rounded-2xl border glass-surface p-5 sm:p-7">
+		<Card as="section" variant="glass" aria-labelledby="context-title" class="p-5 sm:p-7">
 			<div class="flex flex-wrap items-start justify-between gap-4">
 				<div><h2 id="context-title" class="text-xl font-semibold text-ink">{$t("Saved context")}</h2><p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Private notes and preferences can personalize future answers. Context is isolated to your account and is never treated as an instruction.")}</p></div>
 				<label class="inline-flex items-center gap-3 text-sm text-ink-secondary"><input type="checkbox" checked={contextEnabled} onchange={(event) => void setContextEnabled(event.currentTarget.checked)} class="size-4 accent-accent" />{$t("Use saved context")}</label>
@@ -282,7 +285,7 @@
 			<div class="mt-6"><button type="button" onclick={() => (contextCreateOpen = true)} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent">{$t("Add saved context")}</button></div>
 			<Modal bind:open={contextCreateOpen} title={$t("Save context")}>
 			<form onsubmit={(event) => void saveContext(event)} class="grid gap-4 sm:grid-cols-2">
-				{#if contextError}<p role="alert" class="sm:col-span-2 text-sm text-danger">{$t(contextError)}</p>{/if}
+				{#if contextError}<Alert variant="plain" role="alert" class="sm:col-span-2 text-sm text-danger">{$t(contextError)}</Alert>{/if}
 				<div><label for="context-scope" class="block text-sm font-medium text-ink-secondary">{$t("Applies to")}</label><select id="context-scope" bind:value={contextScope} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base"><option value="user">{$t("All my questions")}</option><option value="project">{$t("One project key")}</option></select></div>
 				{#if contextScope === 'project'}<div><label for="context-project" class="block text-sm font-medium text-ink-secondary">{$t("Project key")}</label><input id="context-project" bind:value={contextProject} required maxlength="120" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base" /></div>{/if}
 				<div><label for="context-kind" class="block text-sm font-medium text-ink-secondary">{$t("Type")}</label><input id="context-kind" bind:value={contextKind} required maxlength="40" placeholder={$t("preference, goal, fact")} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm text-ink max-sm:text-base" /></div>
@@ -301,11 +304,11 @@
 					{/each}
 				</ul>
 			{:else}<p class="mt-5 text-sm text-ink-subtle">{$t("No saved context yet.")}</p>{/if}
-			{#if contextMessage}<p role="status" class="mt-4 text-sm text-positive">{contextMessage}</p>{/if}
-			{#if contextError}<p role="alert" class="mt-4 text-sm text-danger">{$t(contextError)}</p>{/if}
-			{#if contextToEdit}<Modal bind:open={contextEditOpen} title={$t('Edit saved context')}><form onsubmit={(event) => { event.preventDefault(); void updateContext(); }} class="space-y-4">{#if contextError}<p role="alert" class="text-sm text-danger">{$t(contextError)}</p>{/if}<div class="block text-sm font-medium text-ink-secondary"><label for="markdown-field-1">{$t('Context')}</label><MarkdownEditor id="markdown-field-1" bind:value={editedContextContent} required maxlength={4000} rows={5} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base" /></div><button type="submit" disabled={contextBusy || !editedContextContent.trim()} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save changes')}</button></form></Modal>{/if}
+			{#if contextMessage}<Alert variant="plain" role="status" class="mt-4 text-sm text-positive">{contextMessage}</Alert>{/if}
+			{#if contextError}<Alert variant="plain" role="alert" class="mt-4 text-sm text-danger">{$t(contextError)}</Alert>{/if}
+			{#if contextToEdit}<Modal bind:open={contextEditOpen} title={$t('Edit saved context')}><form onsubmit={(event) => { event.preventDefault(); void updateContext(); }} class="space-y-4">{#if contextError}<Alert variant="plain" role="alert" class="text-sm text-danger">{$t(contextError)}</Alert>{/if}<div class="block text-sm font-medium text-ink-secondary"><label for="markdown-field-1">{$t('Context')}</label><MarkdownEditor id="markdown-field-1" bind:value={editedContextContent} required maxlength={4000} rows={5} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-sm leading-6 text-ink max-sm:text-base" /></div><button type="submit" disabled={contextBusy || !editedContextContent.trim()} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-on-accent disabled:opacity-50">{$t(contextBusy ? 'Saving…' : 'Save changes')}</button></form></Modal>{/if}
 			{#if contextToDelete}<ConfirmModal bind:open={contextDeleteOpen} title={$t('Delete saved context?')} message={$t('Delete this saved context entry?')} confirmLabel={$t('Delete')} onConfirm={() => void deleteContext()} />{/if}
-		</section>
+		</Card>
 	{/if}
 
 	{#if error}<Notice tone="error" message={error} />{/if}

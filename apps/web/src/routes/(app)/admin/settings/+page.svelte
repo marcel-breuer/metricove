@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError } from '#lib/auth';
@@ -138,7 +139,7 @@
 		{#if error}<Notice class="mt-8" tone="error" message={$t(error)} />{/if}
 		<Panel padding="large" class="mt-8 sm:p-8">
 			{#if loading}
-				<p role="status" class="text-sm text-ink-secondary">{$t("Loading settings…")}</p>
+				<Alert variant="plain" role="status" class="text-sm text-ink-secondary">{$t("Loading settings…")}</Alert>
 			{:else if settings}
 				<form class="space-y-6" onsubmit={saveSettings} aria-busy={busy}>
 					<div>
@@ -202,7 +203,7 @@
 						<textarea id="allowed-ip-ranges" bind:value={allowedIpRanges} rows="6" maxlength="8192" spellcheck="false" autocomplete="off" placeholder={'192.0.2.25\n192.0.2.0/24\n2001:db8::/32'} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 font-mono text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"></textarea>
 						<p class="mt-2 text-sm leading-6 text-ink-muted">{$t('Enter one IPv4 or IPv6 address or CIDR network per line. Commas are also accepted. Up to 100 entries are supported.')}</p>
 					</div>
-					<p class="rounded-xl border border-warning/20 bg-warning/5 p-4 text-sm leading-6 text-warning">{$t('Include the observed address above or a network containing it. Otherwise, connect from an allowed network before managing these settings again.')}</p>
+					<Alert variant="warning" role="none" class="border-warning/20 bg-warning/5 p-4 leading-6">{$t('Include the observed address above or a network containing it. Otherwise, connect from an allowed network before managing these settings again.')}</Alert>
 					<div class="flex flex-wrap gap-3"><Button type="submit" disabled={networkBusy}>{$t(networkBusy ? 'Saving…' : 'Save network access')}</Button></div>
 				</form>
 			{/if}

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Card } from '#lib/components/ui/card/index.js';
+	import Badge from '#lib/ui/Badge.svelte';
 	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -589,7 +592,7 @@
 
 {#snippet fieldReview(field: ReceiptField, value: string)}
 	{#if needsReview(field)}
-		<div class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+		<Alert variant="warning" role="none" class="mt-2 rounded-lg border-warning/30 bg-warning/5 p-2 text-xs">
 			<span>{$t(fieldStatusLabel(field))}</span>
 			<div class="mt-2 flex items-start gap-2">
 				<Checkbox
@@ -602,18 +605,18 @@
 					{$t(fieldReviewPrompt(value))}
 				</Label>
 			</div>
-		</div>
+		</Alert>
 	{/if}
 {/snippet}
 
 <section class="mx-auto max-w-6xl space-y-6">
 	<PageHeading eyebrow="Private documents" title="Receipts" description="Upload a receipt or invoice, review the extracted details, then archive it or create a matching entry." />
 
-	{#if error}<p role="alert" class="rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">{error}</p>{/if}
-	{#if statusMessage}<p role="status" class="rounded-xl border border-positive/30 bg-positive/10 p-4 text-sm text-positive">{statusMessage}</p>{/if}
+	{#if error}<Alert variant="error" role="alert" class="border-danger/30 bg-danger/10 p-4">{error}</Alert>{/if}
+	{#if statusMessage}<Alert variant="success" role="status" class="bg-positive/10 p-4">{statusMessage}</Alert>{/if}
 
 	{#if canCreate}
-		<section class="rounded-2xl border glass-surface p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
+		<Card as="section" variant="glass" class="p-5 sm:p-6" aria-labelledby="receipt-upload-heading">
 			<div class="mb-5">
 				<h2 id="receipt-upload-heading" class="text-xl font-semibold text-ink">{$t('Scan a new receipt')}</h2>
 				<p class="mt-1 text-sm leading-6 text-ink-muted">{$t('Local OCR suggests invoice fields. Nothing is saved until you confirm the preview.')}</p>
@@ -639,7 +642,7 @@
 								<li class="flex items-center justify-between gap-3 text-sm text-ink-secondary"><span class="truncate">{index + 1}. {photo.name}</span><Button type="button" onclick={() => void removePhotoPage(index)} variant="secondary" size="small" class="rounded-lg border-line-strong bg-transparent text-xs shadow-none" aria-label={$t('Remove page')}>{$t('Remove')}</Button></li>
 							{/each}
 						</ol>
-						{#if preparingScan}<p role="status" class="mt-2 text-xs text-accent-ink">{$t('Preparing scan locally…')}</p>{/if}
+						{#if preparingScan}<Alert variant="plain" role="status" class="mt-2 text-xs text-accent-ink">{$t('Preparing scan locally…')}</Alert>{/if}
 					</div>
 				{/if}
 				{#if filePreviewUrl && selectedFile}
@@ -748,19 +751,19 @@
 										</div>
 									</div>
 									{#if targetType === 'vehicle' && vehicleCategory === 'fuel'}<div class="mt-3 flex items-start gap-2 text-sm text-ink-secondary"><Checkbox id="receipt-fuel-full-tank" bind:checked={fuelFullTank} class="mt-1" /><Label variant="field" for="receipt-fuel-full-tank" class="block"><span class="font-medium">{$t('Full tank')}</span><span class="mt-1 block text-xs leading-5 text-ink-muted">{$t('Mark only after filling the tank completely. Consumption compares consecutive full refuels with odometer readings.')}</span></Label></div>{/if}
-									{#if calculatedFuelField}<p class="mt-3 text-xs text-ink-muted" role="status">{$t('Calculated from the other two values.')}</p>{/if}
+									{#if calculatedFuelField}<Alert variant="plain" class="mt-3 text-xs text-ink-muted" role="status">{$t('Calculated from the other two values.')}</Alert>{/if}
 									{#if fuelCalculatedTotal !== null && currency.length === 3}
 										<p class="mt-3 text-sm text-ink-secondary">{$t('Quantity × unit price')}: {formatCurrency(fuelCalculatedTotal, currency)}</p>
-										{#if amount && currencyAmountsDiffer(fuelCalculatedTotal, canonicalizeDecimalInput(amount, $numberLocale), $numberLocale)}<p role="status" class="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-warning">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</p>{/if}
+										{#if amount && currencyAmountsDiffer(fuelCalculatedTotal, canonicalizeDecimalInput(amount, $numberLocale), $numberLocale)}<Alert variant="warning" role="status" class="mt-2 rounded-lg border-warning/30 bg-warning/5 p-3 text-xs">{$t('This calculation differs from the invoice total; check for fees or discounts.')}</Alert>{/if}
 									{/if}
 								</fieldset>
 							{/if}
 							{#if duplicateMatches.length > 0}
-								<div class="rounded-xl border border-warning/40 bg-warning/10 p-4" role="status">
+								<Alert variant="warning" class="block border-warning/40 p-4" role="status">
 									<h4 class="font-semibold text-warning">{$t('Possible duplicate receipts')}</h4>
 									<ul class="mt-2 space-y-1 text-sm text-warning/90">{#each duplicateMatches as duplicate (duplicate.id)}<li>{duplicate.merchant ?? $t('Invoice')} · {formatDate(duplicate.invoice_date)} · {formatCurrency(duplicate.amount, duplicate.currency)} ({$t(duplicate.reasons.includes('identical_file') ? 'Identical file' : duplicate.reasons.includes('merchant_invoice_number') ? 'Same merchant and invoice number' : 'Same merchant, date and total')})</li>{/each}</ul>
 									<div class="mt-3 flex items-start gap-2 text-sm text-warning"><Checkbox id="receipt-duplicate-acknowledgment" bind:checked={duplicateAcknowledged} class="mt-0.5" /><Label variant="field" for="receipt-duplicate-acknowledgment" class="block font-normal! text-warning!">{$t('I reviewed the warning and want to save this receipt anyway.')}</Label></div>
-								</div>
+								</Alert>
 							{/if}
 						</form>
 					</div>
@@ -771,16 +774,16 @@
 					{/snippet}
 				</Modal>
 			{/if}
-		</section>
+		</Card>
 	{:else}
-		<section class="rounded-2xl border border-warning/20 bg-warning/5 p-5" aria-labelledby="receipt-access-heading">
+		<Card as="section" variant="warning" class="p-5" aria-labelledby="receipt-access-heading">
 			<h2 id="receipt-access-heading" class="font-semibold text-warning">{$t('Receipt creation access is required.')}</h2>
 			<p class="mt-2 text-sm leading-6 text-warning/75">{$t('Ask a household administrator to enable Receipts and grant your account Create access.')}</p>
-		</section>
+		</Card>
 	{/if}
 
 	{#if canView}
-		<section class="rounded-2xl border glass-surface p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
+		<Card as="section" variant="glass" class="p-5 sm:p-6" aria-labelledby="saved-receipts-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h2 id="saved-receipts-heading" class="text-xl font-semibold text-ink">{$t('Receipt archive')}</h2>
@@ -788,7 +791,7 @@
 				</div>
 				{#if loading}<span class="text-sm text-ink-muted">{$t('Loading…')}</span>{/if}
 			</div>
-			{#if receiptError}<p role="alert" class="mt-4 rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">{receiptError}</p>{/if}
+			{#if receiptError}<Alert variant="error" role="alert" class="mt-4 border-danger/30 bg-danger/10 p-4">{receiptError}</Alert>{/if}
 			<Disclosure summary="Filter receipts" hint={$t('Receipts found') + ': ' + pagination.total} class="mt-5">
 			<form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
 				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t('Search merchant or invoice number')}
@@ -843,14 +846,14 @@
 			</Disclosure>
 			<ol class="mt-4 space-y-3">
 				{#each receipts as receipt (receipt.id)}
-					<li class="rounded-xl border border-line bg-page p-4">
+					<Card as="li" variant="inset" class="p-4">
 						<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 							<div class="min-w-0">
 								<p class="truncate font-semibold text-ink">{receipt.merchant ?? $t('Invoice')}</p>
 								<p class="mt-1 text-sm text-ink-muted">{formatDate(receipt.invoice_date)} · {formatCurrency(receipt.amount, receipt.currency)} · {$t(currentReceiptTarget(receipt))}</p>
 								{#if receipt.invoice_number}<p class="mt-1 text-xs text-ink-subtle">{$t('Invoice number')}: {receipt.invoice_number}</p>{/if}
 								{#if receipt.fuel_liters && receipt.fuel_unit_price}<p class="mt-1 text-xs text-ink-muted">{receipt.fuel_liters} {$t('liters')} × {formatCurrency(receipt.fuel_unit_price, receipt.currency)}/{$t('liter')}{#if receipt.fuel_odometer_value} · {$t('Odometer reading')}: {receipt.fuel_odometer_value}{/if}{#if receipt.fuel_full_tank} · {$t('Full tank')}{/if}</p>{/if}
-								<span class="mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-medium {receipt.shared_with_household ? 'border-positive/30 bg-positive/10 text-positive' : 'border-line-strong text-ink-secondary'}">{$t(receipt.shared_with_household ? 'Shared with household' : 'Private')}</span>
+								<Badge class="mt-2 px-2.5 py-1 font-medium {receipt.shared_with_household ? 'border-positive/30 bg-positive/10 text-positive' : 'border-line-strong text-ink-secondary'} leading-4 whitespace-normal">{$t(receipt.shared_with_household ? 'Shared with household' : 'Private')}</Badge>
 							</div>
 							<div class="flex shrink-0 flex-wrap gap-2">
 								<a href={'/api/receipts/' + receipt.id + '/preview'} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-line-strong px-3 text-sm font-medium text-accent-ink hover:bg-surface-subtle">{$t('Preview document')}</a>
@@ -870,7 +873,7 @@
 							</div>
 						{/if}
 						{#if targetLinkReceiptId === receipt.id}
-							<form class="mt-3 space-y-3 rounded-xl border glass-surface p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
+							<Card as="form" variant="glass" class="mt-3 space-y-3 rounded-xl p-4" onsubmit={(event) => { event.preventDefault(); void (targetActionMode === 'link' ? saveReceiptTarget() : createReceiptTarget()); }}>
 								<div class="flex flex-wrap items-end gap-3">
 									<div class="block min-w-48 flex-1 text-sm font-[550] text-ink-secondary"><Label variant="field" for="receipt-link-type" class="block">{$t('Target type')}</Label>
 									<NativeSelect.Root variant="glass" id="receipt-link-type" bind:value={linkTargetType} onchange={() => { targetRecordId = ''; void loadTargetOptions(); }} class="mt-2"><NativeSelect.Option value="vehicle">{$t('Vehicle cost')}</NativeSelect.Option></NativeSelect.Root>
@@ -900,11 +903,11 @@
 									<Button type="submit" disabled={targetActionBusy || targetOptionsLoading || (targetActionMode === 'link' ? !targetRecordId : !targetVehicleId)} size="small" class="min-h-10 rounded-lg px-4 text-sm">{$t(targetActionBusy ? 'Saving…' : targetActionMode === 'link' ? 'Link receipt' : 'Create and link')}</Button>
 									<Button type="button" onclick={() => { targetLinkReceiptId = null; targetActionMode = null; }} variant="secondary" size="small" class="min-h-10 rounded-lg border-line-strong bg-transparent px-4 text-sm shadow-none">{$t('Cancel')}</Button>
 								</div>
-							</form>
+							</Card>
 						{/if}
-					</li>
+					</Card>
 				{:else}
-					<li class="rounded-xl border border-line bg-page p-5 text-sm text-ink-muted">{$t(loading ? 'Loading receipts…' : hasReceiptFilters ? 'No receipts match those filters.' : 'No receipts have been saved yet.')}</li>
+					<Card as="li" variant="inset" class="p-5 text-sm text-ink-muted">{$t(loading ? 'Loading receipts…' : hasReceiptFilters ? 'No receipts match those filters.' : 'No receipts have been saved yet.')}</Card>
 				{/each}
 			</ol>
 			{#if pagination.last_page > 1}
@@ -916,6 +919,6 @@
 					</div>
 				</div>
 			{/if}
-		</section>
+		</Card>
 	{/if}
 </section>

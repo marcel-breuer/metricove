@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { goto } from '$app/navigation';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
@@ -113,7 +114,7 @@
 	wide
 >
 	{#if state === 'loading'}
-		<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted" role="status">{$t("Checking household setup…")}</p>
+		<Alert variant="plain" class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted" role="status">{$t("Checking household setup…")}</Alert>
 	{:else if state === 'available'}
 		<h2 id="setup-form-heading" class="mt-4 text-lg leading-[1.35] font-[650] tracking-[-0.02em] text-ink max-[760px]:mt-3.5">{$t("Create your administrator account")}</h2>
 		<form class="mt-3.5 grid gap-3.5 max-[760px]:mt-3 max-[760px]:gap-3" onsubmit={completeSetup} aria-labelledby="setup-form-heading" aria-busy={busy}>
@@ -132,7 +133,7 @@
 			</Button>
 		</form>
 	{:else if state === 'created'}
-		<div role="status" aria-live="polite">
+		<Alert variant="plain" role="status" aria-live="polite">
 			<p class="mt-7 text-xs font-semibold text-positive">{$t("Household ready")}</p>
 			<h2 class="mt-3 text-[1.75rem] leading-[1.35] font-[650] tracking-[-0.02em] text-ink">{$t("Welcome,")} {createdName}.</h2>
 			<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted">
@@ -141,19 +142,19 @@
 			<Button href="/" class="mt-5">
 				{$t("Open dashboard")}
 			</Button>
-		</div>
+		</Alert>
 	{:else if state === 'complete'}
-		<div role="status">
+		<Alert variant="plain" role="status">
 			<p class="mt-7 text-xs font-semibold text-positive">{$t("Setup is complete")}</p>
 			<h2 class="mt-3 text-[1.75rem] leading-[1.35] font-[650] tracking-[-0.02em] text-ink">{$t("This household is already set up.")}</h2>
 			<p class="mt-5 text-[0.9375rem] leading-[1.7] text-ink-muted">{$t("Initial registration is closed for this installation.")}</p>
 			<Button href="/login" variant="secondary" class="mt-5">
 				{$t("Go to sign in")}
 			</Button>
-		</div>
+		</Alert>
 	{:else}
 		<div>
-			<p class="mt-4 text-lg leading-[1.35] font-[650] tracking-[-0.02em] text-ink max-[760px]:mt-3.5" role="alert">{$t("Setup status could not be loaded.")}</p>
+			<Alert variant="plain" class="mt-4 text-lg leading-[1.35] font-[650] tracking-[-0.02em] text-ink max-[760px]:mt-3.5" role="alert">{$t("Setup status could not be loaded.")}</Alert>
 			<Button variant="secondary" class="mt-5" onclick={loadStatus}>
 				{$t("Try again")}
 			</Button>
