@@ -13,6 +13,7 @@
 				ghost: "border-transparent bg-transparent text-muted-foreground hover:not-disabled:bg-muted hover:not-disabled:text-foreground",
 				destructive: "border-destructive/35 bg-destructive/10 text-destructive",
 				link: "text-primary underline-offset-4 hover:underline",
+				toolbar: "rounded-lg border-line bg-surface px-2 text-sm text-ink-secondary hover:not-disabled:border-accent-ink disabled:opacity-50",
 			},
 			size: {
 				default: "min-h-11 rounded-[10px] px-4 py-2.5 text-sm",

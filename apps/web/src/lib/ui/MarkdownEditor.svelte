@@ -30,8 +30,16 @@
 </script>
 <div class="min-w-0">
 	<div role="group" aria-label={$t('Markdown formatting')} class="flex flex-wrap gap-1 pt-2">
-		{#each tools as tool}
-			<Button variant="ghost" size="icon" type="button" aria-label={$t(tool.label)} title={$t(tool.label)} disabled={attrs.disabled || attrs.readonly} onclick={() => format(tool.before, tool.after, tool.line)} class="rounded-lg border-line bg-surface text-sm text-ink-secondary hover:not-disabled:border-accent-ink hover:not-disabled:bg-surface hover:not-disabled:text-ink-secondary">{tool.text}</Button>
+		{#each tools as tool (tool.label)}
+			<Button
+				type="button"
+				variant="toolbar"
+				size="icon"
+				aria-label={$t(tool.label)}
+				title={$t(tool.label)}
+				disabled={attrs.disabled || attrs.readonly}
+				onclick={() => format(tool.before, tool.after, tool.line)}
+			>{tool.text}</Button>
 		{/each}
 	</div>
 	<Textarea {...attrs} variant="glass" bind:ref={textarea} bind:value {oninput} class={className} />
