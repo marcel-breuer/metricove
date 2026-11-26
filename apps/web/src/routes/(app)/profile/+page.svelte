@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -362,41 +366,43 @@
 						<TextField id="email" name="email" label={$t('Email address')} type="email" autocomplete="email" bind:value={email} required maxlength={255} />
 						<div class="grid gap-4 sm:grid-cols-2">
 						<IconChoiceGroup id="language" label="Language" value={$uiLanguage} options={languageOptions} onchange={(value) => changeLanguage(value as 'en' | 'de')} />
-							<label class="block text-sm font-medium text-ink-secondary" for="number-locale">{$t('Number and date format')}
-								<select id="number-locale" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$numberLocale}>
-									<option value="de-DE">{$t('German (Germany)')} · 1.234,56</option><option value="en-US">{$t('English (United States)')} · 1,234.56</option><option value="en-GB">{$t('English (United Kingdom)')} · 1,234.56</option>
-								</select>
-							</label>
-							<label class="block text-sm font-medium text-ink-secondary" for="default-currency">{$t('Currency')}
-								<select id="default-currency" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$defaultCurrency}>
-									<option>{$t("EUR")}</option><option>{$t("USD")}</option><option>{$t("GBP")}</option><option>{$t("CHF")}</option>
-								</select>
-							</label>
-							<label class="block text-sm font-medium text-ink-secondary" for="currency-display">{$t('Currency display')}
-								<select id="currency-display" class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink" bind:value={$currencyDisplay}>
-									<option value="code">{$t('Currency code (EUR)')}</option><option value="symbol">{$t('Currency symbol (€)')}</option>
-								</select>
-							</label>
+							<Label variant="field" class="block text-sm font-medium text-ink-secondary" for="number-locale">{$t('Number and date format')}
+								<NativeSelect.Root variant="glass" id="number-locale" class="mt-2 w-full rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink" bind:value={$numberLocale}>
+									<NativeSelect.Option value="de-DE">{$t('German (Germany)')} · 1.234,56</NativeSelect.Option><NativeSelect.Option value="en-US">{$t('English (United States)')} · 1,234.56</NativeSelect.Option><NativeSelect.Option value="en-GB">{$t('English (United Kingdom)')} · 1,234.56</NativeSelect.Option>
+								</NativeSelect.Root>
+							</Label>
+							<Label variant="field" class="block text-sm font-medium text-ink-secondary" for="default-currency">{$t('Currency')}
+								<NativeSelect.Root variant="glass" id="default-currency" class="mt-2 w-full rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink" bind:value={$defaultCurrency}>
+									<NativeSelect.Option value="EUR">{$t("EUR")}</NativeSelect.Option><NativeSelect.Option value="USD">{$t("USD")}</NativeSelect.Option><NativeSelect.Option value="GBP">{$t("GBP")}</NativeSelect.Option><NativeSelect.Option value="CHF">{$t("CHF")}</NativeSelect.Option>
+								</NativeSelect.Root>
+							</Label>
+							<Label variant="field" class="block text-sm font-medium text-ink-secondary" for="currency-display">{$t('Currency display')}
+								<NativeSelect.Root variant="glass" id="currency-display" class="mt-2 w-full rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink" bind:value={$currencyDisplay}>
+									<NativeSelect.Option value="code">{$t('Currency code (EUR)')}</NativeSelect.Option><NativeSelect.Option value="symbol">{$t('Currency symbol (€)')}</NativeSelect.Option>
+								</NativeSelect.Root>
+							</Label>
 						</div>
-						<section class="space-y-3 rounded-xl border border-line p-4" aria-labelledby="recipe-units-heading">
+						<Card as="section" variant="inset" class="space-y-3 p-4" aria-labelledby="recipe-units-heading">
 							<div>
 								<h3 id="recipe-units-heading" class="text-sm font-semibold text-ink">{$t('Recipe units')}</h3>
 								<p class="mt-1 text-xs leading-5 text-ink-muted">{$t('Choose the units available in your recipe ingredient dropdowns. These settings belong to your account.')}</p>
 							</div>
 							<ul class="flex flex-wrap gap-2">
 								{#each recipeUnits as unit (unit)}
-									<li class="inline-flex min-h-9 items-center gap-2 rounded-lg border border-line-strong bg-page px-3 text-sm text-ink">
-										<span>{$t(unit)}</span>
-										<button type="button" aria-label={$t('Remove recipe unit {unit}', { unit: $t(unit) })} onclick={() => removeRecipeUnit(unit)} disabled={recipeUnits.length <= 1} class="font-medium text-ink-muted hover:text-danger disabled:opacity-40">×</button>
+									<li>
+										<Badge class="inline-flex min-h-9 items-center gap-2 rounded-lg border-line-strong bg-page px-3 text-sm text-ink">
+											{$t(unit)}
+										<Button variant="ghost" size="small" type="button" aria-label={$t('Remove recipe unit {unit}', { unit: $t(unit) })} onclick={() => removeRecipeUnit(unit)} disabled={recipeUnits.length <= 1} class="h-auto min-h-0 px-0 py-0 font-medium text-ink-muted hover:text-danger disabled:opacity-40">×</Button>
+										</Badge>
 									</li>
 								{/each}
 							</ul>
 							<div class="flex flex-col gap-2 sm:flex-row">
 								<label class="sr-only" for="new-recipe-unit">{$t('Add a custom recipe unit')}</label>
-								<input id="new-recipe-unit" bind:value={newRecipeUnit} maxlength="40" placeholder={$t('For example, clove')} class="min-h-11 min-w-0 flex-1 rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
+								<Input variant="glass" id="new-recipe-unit" bind:value={newRecipeUnit} maxlength={40} placeholder={$t('For example, clove')} class="min-h-11 min-w-0 flex-1 rounded-[10px] border-line-strong bg-page px-3 text-sm focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 								<Button variant="secondary" type="button" disabled={!newRecipeUnit.trim() || recipeUnits.length >= 80} onclick={addRecipeUnit}>{$t('Add unit')}</Button>
 							</div>
-						</section>
+						</Card>
 						{#if message}<Notice tone="success" message={$t(message)} />{/if}
 						{#if error}<Notice tone="error" message={$t(error)} />{/if}
 						<Button type="submit" fullWidth disabled={busy}>
@@ -419,15 +425,15 @@
 				<form class="mt-6 space-y-5" onsubmit={changePassword} aria-busy={passwordBusy}>
 					<div>
 						<label for="current-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('Current password')}</label>
-						<input id="current-password" name="current_password" type="password" autocomplete="current-password" bind:value={currentPassword} required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+						<Input variant="glass" id="current-password" name="current_password" type="password" autocomplete="current-password" bind:value={currentPassword} required class="rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<div>
 						<label for="new-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('New password')}</label>
-						<input id="new-password" name="password" type="password" autocomplete="new-password" bind:value={newPassword} required minlength="12" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+						<Input variant="glass" id="new-password" name="password" type="password" autocomplete="new-password" bind:value={newPassword} required minlength={12} class="rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<div>
 						<label for="confirm-password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t('Confirm new password')}</label>
-						<input id="confirm-password" name="password_confirmation" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required minlength="12" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-3 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+						<Input variant="glass" id="confirm-password" name="password_confirmation" type="password" autocomplete="new-password" bind:value={passwordConfirmation} required minlength={12} class="rounded-[10px] border-line-strong bg-page px-3 py-3 text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 					</div>
 					<Button type="submit" disabled={passwordBusy}>{passwordBusy ? $t('Changing…') : $t('Change password')}</Button>
 				</form>
@@ -444,18 +450,18 @@
 					<p class="mt-3 break-all rounded-lg bg-page px-3 py-2 font-mono text-xs text-accent-ink">{mcpEndpoint}</p>
 				{/if}
 				{#if allowedScopes.length > 0}
-					<button type="button" onclick={() => (mcpCreateOpen = true)} class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:opacity-50">{$t('Create MCP token')}</button>
+					<Button type="button" onclick={() => (mcpCreateOpen = true)} class="mt-6 w-full rounded-lg px-4 py-3">{$t('Create MCP token')}</Button>
 					<Modal bind:open={mcpCreateOpen} title={$t('Create MCP token')}>
 					<form class="space-y-4" onsubmit={createMcpToken}>
 						<div>
 							<label for="mcp-token-name" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Token name")}</label>
-							<input id="mcp-token-name" bind:value={tokenName} required maxlength="100" autocomplete="off" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+							<Input variant="glass" id="mcp-token-name" bind:value={tokenName} required maxlength={100} autocomplete="off" class="rounded-[10px] border-line-strong bg-page px-3 py-2.5 text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 						</div>
 						<fieldset class="space-y-2">
 							<legend class="mb-2 text-sm font-medium text-ink-secondary">{$t("Available scopes")}</legend>
 							{#each allowedScopes as scope}
 								<label class="flex items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm text-ink-secondary">
-					<input type="checkbox" value={scope} bind:group={selectedScopes} class="mt-0.5 accent-accent" />
+					<Checkbox checked={selectedScopes.includes(scope)} onCheckedChange={(checked) => { selectedScopes = checked ? [...selectedScopes, scope] : selectedScopes.filter((selectedScope) => selectedScope !== scope); }} class="mt-0.5" />
 									<span>{scopeLabel(scope)}<span class="mt-0.5 block font-mono text-xs text-ink-subtle">{scope}</span></span>
 								</label>
 							{/each}
@@ -463,19 +469,19 @@
 						{#if !tokenNeverExpires}
 							<div>
 								<label for="mcp-token-expiry" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Expires in days")}</label>
-								<input id="mcp-token-expiry" type="number" min="1" max="365" bind:value={tokenExpiry} required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+								<Input variant="glass" id="mcp-token-expiry" type="number" min={1} max={365} bind:value={tokenExpiry} required class="rounded-[10px] border-line-strong bg-page px-3 py-2.5 text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
 							</div>
 						{/if}
 						<label class="flex items-start gap-3 text-sm text-ink-secondary">
-							<input type="checkbox" bind:checked={tokenNeverExpires} class="mt-0.5 accent-accent" />
+							<Checkbox bind:checked={tokenNeverExpires} class="mt-0.5" />
 							<span>{$t("Never expires")}</span>
 						</label>
 						{#if mcpError}<Notice tone="error" message={mcpError} />{/if}
-						<button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</button>
+						<Button type="submit" disabled={mcpBusy || selectedScopes.length === 0} class="w-full rounded-lg px-4 py-3">{mcpBusy ? $t('Creating…') : $t('Create MCP token')}</Button>
 					</form>
 					</Modal>
 				{:else if !loading}
-					<p class="mt-5 rounded-lg border border-line-strong bg-page px-3 py-3 text-sm text-ink-muted">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</p>
+					<Card as="p" variant="inset" class="mt-5 rounded-lg px-3 py-3 text-sm text-ink-muted">{$t("No MCP scopes are currently available. Ask a household admin to enable a module and grant your account access.")}</Card>
 				{/if}
 				{#if newSecret}
 					<Alert variant="warning" role="none" class="mt-5 border-warning/30 bg-warning/10 p-4">
@@ -489,12 +495,12 @@
 					<h3 class="text-base font-semibold">{$t('Your tokens')}</h3>
 					{#if mcpTokens.length === 0}<p class="text-sm text-ink-muted">{$t('No tokens created yet.')}</p>{/if}
 					{#each mcpTokens as token}
-						<div class="rounded-xl border border-line bg-page p-4">
+						<Card variant="inset" class="p-4">
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div><p class="font-medium text-ink">{token.name}</p><p class="mt-1 text-xs text-ink-muted">{token.scopes.join(', ')}</p><p class="mt-1 text-xs text-ink-subtle">{token.expires_at ? `${$t('Expires')} ${formatDate(token.expires_at)}` : $t('Never expires')}{token.revoked_at ? ` · ${$t('revoked')}` : ''}</p></div>
-								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<button type="button" onclick={() => { tokenToRevoke = token; mcpRevokeOpen = true; }} class="rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">{$t('Revoke')}</button>{/if}
+								{#if !token.revoked_at && (!token.expires_at || new Date(token.expires_at).getTime() > Date.now())}<Button type="button" variant="ghost" onclick={() => { tokenToRevoke = token; mcpRevokeOpen = true; }} class="rounded-lg border border-danger/30 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10">{$t('Revoke')}</Button>{/if}
 							</div>
-						</div>
+						</Card>
 					{/each}
 				</div>
 			</Card>
@@ -505,14 +511,14 @@
 				<h2 class="mt-2 text-2xl font-semibold">{$t('Pending MCP actions')}</h2>
 				<p class="mt-3 text-sm leading-6 text-ink-secondary">{$t('A connected MCP client cannot approve its own writes. Review each change here before the client can save it.')}</p>
 				<div class="mt-6 space-y-4">
-					{#if mcpActions.length === 0}<p class="rounded-lg border border-line bg-page px-3 py-3 text-sm text-ink-muted">{$t('No pending actions.')}</p>{/if}
+					{#if mcpActions.length === 0}<Card as="p" variant="inset" class="rounded-lg px-3 py-3 text-sm text-ink-muted">{$t('No pending actions.')}</Card>{/if}
 					{#each mcpActions as action}
-						<article class="rounded-xl border border-line bg-page p-4">
+						<Card as="article" variant="inset" class="p-4">
 							<div class="flex items-start justify-between gap-3"><h3 class="font-semibold text-ink">{action.meter ?? $t(action.action)}</h3><Badge class="border-accent-ink/20 bg-accent/10 px-2.5 py-1 text-accent-ink font-normal leading-4 whitespace-normal">{action.state}</Badge></div>
 							{#if action.meter}<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt class="text-ink-subtle">{$t('Date')}</dt><dd class="mt-1 text-ink-secondary">{formatDate(action.reading_date ?? '')}</dd></div><div><dt class="text-ink-subtle">{$t('Reading')}</dt><dd class="mt-1 text-ink-secondary">{formatMeasurement(action.value ?? '', action.unit ?? '')} {action.unit}</dd></div>{#if action.note}<div class="col-span-2"><dt class="text-ink-subtle">{$t('Note')}</dt><dd class="mt-1 whitespace-pre-wrap text-ink-secondary">{action.note}</dd></div>{/if}</dl>{:else}<dl class="mt-4 space-y-2 text-sm">{#each Object.entries(action.details ?? {}) as [key, value]}<div class="grid grid-cols-[minmax(0,8rem)_1fr] gap-3"><dt class="break-words text-ink-subtle">{approvalFieldLabel(key)}</dt><dd class="break-words text-ink-secondary">{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>{/each}</dl>{/if}
 							<dl class="mt-4 grid grid-cols-2 gap-3 text-sm"><div class="col-span-2"><dt class="text-ink-subtle">{$t('Requested by')}</dt><dd class="mt-1 text-ink-secondary">{action.token_name}</dd></div><div class="col-span-2"><dt class="text-ink-subtle">{$t('Expires')}</dt><dd class="mt-1 text-ink-secondary">{formatDateTime(action.expires_at)}</dd></div></dl>
-							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Approve')}</button><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Reject')}</button></div>{:else}<p class="mt-4 text-sm text-positive">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><button type="button" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-line-strong px-4 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-subtle">{$t('Cancel approval')}</button>{/if}
-						</article>
+							{#if action.state === 'pending'}<div class="mt-5 flex flex-wrap gap-3"><Button type="button" onclick={() => decideMcpAction(action.id, 'approve')} class="rounded-lg px-4 py-2.5">{$t('Approve')}</Button><Button type="button" variant="ghost" onclick={() => decideMcpAction(action.id, 'reject')} class="rounded-lg border border-line-strong px-4 py-2.5 text-ink-secondary hover:bg-surface-subtle">{$t('Reject')}</Button></div>{:else}<p class="mt-4 text-sm text-positive">{$t('Approved. The connected MCP client can complete this action until it expires.')}</p><Button type="button" variant="ghost" onclick={() => decideMcpAction(action.id, 'reject')} class="mt-3 rounded-lg border border-line-strong px-4 py-2.5 text-ink-secondary hover:bg-surface-subtle">{$t('Cancel approval')}</Button>{/if}
+						</Card>
 					{/each}
 				</div>
 			</Card>
