@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import MarkdownInline from '#lib/ui/MarkdownInline.svelte';
@@ -106,7 +108,7 @@
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="meters-heading">
-			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-ink">{$t("Meters")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.")}</p></div><button type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button></div>
+			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="meters-heading" class="text-xl font-semibold text-ink">{$t("Meters")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private meters are visible to their owner. Shared meters are visible to members with Utilities View access.")}</p></div><Button variant="ghost" type="button" onclick={() => void loadMeters()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</Button></div>
 			{#if loading}
 				<Alert variant="glass" role="status" class="mt-5 rounded-xl px-4 py-5 text-sm text-ink-secondary">{$t("Loading meters…")}</Alert>
 			{:else if meters.length === 0}
@@ -127,22 +129,22 @@
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
-		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Create meter')}</button></div>
+		<div class="mt-8 flex justify-end"><Button variant="primary" type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Create meter')}</Button></div>
 		<Modal bind:open={createOpen} size="wide" title={$t('Add a meter.')} description={$t('Register a meter and its units for future readings.')}>{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<div>
 			<p class="mb-6 max-w-2xl text-sm leading-6 text-ink-muted">{$t("Register units are fixed by type to prevent accidental conversions: electricity uses kWh; gas and water use m³. Enter cumulative readings from the meter display.")}</p>
 			<form id="meter-create-form" class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" onsubmit={createMeter}>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Main electricity")} /></label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter type")}<select bind:value={meterType} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#each utilityMeterTypes as type}<option value={type.value}>{$t(type.label)} · {type.unit}</option>{/each}</select></label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}{#if canCreateShared}<option value="household">{$t("Shared household meter")}</option>{/if}</select></label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Alert threshold")} <span class="font-normal text-ink-subtle">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<Input variant="glass" bind:value={name} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Main electricity")} /></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter type")}<NativeSelect.Root variant="glass" bind:value={meterType} class="mt-2 w-full">{#each utilityMeterTypes as type}<NativeSelect.Option value={type.value}>{$t(type.label)} · {type.unit}</NativeSelect.Option>{/each}</NativeSelect.Root></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}<NativeSelect.Root variant="glass" bind:value={visibility} class="mt-2 w-full">{#if canCreatePrivate}<NativeSelect.Option value="private">{$t("Private to me")}</NativeSelect.Option>{/if}{#if canCreateShared}<NativeSelect.Option value="household">{$t("Shared household meter")}</NativeSelect.Option>{/if}</NativeSelect.Root></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Alert threshold")} <span class="font-normal text-ink-subtle">{$t("(optional,")} {utilityMeterTypes.find((type) => type.value === meterType)?.unit} {$t("per interval)")}</span><Input variant="glass" bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
 				<div class="block text-sm font-medium text-ink-secondary sm:col-span-2"><label for="markdown-field-2">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><MarkdownEditor id="markdown-field-2" bind:value={description} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Location or meter details")} /></div>
 				<div class="sm:col-span-2 lg:col-span-4"><p class="text-xs leading-5 text-ink-subtle">{$t("Private readings and meter photos remain hidden from administrators unless their owner grants access.")}</p></div>
 			</form>
 		</div>
 			{#snippet footer()}
 				<Button variant="secondary" type="button" onclick={() => (createOpen = false)}>{$t('Cancel')}</Button>
-				<Button type="submit" form="meter-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create meter')}</Button>
+				<Button variant="primary" type="submit" form="meter-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create meter')}</Button>
 			{/snippet}
 		</Modal>
 	{:else}

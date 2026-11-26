@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
@@ -500,75 +503,75 @@
 				<form id="tracker-schema-form" class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={saveSchema}>
 					<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
 						<p class="text-sm leading-6 text-ink-muted sm:col-span-2 lg:col-span-1">{$t("Removed fields stay in past measurements. Once a field has values, its type and unit cannot change; add a new field for a new unit.")}</p>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Tracker name")}<input bind:value={schemaName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Tracker name")}<Input variant="glass" bind:value={schemaName} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
 						<div class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1"><label for="markdown-field-5">{$t("Description")}</label><MarkdownEditor id="markdown-field-5" bind:value={schemaDescription} maxlength={500} rows={4} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></div>
 					</div>
 					<div class="space-y-4">
 					<div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 lg:border-t-0 lg:pt-0">
 						<div><h3 class="font-semibold text-ink">{$t("Current fields")}</h3><p class="mt-1 text-sm text-ink-muted">{$t("Leave a field out to retire it while retaining its history.")}</p></div>
-						<button type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Add field")}</button>
+						<Button variant="secondary" type="button" onclick={addSchemaField} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Add field")}</Button>
 					</div>
 					<ol class="space-y-3">
 						{#each schemaFields as field, index (field.local_key)}
-							<li class="grid gap-3 rounded-xl border border-line bg-page p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_auto]">
-								<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-								<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base"><option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option></select></label>
-								{#if field.type === 'number'}<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>{/if}
-								<div class="flex flex-wrap items-center gap-3 lg:justify-end"><label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><input bind:checked={field.required} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{$t("Required")}</label><button type="button" disabled={schemaFields.length <= 1} onclick={() => removeSchemaField(index)} class="min-h-10 rounded-lg px-3 text-sm text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Retire")}</button></div>
-								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-ink-muted">{$t("Minimum")}<input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-ink-muted">{$t("Maximum")}<input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label></div>{/if}
-							</li>
+							<Card as="li" variant="inset" class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(9rem,0.8fr)_minmax(8rem,0.7fr)_auto]">
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}<Input variant="glass" bind:value={field.label} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+								<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}<NativeSelect.Root variant="glass" bind:value={field.type} class="mt-2 w-full"><NativeSelect.Option value="number">{$t("Number")}</NativeSelect.Option><NativeSelect.Option value="text">{$t("Text")}</NativeSelect.Option><NativeSelect.Option value="date">{$t("Date")}</NativeSelect.Option><NativeSelect.Option value="boolean">{$t("Yes / no")}</NativeSelect.Option></NativeSelect.Root></label>
+								{#if field.type === 'number'}<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}<Input variant="glass" bind:value={field.unit} required maxlength={32} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>{/if}
+								<div class="flex flex-wrap items-center gap-3 lg:justify-end"><label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><Checkbox bind:checked={field.required} class="size-4" />{$t("Required")}</label><Button variant="ghost" type="button" disabled={schemaFields.length <= 1} onclick={() => removeSchemaField(index)} class="min-h-10 rounded-lg px-3 text-sm text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Retire")}</Button></div>
+								{#if field.type === 'number'}<div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-4"><label class="text-xs font-medium text-ink-muted">{$t("Minimum")}<Input variant="glass" bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label><label class="text-xs font-medium text-ink-muted">{$t("Maximum")}<Input variant="glass" bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label></div>{/if}
+							</Card>
 						{/each}
 					</ol>
 					</div>
 				</form>
 			{#snippet footer()}
 				<Button variant="secondary" type="button" onclick={() => (schemaOpen = false)}>{$t("Cancel")}</Button>
-				<Button type="submit" form="tracker-schema-form" disabled={savingSchema}>{$t(savingSchema ? 'Saving revision…' : 'Save schema revision')}</Button>
+				<Button variant="ghost" type="submit" form="tracker-schema-form" disabled={savingSchema}>{$t(savingSchema ? 'Saving revision…' : 'Save schema revision')}</Button>
 			{/snippet}
 		</Modal>
 
 		{#if canCreate}
-			<div class="mt-7 flex justify-end"><button type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</button></div>
+			<div class="mt-7 flex justify-end"><Button variant="primary" type="button" onclick={() => { clearEntryForm(); entryModalOpen = true; }} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t('Record a measurement')}</Button></div>
 			<Modal bind:open={entryModalOpen} title={$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')} description={$t('Your entries are private to your account by default.')}>
 			<Card as="section" variant="glass" class="p-5 sm:p-7" aria-labelledby="new-entry-heading">
 				<div class="flex flex-wrap items-start justify-between gap-4">
 					<div><p class="text-sm font-medium text-accent-ink">{$t("Quick entry")}</p><h2 id="new-entry-heading" class="mt-1 text-xl font-semibold text-ink">{$t(editingEntryId ? 'Edit measurement' : 'Record a measurement')}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Your entries are private to your account by default.")}</p></div>
-					{#if editingEntryId}<button type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</button>{/if}
+					{#if editingEntryId}<Button variant="ghost" type="button" onclick={() => { clearEntryForm(); entryModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Cancel edit")}</Button>{/if}
 				</div>
 				<form class="mt-5 space-y-5" onsubmit={saveEntry}>
 					<div class="grid gap-4 sm:grid-cols-2">
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Recorded at")}<input bind:value={recordedAt} type="datetime-local" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={note} maxlength="1000" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Add context")} /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Recorded at")}<Input variant="glass" bind:value={recordedAt} type="datetime-local" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><Input variant="glass" bind:value={note} maxlength={1000} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Add context")} /></label>
 					</div>
 					<div class="grid gap-4 sm:grid-cols-2">
 						{#each activeFields as field (field.key)}
 							<div class="min-w-0">
 								{#if field.type === 'boolean'}
-									<label class="flex min-h-14 items-center gap-3 rounded-xl border border-line bg-page px-4 text-sm font-medium text-ink-secondary"><input bind:checked={booleanValues[field.key]} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{field.label}{$t(field.required ? ' · required' : '')}</label>
+									<label class="flex min-h-14 items-center gap-3 rounded-xl border border-line bg-page px-4 text-sm font-medium text-ink-secondary"><Checkbox bind:checked={booleanValues[field.key]} class="size-4" />{field.label}{$t(field.required ? ' · required' : '')}</label>
 								{:else}
 									<label class="block text-sm font-medium text-ink-secondary">{field.label}{$t(field.required ? ' · required' : '')}
 										{#if field.type === 'number'}
 										<span class="ml-1 text-xs font-normal text-ink-muted">{field.unit}{field.minimum !== null || field.maximum !== null ? ' · ' + (field.minimum === null ? '−∞' : formatMeasurement(field.minimum, field.unit)) + ' ' + $t('to') + ' ' + (field.maximum === null ? '∞' : formatMeasurement(field.maximum, field.unit)) : ''}</span>
-											<input bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Enter a decimal value")} />
+											<Input variant="glass" bind:value={entryValues[field.key]} type="text" inputmode="decimal" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Enter a decimal value")} />
 										{:else if field.type === 'date'}
-											<input bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+											<Input variant="glass" bind:value={entryValues[field.key]} type="date" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 										{:else}
-											<input bind:value={entryValues[field.key]} type="text" maxlength="5000" required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+											<Input variant="glass" bind:value={entryValues[field.key]} type="text" maxlength={5000} required={field.required} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 										{/if}
 									</label>
 								{/if}
 							</div>
 						{/each}
 					</div>
-					<div class="rounded-xl border border-line bg-page p-4">
+					<Card variant="inset" class="p-4">
 						<label class="block text-sm font-medium text-ink-secondary">{$t('Supporting file')} <span class="font-normal text-ink-subtle">{$t('(optional)')}</span>
-							<input type="file" accept="application/pdf,image/jpeg,image/png" onchange={(event) => { attachmentFile = event.currentTarget.files?.[0] ?? null; attachmentNotice = ''; }} class="mt-2 block min-h-11 w-full text-sm text-ink-secondary file:mr-3 file:min-h-10 file:rounded-lg file:border-0 file:bg-surface file:px-3 file:text-sm file:font-medium file:text-ink-secondary" />
+							<Input variant="file" type="file" accept="application/pdf,image/jpeg,image/png" onchange={(event) => { attachmentFile = event.currentTarget.files?.[0] ?? null; attachmentNotice = ''; }} class="mt-2" />
 						</label>
 						<p class="mt-2 text-xs leading-5 text-ink-muted">{$t('Attach a PDF or image up to 10 MB. Extracted values are suggestions; check them before saving.')}</p>
-						{#if attachmentFile}<div class="mt-3 flex flex-wrap items-center gap-3"><span class="max-w-full truncate text-sm text-ink-secondary">{attachmentFile.name}</span><button type="button" disabled={previewingAttachment} onclick={() => void previewAttachment()} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink disabled:opacity-50">{$t(previewingAttachment ? 'Reading file…' : 'Read file and suggest values')}</button></div>{/if}
+						{#if attachmentFile}<div class="mt-3 flex flex-wrap items-center gap-3"><span class="max-w-full truncate text-sm text-ink-secondary">{attachmentFile.name}</span><Button variant="ghost" type="button" disabled={previewingAttachment} onclick={() => void previewAttachment()} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm font-medium text-ink-secondary hover:border-accent-ink disabled:opacity-50">{$t(previewingAttachment ? 'Reading file…' : 'Read file and suggest values')}</Button></div>{/if}
 						{#if attachmentNotice}<Alert variant="plain" role="status" class="mt-3 text-sm text-ink-muted">{$t(attachmentNotice)}</Alert>{/if}
-					</div>
-					<div class="flex justify-end border-t border-line pt-4"><button type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</button></div>
+					</Card>
+					<div class="flex justify-end border-t border-line pt-4"><Button variant="primary" type="submit" disabled={savingEntry} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(savingEntry ? 'Saving…' : editingEntryId ? 'Save changes' : 'Save measurement')}</Button></div>
 				</form>
 			</Card>
 			</Modal>
@@ -583,7 +586,7 @@
 						<Card as="article" variant="glass" class="p-4 sm:p-5">
 							<div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold text-ink">{field.label}</h3><p class="mt-1 text-xs text-ink-muted">{series.length} {$t("saved values ·")} {field.unit ?? 'unit not set'}</p></div><Badge class="border-line-strong px-2.5 py-1 text-ink-muted font-normal leading-4 whitespace-normal">{field.unit ?? '—'}</Badge></div>
 							{#if series.length > 0}
-								<div class="mt-4 overflow-hidden rounded-xl border border-line bg-page p-2" role="img" aria-label={field.label + ' measurement history'}>
+								<Card as="div" variant="inset" class="mt-4 overflow-hidden p-2" role="img" aria-label={field.label + ' measurement history'}>
 									<svg viewBox="0 0 1000 200" preserveAspectRatio="none" class="h-40 w-full">
 										<path d="M0 30H1000M0 105H1000M0 180H1000" stroke="#1e293b" stroke-width="2" />
 										{#if series.length > 1}<polyline points={chartPoints(field)} fill="none" stroke="#67e8f9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />{/if}
@@ -591,7 +594,7 @@
 											<circle cx={point.x} cy={point.y} r="8" fill="#67e8f9" stroke="#0f172a" stroke-width="4" vector-effect="non-scaling-stroke"><title>{point.displayedValue} {field.unit ?? ''} on {formatDate(point.at)}</title></circle>
 										{/each}
 									</svg>
-								</div>
+								</Card>
 								<div class="mt-2 flex justify-between text-xs text-ink-subtle"><span>{formatDate(series[0].at)}</span><span>{formatDate(series[series.length - 1].at)}</span></div>
 							{:else}<p class="mt-4 rounded-lg bg-page p-4 text-sm text-ink-muted">{$t("No numeric values are available for this field yet.")}</p>{/if}
 						</Card>
@@ -643,8 +646,8 @@
 									<Table.Cell class="px-4 py-4 text-right align-top">
 										{#if entry.can_edit}
 											<div class="flex justify-end gap-2">
-												<button type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</button>
-												<button type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</button>
+												<Button variant="ghost" type="button" onclick={() => beginEdit(entry)} class="rounded-lg border border-line-strong px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Edit")}</Button>
+										<Button variant="danger" type="button" disabled={deletingEntryId === entry.id} onclick={() => { deleteTargetEntry = entry; deleteModalOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingEntryId === entry.id ? 'Deleting…' : 'Delete')}</Button>
 											</div>
 										{/if}
 									</Table.Cell>
@@ -654,7 +657,7 @@
 					</Table.Root>
 					<p class="border-t border-line px-4 py-3 text-xs leading-5 text-ink-subtle">{$t("Showing {count} measurements. Values keep the field label and unit that were active when they were saved.", { count: entries.length })}</p>
 				</Card>
-				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><button type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-line-strong px-5 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</button></div>{/if}
+				{#if hasMoreEntries}<div class="mt-4 flex flex-col items-center gap-2"><div bind:this={loadMoreSentinel} class="h-px w-full" aria-hidden="true"></div><Button variant="ghost" type="button" onclick={() => void loadMoreEntries()} disabled={loadingMoreEntries} aria-live="polite" class="min-h-11 rounded-xl border border-line-strong px-5 text-sm font-semibold text-ink-secondary transition hover:border-accent-ink hover:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-50">{$t(loadingMoreEntries ? 'Loading…' : 'Load more measurements')}</Button></div>{/if}
 			{/if}
 		</section>
 		{#if deleteTargetEntry}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete measurement?')} message={$t('Delete this measurement?')} busy={deletingEntryId === deleteTargetEntry.id} onConfirm={() => void deleteEntry(deleteTargetEntry!)} />{/if}

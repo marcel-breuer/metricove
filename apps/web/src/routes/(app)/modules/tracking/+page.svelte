@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import MarkdownInline from '#lib/ui/MarkdownInline.svelte';
@@ -194,7 +197,7 @@
 		<section class="mt-8" aria-labelledby="trackers-heading">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div><h2 id="trackers-heading" class="text-xl font-semibold text-ink">{$t("Your trackers")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Shared templates are available to members with tracking access; entries stay private to each owner.")}</p></div>
-				<button type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
+				<Button variant="ghost" type="button" onclick={() => void loadTrackers()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</Button>
 			</div>
 			{#if loading}
 				<Alert variant="glass" role="status" class="mt-5 rounded-xl px-4 py-5 text-sm text-ink-secondary">{$t("Loading trackers…")}</Alert>
@@ -218,7 +221,7 @@
 								</span>
 								<span class="inline-flex items-center gap-2 text-sm font-medium text-accent-ink group-hover:text-accent-ink">{$t("Open history")} <span aria-hidden="true">→</span></span>
 							</a>
-							{#if tracker.can_manage_schema}<button type="button" disabled={deletingTrackerId === tracker.id} onclick={() => { trackerToDelete = tracker; deleteModalOpen = true; }} class="min-h-10 shrink-0 rounded-lg border border-danger/20 px-3 text-sm font-medium text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</button>{/if}
+							{#if tracker.can_manage_schema}<Button variant="ghost" type="button" disabled={deletingTrackerId === tracker.id} onclick={() => { trackerToDelete = tracker; deleteModalOpen = true; }} class="min-h-10 shrink-0 rounded-lg border border-danger/20 px-3 text-sm font-medium text-danger hover:border-danger/50 hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t(deletingTrackerId === tracker.id ? 'Deleting…' : 'Delete tracker')}</Button>{/if}
 						</li>
 					{/each}
 				</Card>
@@ -232,19 +235,19 @@
 	{/if}
 
 	{#if canCreatePrivate || canCreateShared}
-		<div class="mt-8 flex justify-end"><button type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t("Create tracker")}</button></div>
+		<div class="mt-8 flex justify-end"><Button variant="primary" type="button" onclick={() => (createOpen = true)} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90">{$t("Create tracker")}</Button></div>
 		<Modal bind:open={createOpen} size="wide" title={$t('Start with a tracker.')} description={$t('Build a schema around the measurements you want to follow.')}>
 			{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 			<form id="tracker-create-form" class="grid gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]" onsubmit={createTracker}>
 				<div class="grid h-fit gap-4 sm:grid-cols-2 lg:grid-cols-1">
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Tracker name")}
-						<input bind:value={name} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Daily steps")} />
+						<Input variant="glass" bind:value={name} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Daily steps")} />
 					</label>
 					<label class="block text-sm font-medium text-ink-secondary">{$t("Visibility")}
-						<select bind:value={visibility} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-							{#if canCreatePrivate}<option value="private">{$t("Private to me")}</option>{/if}
-							{#if canCreateShared}<option value="household">{$t("Household template")}</option>{/if}
-						</select>
+						<NativeSelect.Root variant="glass" bind:value={visibility} class="mt-2 w-full">
+							{#if canCreatePrivate}<NativeSelect.Option value="private">{$t("Private to me")}</NativeSelect.Option>{/if}
+							{#if canCreateShared}<NativeSelect.Option value="household">{$t("Household template")}</NativeSelect.Option>{/if}
+						</NativeSelect.Root>
 					</label>
 					<div class="block text-sm font-medium text-ink-secondary sm:col-span-2 lg:col-span-1"><label for="markdown-extra-96929">{$t("Description")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span>
 						</label><MarkdownEditor id="markdown-extra-96929" bind:value={description} maxlength={500} rows={4} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("What does this tracker help you follow?")} /></div>
@@ -253,36 +256,36 @@
 				<div class="border-t border-line pt-6 lg:border-t-0 lg:pt-0">
 					<div class="flex flex-wrap items-end justify-between gap-3">
 						<div><h3 class="text-base font-semibold text-ink">{$t("Fields")}</h3><p class="mt-1 text-sm text-ink-muted">{$t("Add numeric, text, date or yes/no fields.")}</p></div>
-						<button type="button" onclick={addField} class="min-h-10 rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Add field")}</button>
+						<Button variant="secondary" type="button" onclick={addField} class="min-h-10 rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Add field")}</Button>
 					</div>
 					<ol class="mt-4 space-y-4">
 						{#each fields as field, index (field.local_key)}
 							<Card as="li" variant="inset" class="p-4">
 								<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(10rem,0.8fr)_minmax(9rem,0.7fr)_auto]">
 									<label class="block text-sm font-medium text-ink-secondary">{$t("Field name")}
-										<input bind:value={field.label} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Steps")} />
+										<Input variant="glass" bind:value={field.label} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Steps")} />
 									</label>
 									<label class="block text-sm font-medium text-ink-secondary">{$t("Type")}
-										<select bind:value={field.type} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-											<option value="number">{$t("Number")}</option><option value="text">{$t("Text")}</option><option value="date">{$t("Date")}</option><option value="boolean">{$t("Yes / no")}</option>
-										</select>
+										<NativeSelect.Root variant="glass" bind:value={field.type} class="mt-2 w-full">
+											<NativeSelect.Option value="number">{$t("Number")}</NativeSelect.Option><NativeSelect.Option value="text">{$t("Text")}</NativeSelect.Option><NativeSelect.Option value="date">{$t("Date")}</NativeSelect.Option><NativeSelect.Option value="boolean">{$t("Yes / no")}</NativeSelect.Option>
+										</NativeSelect.Root>
 									</label>
 									{#if field.type === 'number'}
 										<label class="block text-sm font-medium text-ink-secondary">{$t("Unit")}
-											<input bind:value={field.unit} required maxlength="32" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("kg, steps…")} />
+											<Input variant="glass" bind:value={field.unit} required maxlength={32} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("kg, steps…")} />
 										</label>
 									{:else}
 										<div class="hidden lg:block"></div>
 									{/if}
 									<div class="flex flex-wrap items-center gap-3 pt-1 sm:col-span-2 lg:col-span-1 lg:justify-end">
-										<label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><input bind:checked={field.required} type="checkbox" class="size-4 rounded border-line-strong bg-surface text-accent-ink focus:ring-accent-ink" />{$t("Required")}</label>
-										<button type="button" disabled={fields.length <= 1} onclick={() => removeField(index)} class="min-h-10 rounded-lg px-3 text-sm font-medium text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Remove")}</button>
+										<label class="inline-flex min-h-11 items-center gap-2 text-sm text-ink-secondary"><Checkbox bind:checked={field.required} class="size-4" />{$t("Required")}</label>
+						<Button variant="danger" type="button" disabled={fields.length <= 1} onclick={() => removeField(index)} class="min-h-10 rounded-lg px-3 text-sm font-medium text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-40">{$t("Remove")}</Button>
 									</div>
 								</div>
 								{#if field.type === 'number'}
 									<div class="mt-4 grid gap-4 sm:grid-cols-2">
-										<label class="block text-xs font-medium text-ink-muted">{$t("Minimum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label>
-										<label class="block text-xs font-medium text-ink-muted">{$t("Maximum")} <span class="font-normal">{$t("(optional)")}</span><input bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label>
+										<label class="block text-xs font-medium text-ink-muted">{$t("Minimum")} <span class="font-normal">{$t("(optional)")}</span><Input variant="glass" bind:value={field.minimum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No minimum")} /></label>
+										<label class="block text-xs font-medium text-ink-muted">{$t("Maximum")} <span class="font-normal">{$t("(optional)")}</span><Input variant="glass" bind:value={field.maximum} inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No maximum")} /></label>
 									</div>
 								{/if}
 							</Card>
@@ -297,7 +300,7 @@
 			</form>
 			{#snippet footer()}
 				<Button variant="secondary" type="button" disabled={saving} onclick={() => (createOpen = false)}>{$t('Cancel')}</Button>
-				<Button type="submit" form="tracker-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create tracker')}</Button>
+				<Button variant="primary" type="submit" form="tracker-create-form" disabled={saving}>{$t(saving ? 'Creating…' : 'Create tracker')}</Button>
 			{/snippet}
 		</Modal>
 		{#if trackerToDelete}<ConfirmModal bind:open={deleteModalOpen} title={$t('Delete tracker?')} message={$t('Delete “{name}” and all its measurements?', { name: trackerToDelete.name })} busy={deletingTrackerId === trackerToDelete.id} onConfirm={() => void deleteTracker(trackerToDelete!)} />{/if}

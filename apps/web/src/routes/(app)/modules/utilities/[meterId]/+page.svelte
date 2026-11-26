@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import Button from '#lib/ui/Button.svelte';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
@@ -6,7 +8,6 @@
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import BackLink from '#lib/ui/BackLink.svelte';
-	import { fileInput } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t, visibilityLabel } from '#lib/i18n';
 	import { formatDate, formatDateTime, numberLocale } from '#lib/i18n';
@@ -215,12 +216,12 @@
 		{#if error}<Notice tone="error" message={error} class="mt-5" />{/if}
 
 		{#if canManage}
-			<button type="button" onclick={() => (meterModalOpen = true)} class="mt-6 min-h-10 rounded-lg border border-line-strong px-4 text-sm font-semibold text-ink-secondary">{$t('Edit meter settings')}</button>
+			<Button variant="ghost" type="button" onclick={() => (meterModalOpen = true)} class="mt-6 min-h-10 rounded-lg border border-line-strong px-4 text-sm font-semibold text-ink-secondary">{$t('Edit meter settings')}</Button>
 			<Modal bind:open={meterModalOpen} title={$t('Edit meter settings')}>
 			<Card as="form" variant="glass" class="mt-6 grid gap-4 rounded-[20px] p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onsubmit={saveMeter}>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<input bind:value={meterName} required maxlength="120" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t("Interval alert threshold")} <span class="font-normal text-ink-subtle">({meter.unit})</span><input bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
-				<button type="submit" disabled={saving} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save settings')}</button>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Meter name")}<Input variant="glass" bind:value={meterName} required maxlength={120} class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+				<label class="block text-sm font-medium text-ink-secondary">{$t("Interval alert threshold")} <span class="font-normal text-ink-subtle">({meter.unit})</span><Input variant="glass" bind:value={alertThreshold} inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("No alert")} /></label>
+				<Button variant="secondary" type="submit" disabled={saving} class="min-h-11 rounded-xl border border-line-strong px-4 text-sm font-semibold text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save settings')}</Button>
 			</Card>
 			</Modal>
 		{/if}
@@ -228,7 +229,7 @@
 		<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-7" aria-labelledby="trend-heading">
 			<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-sm font-medium text-accent-ink">{$t("Consumption trend")}</p><h2 id="trend-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Usage between readings")}</h2></div><p class="text-xs text-ink-subtle">{$t("Latest")} {chartData.length} {$t("intervals ·")} {meter.unit}</p></div>
 			{#if chartData.length === 0}
-				<p class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t("Add a second dated reading to see consumption.")}</p>
+				<Alert variant="plain" role="status" class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t("Add a second dated reading to see consumption.")}</Alert>
 			{:else}
 				<div class="mt-5 overflow-x-auto"><svg class="h-48 min-w-[34rem] w-full" viewBox="0 0 720 190" role="img" aria-label={$t("Bar chart of consumption between consecutive meter readings")}>
 					<line x1="30" y1="155" x2="700" y2="155" stroke="#334155" stroke-width="1" />
@@ -247,14 +248,14 @@
 			{#if canCreate}
 				<Card as="section" variant="glass" class="h-fit rounded-[20px] p-5 sm:p-7" aria-labelledby="add-reading-heading">
 					<p class="text-sm font-medium text-accent-ink">{$t("New reading")}</p><h2 id="add-reading-heading" class="mt-1 text-xl font-semibold text-ink">{$t("Record the register.")}</h2><p class="mt-2 text-sm leading-6 text-ink-muted">{$t("A reading can be added out of order when its value fits between the neighboring readings.")}</p>
-					<button type="button" onclick={() => (readingModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Record reading')}</button>
+					<Button variant="primary" type="button" onclick={() => (readingModalOpen = true)} class="mt-4 min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Record reading')}</Button>
 					<Modal bind:open={readingModalOpen} title={$t('Record the register.')}>
 					<form class="mt-5 space-y-4" onsubmit={saveReading}>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Reading date")}<input bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Cumulative value")} <span class="font-normal text-ink-subtle">({meter.unit})</span><input bind:value={readingValue} type="number" min="0" step="1" required inputmode="numeric" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder="1234" /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Reading date")}<Input variant="glass" bind:value={readingDate} type="date" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Cumulative value")} <span class="font-normal text-ink-subtle">({meter.unit})</span><Input variant="glass" bind:value={readingValue} type="number" min={0} step={1} required inputmode="numeric" class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder="1234" /></label>
 						<div class="block text-sm font-medium text-ink-secondary"><label for="markdown-field-3">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span></label><MarkdownEditor id="markdown-field-3" bind:value={readingNote} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-sm leading-6 text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Meter display or context")} /></div>
-						<label class="block text-sm font-medium text-ink-secondary">{$t("Meter photo")} <span class="font-normal text-ink-subtle">{$t("(optional, max 5 MB)")}</span><input type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; }} class="{fileInput} mt-2" /></label>
-						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</button>
+						<label class="block text-sm font-medium text-ink-secondary">{$t("Meter photo")} <span class="font-normal text-ink-subtle">{$t("(optional, max 5 MB)")}</span><Input variant="file" type="file" accept="image/jpeg,image/png,image/webp" onchange={(event) => { readingPhoto = event.currentTarget.files?.[0] ?? null; }} class="mt-2" /></label>
+						<Button variant="primary" type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">{$t(saving ? 'Saving…' : 'Save reading')}</Button>
 					</form>
 					</Modal>
 				</Card>
@@ -275,22 +276,22 @@
 							{#if reading.note}<Markdown class="mt-3 text-sm leading-6 text-ink-secondary" value={reading.note} />{/if}
 							{#if reading.photo_url}<a href={reading.photo_url} target="_blank" rel="noreferrer" class="mt-3 inline-flex rounded-lg border border-line-strong p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"><img src={reading.photo_url} alt={$t('Meter photo for {date}', { date: formatDate(reading.reading_date) })} loading="lazy" class="max-h-36 max-w-48 rounded-md object-cover" /></a>{/if}
 							<div class="mt-4 flex flex-wrap gap-3 border-t border-line pt-3">
-								{#if canEdit}<button type="button" onclick={() => beginCorrection(reading)} class="rounded-lg px-2 py-1 text-sm font-medium text-accent-ink hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Correct reading")}</button>{/if}
-								{#if reading.revision_count > 0}<button type="button" onclick={() => void loadRevisions(reading.id)} class="rounded-lg px-2 py-1 text-sm font-medium text-ink-secondary hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{revisionsByReading[reading.id] ? (revisionsByReading[reading.id].length ? 'Hide correction history' : 'Correction history') : 'Correction history'}</button>{/if}
+								{#if canEdit}<Button variant="ghost" type="button" onclick={() => beginCorrection(reading)} class="rounded-lg px-2 py-1 text-sm font-medium text-accent-ink hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Correct reading")}</Button>{/if}
+								{#if reading.revision_count > 0}<Button variant="ghost" type="button" onclick={() => void loadRevisions(reading.id)} class="rounded-lg px-2 py-1 text-sm font-medium text-ink-secondary hover:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{revisionsByReading[reading.id] ? (revisionsByReading[reading.id].length ? 'Hide correction history' : 'Correction history') : 'Correction history'}</Button>{/if}
 							</div>
 							{#if editingReadingId === reading.id}
 								<Modal bind:open={correctionModalOpen} title={$t('Correct meter reading')}>
-								<form class="mt-4 grid gap-3 rounded-xl border border-accent-ink/20 bg-page p-4 sm:grid-cols-2" onsubmit={saveCorrection}>
-									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected date")}<input bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
-									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected value (")}{reading.unit})<input bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+								<Card as="form" variant="inset" class="mt-4 grid gap-3 p-4 sm:grid-cols-2" onsubmit={saveCorrection}>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected date")}<Input variant="glass" bind:value={correctionDate} type="date" required class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
+									<label class="block text-sm font-medium text-ink-secondary">{$t("Corrected value (")}{reading.unit})<Input variant="glass" bind:value={correctionValue} required inputmode="decimal" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></label>
 									<div class="block text-sm font-medium text-ink-secondary sm:col-span-2"><label for="markdown-field-4">{$t("Note")}</label><MarkdownEditor id="markdown-field-4" bind:value={correctionNote} maxlength={2000} rows={2} class="mt-2 w-full rounded-[10px] border glass-control px-3 py-2 text-sm text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /></div>
-									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><input bind:value={correctionReason} maxlength="500" class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Explain why the original reading changed")} /></label>
-									<div class="flex flex-wrap gap-2 sm:col-span-2"><button type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</button><button type="button" onclick={() => { editingReadingId = null; correctionModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-4 text-sm font-medium text-ink-secondary hover:border-line-strong">{$t("Cancel")}</button></div>
-								</form>
+									<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t("Reason for correction")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span><Input variant="glass" bind:value={correctionReason} maxlength={500} class="mt-2 min-h-10 w-full rounded-[10px] border glass-control px-3 text-sm text-ink outline-none placeholder:text-ink-subtle focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" placeholder={$t("Explain why the original reading changed")} /></label>
+									<div class="flex flex-wrap gap-2 sm:col-span-2"><Button variant="primary" type="submit" disabled={correcting} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(correcting ? 'Saving…' : 'Save correction')}</Button><Button variant="ghost" type="button" onclick={() => { editingReadingId = null; correctionModalOpen = false; }} class="min-h-10 rounded-lg border border-line-strong px-4 text-sm font-medium text-ink-secondary hover:border-line-strong">{$t("Cancel")}</Button></div>
+								</Card>
 								</Modal>
 							{/if}
 							{#if revisionsByReading[reading.id]?.length}
-							<ol class="mt-3 space-y-2 rounded-xl bg-page p-3" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-line-strong pl-3 text-sm"><p class="font-medium text-ink-secondary">{formatDate(revision.old_reading_date)}: {formatMeasurement(revision.old_value, reading.unit)} → {formatDate(revision.new_reading_date)}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-ink-muted">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-ink-subtle">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol>
+							<Card variant="inset" class="mt-3 p-3"><ol class="space-y-2" aria-label={$t("Correction history")}>{#each revisionsByReading[reading.id] as revision (revision.id)}<li class="border-l-2 border-line-strong pl-3 text-sm"><p class="font-medium text-ink-secondary">{formatDate(revision.old_reading_date)}: {formatMeasurement(revision.old_value, reading.unit)} → {formatDate(revision.new_reading_date)}: {formatMeasurement(revision.new_value, reading.unit)} {reading.unit}</p>{#if revision.reason}<p class="mt-1 text-ink-muted">{revision.reason}</p>{/if}<time class="mt-1 block text-xs text-ink-subtle">{formatDateTime(revision.changed_at)}</time></li>{/each}</ol></Card>
 							{:else if revisionsLoading === reading.id}<Alert variant="plain" role="status" class="mt-3 text-xs text-ink-subtle">{$t("Loading correction history…")}</Alert>{/if}
 						</Card>
 					{/each}
