@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
@@ -315,35 +317,35 @@
 			<form id="pantry-item-form" onsubmit={saveItem} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
 				<label class="{field} sm:col-span-2">
 					<span class="{fieldLabel}">{$t("Food or item name")}</span>
-					<input bind:value={name} required maxlength="180" class="{control}" placeholder={$t("Oat milk")} />
+					<Input variant="glass" bind:value={name} required maxlength={180} class={control} placeholder={$t("Oat milk")} />
 				</label>
 				{#if !editingItem}
 					<label class="{field}">
 						<span class="{fieldLabel}">{$t("Starting quantity")}</span>
-						<input bind:value={quantity} required inputmode="decimal" class="{control}" placeholder="1.000" />
+						<Input variant="glass" bind:value={quantity} required inputmode="decimal" class={control} placeholder="1.000" />
 					</label>
 					<label class="{field}">
 						<span class="{fieldLabel}">{$t("Unit")}</span>
-						<input bind:value={unit} required maxlength="32" class="{control}" placeholder={$t("pcs, g, ml")} />
+						<Input variant="glass" bind:value={unit} required maxlength={32} class={control} placeholder={$t("pcs, g, ml")} />
 					</label>
 				{:else}
 					<p class="self-end pb-3 text-sm text-ink-muted sm:col-span-2">{$t("Quantity and unit:")} <span class="ml-1 text-ink">{formatMeasurement(editingItem.quantity, editingItem.unit)} {editingItem.unit}</span></p>
 				{/if}
 				<label class="{field} sm:col-span-2">
 					<span class="{fieldLabel}">{$t("Storage location")} <span class="font-normal text-ink-muted">{$t("(optional)")}</span></span>
-					<input bind:value={location} maxlength="120" class="{control}" placeholder={$t("Fridge, pantry shelf")} />
+					<Input variant="glass" bind:value={location} maxlength={120} class={control} placeholder={$t("Fridge, pantry shelf")} />
 				</label>
 				<label class="{field}">
 					<span class="{fieldLabel}">{$t("Best-before date")} <span class="font-normal text-ink-muted">{$t("(optional)")}</span></span>
-					<input bind:value={bestBefore} type="date" class="{control}" />
+					<Input variant="glass" bind:value={bestBefore} type="date" class={control} />
 				</label>
 				{#if !editingItem && canManageShared}
 					<label class="{field}">
 						<span class="{fieldLabel}">{$t("Visibility")}</span>
-						<select bind:value={visibility} class="{control}">
-							<option value="private">{$t("Private to me")}</option>
-							<option value="household">{$t("Shared with household")}</option>
-						</select>
+						<NativeSelect.Root variant="glass" bind:value={visibility}>
+							<NativeSelect.Option value="private">{$t("Private to me")}</NativeSelect.Option>
+							<NativeSelect.Option value="household">{$t("Shared with household")}</NativeSelect.Option>
+						</NativeSelect.Root>
 					</label>
 				{/if}
 			</form>
@@ -362,7 +364,7 @@
 				</div>
 				<div class="flex flex-wrap gap-2" role="group" aria-label={$t("Filter pantry items by best-before date")}>
 					{#each expiryFilters as option}
-						<button type="button" aria-pressed={filter === option.key} onclick={() => setFilter(option.key)} class="rounded-full border px-3 py-2 text-xs font-medium transition {filter === option.key ? 'border-positive/40 bg-positive/10 text-positive' : 'border-line bg-surface/[0.03] text-ink-muted hover:text-ink'}">{option.label}</button>
+						<Button variant="ghost" type="button" aria-pressed={filter === option.key} onclick={() => setFilter(option.key)} class="rounded-full border px-3 py-2 text-xs font-medium transition {filter === option.key ? 'border-positive/40 bg-positive/10 text-positive' : 'border-line bg-surface/[0.03] text-ink-muted hover:text-ink'}">{$t(option.label)}</Button>
 					{/each}
 				</div>
 			</div>
@@ -373,7 +375,7 @@
 				<Card variant="glass" class="border-dashed px-6 py-12 text-center">
 					<p class="text-base font-medium text-ink">{$t(filter === 'all' ? 'Nothing in the pantry yet' : 'No items match this date filter')}</p>
 					<p class="mt-2 text-sm text-ink-muted">{$t(filter === 'all' ? 'Add a food item to keep its quantity, location and best-before date in one place.' : 'Try another best-before filter to see more of your stock.')}</p>
-					{#if filter === 'all' && canAdd}<button type="button" onclick={openNewItem} class="mt-5 rounded-xl border border-positive/25 px-4 py-2.5 text-sm font-medium text-positive hover:bg-positive/10">{$t("Add first item")}</button>{/if}
+					{#if filter === 'all' && canAdd}<Button variant="ghost" type="button" onclick={openNewItem} class="mt-5 rounded-xl border border-positive/25 px-4 py-2.5 text-sm font-medium text-positive hover:bg-positive/10">{$t("Add first item")}</Button>{/if}
 				</Card>
 			{:else}
 				<div class="grid gap-3 lg:grid-cols-2">
@@ -394,20 +396,20 @@
 									</div>
 									<div class="flex flex-wrap gap-2 sm:justify-end">
 										{#if item.can_edit}
-											<button type="button" onclick={() => openAdjustment(item)} class="rounded-lg border border-positive/20 px-3 py-2 text-xs font-semibold text-positive hover:bg-positive/10">{$t("Adjust stock")}</button>
-											<button type="button" onclick={() => openEdit(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t("Edit")}</button>
-										<button type="button" disabled={saving} onclick={() => { itemToDelete = item; deleteOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 disabled:opacity-50">{$t("Delete")}</button>
+										<Button variant="ghost" type="button" onclick={() => openAdjustment(item)} class="rounded-lg border border-positive/20 px-3 py-2 text-xs font-semibold text-positive hover:bg-positive/10">{$t("Adjust stock")}</Button>
+										<Button variant="ghost" type="button" onclick={() => openEdit(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t("Edit")}</Button>
+										<Button variant="ghost" type="button" disabled={saving} onclick={() => { itemToDelete = item; deleteOpen = true; }} class="rounded-lg border border-danger/20 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10 disabled:opacity-50">{$t("Delete")}</Button>
 										{/if}
-										<button type="button" aria-expanded={historyItemId === item.id} onclick={() => void toggleHistory(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t(historyItemId === item.id ? 'Hide history' : 'History')}</button>
+										<Button variant="ghost" type="button" aria-expanded={historyItemId === item.id} onclick={() => void toggleHistory(item)} class="rounded-lg border border-line px-3 py-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle">{$t(historyItemId === item.id ? 'Hide history' : 'History')}</Button>
 									</div>
 								</div>
 				{#if adjustmentItem?.id === item.id}
 					<Modal bind:open={adjustmentOpen} title={$t('Adjust stock')} description={item.name}>
-									<form onsubmit={saveAdjustment} class="mt-5 grid gap-3 rounded-xl border border-positive/15 bg-positive/[0.04] p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-										<label class="space-y-2 text-xs text-ink-secondary"><span>{$t("Change in")} {item.unit} <span class="text-ink-subtle">{$t("(use minus to remove)")}</span></span><input bind:value={adjustment} required inputmode="decimal" class="w-full rounded-[10px] border border-line bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-positive/50 max-sm:text-base" placeholder={$t("0.500 or -1")} /></label>
-										<label class="space-y-2 text-xs text-ink-secondary"><span>{$t("Note")} <span class="text-ink-subtle">{$t("(optional)")}</span></span><input bind:value={adjustmentNote} maxlength="500" class="w-full rounded-[10px] border border-line bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-positive/50 max-sm:text-base" placeholder={$t("Used for dinner")} /></label>
-						<div class="flex gap-2"><button disabled={saving} class="rounded-lg bg-positive px-3 py-2.5 text-xs font-semibold text-on-accent disabled:opacity-50">{$t("Save")}</button><button type="button" onclick={() => { adjustmentItem = null; adjustmentOpen = false; }} class="rounded-lg border border-line px-3 py-2.5 text-xs text-ink-secondary">{$t("Cancel")}</button></div>
-									</form>
+									<Card as="form" variant="inset" onsubmit={saveAdjustment} class="mt-5 grid gap-3 rounded-xl border-positive/15 bg-positive/[0.04] p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+										<label class="space-y-2 text-xs text-ink-secondary"><span>{$t("Change in")} {item.unit} <span class="text-ink-subtle">{$t("(use minus to remove)")}</span></span><Input variant="glass" bind:value={adjustment} required inputmode="decimal" class="w-full rounded-[10px] border border-line bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-positive/50 max-sm:text-base" placeholder={$t("0.500 or -1")} /></label>
+										<label class="space-y-2 text-xs text-ink-secondary"><span>{$t("Note")} <span class="text-ink-subtle">{$t("(optional)")}</span></span><Input variant="glass" bind:value={adjustmentNote} maxlength={500} class="w-full rounded-[10px] border border-line bg-page px-3 py-2.5 text-sm text-ink outline-none focus:border-positive/50 max-sm:text-base" placeholder={$t("Used for dinner")} /></label>
+						<div class="flex gap-2"><Button variant="ghost" disabled={saving} class="rounded-lg bg-positive px-3 py-2.5 text-xs font-semibold text-on-accent disabled:opacity-50">{$t("Save")}</Button><Button variant="ghost" type="button" onclick={() => { adjustmentItem = null; adjustmentOpen = false; }} class="rounded-lg border border-line px-3 py-2.5 text-xs text-ink-secondary">{$t("Cancel")}</Button></div>
+					</Card>
 					</Modal>
 								{/if}
 								{#if historyItemId === item.id}

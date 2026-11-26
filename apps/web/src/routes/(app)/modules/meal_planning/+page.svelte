@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
@@ -330,9 +332,9 @@
 	<PageHeading eyebrow="Food · Meal planning" title="A week that works" description="Plan breakfast, lunch and dinner with a saved recipe or a simple dish name. Your plan works on its own.">
 		{#snippet actions()}
 			<div class="{segmented}" role="group" aria-label={$t("Week")}>
-				<button type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class="{segmentedButton}"><span aria-hidden="true">‹</span></button>
+				<Button variant="ghost" type="button" onclick={() => changeWeek(-1)} aria-label={$t("Previous week")} class={segmentedButton}><span aria-hidden="true">‹</span></Button>
 				<div class="min-w-0 flex-1 px-2 text-center text-sm font-medium text-ink tabular-nums" aria-live="polite">{formatDay(weekStart, { month: 'short', day: 'numeric' })} – {formatDay(addDays(weekStart, 6), { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-				<button type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class="{segmentedButton}"><span aria-hidden="true">›</span></button>
+				<Button variant="ghost" type="button" onclick={() => changeWeek(1)} aria-label={$t("Next week")} class={segmentedButton}><span aria-hidden="true">›</span></Button>
 			</div>
 			<Button variant="secondary" disabled={isCurrentWeek} onclick={() => (weekStart = mondayOf(new Date()))}>{$t("This week")}</Button>
 			{#if canCreate && isCurrentWeek}<Button variant="secondary" onclick={() => (copyPreviousWeekOpen = true)} disabled={copyingWeek}>{$t("Copy previous week")}</Button>{/if}
@@ -346,48 +348,48 @@
 		{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 		<form id="meal-slot-form" onsubmit={saveSlot} class="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
 			<label class="text-xs font-medium text-ink-muted">{$t("Day")}
-				<input bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+				<Input variant="glass" bind:value={plannedFor} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			<label class="text-xs font-medium text-ink-muted">{$t("Meal")}
-				<select bind:value={mealType} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-					{#each mealTypes as entry}<option value={entry.key}>{$t(entry.label)}</option>{/each}
-				</select>
+				<NativeSelect.Root variant="glass" bind:value={mealType} class="mt-1.5 w-full [&>select]:text-sm max-sm:[&>select]:text-base">
+					{#each mealTypes as entry}<NativeSelect.Option value={entry.key}>{$t(entry.label)}</NativeSelect.Option>{/each}
+				</NativeSelect.Root>
 			</label>
 			{#if editingSlotId !== null && dishType === 'recipe' && recipeId === ''}
 				<Alert variant="info" role="none" class="block border-line bg-page leading-6 text-ink-muted sm:col-span-2">
 					{$t("The linked recipe is not available to your account right now. You can update the number of people or notes, or convert this slot to a dish name.")}
-					<button type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-accent-ink hover:text-accent-ink">{$t("Convert to a dish name")}</button>
+					<Button variant="ghost" type="button" onclick={() => { dishType = 'free_text'; dishName = ''; }} class="mt-2 block min-h-9 text-xs font-semibold text-accent-ink hover:text-accent-ink">{$t("Convert to a dish name")}</Button>
 				</Alert>
 			{:else}<label class="text-xs font-medium text-ink-muted">{$t("Dish source")}
-				<select bind:value={dishType} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-					<option value="free_text">{$t("Write a dish name")}</option>
-					{#if canViewRecipes}<option value="recipe">{$t("Link a recipe")}</option>{/if}
-				</select>
+				<NativeSelect.Root variant="glass" bind:value={dishType} class="mt-1.5 w-full [&>select]:text-sm max-sm:[&>select]:text-base">
+					<NativeSelect.Option value="free_text">{$t("Write a dish name")}</NativeSelect.Option>
+					{#if canViewRecipes}<NativeSelect.Option value="recipe">{$t("Link a recipe")}</NativeSelect.Option>{/if}
+				</NativeSelect.Root>
 			</label>{/if}
 			<label class="text-xs font-medium text-ink-muted">{$t("People")}
-				<input bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+				<Input variant="glass" bind:value={servings} type="number" min="1" max="1000" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			{#if dishType === 'recipe' && (canViewRecipes || editingSlotId === null)}
 				<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Recipe you can view")}
-					<select bind:value={recipeId} required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-						<option value="">{$t("Choose a recipe")}</option>
-						{#each recipeChoices as recipe}<option value={recipe.id}>{recipe.title}</option>{/each}
-					</select>
+					<NativeSelect.Root variant="glass" bind:value={recipeId} required class="mt-1.5 w-full [&>select]:text-sm max-sm:[&>select]:text-base">
+						<NativeSelect.Option value="">{$t("Choose a recipe")}</NativeSelect.Option>
+						{#each recipeChoices as recipe}<NativeSelect.Option value={recipe.id}>{recipe.title}</NativeSelect.Option>{/each}
+					</NativeSelect.Root>
 				</label>
 			{:else if dishType === 'free_text'}
 				<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Dish name")}
-					<input bind:value={dishName} maxlength="180" required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+					<Input variant="glass" bind:value={dishName} maxlength={180} required placeholder={$t("For example, tomato soup")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 				</label>
 			{/if}
 			<label class="text-xs font-medium text-ink-muted sm:col-span-2">{$t("Note")} <span class="font-normal text-ink-subtle">{$t("(optional)")}</span>
-				<input bind:value={notes} maxlength="2000" placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+				<Input variant="glass" bind:value={notes} maxlength={2000} placeholder={$t("Anything to remember?")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 			</label>
 			{#if editingSlotId === null && canManageShared && canCreate}
 				<label class="text-xs font-medium text-ink-muted">{$t("Who can see it?")}
-					<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-						<option value="private">{$t("Only me")}</option>
-						<option value="household">{$t("Household plan")}</option>
-					</select>
+					<NativeSelect.Root variant="glass" bind:value={visibility} class="mt-1.5 w-full [&>select]:text-sm max-sm:[&>select]:text-base">
+						<NativeSelect.Option value="private">{$t("Only me")}</NativeSelect.Option>
+						<NativeSelect.Option value="household">{$t("Household plan")}</NativeSelect.Option>
+					</NativeSelect.Root>
 				</label>
 			{/if}
 		</form>
@@ -430,7 +432,7 @@
 									<p class="mt-1 text-xs text-ink-subtle">{$t(slot.servings === 1 ? '{count} person' : '{count} people', { count: slot.servings })}{#if slot.notes}<span> · {slot.notes}</span>{/if}</p>
 									{#if slot.can_edit}
 										<div class="mt-3 flex gap-2">
-											<button
+											<Button variant="ghost"
 												type="button"
 												draggable={movingSlotId !== slot.id}
 												onclick={() => openEdit(slot)}
@@ -441,13 +443,13 @@
 												title={$t('Drag to move, or select to choose a day and meal')}
 											>
 												{$t('Move')}
-											</button>
-											<button type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>
-											<button type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</button>
+											</Button>
+											<Button variant="ghost" type="button" onclick={() => openEdit(slot)} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</Button>
+											<Button variant="ghost" type="button" onclick={() => { slotToRemove = slot; removeOpen = true; }} class="min-h-9 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</Button>
 										</div>
 									{/if}
 								{:else if canAdd}
-									<button type="button" onclick={() => openNewSlot(day, entry.key)} class="mt-3 min-h-9 w-full rounded-lg border border-dashed border-line-strong px-2 text-xs font-medium text-ink-muted hover:border-accent-ink/60 hover:text-accent-ink">+ Plan meal</button>
+												<Button variant="ghost" type="button" onclick={() => openNewSlot(day, entry.key)} class="mt-3 min-h-9 w-full rounded-lg border border-dashed border-line-strong px-2 text-xs font-medium text-ink-muted hover:border-accent-ink/60 hover:text-accent-ink">+ {$t('Plan meal')}</Button>
 								{:else}
 									<p class="mt-3 text-xs text-ink-subtle">{$t("Not planned")}</p>
 								{/if}
