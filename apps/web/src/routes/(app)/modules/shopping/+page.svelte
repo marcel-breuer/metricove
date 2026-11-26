@@ -1,6 +1,10 @@
 <script lang="ts">
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
+	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
@@ -400,6 +404,12 @@
 		selectedSuggestionIds = allSelected ? [] : ids;
 	}
 
+	function setSuggestionSelected(id: string, checked: boolean | 'indeterminate'): void {
+		selectedSuggestionIds = checked === true
+			? [...new Set([...selectedSuggestionIds, id])]
+			: selectedSuggestionIds.filter((selectedId) => selectedId !== id);
+	}
+
 	function isFirstInGroup(item: ShoppingItem): boolean {
 		const group = items.filter((entry) => entry.is_checked === item.is_checked)
 			.sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
@@ -484,13 +494,13 @@
 					{#if lists.length}
 						<nav aria-label={$t("Shopping lists")} class="space-y-2">
 							{#each lists as list (list.id)}
-								<button type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink {activeListId === list.id ? 'border-accent-ink/50 bg-accent/10' : 'border-line bg-page hover:border-line-strong'}">
+								<Button variant="ghost" type="button" onclick={() => chooseList(list.id)} aria-current={activeListId === list.id ? 'page' : undefined} class="w-full rounded-xl border px-3 py-3 text-left text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink {activeListId === list.id ? 'border-accent-ink/50 bg-accent/10' : 'border-line bg-page hover:border-line-strong'}">
 									<span class="flex items-center justify-between gap-2">
 										<span class="truncate text-sm font-medium text-ink">{list.name}</span>
 										{#if list.visibility === 'household'}<span class="shrink-0 text-[0.65rem] text-accent-ink">{$t("Shared")}</span>{/if}
 									</span>
 									<span class="mt-1 block text-xs text-ink-subtle">{list.open_item_count} {$t("open ·")} {list.item_count} total</span>
-								</button>
+								</Button>
 							{/each}
 						</nav>
 					{:else}
@@ -499,22 +509,22 @@
 				</Card>
 
 				{#if canCreateList}
-					<button type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Create a list')}</button>
+					<Button variant="ghost" type="button" onclick={() => (listModalOpen = true)} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Create a list')}</Button>
 					<Modal bind:open={listModalOpen} title={$t('Create a list')}>
 					<Card as="form" variant="glass" onsubmit={createList} class="space-y-3 rounded-[20px] p-4">
 						<h2 class="text-sm font-semibold text-ink">{$t("Create a list")}</h2>
 						<label class="block text-xs font-medium text-ink-muted">{$t("List name")}
-							<input bind:value={listName} maxlength="160" required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+							<Input variant="glass" bind:value={listName} maxlength={160} required placeholder={$t("Weekly groceries")} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 						</label>
 						{#if canManageShared}
 							<label class="block text-xs font-medium text-ink-muted">{$t("Who can see it?")}
-								<select bind:value={visibility} class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base">
-									<option value="private">{$t("Only me")}</option>
-									<option value="household">{$t("Household")}</option>
-								</select>
+								<NativeSelect.Root variant="glass" bind:value={visibility} class="mt-1.5 w-full [&>select]:text-sm max-sm:[&>select]:text-base">
+									<NativeSelect.Option value="private">{$t("Only me")}</NativeSelect.Option>
+									<NativeSelect.Option value="household">{$t("Household")}</NativeSelect.Option>
+								</NativeSelect.Root>
 							</label>
 						{/if}
-						<button type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</button>
+						<Button variant="ghost" type="submit" disabled={saving} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Creating…' : 'Create list')}</Button>
 					</Card>
 					</Modal>
 				{/if}
@@ -529,7 +539,7 @@
 			{:else}
 				<section class="min-w-0 space-y-4">
 					{#if activeList.can_add_items}
-						<button type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add item')}</button>
+						<Button variant="ghost" type="button" onclick={() => (addItemModalOpen = true)} class="min-h-11 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Add item')}</Button>
 						<Modal bind:open={addItemModalOpen} title={$t('Add item')} description={activeList.name}>
 						<Card as="form" variant="glass" onsubmit={addItem} class="border-accent-ink/30 p-4 sm:p-5">
 							<div class="mb-3 flex items-center justify-between gap-3">
@@ -541,15 +551,15 @@
 							</div>
 							<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]">
 								<label class="text-xs font-medium text-ink-muted">{$t("Item")}
-									<input bind:value={quickName} maxlength="180" required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
+									<Input variant="glass" bind:value={quickName} maxlength={180} required placeholder={$t("Apples, olive oil…")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
 								<label class="text-xs font-medium text-ink-muted">{$t("Quantity")} <span class="font-normal text-ink-subtle">{$t('optional')}</span>
-									<input bind:value={quickQuantity} type="text" inputmode="decimal" maxlength="15" placeholder="2" class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
+									<Input variant="glass" bind:value={quickQuantity} type="text" inputmode="decimal" maxlength={15} placeholder="2" class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
 								<label class="text-xs font-medium text-ink-muted">{$t("Unit")} <span class="font-normal text-ink-subtle">{$t('optional')}</span>
-									<input bind:value={quickUnit} maxlength="32" placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
+									<Input variant="glass" bind:value={quickUnit} maxlength={32} placeholder={$t("kg, cans")} class="mt-1.5 min-h-12 w-full rounded-[10px] border border-line-strong bg-page px-3 text-base text-ink placeholder:text-ink-subtle focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20" />
 								</label>
-								<button type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</button>
+								<Button variant="ghost" type="submit" disabled={saving} class="min-h-12 self-end rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-60">{$t(saving ? 'Adding…' : 'Add item')}</Button>
 							</div>
 							<p class="mt-2 text-xs text-ink-subtle">{$t("Add both quantity and unit, or leave both blank. No unit conversions are applied.")}</p>
 						</Card>
@@ -565,9 +575,9 @@
 							</div>
 							<form onsubmit={previewMealSuggestions} class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 								<label class="block text-xs font-medium text-ink-muted">{$t("Week starting Monday")}
-									<input bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+									<Input variant="glass" bind:value={suggestionWeekStart} onchange={invalidateMealPreview} type="date" required class="mt-1.5 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 								</label>
-								<button type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-accent-ink/40 px-4 text-sm font-semibold text-accent-ink hover:bg-accent/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</button>
+								<Button variant="ghost" type="submit" disabled={suggestionLoading || suggestionImporting} class="min-h-11 rounded-xl border border-accent-ink/40 px-4 text-sm font-semibold text-accent-ink hover:bg-accent/10 disabled:opacity-60">{$t(suggestionLoading ? 'Preparing…' : 'Review suggestions')}</Button>
 							</form>
 
 							{#if suggestionPreview}
@@ -580,25 +590,25 @@
 										{:else}
 											<div class="flex flex-wrap items-center justify-between gap-2">
 												<p class="text-xs text-ink-muted">{$t("Select the ingredients you want and adjust each quantity for what you already have. Matching ingredients are combined across linked recipes.")}</p>
-												<button type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:border-accent-ink/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</button>
+												<Button variant="ghost" type="button" onclick={toggleSuggestionSelection} class="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-medium text-ink-secondary hover:border-accent-ink/60">{$t(selectedSuggestionIds.length === suggestionPreview.suggestions.length ? 'Clear selection' : 'Select all')}</Button>
 											</div>
 											<div class="max-h-80 space-y-2 overflow-y-auto">
 												{#each suggestionPreview.suggestions as suggestion (suggestion.id)}
-													<div class="grid min-h-12 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line bg-page px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-														<input id={'meal-suggestion-' + suggestion.id} bind:group={selectedSuggestionIds} type="checkbox" value={suggestion.id} aria-label={$t('Select {item}', { item: suggestion.name })} class="size-4 shrink-0 accent-accent" />
+											<Card variant="inset" class="grid min-h-12 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+												<Checkbox id={'meal-suggestion-' + suggestion.id} checked={selectedSuggestionIds.includes(suggestion.id)} onCheckedChange={(checked) => setSuggestionSelected(suggestion.id, checked)} aria-label={$t('Select {item}', { item: suggestion.name })} class="size-4 shrink-0" />
 														<label for={'meal-suggestion-' + suggestion.id} class="break-words text-sm font-medium text-ink">{suggestion.name}</label>
 														<div class="flex items-center gap-2">
-															<input bind:value={suggestionQuantities[suggestion.id]} type="text" inputmode="decimal" autocomplete="off" aria-label={$t('Quantity to add for {item}', { item: suggestion.name })} class="min-h-10 w-24 rounded-[10px] border border-line-strong bg-page px-2 text-right text-sm tabular-nums text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
+															<Input variant="glass" bind:value={suggestionQuantities[suggestion.id]} type="text" inputmode="decimal" autocomplete="off" aria-label={$t('Quantity to add for {item}', { item: suggestion.name })} class="min-h-10 w-24 rounded-[10px] border border-line-strong bg-page px-2 text-right text-sm tabular-nums text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" />
 															<span class="min-w-8 text-sm text-accent-ink">{suggestion.unit}</span>
 														</div>
-													</div>
-												{/each}
-											</div>
+											</Card>
+										{/each}
+										</div>
 											{#if suggestionPreview.skipped.free_text_meals > 0}<p class="text-xs text-ink-subtle">{suggestionPreview.skipped.free_text_meals} {$t("free-text meal(s) have no recipe ingredients to suggest.")}</p>{/if}
 											{#if suggestionPreview.skipped.unavailable_recipes > 0}<p class="text-xs text-ink-subtle">{$t("Some linked recipes are unavailable to your account and were skipped.")}</p>{/if}
 											{#if suggestionPreview.skipped.unsupported_quantities > 0}<p class="text-xs text-warning">{$t("Some quantities cannot be represented exactly in Shopping and were skipped.")}</p>{/if}
 											<p class="text-xs leading-5 text-ink-subtle">{$t("Adding suggestions copies items into this list only. Confirming will not change meal plans or recipes.")}</p>
-											<button type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(suggestionImporting ? 'Adding…' : 'Add selected ingredients')} · {selectedSuggestionIds.length}</button>
+											<Button variant="ghost" type="button" onclick={importMealSuggestions} disabled={selectedSuggestionIds.length === 0 || suggestionImporting} class="min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:bg-accent/90 disabled:opacity-50">{$t(suggestionImporting ? 'Adding…' : 'Add selected ingredients')} · {selectedSuggestionIds.length}</Button>
 										{/if}
 									{/if}
 								</div>
@@ -617,22 +627,22 @@
 							</div>
 							<div class="flex flex-wrap items-center gap-2">
 								<label class="sr-only" for="shopping-filter">{$t("Show items")}</label>
-								<select id="shopping-filter" bind:value={filter} class="min-h-10 rounded-[10px] border border-line-strong bg-page px-3 text-xs text-ink-secondary focus:border-accent-ink focus:outline-none max-sm:text-base">
-									<option value="open">{$t("To buy")}</option>
-									<option value="checked">{$t("Checked")}</option>
-									<option value="all">{$t("All items")}</option>
-								</select>
+								<NativeSelect.Root variant="glass" id="shopping-filter" bind:value={filter} class="w-fit [&>select]:min-h-10 [&>select]:w-auto [&>select]:px-3 [&>select]:py-1 [&>select]:text-xs max-sm:[&>select]:text-base">
+									<NativeSelect.Option value="open">{$t("To buy")}</NativeSelect.Option>
+									<NativeSelect.Option value="checked">{$t("Checked")}</NativeSelect.Option>
+									<NativeSelect.Option value="all">{$t("All items")}</NativeSelect.Option>
+								</NativeSelect.Root>
 								<label class="sr-only" for="shopping-sort">{$t("Sort items")}</label>
-								<select id="shopping-sort" bind:value={sortMode} class="min-h-10 rounded-[10px] border border-line-strong bg-page px-3 text-xs text-ink-secondary focus:border-accent-ink focus:outline-none max-sm:text-base">
-									<option value="manual">{$t("List order")}</option>
-									<option value="name">{$t("Name A–Z")}</option>
-								</select>
+								<NativeSelect.Root variant="glass" id="shopping-sort" bind:value={sortMode} class="w-fit [&>select]:min-h-10 [&>select]:w-auto [&>select]:px-3 [&>select]:py-1 [&>select]:text-xs max-sm:[&>select]:text-base">
+									<NativeSelect.Option value="manual">{$t("List order")}</NativeSelect.Option>
+									<NativeSelect.Option value="name">{$t("Name A–Z")}</NativeSelect.Option>
+								</NativeSelect.Root>
 								{#if activeList.can_edit}
-									<button type="button" onclick={() => (renameModalOpen = true)} class="min-h-10 rounded-lg border border-line-strong px-3 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Rename list")}</button>
+									<Button variant="ghost" type="button" onclick={() => (renameModalOpen = true)} class="min-h-10 rounded-lg border border-line-strong px-3 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Rename list")}</Button>
 								{/if}
 							</div>
 						</header>
-						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-ink-secondary" for="shopping-list-name">{$t('List name')}<input id="shopping-list-name" bind:value={activeList.name} maxlength="160" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" /></label><button type="submit" disabled={saving} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Rename')}</button></form></Modal>{/if}
+						{#if activeList.can_edit}<Modal bind:open={renameModalOpen} title={$t('Rename shopping list')}><form onsubmit={renameList} class="space-y-4"><label class="block text-sm font-medium text-ink-secondary" for="shopping-list-name">{$t('List name')}<Input variant="glass" id="shopping-list-name" bind:value={activeList.name} maxlength={160} required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" /></label><Button variant="ghost" type="submit" disabled={saving} class="min-h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent">{$t('Rename')}</Button></form></Modal>{/if}
 
 						{#if listLoading}
 							<Alert variant="plain" role="status" class="p-6 text-sm text-ink-muted">{$t("Loading items…")}</Alert>
@@ -640,7 +650,7 @@
 							<ul aria-label={$t("Shopping items")} class="divide-y divide-line">
 								{#each visibleItems as item (item.id)}
 									<li class="flex min-w-0 items-start gap-3 px-4 py-4 sm:items-center sm:px-5">
-										<input type="checkbox" checked={item.is_checked} disabled={!item.can_edit} aria-label={item.is_checked ? 'Restore ' + item.name + ' to the list' : 'Check off ' + item.name} onchange={(event) => void setChecked(item, (event.currentTarget as HTMLInputElement).checked)} class="mt-1 h-5 w-5 shrink-0 rounded border-line-strong bg-page text-accent-ink focus:ring-2 focus:ring-accent-ink/40 disabled:opacity-50 sm:mt-0" />
+										<Checkbox checked={item.is_checked} disabled={!item.can_edit} aria-label={$t(item.is_checked ? 'Restore {item} to the list' : 'Check off {item}', { item: item.name })} onCheckedChange={(checked) => void setChecked(item, checked === true)} class="mt-1 size-5 shrink-0 rounded border-line-strong bg-page text-accent-ink focus:ring-2 focus:ring-accent-ink/40 disabled:opacity-50 sm:mt-0" />
 										<div class="min-w-0 flex-1">
 											<p class="break-words text-sm font-medium {item.is_checked ? 'text-ink-subtle line-through' : 'text-ink'}">{item.name}</p>
 											<p class="mt-1 text-xs text-ink-subtle">{#if item.quantity}{formatMeasurement(item.quantity, item.unit)} {item.unit}{:else}{$t("Quantity not set")}{/if}{#if item.is_checked && item.checked_at}<span> {$t("· Checked")} {formatDate(item.checked_at)}</span>{/if}{#if item.pantry_received}<span> · {$t('Added to your private pantry')}</span>{/if}</p>
@@ -648,13 +658,13 @@
 										{#if item.can_edit}
 											<div class="flex shrink-0 flex-wrap items-center justify-end gap-1">
 												{#if item.is_checked}
-													<button type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-accent-ink/30 px-2.5 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t("Put back")}</button>
+													<Button variant="ghost" type="button" onclick={() => void setChecked(item, false)} class="min-h-10 rounded-lg border border-accent-ink/30 px-2.5 text-xs font-medium text-accent-ink hover:bg-accent/10">{$t("Put back")}</Button>
 												{:else}
-													<button type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={'Move ' + item.name + ' up'} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↑</button>
-													<button type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={'Move ' + item.name + ' down'} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↓</button>
+												<Button variant="ghost" type="button" disabled={sortMode !== 'manual' || isFirstInGroup(item)} onclick={() => void moveItem(item, 'up')} aria-label={$t('Move {item} up', { item: item.name })} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↑</Button>
+												<Button variant="ghost" type="button" disabled={sortMode !== 'manual' || isLastInGroup(item)} onclick={() => void moveItem(item, 'down')} aria-label={$t('Move {item} down', { item: item.name })} class="min-h-10 w-10 rounded-lg border border-line-strong text-sm text-ink-secondary hover:border-accent-ink/60 disabled:opacity-30">↓</Button>
 												{/if}
-												<button type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</button>
-											<button type="button" onclick={() => { itemToRemove = item; removeModalOpen = true; }} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</button>
+												<Button variant="ghost" type="button" onclick={() => startEdit(item)} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-secondary hover:border-accent-ink/60">{$t("Edit")}</Button>
+											<Button variant="ghost" type="button" onclick={() => { itemToRemove = item; removeModalOpen = true; }} class="min-h-10 rounded-lg border border-line-strong px-2.5 text-xs text-ink-muted hover:border-danger/60 hover:text-danger">{$t("Remove")}</Button>
 											</div>
 										{/if}
 									</li>
@@ -663,16 +673,16 @@
 											<Modal bind:open={editItemModalOpen} title={$t('Edit shopping item')} description={item.name}>
 											<form onsubmit={(event) => saveItem(event, item)} class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_8rem_auto_auto]">
 												<label class="text-xs font-medium text-ink-muted">{$t("Item name")}
-													<input bind:value={editName} maxlength="180" required class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
+													<Input variant="glass" bind:value={editName} maxlength={180} required class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
 												<label class="text-xs font-medium text-ink-muted">{$t("Quantity")}
-													<input bind:value={editQuantity} type="text" inputmode="decimal" maxlength="15" class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
+													<Input variant="glass" bind:value={editQuantity} type="text" inputmode="decimal" maxlength={15} class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
 												<label class="text-xs font-medium text-ink-muted">{$t("Unit")}
-													<input bind:value={editUnit} maxlength="32" class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
+													<Input variant="glass" bind:value={editUnit} maxlength={32} class="mt-1 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink max-sm:text-base" />
 												</label>
-												<button type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-accent px-4 text-xs font-semibold text-on-accent">{$t("Save")}</button>
-											<button type="button" onclick={() => { editingItemId = null; editItemModalOpen = false; }} class="min-h-11 self-end rounded-lg border border-line-strong px-4 text-xs text-ink-secondary">{$t("Cancel")}</button>
+												<Button variant="ghost" type="submit" disabled={saving} class="min-h-11 self-end rounded-lg bg-accent px-4 text-xs font-semibold text-on-accent">{$t("Save")}</Button>
+											<Button variant="ghost" type="button" onclick={() => { editingItemId = null; editItemModalOpen = false; }} class="min-h-11 self-end rounded-lg border border-line-strong px-4 text-xs text-ink-secondary">{$t("Cancel")}</Button>
 											</form>
 										</Modal>
 										</li>
@@ -681,16 +691,16 @@
 							</ul>
 						{:else}
 							<div class="px-5 py-10 text-center">
-								<p class="text-sm font-medium text-ink">{items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.'}</p>
+											<p class="text-sm font-medium text-ink">{$t(items.length === 0 ? 'This list is ready for its first item.' : filter === 'open' ? 'Everything is checked off.' : 'No items match this view.')}</p>
 								<p class="mt-1 text-xs text-ink-subtle">{$t(filter === 'checked' && checkedItems.length ? 'Checked items can be put back on the list at any time.' : 'Use Quick add above to keep the list current.')}</p>
 							</div>
 						{/if}
 					</Card>
 
 					<Card as="section" variant="glass" class="overflow-hidden rounded-[20px]">
-						<button type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-ink-secondary hover:bg-surface sm:px-5">
+						<Button variant="ghost" type="button" aria-expanded={historyOpen} onclick={() => void toggleHistory()} class="flex min-h-12 w-full items-center justify-between gap-4 px-4 text-left text-sm font-medium text-ink-secondary hover:bg-surface sm:px-5">
 							<span>{$t("List activity")}</span><span class="text-xs text-ink-subtle">{$t(historyOpen ? 'Hide' : 'Show last 100 events')} <span aria-hidden="true">{$t(historyOpen ? '−' : '+')}</span></span>
-						</button>
+						</Button>
 						{#if historyOpen}
 							<div class="border-t border-line px-4 py-3 sm:px-5">
 								{#if historyLoading}
