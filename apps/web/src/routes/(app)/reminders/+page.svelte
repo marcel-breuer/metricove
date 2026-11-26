@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Card } from '#lib/components/ui/card/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { onMount } from 'svelte';
@@ -100,20 +104,20 @@
 	<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-6" aria-labelledby="inbox-heading">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div><h2 id="inbox-heading" class="text-xl font-semibold text-ink">{$t('Upcoming')}</h2><p class="mt-1 text-sm text-ink-muted">{reminders.filter((reminder) => !reminder.is_read).length} {$t('unread reminders')}</p></div>
-			<button type="button" onclick={() => void load()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t('Refresh')}</button>
+			<Button variant="secondary" size="small" type="button" onclick={() => void load()} disabled={loading} class="rounded-lg border-line-strong bg-transparent px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-accent-ink disabled:opacity-50">{$t('Refresh')}</Button>
 		</div>
 		{#if loading}
 			<Alert variant="plain" role="status" class="mt-5 text-sm text-ink-muted">{$t('Loading reminders…')}</Alert>
 		{:else if reminders.length === 0}
-			<p class="mt-5 rounded-xl border border-line bg-page px-4 py-5 text-sm text-ink-muted">{$t('No upcoming reminders. They appear here when enabled modules have an obligation or alert within your reminder window.')}</p>
+			<Card variant="inset" class="mt-5 rounded-xl px-4 py-5 text-sm text-ink-muted">{$t('No upcoming reminders. They appear here when enabled modules have an obligation or alert within your reminder window.')}</Card>
 		{:else}
 			<ul class="mt-5 divide-y divide-line">
 				{#each reminders as reminder (reminder.id)}
 					<li class="flex flex-wrap items-center justify-between gap-3 py-4 {reminder.is_read ? 'opacity-75' : ''}">
 						<div class="min-w-0"><p class="font-medium text-ink">{reminder.title}</p><p class="mt-1 text-sm text-ink-muted">{$t('Due')} · {formatDate(reminder.due_on)}</p><a href={reminder.href} class="mt-1 inline-flex text-sm font-medium text-accent-ink hover:text-accent-ink">{$t('Open record')} <span class="ml-1" aria-hidden="true">→</span></a></div>
 						<div class="flex gap-2">
-							{#if !reminder.is_read}<button type="button" onclick={() => void updateReminder(reminder, 'read')} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t('Mark read')}</button>{/if}
-							<button type="button" onclick={() => void updateReminder(reminder, 'dismiss')} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary hover:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">{$t('Dismiss')}</button>
+							{#if !reminder.is_read}<Button variant="secondary" size="small" type="button" onclick={() => void updateReminder(reminder, 'read')} class="min-h-10 rounded-lg border-line-strong bg-transparent px-3 text-sm font-normal text-ink-secondary hover:border-accent-ink focus-visible:outline-accent-ink">{$t('Mark read')}</Button>{/if}
+							<Button variant="secondary" size="small" type="button" onclick={() => void updateReminder(reminder, 'dismiss')} class="min-h-10 rounded-lg border-line-strong bg-transparent px-3 text-sm font-normal text-ink-secondary hover:border-danger focus-visible:outline-danger">{$t('Dismiss')}</Button>
 						</div>
 					</li>
 				{/each}
@@ -124,10 +128,10 @@
 	<Card as="section" variant="glass" class="mt-8 rounded-[20px] p-5 sm:p-6" aria-labelledby="settings-heading">
 		<div><h2 id="settings-heading" class="text-xl font-semibold text-ink">{$t('Reminder settings')}</h2><p class="mt-1 text-sm text-ink-muted">{$t('Email is optional and uses the SMTP settings configured for this installation.')}</p></div>
 		<form class="mt-5 space-y-5" onsubmit={savePreferences}>
-			<label class="flex items-start gap-3 text-sm text-ink-secondary"><input bind:checked={emailEnabled} type="checkbox" class="mt-0.5 size-4 rounded border-line-strong bg-page accent-accent" /><span><span class="font-medium">{$t('Send reminder emails')}</span><span class="mt-1 block text-ink-muted">{$t('Email details are sent only while you retain permission to view the source record.')}</span></span></label>
-			<label for="reminder-lead-days" class="block max-w-sm text-sm font-medium text-ink-secondary">{$t('Days in advance')}<input id="reminder-lead-days" bind:value={leadDays} type="number" min="0" max="30" required class="mt-2 min-h-11 w-full rounded-[10px] border border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:outline-none focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /><span class="mt-1 block text-xs text-ink-subtle">{$t('Choose between 0 and 30 days. Utility threshold alerts are created when a new reading exceeds the meter threshold.')}</span></label>
-				<fieldset><legend class="text-sm font-medium text-ink-secondary">{$t('Reminder sources')}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2">{#each Object.keys(defaultSources) as source (source)}<label class="flex items-center gap-3 rounded-xl border border-line bg-page px-3 py-3 text-sm text-ink-secondary"><input bind:checked={sources[source]} type="checkbox" class="size-4 rounded border-line-strong bg-page accent-accent" />{$t(source === 'vehicles' ? 'Vehicle insurance and service' : source === 'utilities' ? 'Utility threshold alerts' : source === 'pantry' ? 'Pantry best-before dates' : 'Task checklist reminders')}</label>{/each}</div></fieldset>
-			<button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save reminder settings')}</button>
+			<Label variant="field" class="flex items-start gap-3 text-sm text-ink-secondary"><Checkbox bind:checked={emailEnabled} class="mt-0.5 border-line-strong bg-page data-checked:border-accent data-checked:bg-accent data-checked:text-on-accent" /><span><span class="font-medium">{$t('Send reminder emails')}</span><span class="mt-1 block text-ink-muted">{$t('Email details are sent only while you retain permission to view the source record.')}</span></span></Label>
+			<Label variant="field" for="reminder-lead-days" class="block max-w-sm gap-0 text-sm font-medium text-ink-secondary">{$t('Days in advance')}<Input id="reminder-lead-days" variant="glass" bind:value={leadDays} type="number" min="0" max="30" required class="mt-2 min-h-11 rounded-[10px] border-line-strong bg-page px-3 text-sm text-ink focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20 max-sm:text-base" /><span class="mt-1 block text-xs text-ink-subtle">{$t('Choose between 0 and 30 days. Utility threshold alerts are created when a new reading exceeds the meter threshold.')}</span></Label>
+				<fieldset><legend class="text-sm font-medium text-ink-secondary">{$t('Reminder sources')}</legend><div class="mt-3 grid gap-3 sm:grid-cols-2">{#each Object.keys(defaultSources) as source (source)}<Label variant="field" class="flex items-center gap-3 rounded-xl border border-line bg-page px-3 py-3 text-sm text-ink-secondary"><Checkbox bind:checked={sources[source]} class="border-line-strong bg-page data-checked:border-accent data-checked:bg-accent data-checked:text-on-accent" />{$t(source === 'vehicles' ? 'Vehicle insurance and service' : source === 'utilities' ? 'Utility threshold alerts' : source === 'pantry' ? 'Pantry best-before dates' : 'Task checklist reminders')}</Label>{/each}</div></fieldset>
+			<Button type="submit" disabled={saving} class="min-h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:bg-accent/90 focus-visible:outline-accent-ink disabled:opacity-50">{$t(saving ? 'Saving…' : 'Save reminder settings')}</Button>
 		</form>
 	</Card>
 </section>

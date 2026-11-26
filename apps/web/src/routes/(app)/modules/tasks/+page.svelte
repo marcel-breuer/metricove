@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
 	import { Card } from '#lib/components/ui/card/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import MarkdownEditor from '#lib/ui/MarkdownEditor.svelte';
-	import { control } from '#lib/ui/styles';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
@@ -374,46 +377,46 @@
 			<Modal bind:open={formOpen} size="wide" title={$t(editing ? 'Edit task' : 'New task')} description={$t(editing ? 'Keep the next step clear.' : 'A task everyone can understand.')}>
 				{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 				<form id="task-form" class="grid gap-x-6 gap-y-5 md:grid-cols-2 lg:grid-cols-4" onsubmit={saveTask}>
-				<label class="block md:col-span-2 lg:col-span-4">
+				<Label variant="field" class="block gap-0 md:col-span-2 lg:col-span-4">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Task title')}</span>
-					<input required maxlength="180" bind:value={title} placeholder={$t('e.g. Book the car service')} class="{control}" />
-				</label>
-				<div class="block md:col-span-2 lg:col-span-4"><label for="markdown-extra-72554">
+					<Input variant="glass" required maxlength={180} bind:value={title} placeholder={$t('e.g. Book the car service')} />
+				</Label>
+				<div class="block md:col-span-2 lg:col-span-4"><Label for="markdown-extra-72554" variant="field" class="gap-0">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Details')}</span>
-					</label><MarkdownEditor id="markdown-extra-72554" maxlength={4000} bind:value={description} rows={6} placeholder={$t('Add the context someone needs to get it done.')} class="{control} resize-y" /></div>
-				<label class="block">
+					</Label><MarkdownEditor id="markdown-extra-72554" maxlength={4000} bind:value={description} rows={6} placeholder={$t('Add the context someone needs to get it done.')} class="resize-y" /></div>
+				<Label variant="field" class="block gap-0">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Due date')}</span>
-					<input type="datetime-local" bind:value={dueInput} oninput={() => (taskTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')} class="{control}" />
-				</label>
-				<label class="block">
+					<Input variant="glass" type="datetime-local" bind:value={dueInput} oninput={() => (taskTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')} />
+				</Label>
+				<Label variant="field" class="block gap-0">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Priority')}</span>
-					<select bind:value={priority} class="{control}">
+					<NativeSelect.Root variant="glass" bind:value={priority}>
 						<option value="low">{$t('Low')}</option><option value="medium">{$t('Medium')}</option><option value="high">{$t('High')}</option>
-					</select>
-				</label>
+					</NativeSelect.Root>
+				</Label>
 				{#if canAssign}
-					<label class="block">
+					<Label variant="field" class="block gap-0">
 						<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Assignee')}</span>
-						<select bind:value={assigneeId} class="{control}"><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select>
-					</label>
+						<NativeSelect.Root variant="glass" bind:value={assigneeId}><option value="">{$t('Unassigned')}</option>{#each assignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</NativeSelect.Root>
+					</Label>
 				{/if}
-				<label class="block">
+				<Label variant="field" class="block gap-0">
 					<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Repeats')}</span>
-					<select bind:value={frequency} class="{control}">
+					<NativeSelect.Root variant="glass" bind:value={frequency}>
 						<option value="none">{$t('Does not repeat')}</option><option value="daily">{$t('Daily')}</option><option value="weekly">{$t('Weekly')}</option><option value="monthly">{$t('Monthly')}</option><option value="yearly">{$t('Yearly')}</option>
-					</select>
-				</label>
+					</NativeSelect.Root>
+				</Label>
 				{#if frequency !== 'none'}
-					<label class="block">
+					<Label variant="field" class="block gap-0">
 						<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Every')}</span>
-						<input type="number" min="1" max="99" bind:value={interval} required class="{control}" />
-					</label>
+						<Input variant="glass" type="number" min="1" max="99" bind:value={interval} required />
+					</Label>
 				{/if}
 				{#if canCreateShared && !editing}
-					<label class="block">
+						<Label variant="field" class="block gap-0">
 						<span class="mb-1.5 block text-sm font-medium text-ink-secondary">{$t('Visibility')}</span>
-						<select bind:value={visibility} class="{control}"><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></select>
-					</label>
+						<NativeSelect.Root variant="glass" bind:value={visibility}><option value="private">{$t('Private')}</option><option value="household">{$t('Shared with household')}</option></NativeSelect.Root>
+					</Label>
 				{/if}
 				</form>
 				{#if !editing}<p class="mt-6 text-xs leading-5 text-ink-muted">{$t('Tasks are private by default. Household tasks are visible to members with access.')}</p>{/if}
@@ -429,11 +432,11 @@
 				<div><p class="text-[0.8125rem] font-semibold tracking-[0.01em] text-accent-ink">{$t('Your tasks')}</p><h2 class="mt-2 text-xl font-semibold text-ink">{$t('Keep the household moving.')}</h2></div>
 				<Disclosure summary="Filter and sort" class="w-full">
 				<div class="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-5">
-					<label><span class="mb-1 block text-xs text-ink-muted">{$t('Status')}</span><select bind:value={statusFilter} onchange={updateFilters} class="{control}"><option value="open">{$t('Open')}</option><option value="completed">{$t('Completed')}</option><option value="all">{$t('All')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-ink-muted">{$t('Priority')}</span><select bind:value={priorityFilter} onchange={updateFilters} class="{control}"><option value="all">{$t('All priorities')}</option><option value="high">{$t('High')}</option><option value="medium">{$t('Medium')}</option><option value="low">{$t('Low')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-ink-muted">{$t('Due date')}</span><select bind:value={dueFilter} onchange={updateFilters} class="{control}"><option value="all">{$t('Any date')}</option><option value="overdue">{$t('Overdue')}</option><option value="upcoming">{$t('Upcoming')}</option><option value="none">{$t('No due date')}</option></select></label>
-					<label><span class="mb-1 block text-xs text-ink-muted">{$t('Assignee')}</span><select bind:value={assigneeFilter} onchange={updateFilters} class="{control}"><option value="">{$t('Anyone')}</option>{#each visibleAssignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</select></label>
-					<label><span class="mb-1 block text-xs text-ink-muted">{$t('Sort by')}</span><select bind:value={sortMode} onchange={updateFilters} class="{control}"><option value="due_at">{$t('Due date')}</option><option value="priority">{$t('Priority')}</option><option value="assignee">{$t('Assignee')}</option></select></label>
+					<Label variant="field" class="gap-1 text-xs text-ink-muted">{$t('Status')}<NativeSelect.Root variant="glass" bind:value={statusFilter} onchange={updateFilters}><option value="open">{$t('Open')}</option><option value="completed">{$t('Completed')}</option><option value="all">{$t('All')}</option></NativeSelect.Root></Label>
+					<Label variant="field" class="gap-1 text-xs text-ink-muted">{$t('Priority')}<NativeSelect.Root variant="glass" bind:value={priorityFilter} onchange={updateFilters}><option value="all">{$t('All priorities')}</option><option value="high">{$t('High')}</option><option value="medium">{$t('Medium')}</option><option value="low">{$t('Low')}</option></NativeSelect.Root></Label>
+					<Label variant="field" class="gap-1 text-xs text-ink-muted">{$t('Due date')}<NativeSelect.Root variant="glass" bind:value={dueFilter} onchange={updateFilters}><option value="all">{$t('Any date')}</option><option value="overdue">{$t('Overdue')}</option><option value="upcoming">{$t('Upcoming')}</option><option value="none">{$t('No due date')}</option></NativeSelect.Root></Label>
+					<Label variant="field" class="gap-1 text-xs text-ink-muted">{$t('Assignee')}<NativeSelect.Root variant="glass" bind:value={assigneeFilter} onchange={updateFilters}><option value="">{$t('Anyone')}</option>{#each visibleAssignees as assignee (assignee.id)}<option value={String(assignee.id)}>{assignee.name}</option>{/each}</NativeSelect.Root></Label>
+					<Label variant="field" class="gap-1 text-xs text-ink-muted">{$t('Sort by')}<NativeSelect.Root variant="glass" bind:value={sortMode} onchange={updateFilters}><option value="due_at">{$t('Due date')}</option><option value="priority">{$t('Priority')}</option><option value="assignee">{$t('Assignee')}</option></NativeSelect.Root></Label>
 				</div>
 				</Disclosure>
 			</div>
@@ -441,11 +444,11 @@
 			{#if loading}
 				<Alert variant="plain" role="status" class="mt-6 text-sm text-ink-muted">{$t('Loading tasks…')}</Alert>
 			{:else if tasks.length === 0}
-				<div class="mt-6 rounded-2xl border border-dashed border-line-strong px-5 py-8 text-center"><p class="text-base font-semibold text-ink">{$t('Nothing on the list yet.')}</p><p class="mt-2 text-sm text-ink-muted">{$t('Add a household task or adjust your filters.')}</p></div>
+				<Card variant="inset" class="mt-6 rounded-2xl border-dashed border-line-strong px-5 py-8 text-center"><p class="text-base font-semibold text-ink">{$t('Nothing on the list yet.')}</p><p class="mt-2 text-sm text-ink-muted">{$t('Add a household task or adjust your filters.')}</p></Card>
 			{:else}
 				<ul class="mt-5 space-y-3">
 					{#each tasks as task (task.id)}
-						<li id="task-{task.id}" class="rounded-2xl border border-line bg-page p-4 sm:p-5">
+						<Card as="li" variant="inset" id="task-{task.id}" class="rounded-2xl p-4 sm:p-5">
 							<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 								<div class="min-w-0 flex-1">
 									<div class="flex flex-wrap items-center gap-2"><h3 class="text-base font-semibold text-ink">{task.title}</h3><Badge class="px-2.5 py-1 font-medium {task.priority === 'high' ? 'bg-danger/10 text-danger' : task.priority === 'medium' ? 'bg-warning/10 text-warning' : 'bg-surface-subtle text-ink-secondary'} border-0 leading-4 whitespace-normal">{$t(task.priority[0].toUpperCase() + task.priority.slice(1))}</Badge><Badge class="border-line-strong px-2.5 py-1 text-ink-secondary font-normal leading-4 whitespace-normal">{$t(task.visibility === 'private' ? 'Private' : 'Shared')}</Badge>{#if task.is_completed}<Badge class="bg-positive/10 px-2.5 py-1 text-positive border-0 font-normal leading-4 whitespace-normal">{$t('Completed')}</Badge>{/if}</div>
@@ -474,17 +477,17 @@
 											<Card as="li" variant="glass" id="task-{task.id}-checklist-item-{item.id}" class="rounded-xl p-3">
 												{#if editingChecklistItemId === item.id}
 													<form class="grid gap-3 sm:grid-cols-2" onsubmit={(event) => void saveChecklistItem(event, task, item)}>
-														<label class="sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('Checklist item')}</span><input required maxlength="180" bind:value={checklistEditTitle} class="{control}" /></label>
-														<label><span class="mb-1 block text-xs text-ink-muted">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistEditDueInput} class="{control}" /></label>
-														<label><span class="mb-1 block text-xs text-ink-muted">{$t('Remind before due')}</span><select bind:value={checklistEditLead} disabled={!checklistEditDueInput} class="{control}"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+										<Label variant="field" class="gap-0 sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('Checklist item')}</span><Input variant="glass" required maxlength={180} bind:value={checklistEditTitle} /></Label>
+										<Label variant="field" class="gap-0"><span class="mb-1 block text-xs text-ink-muted">{$t('Due date')}</span><Input variant="glass" type="datetime-local" bind:value={checklistEditDueInput} /></Label>
+										<Label variant="field" class="gap-0"><span class="mb-1 block text-xs text-ink-muted">{$t('Remind before due')}</span><NativeSelect.Root variant="glass" bind:value={checklistEditLead} disabled={!checklistEditDueInput}><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></NativeSelect.Root></Label>
 														<div class="flex gap-2 sm:col-span-2"><Button type="submit" size="small">{$t('Save item')}</Button><Button type="button" variant="ghost" size="small" onclick={() => (editingChecklistItemId = null)}>{$t('Cancel')}</Button></div>
 													</form>
 												{:else}
 													<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-														<label class="flex min-w-0 items-start gap-3 text-sm text-ink-secondary">
-															<input type="checkbox" checked={item.is_completed} disabled={!task.can_complete || task.is_completed} onchange={(event) => void setChecklistItemCompleted(task, item, event.currentTarget.checked)} class="mt-0.5 size-4 rounded border-line-strong bg-page text-accent-ink focus:ring-accent-ink" />
+										<Label variant="field" class="flex min-w-0 items-start gap-3 text-sm text-ink-secondary">
+											<Checkbox checked={item.is_completed} disabled={!task.can_complete || task.is_completed} onCheckedChange={(checked) => void setChecklistItemCompleted(task, item, checked === true)} class="mt-0.5 border-line-strong bg-page text-accent-ink data-checked:border-accent data-checked:bg-accent data-checked:text-on-accent focus:ring-accent-ink" />
 															<span class={item.is_completed ? 'text-ink-subtle line-through' : ''}>{item.title}<span class="mt-1 block text-xs text-ink-subtle">{#if item.due_at}{$t('Due')} {formatDateTime(item.due_at)}{#if item.reminder_lead_minutes > 0} · {$t('Reminder set')}{/if}{:else}{$t('No due date')}{/if}{#if item.completed_by} · {$t('Completed by')} {item.completed_by}{/if}</span></span>
-														</label>
+										</Label>
 														{#if task.can_edit_checklist && !task.is_completed}<div class="flex flex-wrap gap-1"><Button variant="ghost" size="small" aria-label={$t('Move up')} disabled={index === 0} onclick={() => void moveChecklistItem(task, item, -1)}>↑</Button><Button variant="ghost" size="small" aria-label={$t('Move down')} disabled={index === task.checklist_items.length - 1} onclick={() => void moveChecklistItem(task, item, 1)}>↓</Button><Button variant="ghost" size="small" onclick={() => editChecklistItem(item)}>{$t('Edit')}</Button><Button variant="danger" size="small" onclick={() => { checklistDeleteTarget = { task, item }; checklistDeleteOpen = true; }}>{$t('Delete')}</Button></div>{/if}
 													</div>
 												{/if}
@@ -493,9 +496,9 @@
 									</ol>
 									{#if task.can_edit_checklist && !task.is_completed}
 										<form class="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2" onsubmit={(event) => void addChecklistItem(event, task)}>
-											<label class="sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('New checklist item')}</span><input required maxlength="180" bind:value={checklistTitle} placeholder={$t('e.g. Take a photo of the meter')} class="{control}" /></label>
-											<label><span class="mb-1 block text-xs text-ink-muted">{$t('Due date')}</span><input type="datetime-local" bind:value={checklistDueInput} class="{control}" /></label>
-											<label><span class="mb-1 block text-xs text-ink-muted">{$t('Remind before due')}</span><select bind:value={checklistLead} disabled={!checklistDueInput} class="{control}"><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></select></label>
+											<Label variant="field" class="gap-0 sm:col-span-2"><span class="mb-1 block text-xs text-ink-muted">{$t('New checklist item')}</span><Input variant="glass" required maxlength={180} bind:value={checklistTitle} placeholder={$t('e.g. Take a photo of the meter')} /></Label>
+											<Label variant="field" class="gap-0"><span class="mb-1 block text-xs text-ink-muted">{$t('Due date')}</span><Input variant="glass" type="datetime-local" bind:value={checklistDueInput} /></Label>
+											<Label variant="field" class="gap-0"><span class="mb-1 block text-xs text-ink-muted">{$t('Remind before due')}</span><NativeSelect.Root variant="glass" bind:value={checklistLead} disabled={!checklistDueInput}><option value="0">{$t('At due time')}</option><option value="15">15 {$t('minutes')}</option><option value="60">1 {$t('hour')}</option><option value="1440">1 {$t('day')}</option><option value="10080">1 {$t('week')}</option></NativeSelect.Root></Label>
 											<div class="sm:col-span-2"><Button type="submit">{$t('Add checklist item')}</Button></div>
 										</form>
 									{/if}
@@ -503,10 +506,10 @@
 							</div>
 							{#if historyOpen === task.id}
 								<div class="mt-4 border-t border-line pt-4"><p class="text-xs font-semibold text-ink-muted">{$t('Completion history')}</p>
-									{#if (histories[task.id] ?? []).length === 0}<p class="mt-2 text-sm text-ink-muted">{$t('No completed occurrences yet.')}</p>{:else}<ol class="mt-3 space-y-3">{#each histories[task.id] as completion (completion.id)}<li class="rounded-xl border border-line p-3"><div class="flex flex-wrap justify-between gap-2 text-sm text-ink-secondary"><span>{$t('Occurrence')} {completion.occurrence_number} · {completion.completed_by ?? $t('Former member')}</span><time datetime={completion.completed_at}>{formatDateTime(completion.completed_at)}</time></div>{#if completion.checklist_items.length > 0}<ul class="mt-2 space-y-1 text-xs text-ink-muted">{#each completion.checklist_items as item, itemIndex (`${completion.id}-${itemIndex}`)}<li>{item.is_completed ? '✓' : '○'} {item.title}{#if item.completed_by} · {item.completed_by}{/if}</li>{/each}</ul>{/if}</li>{/each}</ol>{/if}
+									{#if (histories[task.id] ?? []).length === 0}<p class="mt-2 text-sm text-ink-muted">{$t('No completed occurrences yet.')}</p>{:else}<ol class="mt-3 space-y-3">{#each histories[task.id] as completion (completion.id)}<Card as="li" variant="inset" class="rounded-xl p-3"><div class="flex flex-wrap justify-between gap-2 text-sm text-ink-secondary"><span>{$t('Occurrence')} {completion.occurrence_number} · {completion.completed_by ?? $t('Former member')}</span><time datetime={completion.completed_at}>{formatDateTime(completion.completed_at)}</time></div>{#if completion.checklist_items.length > 0}<ul class="mt-2 space-y-1 text-xs text-ink-muted">{#each completion.checklist_items as item, itemIndex (`${completion.id}-${itemIndex}`)}<li>{item.is_completed ? '✓' : '○'} {item.title}{#if item.completed_by} · {item.completed_by}{/if}</li>{/each}</ul>{/if}</Card>{/each}</ol>{/if}
 								</div>
 							{/if}
-						</li>
+						</Card>
 					{/each}
 				</ul>
 				<p class="mt-4 text-xs text-ink-subtle">{$t('Showing up to 200 visible tasks.')}</p>
