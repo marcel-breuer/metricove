@@ -8,6 +8,26 @@ Metricove follows Semantic Versioning. Before 1.0.0, releases use `0.MINOR.PATCH
 
 * **import:** remove the Notion food import (the Notion section on `/modules/import`, `POST /api/import/notion/food/preview`, `POST /api/import/notion/food/import`, the `preview_import_notion_recipes` MCP tool and the `import:create` MCP token scope). Recipes and meal plans that were already imported from Notion are kept unchanged, including their `source_system`/`source_id` references and review flags, and stay editable in Recipes and Meal Planning. CSV, CAMT.053 and meter photo imports are unaffected.
 
+## [0.30.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.29.0...metricove-v0.30.0) (2026-11-27)
+
+
+### Features
+
+* **frontend:** build the UI on shadcn-svelte with the glass look ([#295](https://github.com/marcel-breuer/metricove/issues/295)) ([9a68dbb](https://github.com/marcel-breuer/metricove/commit/9a68dbb62da35da117411b5fabc4b44ad99afd6e))
+* **frontend:** migrate admin settings and members pages to shadcn ([#320](https://github.com/marcel-breuer/metricove/issues/320)) ([2ef6a1d](https://github.com/marcel-breuer/metricove/commit/2ef6a1db54262400a713f7b4b154e27f46d489e6))
+* **frontend:** migrate app shell navigation and menus to shadcn ([#301](https://github.com/marcel-breuer/metricove/issues/301)) ([619ea4b](https://github.com/marcel-breuer/metricove/commit/619ea4b5424c3afa24fec7c454a3ee28f8d9803e))
+* **frontend:** migrate module editor forms to shadcn ([#304](https://github.com/marcel-breuer/metricove/issues/304)) ([4c65176](https://github.com/marcel-breuer/metricove/commit/4c651767114b7a95f4bf1ab513da06a5ef6d2e2b))
+* **frontend:** migrate notes pages to shadcn ([#319](https://github.com/marcel-breuer/metricove/issues/319)) ([0280d97](https://github.com/marcel-breuer/metricove/commit/0280d9748acddc0c5d5902733c837152e9eea59b))
+* **frontend:** migrate password pages to shadcn ([#318](https://github.com/marcel-breuer/metricove/issues/318)) ([f6aed76](https://github.com/marcel-breuer/metricove/commit/f6aed76c144b8c535fcc7a65a809dba5ba327ba5))
+* **frontend:** migrate profile and assistant pages to shadcn ([#311](https://github.com/marcel-breuer/metricove/issues/311)) ([51ba202](https://github.com/marcel-breuer/metricove/commit/51ba202b911b94cbf56fc4cc11e8dcfddf126bd8))
+* **frontend:** migrate remaining receipts, recipes and vehicles controls to shadcn ([#321](https://github.com/marcel-breuer/metricove/issues/321)) ([c11ec7f](https://github.com/marcel-breuer/metricove/commit/c11ec7f3ed410bc6215893882b62e32998f01e9b))
+* **frontend:** migrate shared utilities to shadcn ([#303](https://github.com/marcel-breuer/metricove/issues/303)) ([dd2c60b](https://github.com/marcel-breuer/metricove/commit/dd2c60b4fefdee56500e405b4e24fda10a364364))
+* **frontend:** migrate shopping, pantry and meal planning pages to shadcn ([#312](https://github.com/marcel-breuer/metricove/issues/312)) ([3c92611](https://github.com/marcel-breuer/metricove/commit/3c926114ad2bdfefaa92667b24437463c3038f4a))
+* **frontend:** migrate tasks and reminders pages to shadcn ([#309](https://github.com/marcel-breuer/metricove/issues/309)) ([4a11d44](https://github.com/marcel-breuer/metricove/commit/4a11d444722c0eb70e5ccc2211ced804f02b2918))
+* **frontend:** migrate tracking history and status UI to shadcn ([#302](https://github.com/marcel-breuer/metricove/issues/302)) ([eedc989](https://github.com/marcel-breuer/metricove/commit/eedc98920d34729fe5c717704ddfdc0f961f4442))
+* **frontend:** migrate tracking, utilities and analytics pages to shadcn ([#310](https://github.com/marcel-breuer/metricove/issues/310)) ([5e4a0e7](https://github.com/marcel-breuer/metricove/commit/5e4a0e701b9beca36608aa7bdce375b66dbc46c5))
+* **pantry:** delete pantry items ([#293](https://github.com/marcel-breuer/metricove/issues/293)) ([8e23d65](https://github.com/marcel-breuer/metricove/commit/8e23d65f8c34b863d78d6f1f25fe4c17b60b4b3f))
+
 ## [0.29.0](https://github.com/marcel-breuer/metricove/compare/metricove-v0.28.1...metricove-v0.29.0) (2026-11-23)
 
 
