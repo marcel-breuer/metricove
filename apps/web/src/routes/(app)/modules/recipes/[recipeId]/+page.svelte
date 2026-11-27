@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Button as PrimitiveButton } from '#lib/components/ui/button/index.js';
 	import Markdown from '#lib/ui/Markdown.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import { iconButton } from '#lib/ui/styles';
@@ -129,7 +130,7 @@
 			</div>
 			{#snippet actions()}
 				{#if recipe}
-					<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</button>
+					<PrimitiveButton type="button" variant="ghost" size="icon-lg" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe!)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</PrimitiveButton>
 					{#if recipe.can_edit}
 						<Button variant="ghost" onclick={() => (deleteOpen = true)}>{$t('Delete')}</Button>
 						<Button onclick={() => { message = ''; editorOpen = true; }}>{$t('Edit')}</Button>
@@ -139,7 +140,7 @@
 		</PageHeader>
 
 		{#if recipe.photo_url}
-			{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="inline-flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface-subtle px-4 text-sm font-medium text-ink-secondary hover:border-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}
+			{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="inline-flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface-subtle px-4 text-sm font-medium text-ink-secondary hover:border-accent-ink">{$t('Open recipe PDF')}<Badge class="rounded border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</Badge></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} class="aspect-[21/9] w-full rounded-2xl border border-line object-cover" />{/if}
 		{/if}
 
 		<div class="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
