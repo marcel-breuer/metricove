@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
+	import { Button as PrimitiveButton } from '#lib/components/ui/button/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
 	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
-	import { control, fieldLabel, iconButton } from '#lib/ui/styles';
+	import { fieldLabel, iconButton } from '#lib/ui/styles';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Badge from '#lib/ui/Badge.svelte';
 	import EmptyState from '#lib/ui/EmptyState.svelte';
@@ -157,7 +158,7 @@
 {/snippet}
 
 {#snippet favoriteButton(recipe: Recipe)}
-	<button type="button" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</button>
+	<PrimitiveButton type="button" variant="ghost" size="icon-lg" aria-label={$t(recipe.is_favorite ? 'Remove {title} from favorites' : 'Add {title} to favorites', { title: recipe.title })} aria-pressed={recipe.is_favorite} onclick={() => void toggleFavorite(recipe)} class="{iconButton} aria-pressed:text-warning">{@render star(recipe.is_favorite)}</PrimitiveButton>
 {/snippet}
 
 <div class="mx-auto max-w-7xl space-y-8">
@@ -173,15 +174,15 @@
 
 	<section aria-labelledby="recipe-list-title" class="space-y-6">
 		<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
-			<label class="{fieldLabel} block">{$t("Search recipes and ingredients")}
-				<input bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="{control} mt-1.5" />
-			</label>
-			<label class="{fieldLabel} block">{$t("Category")}
-				<select bind:value={categoryFilter} class="{control} mt-1.5">
-					<option value="all">{$t("All categories")}</option>
-					{#each categories as recipeCategory}<option value={recipeCategory}>{recipeCategory}</option>{/each}
-				</select>
-			</label>
+			<Label variant="field" class="block gap-0">{$t("Search recipes and ingredients")}
+				<Input variant="glass" bind:value={search} type="search" placeholder={$t("Try tomato, soup or breakfast")} class="mt-1.5" />
+			</Label>
+			<Label variant="field" class="block gap-0">{$t("Category")}
+				<NativeSelect.Root variant="glass" bind:value={categoryFilter} class="mt-1.5">
+					<NativeSelect.Option value="all">{$t("All categories")}</NativeSelect.Option>
+					{#each categories as recipeCategory}<NativeSelect.Option value={recipeCategory}>{recipeCategory}</NativeSelect.Option>{/each}
+				</NativeSelect.Root>
+			</Label>
 			<Button type="button" variant="secondary" aria-pressed={favoriteOnly} onclick={() => (favoriteOnly = !favoriteOnly)} class="aria-pressed:border-warning aria-pressed:text-warning">
 				{@render star(favoriteOnly)}{$t("Favorites")}
 			</Button>
@@ -205,7 +206,7 @@
 			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{#each visibleRecipes as recipe (recipe.id)}
 					<Card as="li" variant="glass" class="flex min-w-0 flex-col overflow-hidden">
-						{#if recipe.photo_url}{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="flex aspect-[16/9] items-center gap-3 border-b border-line bg-surface-subtle px-5 text-sm font-medium text-ink-secondary hover:text-accent-ink">{$t('Open recipe PDF')}<span class="rounded border border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</span></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}{/if}
+						{#if recipe.photo_url}{#if recipe.photo_is_pdf}<a href={recipe.photo_url} target="_blank" rel="noreferrer" class="flex aspect-[16/9] items-center gap-3 border-b border-line bg-surface-subtle px-5 text-sm font-medium text-ink-secondary hover:text-accent-ink">{$t('Open recipe PDF')}<Badge class="rounded border-line-strong px-2 py-1 text-xs text-ink-muted">PDF</Badge></a>{:else}<img src={recipe.photo_url} alt={$t('Photo of {title}', { title: recipe.title })} loading="lazy" class="aspect-[16/9] w-full border-b border-line object-cover" />{/if}{/if}
 						<div class="flex flex-1 flex-col gap-3 p-5">
 							<div class="flex items-start justify-between gap-3">
 								<div class="min-w-0">

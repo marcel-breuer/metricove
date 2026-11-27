@@ -635,7 +635,7 @@
 				</div>
 				<p class="mt-2 text-xs leading-5 text-ink-subtle">{$t('PDF up to 10 MB and 5 pages. Add up to 5 JPEG, PNG or iPhone HEIC photo pages; they are converted and combined on this device.')}</p>
 				{#if photoPages.length > 0}
-					<div class="rounded-xl border border-line bg-page p-3">
+					<Card variant="inset" class="gap-0 p-3">
 						<p class="text-sm font-medium text-ink-secondary">{$t('Scan pages')} ({photoPages.length}/{receiptPageLimit})</p>
 						<ol class="mt-2 space-y-2">
 							{#each photoPages as photo, index (photo.name + index)}
@@ -643,12 +643,12 @@
 							{/each}
 						</ol>
 						{#if preparingScan}<Alert variant="plain" role="status" class="mt-2 text-xs text-accent-ink">{$t('Preparing scan locally…')}</Alert>{/if}
-					</div>
+					</Card>
 				{/if}
 				{#if filePreviewUrl && selectedFile}
-					<div class="rounded-xl border border-line bg-page p-3">
+					<Card variant="inset" class="gap-0 p-3">
 						<iframe title={$t('Invoice preview')} src={filePreviewUrl} class="h-[28rem] w-full rounded-lg bg-surface"></iframe>
-					</div>
+					</Card>
 				{/if}
 				<Button type="submit" disabled={previewing || preparingScan || !selectedFile} class="rounded-xl px-5 disabled:cursor-wait disabled:opacity-60">
 					{$t(previewing ? 'Reading invoice locally…' : 'Preview invoice')}
@@ -666,9 +666,9 @@
 					{#if error}<Notice tone="error" message={error} class="mb-5" />{/if}
 					<div class="grid gap-x-8 gap-y-6 {filePreviewUrl ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : ''}">
 						{#if filePreviewUrl}
-							<div class="rounded-xl border border-line bg-page p-3 lg:sticky lg:top-0 lg:self-start">
+							<Card variant="inset" class="gap-0 p-3 lg:sticky lg:top-0 lg:self-start">
 								<iframe title={$t('Invoice preview')} src={filePreviewUrl} class="h-[24rem] w-full rounded-lg bg-surface lg:h-[calc(100dvh-16rem)]"></iframe>
-							</div>
+							</Card>
 						{/if}
 						<form id="receipt-review-form" class="min-w-0 space-y-5" onsubmit={confirmReceipt}>
 							<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -794,49 +794,49 @@
 			{#if receiptError}<Alert variant="error" role="alert" class="mt-4 border-danger/30 bg-danger/10 p-4">{receiptError}</Alert>{/if}
 			<Disclosure summary="Filter receipts" hint={$t('Receipts found') + ': ' + pagination.total} class="mt-5">
 			<form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyReceiptFilters} aria-label={$t('Filter receipts')}>
-				<label class="block text-sm font-medium text-ink-secondary sm:col-span-2">{$t('Search merchant or invoice number')}
-					<input bind:value={receiptSearch} type="search" maxlength="100" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice date from')}
-					<input bind:value={dateFrom} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Invoice date to')}
-					<input bind:value={dateTo} type="date" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Minimum amount')}
-					<input bind:value={minAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Maximum amount')}
-					<input bind:value={maxAmount} type="text" inputmode="decimal" class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base" />
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Currency')}
-					<select bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
-						<option value="">{$t('All currencies')}</option>
+				<Label variant="field" class="block gap-0 sm:col-span-2">{$t('Search merchant or invoice number')}
+					<Input variant="glass" bind:value={receiptSearch} type="search" maxlength={100} class="mt-2 text-sm max-sm:text-base" />
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Invoice date from')}
+					<Input variant="glass" bind:value={dateFrom} type="date" class="mt-2 text-sm max-sm:text-base" />
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Invoice date to')}
+					<Input variant="glass" bind:value={dateTo} type="date" class="mt-2 text-sm max-sm:text-base" />
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Minimum amount')}
+					<Input variant="glass" bind:value={minAmount} inputmode="decimal" class="mt-2 text-sm max-sm:text-base" />
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Maximum amount')}
+					<Input variant="glass" bind:value={maxAmount} inputmode="decimal" class="mt-2 text-sm max-sm:text-base" />
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Currency')}
+					<NativeSelect.Root variant="glass" bind:value={currencyFilter} required={Boolean(minAmount || maxAmount)} class="mt-2">
+						<NativeSelect.Option value="">{$t('All currencies')}</NativeSelect.Option>
 						{#each currencies as receiptCurrency (receiptCurrency)}
-							<option value={receiptCurrency}>{receiptCurrency}</option>
+							<NativeSelect.Option value={receiptCurrency}>{receiptCurrency}</NativeSelect.Option>
 						{/each}
-					</select>
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Target')}
-					<select bind:value={targetFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
-						<option value="">{$t('All targets')}</option>
-						<option value="archive">{$t('Archived only')}</option>
-						<option value="vehicle">{$t('Vehicle cost')}</option>
-					</select>
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Category')}
-					<select bind:value={categoryFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
-						<option value="">{$t('All categories')}</option>
-						{#each categoryFilters as option (option.value)}<option value={option.value}>{categoryFilterLabel(option)}</option>{/each}
-					</select>
-				</label>
-				<label class="block text-sm font-medium text-ink-secondary">{$t('Sharing status')}
-					<select bind:value={sharingStatusFilter} class="mt-2 min-h-11 w-full rounded-[10px] border glass-control px-3 text-sm text-ink max-sm:text-base">
-						<option value="">{$t('All sharing states')}</option>
-						<option value="private">{$t('Private')}</option>
-						<option value="shared">{$t('Shared with household')}</option>
-					</select>
-				</label>
+					</NativeSelect.Root>
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Target')}
+					<NativeSelect.Root variant="glass" bind:value={targetFilter} class="mt-2">
+						<NativeSelect.Option value="">{$t('All targets')}</NativeSelect.Option>
+						<NativeSelect.Option value="archive">{$t('Archived only')}</NativeSelect.Option>
+						<NativeSelect.Option value="vehicle">{$t('Vehicle cost')}</NativeSelect.Option>
+					</NativeSelect.Root>
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Category')}
+					<NativeSelect.Root variant="glass" bind:value={categoryFilter} class="mt-2">
+						<NativeSelect.Option value="">{$t('All categories')}</NativeSelect.Option>
+						{#each categoryFilters as option (option.value)}<NativeSelect.Option value={option.value}>{categoryFilterLabel(option)}</NativeSelect.Option>{/each}
+					</NativeSelect.Root>
+				</Label>
+				<Label variant="field" class="block gap-0">{$t('Sharing status')}
+					<NativeSelect.Root variant="glass" bind:value={sharingStatusFilter} class="mt-2">
+						<NativeSelect.Option value="">{$t('All sharing states')}</NativeSelect.Option>
+						<NativeSelect.Option value="private">{$t('Private')}</NativeSelect.Option>
+						<NativeSelect.Option value="shared">{$t('Shared with household')}</NativeSelect.Option>
+					</NativeSelect.Root>
+				</Label>
 				<div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4">
 					<Button type="submit" size="small" disabled={loading}>{$t('Apply filters')}</Button>
 					<Button type="button" variant="secondary" size="small" onclick={clearReceiptFilters} disabled={loading}>{$t('Clear filters')}</Button>
@@ -859,10 +859,10 @@
 								<a href={'/api/receipts/' + receipt.id + '/preview'} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-line-strong px-3 text-sm font-medium text-accent-ink hover:bg-surface-subtle">{$t('Preview document')}</a>
 								<a href={receipt.file_url} download class="inline-flex min-h-10 items-center justify-center rounded-lg border border-line-strong px-3 text-sm font-medium text-accent-ink hover:bg-surface-subtle">{$t('Download original')}</a>
 								{#if canManageSharing && receipt.is_owner}
-									<button type="button" onclick={() => updateReceiptSharing(receipt)} disabled={sharingId === receipt.id} class="min-h-10 rounded-lg border border-positive/30 px-3 text-sm font-medium text-positive hover:bg-positive/10 disabled:opacity-50">{$t(sharingId === receipt.id ? 'Updating sharing…' : receipt.shared_with_household ? 'Stop sharing' : 'Share with household')}</button>
+									<Button type="button" variant="secondary" onclick={() => updateReceiptSharing(receipt)} disabled={sharingId === receipt.id} class="min-h-10 rounded-lg border-positive/30 bg-transparent px-3 py-0 text-positive hover:not-disabled:bg-positive/10">{$t(sharingId === receipt.id ? 'Updating sharing…' : receipt.shared_with_household ? 'Stop sharing' : 'Share with household')}</Button>
 								{/if}
 								{#if canEdit && receipt.is_owner}
-									<button type="button" onclick={() => deleteReceipt(receipt)} disabled={deletingId === receipt.id} class="min-h-10 rounded-lg border border-danger/30 px-3 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50">{$t(deletingId === receipt.id ? 'Deleting…' : 'Delete receipt')}</button>
+									<Button type="button" variant="secondary" onclick={() => deleteReceipt(receipt)} disabled={deletingId === receipt.id} class="min-h-10 rounded-lg border-danger/30 bg-transparent px-3 py-0 text-danger hover:not-disabled:bg-danger/10">{$t(deletingId === receipt.id ? 'Deleting…' : 'Delete receipt')}</Button>
 								{/if}
 							</div>
 						</div>
@@ -914,8 +914,8 @@
 				<div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
 					<p class="text-sm text-ink-muted">{$t('Page')} {pagination.current_page} {$t('of')} {pagination.last_page}</p>
 					<div class="flex gap-2">
-						<button type="button" onclick={() => changeReceiptPage(receiptPage - 1)} disabled={loading || receiptPage <= 1} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary disabled:opacity-50">{$t('Previous')}</button>
-						<button type="button" onclick={() => changeReceiptPage(receiptPage + 1)} disabled={loading || receiptPage >= pagination.last_page} class="min-h-10 rounded-lg border border-line-strong px-3 text-sm text-ink-secondary disabled:opacity-50">{$t('Next')}</button>
+						<Button type="button" variant="secondary" onclick={() => changeReceiptPage(receiptPage - 1)} disabled={loading || receiptPage <= 1} class="min-h-10 rounded-lg border-line-strong bg-transparent px-3 py-0 text-ink-secondary hover:not-disabled:bg-surface-subtle">{$t('Previous')}</Button>
+						<Button type="button" variant="secondary" onclick={() => changeReceiptPage(receiptPage + 1)} disabled={loading || receiptPage >= pagination.last_page} class="min-h-10 rounded-lg border-line-strong bg-transparent px-3 py-0 text-ink-secondary hover:not-disabled:bg-surface-subtle">{$t('Next')}</Button>
 					</div>
 				</div>
 			{/if}

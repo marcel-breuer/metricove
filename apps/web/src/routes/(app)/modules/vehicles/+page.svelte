@@ -101,7 +101,7 @@
 
 	{#if canView}
 		<section class="mt-8" aria-labelledby="vehicles-heading">
-			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="vehicles-heading" class="text-xl font-semibold text-ink">{$t("Your vehicles")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private records are visible to their owner and explicitly authorized members.")}</p></div><button type="button" onclick={() => void loadVehicles()} disabled={loading} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button></div>
+			<div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="vehicles-heading" class="text-xl font-semibold text-ink">{$t("Your vehicles")}</h2><p class="mt-1 text-sm text-ink-muted">{$t("Private records are visible to their owner and explicitly authorized members.")}</p></div><Button type="button" variant="secondary" onclick={() => void loadVehicles()} disabled={loading} class="min-h-10 rounded-lg border-line-strong bg-transparent px-3 py-0 text-sm font-medium text-ink-secondary hover:not-disabled:bg-surface-subtle">{$t("Refresh")}</Button></div>
 			{#if loading}
 				<Alert variant="glass" role="status" class="mt-5 rounded-xl px-4 py-5 text-sm text-ink-secondary">{$t("Loading vehicles…")}</Alert>
 			{:else if vehicles.length === 0}
