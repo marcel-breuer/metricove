@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
 	import { t } from '#lib/i18n';
 	import { page } from '$app/state';
@@ -73,9 +75,8 @@
 		}
 	}
 
-	async function updateCapability(module: MemberModule, capability: Capability, event: Event): Promise<void> {
-		const input = event.currentTarget;
-		if (!(input instanceof HTMLInputElement) || member === null) return;
+	async function updateCapability(module: MemberModule, capability: Capability, checked: boolean): Promise<void> {
+		if (member === null) return;
 
 		message = '';
 		error = '';
@@ -85,7 +86,9 @@
 			return;
 		}
 
-		const nextCapabilities = { ...module.capabilities, [capability]: input.checked };
+		const previousValue = module.capabilities[capability];
+		const nextCapabilities = { ...module.capabilities, [capability]: checked };
+		module.capabilities[capability] = checked;
 		busyKey = module.key;
 		try {
 			const response = await fetch(`/api/admin/members/${member.id}/module-permissions/${module.key}`, {
@@ -101,7 +104,7 @@
 			}
 			if (!response.ok || !result.module) {
 				error = firstError(result) || result.message || 'Module rights could not be updated.';
-				input.checked = module.capabilities[capability];
+				module.capabilities[capability] = previousValue;
 				return;
 			}
 
@@ -109,7 +112,7 @@
 			message = result.message ?? 'Module rights updated.';
 			await shell.refresh();
 		} catch {
-			input.checked = module.capabilities[capability];
+			module.capabilities[capability] = previousValue;
 			error = 'Module rights could not be updated. Check your connection and try again.';
 		} finally {
 			busyKey = '';
@@ -164,20 +167,21 @@
 							<fieldset class="mt-5 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
 										<legend class="sr-only">{$t('{module} capabilities', { module: module.label })}</legend>
 								{#each capabilities as capability (capability.key)}
-									<label class="flex min-w-0 items-start gap-3 rounded-xl border border-line px-3 py-3">
-										<input
-											type="checkbox"
+										<Label variant="field" class="flex min-w-0 items-start gap-3 rounded-xl border border-line px-3 py-3">
+										<Checkbox
 											checked={module.capabilities[capability.key]}
 											disabled={busyKey !== ''}
 											aria-label={$t('{capability} permission for {module}', { capability: $t(capability.label), module: $t(module.label) })}
-											onchange={(event) => void updateCapability(module, capability.key, event)}
-											class="mt-0.5 size-4 shrink-0 accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
+											onCheckedChange={(checked) => {
+												void updateCapability(module, capability.key, checked === true);
+											}}
+											class="mt-0.5 shrink-0"
 										/>
 										<span class="min-w-0">
 											<span class="block text-sm font-medium text-ink">{$t(capability.label)}</span>
 											<span class="mt-1 block text-xs leading-5 text-ink-muted">{$t(capability.description)}</span>
 										</span>
-									</label>
+										</Label>
 								{/each}
 							</fieldset>
 							</Panel>
