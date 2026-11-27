@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { Card } from '#lib/components/ui/card/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+
+	const inputClass = 'min-h-0 w-full rounded-[10px] border border-line-strong bg-page! px-3 py-2.5 text-ink shadow-none! outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20';
 
 	let email = '';
 	let message = '';
@@ -74,8 +79,8 @@
 
 			<form class="mt-8 space-y-5" onsubmit={requestReset}>
 				<div>
-					<label for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Email address")}</label>
-					<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+					<Label variant="field" for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Email address")}</Label>
+					<Input variant="glass" id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength={255} class={inputClass} />
 				</div>
 				{#if message}
 					<Notice tone="success" message={message} />
@@ -83,9 +88,9 @@
 				{#if error}
 					<Notice tone="error" message={error} />
 				{/if}
-				<button type="submit" disabled={busy} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">
+				<Button fullWidth size="large" disabled={busy} class="min-h-0 rounded-lg border-0 py-3 hover:not-disabled:bg-accent/90 hover:not-disabled:brightness-100 disabled:cursor-wait disabled:opacity-60">
 					{$t(busy ? 'Sending…' : 'Send reset link')}
-				</button>
+				</Button>
 			</form>
 
 			<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink hover:text-accent-ink">{$t("Return to sign in")}</a>

@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { Card } from '#lib/components/ui/card/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { t } from '#lib/i18n';
 	import { onMount } from 'svelte';
 	import { csrfToken, firstError, type ApiResponse } from '#lib/auth';
+
+	const inputClass = 'min-h-0 w-full rounded-[10px] border border-line-strong bg-page! px-3 py-2.5 text-ink shadow-none! outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20';
 
 	let resetToken = '';
 	let email = '';
@@ -93,18 +98,18 @@
 			<h1 class="mt-3 text-3xl font-semibold tracking-tight">{$t("Choose a new password")}</h1>
 			<form class="mt-8 space-y-5" onsubmit={resetPassword}>
 				<div>
-					<label for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Email address")}</label>
-					<input id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength="255" aria-describedby="email-help" class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+					<Label variant="field" for="email" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Email address")}</Label>
+					<Input variant="glass" id="email" name="email" type="email" autocomplete="email" bind:value={email} required maxlength={255} aria-describedby="email-help" class={inputClass} />
 					<p id="email-help" class="mt-2 text-xs text-ink-muted">{$t("Enter the email address that received the reset link.")}</p>
 				</div>
 				<div>
-					<label for="password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("New password")}</label>
-					<input id="password" name="password" type="password" autocomplete="new-password" bind:value={password} minlength="12" required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+					<Label variant="field" for="password" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("New password")}</Label>
+					<Input variant="glass" id="password" name="password" type="password" autocomplete="new-password" bind:value={password} minlength={12} required class={inputClass} />
 					<p class="mt-2 text-xs text-ink-muted">{$t("Use at least 12 characters.")}</p>
 				</div>
 				<div>
-					<label for="password_confirmation" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Confirm new password")}</label>
-					<input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" bind:value={confirmation} required class="w-full rounded-[10px] border border-line-strong bg-page px-3 py-2.5 text-ink outline-none focus:border-accent-ink focus:ring-2 focus:ring-accent-ink/20" />
+					<Label variant="field" for="password_confirmation" class="mb-2 block text-sm font-medium text-ink-secondary">{$t("Confirm new password")}</Label>
+					<Input variant="glass" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" bind:value={confirmation} required class={inputClass} />
 				</div>
 				{#if message}
 					<Notice tone="success" message={message} />
@@ -112,9 +117,9 @@
 				{#if error}
 					<Notice tone="error" message={error} />
 				{/if}
-				<button type="submit" disabled={busy || Boolean(message) || !resetToken} class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-on-accent transition hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:cursor-wait disabled:opacity-60">
+				<Button fullWidth size="large" disabled={busy || Boolean(message) || !resetToken} class="min-h-0 rounded-lg border-0 py-3 hover:not-disabled:bg-accent/90 hover:not-disabled:brightness-100 disabled:cursor-wait disabled:opacity-60">
 					{$t(busy ? 'Saving…' : 'Set new password')}
-				</button>
+				</Button>
 			</form>
 
 			<a href="/login" class="mt-5 inline-flex text-sm font-semibold text-accent-ink hover:text-accent-ink">{$t("Return to sign in")}</a>
