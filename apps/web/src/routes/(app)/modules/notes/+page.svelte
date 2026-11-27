@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import { Card } from '#lib/components/ui/card/index.js';
-	import { control, field } from '#lib/ui/styles';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import * as NativeSelect from '#lib/components/ui/native-select/index.js';
+	import { field } from '#lib/ui/styles';
 	import { goto } from '$app/navigation';
 	import { getContext, untrack } from 'svelte';
 	import { notesRequest as api } from '#lib/api-client';
@@ -140,9 +143,9 @@
 			<Panel>
 				<h2 class="text-lg font-semibold">{$t('Your notebook')}</h2>
 				<div class="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem_12rem] md:items-end">
-					<form class="flex gap-2" onsubmit={applySearch}><label class="sr-only" for="note-search">{$t('Search notes')}</label><input id="note-search" bind:value={searchInput} placeholder={$t('Search title, text or tags')} class="{control} min-w-0 flex-1" /><Button type="submit" variant="secondary">{$t('Search')}</Button></form>
-					<label class="{field} gap-1"><span class="text-xs text-ink-muted">{$t('Folder')}</span><select bind:value={folderFilter} onchange={() => { pagination.current_page = 1; void loadNotes(); }} class="{control}"><option value="">{$t('All folders')}</option>{#each folders as folder (folder.id)}<option value={String(folder.id)}>{folder.name}</option>{/each}</select></label>
-					<label class="{field} gap-1"><span class="text-xs text-ink-muted">{$t('Show')}</span><select value={statusFilter} onchange={(event) => setStatus(event.currentTarget.value === 'archived' ? 'archived' : 'active')} class="{control}"><option value="active">{$t('Active notes')}</option><option value="archived">{$t('Archived notes')}</option></select></label>
+					<form class="flex gap-2" onsubmit={applySearch}><Label for="note-search" class="sr-only">{$t('Search notes')}</Label><Input variant="glass" id="note-search" bind:value={searchInput} placeholder={$t('Search title, text or tags')} class="min-w-0 flex-1" /><Button type="submit" variant="secondary">{$t('Search')}</Button></form>
+					<div class="{field} gap-1"><Label for="note-folder-filter" class="text-xs text-ink-muted">{$t('Folder')}</Label><NativeSelect.Root variant="glass" id="note-folder-filter" bind:value={folderFilter} onchange={() => { pagination.current_page = 1; void loadNotes(); }}><NativeSelect.Option value="">{$t('All folders')}</NativeSelect.Option>{#each folders as folder (folder.id)}<NativeSelect.Option value={String(folder.id)}>{folder.name}</NativeSelect.Option>{/each}</NativeSelect.Root></div>
+					<div class="{field} gap-1"><Label for="note-status-filter" class="text-xs text-ink-muted">{$t('Show')}</Label><NativeSelect.Root variant="glass" id="note-status-filter" value={statusFilter} onchange={(event) => setStatus(event.currentTarget.value === 'archived' ? 'archived' : 'active')}><NativeSelect.Option value="active">{$t('Active notes')}</NativeSelect.Option><NativeSelect.Option value="archived">{$t('Archived notes')}</NativeSelect.Option></NativeSelect.Root></div>
 				</div>
 				{#if loading}<Alert variant="plain" class="mt-5 text-sm text-ink-muted" role="status">{$t('Loading notes…')}</Alert>
 				{:else if notes.length === 0}<EmptyState title="No notes match your search." class="mt-5" />
@@ -168,8 +171,8 @@
 			{#if canCreate || canEdit}
 				<Panel class="h-fit">
 					<h2 class="text-sm font-semibold">{$t('Private folders')}</h2>
-					{#if canCreate}<form class="mt-3 flex gap-2" onsubmit={saveFolder}><label class="sr-only" for="note-folder-name">{$t('Folder name')}</label><input id="note-folder-name" bind:value={folderName} placeholder={$t('New folder')} maxlength="80" class="{control} min-w-0 flex-1" /><Button size="small" type="submit">{$t('Add')}</Button></form>{/if}
-					{#if folderEditId}<form class="mt-3 flex flex-wrap gap-2" onsubmit={saveFolder}><label class="sr-only" for="note-folder-edit">{$t('Folder name')}</label><input id="note-folder-edit" bind:value={folderEditName} maxlength="80" required class="{control} min-w-0 flex-1" /><Button size="small" type="submit">{$t('Rename')}</Button><Button size="small" variant="ghost" type="button" onclick={() => { folderEditId = null; folderEditName = ''; }}>{$t('Cancel')}</Button></form>{/if}
+					{#if canCreate}<form class="mt-3 flex gap-2" onsubmit={saveFolder}><Label for="note-folder-name" class="sr-only">{$t('Folder name')}</Label><Input variant="glass" id="note-folder-name" bind:value={folderName} placeholder={$t('New folder')} maxlength={80} class="min-w-0 flex-1" /><Button size="small" type="submit">{$t('Add')}</Button></form>{/if}
+					{#if folderEditId}<form class="mt-3 flex flex-wrap gap-2" onsubmit={saveFolder}><Label for="note-folder-edit" class="sr-only">{$t('Folder name')}</Label><Input variant="glass" id="note-folder-edit" bind:value={folderEditName} maxlength={80} required class="min-w-0 flex-1" /><Button size="small" type="submit">{$t('Rename')}</Button><Button size="small" variant="ghost" type="button" onclick={() => { folderEditId = null; folderEditName = ''; }}>{$t('Cancel')}</Button></form>{/if}
 					<ul class="mt-3 space-y-1">{#each folders as folder (folder.id)}<li class="flex items-center justify-between gap-2 rounded-lg py-1.5 text-sm text-ink-secondary"><span class="truncate">{folder.name} <span class="text-xs text-ink-subtle">({folder.note_count})</span></span>{#if canEdit}<span class="flex gap-1"><Button size="small" variant="ghost" onclick={() => { folderEditId = folder.id; folderEditName = folder.name; }}>{$t('Rename')}</Button><Button size="small" variant="ghost" onclick={() => void deleteFolder(folder)}>{$t('Remove')}</Button></span>{/if}</li>{/each}</ul>
 				</Panel>
 			{/if}
