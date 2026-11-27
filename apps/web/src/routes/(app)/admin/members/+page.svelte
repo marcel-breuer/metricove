@@ -2,6 +2,7 @@
 	import { Card } from '#lib/components/ui/card/index.js';
 	import { Alert } from '#lib/components/ui/alert/index.js';
 	import Badge from '#lib/ui/Badge.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import PageHeading from '#lib/ui/PageHeading.svelte';
 	import { t } from '#lib/i18n';
@@ -221,7 +222,7 @@
 					<h2 id="members-heading" class="text-xl font-semibold">{$t("Household members")}</h2>
 					<p class="mt-1 text-sm text-ink-muted">{activeAdminCount} {$t(activeAdminCount === 1 ? "active administrator" : "active administrators")}</p>
 				</div>
-				<button type="button" disabled={busy} onclick={() => void loadMembers()} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t("Refresh")}</button>
+				<Button variant="secondary" size="small" type="button" disabled={busy} onclick={() => void loadMembers()} class="border-line-strong text-ink-secondary hover:border-accent-ink">{$t("Refresh")}</Button>
 			</div>
 
 			{#if loading}
@@ -241,10 +242,12 @@
 								</div>
 							</div>
 							<div class="flex flex-wrap gap-2 lg:justify-end">
-								<a href={`/admin/members/${member.id}/modules`} class="rounded-lg border border-accent-ink/30 px-3 py-2 text-sm font-medium text-accent-ink transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink">{$t("Module rights")}</a>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:opacity-50">{$t(member.is_admin ? 'Demote' : 'Promote')}</button>
-								<button type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="rounded-lg border border-line-strong px-3 py-2 text-sm font-medium text-ink-secondary transition hover:border-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning disabled:opacity-50">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</button>
-				<button type="button" disabled={busy} onclick={() => { memberToRemove = member; removeModalOpen = true; }} class="rounded-lg border border-danger/30 px-3 py-2 text-sm font-medium text-danger transition hover:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger disabled:opacity-50">{$t("Remove")}</button>
+				<Button href={`/admin/members/${member.id}/modules`} variant="secondary" size="small" class="border-accent-ink/30 bg-transparent text-accent-ink hover:border-accent-ink hover:bg-transparent">{$t("Module rights")}</Button>
+				<Button variant="secondary" size="small" type="button" disabled={busy} onclick={() => void updateMember(member, { is_admin: !member.is_admin })} class="border-line-strong text-ink-secondary hover:border-accent-ink">{$t(member.is_admin ? 'Demote' : 'Promote')}</Button>
+				<Button variant="secondary" size="small" type="button" disabled={busy} onclick={() => void updateMember(member, { is_active: !member.is_active })} class="border-line-strong text-ink-secondary hover:border-warning">{$t(member.is_active ? 'Suspend' : 'Reactivate')}</Button>
+				<Button variant="secondary" size="small" type="button" disabled={busy} onclick={() => { memberToRemove = member; removeModalOpen = true; }} class="border-danger/30 bg-transparent text-danger hover:border-danger hover:bg-transparent">
+					{$t("Remove")}
+				</Button>
 							</div>
 						</li>
 					{/each}
